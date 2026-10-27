@@ -4,6 +4,8 @@ export { Badges } from "./badge.ts";
 export type { BadgeSpec, BadgesProps } from "./badge.ts";
 export { Band } from "./band.ts";
 export type { BandProps } from "./band.ts";
+export { BigText } from "./big-text.ts";
+export type { BigTextProps } from "./big-text.ts";
 export { Byline } from "./byline.ts";
 export type { BylineProps } from "./byline.ts";
 export { Concealed } from "./concealed.ts";

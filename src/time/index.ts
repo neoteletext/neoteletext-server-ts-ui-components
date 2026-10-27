@@ -10,3 +10,5 @@ export { Countdown } from "./countdown.ts";
 export type { CountdownProps } from "./countdown.ts";
 export { DATE_FORMATS, dateOf, DateText, formatDate } from "./date-text.ts";
 export type { DateTextProps, DateValue } from "./date-text.ts";
+export { Stopwatch } from "./stopwatch.ts";
+export type { StopwatchProps } from "./stopwatch.ts";

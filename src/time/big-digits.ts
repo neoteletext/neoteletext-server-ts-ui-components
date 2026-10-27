@@ -5,8 +5,8 @@ import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { Colour, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
 
-/** Each character's rows of sixels, "#" set; any other character is drawn as "-". */
-const DIGITS: Readonly<Record<string, readonly string[]>> = {
+/** Each character's rows of sixels, "#" set; any other character is drawn as "-". Large text (text/big-text.ts) draws its digits from these too. */
+export const DIGITS: Readonly<Record<string, readonly string[]>> = {
   "0": ["#####", "#...#", "#..##", "#.#.#", "##..#", "#...#", "#####"],
   "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
   "2": ["#####", "....#", "....#", "#####", "#....", "#....", "#####"],
@@ -21,10 +21,11 @@ const DIGITS: Readonly<Record<string, readonly string[]>> = {
   "-": [".....", ".....", ".....", "#####", ".....", ".....", "....."],
 };
 
-const DIGIT_WIDTH = 5;
-const DIGIT_HEIGHT = 7;
+/** A character's sixels across and down, its gap's across: large text's letters are sized alike. */
+export const DIGIT_WIDTH = 5;
+export const DIGIT_HEIGHT = 7;
 /** The sixels between one character and the next. */
-const DIGIT_GAP = 1;
+export const DIGIT_GAP = 1;
 
 /** The rows large digits take: seven sixels over three to a cell. */
 export const BIG_ROWS = Math.ceil(DIGIT_HEIGHT / SIXELS_DOWN);
