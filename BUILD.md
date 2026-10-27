@@ -31,14 +31,7 @@ Copy its `.tgz` into `vendor/`, remove the old one, and run
 `npm install --save-dev --save-exact ./vendor/<the file>`; set the peer
 dependency to its version.
 
-## Release
+## Release and deploy
 
-Raise `version` in `package.json` and commit, then:
-
-    scripts/release.sh
-
-On a clean tree it checks, builds, packs
-`tmp/release/neottx-server-ts-ui-components-<version>.tgz` and tags the
-commit `v<version>`. A consumer commits it under its `vendor/` beside the
-protocol's release, depends on both as `file:vendor/<the file>`, and
-imports `neottx-server-ts-ui-components`; nothing else is exported.
+`DEPLOYMENT.md`: the release, and how it reaches the programs that use it
+and the host they run on.
