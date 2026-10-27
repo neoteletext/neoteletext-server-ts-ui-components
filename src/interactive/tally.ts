@@ -6,6 +6,8 @@ export class Tally {
   readonly name: string;
   readonly options: readonly string[];
   readonly #votes: number[];
+  /** The option each viewer voted for, while they are on the channel: a vote is kept, not cast again, when they come back to the page. */
+  readonly #ballots = new Map<number, number>();
 
   constructor(name: string, options: readonly string[]) {
     this.name = name;
@@ -31,5 +33,24 @@ export class Tally {
       this.#votes[from] = (this.#votes[from] ?? 0) - 1;
     }
     this.#votes[to] = (this.#votes[to] ?? 0) + 1;
+  }
+
+  /** The option `session` voted for, or null. */
+  ballotOf(session: number): number | null {
+    return this.#ballots.get(session) ?? null;
+  }
+
+  /** `session` votes for `option`, their vote moving there if they had one. */
+  vote(session: number, option: number): void {
+    if (!this.#isOption(option)) {
+      return;
+    }
+    this.move(this.ballotOf(session), option);
+    this.#ballots.set(session, option);
+  }
+
+  /** The viewer went: their vote stays counted, and the record of whose it was goes. */
+  forget(session: number): void {
+    this.#ballots.delete(session);
   }
 }

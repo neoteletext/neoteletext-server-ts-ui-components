@@ -1,38 +1,17 @@
 // The core part of the library's interface: what it exports, by name.
-
-export { EventBus, reaches } from "./bus.ts";
+export { EventBus } from "./bus.ts";
 export type { Audience, Bus, Place, Unsubscribe } from "./bus.ts";
-export { Canvas, CHIP_CELLS, NEW_BACKGROUND_CELL, nothingDeclared } from "./canvas.ts";
+export { Canvas, CHIP_CELLS, NEW_BACKGROUND_CELL } from "./canvas.ts";
 export type { Declared, PageRequests, Region } from "./canvas.ts";
 export type { ComponentEvent, ComponentEventInit, Origin } from "./component-events.ts";
 export { Component } from "./component.ts";
 export { stack, stackSize } from "./layout.ts";
 export type { ComponentHost, TimerOptions } from "./component.ts";
 export type { Box, LayoutChild, Size } from "./layout.ts";
-export {
-  controlLines,
-  controlTriplet,
-  controlTriplets,
-  enhancementLines,
-  FIRST_CONTROL_ROW,
-  keptControls,
-  keptDeclarations,
-  LAST_CONTROL_ROW,
-  MAX_CONTROLS,
-  MAX_POINTER_AREAS,
-  NO_POINTER_AREAS,
-  packedLine,
-  pointerAreaTriplet,
-  setActivePosition,
-  TERMINATION,
-  triplet,
-  WHOLE_PAGE_POINTER_AREA,
-} from "./controls.ts";
 export { readControls, readDeclarations } from "./read-controls.ts";
-export type { Kept, PointerAreas } from "./controls.ts";
 export type { Declarations } from "./read-controls.ts";
-export { flatten, h, isElement } from "./element.ts";
-export type { AnyComponentClass, Child, ClassProps, ComponentClass, Element, LayoutProps, PropsOf, WithChildren } from "./element.ts";
+export { h } from "./element.ts";
+export type { AnyComponentClass, Child, ClassProps, ComponentClass, Element, FunctionComponent, LayoutProps, PropsOf, WithChildren } from "./element.ts";
 export { isPress, NOTCH, typedText } from "./events.ts";
 export type { Cell, HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
 export { choosing, COLOUR_KEY_NAMES, COLOUR_KEYS, colourKeyOf, digitOf, FUNCTION_KEYS } from "./keys.ts";
@@ -56,21 +35,17 @@ export {
 } from "./look.ts";
 export type { ControlLook, Kind } from "./look.ts";
 export { BOTTOM_ROW, FULL_BLOCK, LEFT_HALF, LOWER_TWO, MIDDLE_ROW, MOSAIC_BASE, RIGHT_HALF, SIXEL, TOP_ROW, UPPER_TWO } from "./mosaics.ts";
-export { Mount } from "./mount.ts";
-export type { MountHost } from "./mount.ts";
-export { probeNeeds } from "./needs.ts";
 export type { PageNeeds } from "./needs.ts";
-export { SCREEN, SubPage } from "./page.ts";
+export { SubPage } from "./page.ts";
 export type { SubPageLinks, SubPageProps } from "./page.ts";
 export { RawSubPage } from "./raw-sub-page.ts";
 export type { RawProps } from "./raw-sub-page.ts";
-export { LEVEL_1_COLOURS, ROLLOVER_COLOURS, rolloverLine, rolloverTriplets } from "./rollover.ts";
+export { ROLLOVER_COLOURS, rolloverLine } from "./rollover.ts";
 export type { ColourTable, Rgb12 } from "./rollover.ts";
 export { ComponentChannel } from "./runtime.ts";
 export type { PageSpec } from "./page-spec.ts";
 export type { PageParams, Services } from "./services.ts";
 export { noise, RATE, sequence, sound, tone } from "./sound.ts";
 export type { Sound, Wave } from "./sound.ts";
-export { BLOCK_SAMPLES, LEAD_MS, MOST_BLOCKS, SECOND_MS, STREAM_CHANNEL, STREAM_HANDLE, TICK_MS, WRAP } from "./stream.ts";
 export type { Listening, StreamSource } from "./stream.ts";
 export { cells, CUT_MARK, fit, headline, HEADLINE_CUT, pad, padStart, wrap } from "./text.ts";

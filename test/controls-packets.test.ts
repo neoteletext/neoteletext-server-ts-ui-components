@@ -4,26 +4,22 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { type ColourTable, readControls, readDeclarations, ROLLOVER_COLOURS, rolloverLine } from "../src/index.ts";
 import {
-  type ColourTable,
   controlLines,
   controlTriplet,
   controlTriplets,
   enhancementLines,
   keptControls,
   keptDeclarations,
-  LEVEL_1_COLOURS,
   MAX_CONTROLS,
   MAX_POINTER_AREAS,
   pointerAreaTriplet,
-  readControls,
-  readDeclarations,
-  ROLLOVER_COLOURS,
-  rolloverLine,
   setActivePosition,
   TERMINATION,
   WHOLE_PAGE_POINTER_AREA,
-} from "../src/index.ts";
+} from "../src/core/controls.ts";
+import { LEVEL_1_COLOURS } from "../src/core/rollover.ts";
 import { lines, lineTriplets, streamBits } from "./controls-fixtures.ts";
 
 test("the triplets are INPUT.md section 7.3's: four buttons on row 20, nine cells each, and the Termination Marker", () => {

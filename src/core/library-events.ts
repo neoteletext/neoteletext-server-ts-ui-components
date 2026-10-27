@@ -17,4 +17,6 @@ export interface LibraryEvents {
   readonly poll: { readonly name: string; readonly votes: readonly number[] };
   /** A toast to show on every page with a toast shelf. */
   readonly toast: ToastEvent;
+  /** A viewer went: what a component keeps for them, beyond its own copy, can go. */
+  readonly ended: { readonly session: number };
 }

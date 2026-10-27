@@ -9,7 +9,6 @@ import {
   type Child,
   Component,
   ComponentChannel,
-  controlLines,
   type Element,
   Frame,
   h,
@@ -20,6 +19,7 @@ import {
   readDeclarations,
   type Size,
 } from "../src/index.ts";
+import { controlLines } from "../src/core/controls.ts";
 import { Colour } from "../src/kit.ts";
 
 export const PAGE = 0x150;

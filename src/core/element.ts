@@ -26,9 +26,15 @@ export interface WithChildren {
 /** A component class, made with its props. */
 export type ComponentClass<P extends object> = new (props: P) => Component<P>;
 
-/** One element: a component class, its props, children included, and its key among its siblings. */
+/**
+ * A function component: what it renders from its props, as React's are.
+ * It keeps no state and has no lifecycle; a component that does is a class.
+ */
+export type FunctionComponent<P extends object = object> = (props: Readonly<P & WithChildren>) => Child;
+
+/** One element: a component, its props, children included, and its key among its siblings. */
 export interface Element {
-  readonly type: ComponentClass<never>;
+  readonly type: ComponentClass<never> | FunctionComponent<never>;
   readonly props: WithChildren & LayoutProps;
   readonly key: string | number | undefined;
 }
@@ -49,22 +55,17 @@ export type AnyComponentClass = new (props: never) => { readonly props: object }
 
 /**
  * An element of `type` with `props` and `children`, as React's
- * createElement: the class-component form, with no JSX, since Node runs
- * the channel's TypeScript as it is.
+ * createElement, with no JSX, since Node runs the channel's TypeScript as
+ * it is. `type` is a class component or a function component.
  */
-export function h<C extends AnyComponentClass>(type: C, props: PropsOf<ClassProps<C>>, ...children: Child[]): Element {
-  const { key, ...rest }: PropsOf<ClassProps<C>> & { readonly key?: string | number } = props;
+export function h<C extends AnyComponentClass>(type: C, props: PropsOf<ClassProps<C>>, ...children: Child[]): Element;
+export function h<P extends object>(type: FunctionComponent<P>, props: PropsOf<P>, ...children: Child[]): Element;
+export function h(type: AnyComponentClass | FunctionComponent<never>, props: PropsOf<object>, ...children: Child[]): Element {
+  const { key, ...rest } = props;
   const withChildren = children.length > 0 ? { ...rest, children } : rest;
-  // An element erases its class's props, so a tree holds elements of any class; instantiate gives each its own back.
+  // An element erases its component's props, so a tree holds elements of any component; instantiate gives each its own back.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the erasure, undone only by instantiate with the props it was made with
-  return { type: type as unknown as ComponentClass<never>, props: withChildren, key };
-}
-
-/** A new instance of `element`'s class, made with the props it carries. */
-export function instantiate(element: Element): Component {
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- an element's class is erased to no props (h); it was made with the props the element carries
-  const Type = element.type as unknown as new (props: object) => Component;
-  return new Type(element.props);
+  return { type: type as unknown as ComponentClass<never> | FunctionComponent<never>, props: withChildren, key };
 }
 
 /** Whether `child` is an element rather than text or nothing. */

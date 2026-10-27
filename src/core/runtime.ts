@@ -149,6 +149,7 @@ export class ComponentChannel implements Application {
       for (const watching of this.#watching.values()) {
         watching.delete(session);
       }
+      this.bus.emit("ended", { session });
     });
   }
 

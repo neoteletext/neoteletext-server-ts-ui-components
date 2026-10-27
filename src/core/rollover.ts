@@ -88,7 +88,7 @@ function colourWord(colour: Rgb12): number {
 }
 
 /** The thirteen triplets of X/28/0 format 1 that give a page `rollover` as its controls' hover colours. */
-export function rolloverTriplets(rollover: ColourTable = ROLLOVER_COLOURS): number[] {
+function rolloverTriplets(rollover: ColourTable = ROLLOVER_COLOURS): number[] {
   const triplets = Array.from({ length: TRIPLETS_PER_PACKET }, () => 0);
   triplets[0] = (DESIGNATION_LATIN_ENGLISH << DEFAULT_DESIGNATION_SHIFT) | ((NO_SECOND_G0 & NIBBLE) << SECOND_DESIGNATION_LOW_SHIFT);
   triplets[1] = NO_SECOND_G0 >> SECOND_DESIGNATION_LOW_BITS;

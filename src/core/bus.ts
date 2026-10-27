@@ -19,7 +19,7 @@ export interface Place {
 }
 
 /** Whether an event for `audience` reaches a listener at `place`. */
-export function reaches(audience: Audience, place: Place): boolean {
+function reaches(audience: Audience, place: Place): boolean {
   return (audience.page === undefined || audience.page === place.page) && (audience.session === undefined || audience.session === place.session);
 }
 

@@ -5,7 +5,8 @@
 // drawn, so a component that mounts sees its box.
 
 import type { Component, ComponentHost } from "./component.ts";
-import { type Element, flatten, h, instantiate, isElement } from "./element.ts";
+import { instantiate } from "./instantiate.ts";
+import { type Element, flatten, h, isElement } from "./element.ts";
 import { type AnyComponent, Node } from "./node.ts";
 import { Text } from "../text/styles.ts";
 

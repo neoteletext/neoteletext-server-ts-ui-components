@@ -48,7 +48,7 @@ const TERMINATION_DATA = 0b111;
 export const JOINED = 0x40;
 export const WIDTH_MASK = 0x3f;
 /** The rows a control may be on: not the header, not the Fastext row (the engine's FIRST_CONTROL_ROW and LAST_CONTROL_ROW). */
-export const FIRST_CONTROL_ROW = 1;
+const FIRST_CONTROL_ROW = 1;
 export const LAST_CONTROL_ROW = 23;
 /** The most controls a page has (the engine's MAX_CONTROLS, REQ-INT-118). */
 export const MAX_CONTROLS = 32;
@@ -72,7 +72,7 @@ if (CHARACTERS_PER_TRIPLET * PACKED_CHARACTER_BITS !== ADDRESS_BITS + MODE_BITS 
 }
 
 /** A triplet's 18-bit value (clause 12.3.1). */
-export function triplet(address: number, mode: number, data: number): number {
+function triplet(address: number, mode: number, data: number): number {
   return (address & ADDRESS_MASK) | ((mode & MODE_MASK) << MODE_SHIFT) | ((data & DATA_MASK) << DATA_SHIFT);
 }
 
@@ -104,7 +104,7 @@ export interface PointerAreas {
   readonly wholePage: boolean;
 }
 
-export const NO_POINTER_AREAS: PointerAreas = { areas: [], wholePage: false };
+const NO_POINTER_AREAS: PointerAreas = { areas: [], wholePage: false };
 
 function overlaps(a: Box, b: Box): boolean {
   return a.row < b.row + b.height && b.row < a.row + a.height && a.column < b.column + b.width && b.column < a.column + a.width;

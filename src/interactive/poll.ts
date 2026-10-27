@@ -39,22 +39,36 @@ function stepOf(event: KeyEvent): number {
 export class Poll extends Control<PollProps, PollState> {
   override state: PollState = { chosen: 0, mine: null, votes: this.props.tally.votes.slice() };
 
-  #unsubscribe: (() => void) | null = null;
+  readonly #unsubscribe: (() => void)[] = [];
 
   protected override keysHint(): string {
     return "Up Down choose, Enter or a click votes";
   }
 
   override componentDidMount(): void {
-    this.#unsubscribe = this.services.bus.on("poll", ({ name, votes }) => {
-      if (name === this.props.tally.name) {
-        this.setState({ votes });
-      }
-    });
+    const { tally } = this.props;
+    this.#unsubscribe.push(
+      this.services.bus.on("poll", ({ name, votes }) => {
+        if (name === tally.name) {
+          this.setState({ votes });
+        }
+      }),
+      this.services.bus.on("ended", ({ session }) => {
+        tally.forget(session);
+      }),
+    );
+    // A viewer back on the page sees the vote they cast before.
+    const { session } = this.services;
+    const mine = session === null ? null : tally.ballotOf(session);
+    if (mine !== null) {
+      this.setState({ chosen: mine, mine });
+    }
   }
 
   override componentWillUnmount(): void {
-    this.#unsubscribe?.();
+    for (const unsubscribe of this.#unsubscribe) {
+      unsubscribe();
+    }
   }
 
   override render(): Child {
@@ -86,7 +100,7 @@ export class Poll extends Control<PollProps, PollState> {
     if (this.disabled) {
       return;
     }
-    this.props.tally.move(this.state.mine, option);
+    this.props.tally.vote(session, option);
     this.setState({ chosen: option, mine: option });
     this.services.bus.emit("poll", { name: this.props.tally.name, votes: this.props.tally.votes.slice() });
     this.activate(option, session);

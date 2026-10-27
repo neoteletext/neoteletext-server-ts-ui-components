@@ -23,14 +23,15 @@ export const FASTEXT_ROW = 24;
 /** One Fastext prompt: its label and the page it goes to, or none. */
 export type Prompt = readonly [label: string, page: number | null];
 
-export type Prompts = readonly [Prompt, Prompt, Prompt, Prompt];
+/** Up to four prompts: red, green, yellow and cyan. Fewer leave the rest of row 24 empty; past four, none is drawn. */
+export type Prompts = readonly Prompt[];
 
 export interface FrameProps {
   /** The title band's text: the sub-page's name. */
   readonly title: string;
   readonly background: Colour;
   readonly foreground?: Colour;
-  readonly prompts: Prompts;
+  readonly prompts?: Prompts;
   readonly hint?: string;
   /** The Index key's page. */
   readonly index?: number;
@@ -41,7 +42,7 @@ export interface FrameProps {
 /** A sub-page with the frame: band, body, hint and prompts. Its children are the body. */
 export class Frame extends SubPage<FrameProps> {
   override links(): SubPageLinks {
-    return { fastext: fastextLinks(this.props.prompts), index: this.props.index ?? null };
+    return { fastext: fastextLinks(this.props.prompts ?? []), index: this.props.index ?? null };
   }
 
   override render(): Child {
@@ -56,7 +57,7 @@ export class Frame extends SubPage<FrameProps> {
           }),
       h(Rows, { key: "body" }, ...(this.props.children ?? [])),
       h(HintLine, { key: "hint", ...(this.props.hint === undefined ? {} : { text: this.props.hint }) }),
-      h(FastextBar, { key: "prompts", prompts: this.props.prompts }),
+      h(FastextBar, { key: "prompts", prompts: this.props.prompts ?? [] }),
     ];
   }
 

@@ -8,7 +8,8 @@
 // them by a probe: each element is made and rendered, down the tree,
 // without mounting it, so no lifecycle runs and no timer starts.
 
-import { type Element, flatten, instantiate, isElement } from "./element.ts";
+import { instantiate } from "./instantiate.ts";
+import { type Element, flatten, isElement } from "./element.ts";
 
 export interface PageNeeds {
   readonly digits?: boolean;
