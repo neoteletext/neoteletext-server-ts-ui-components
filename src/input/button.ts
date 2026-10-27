@@ -8,7 +8,7 @@
 // disabled button declares none.
 
 import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { CHOSEN, DISABLED_BAND } from "../core/look.ts";

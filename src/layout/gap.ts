@@ -1,6 +1,7 @@
 // Gap: empty rows between components.
 
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 
 export interface GapProps {
   /** One when absent. */

@@ -4,7 +4,7 @@
 // (list-row.ts), controls the browser lights as the pointer passes; the
 // pointer coming onto one is told to the list's user (onHover).
 
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";

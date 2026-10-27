@@ -3,7 +3,8 @@
 
 import type { Canvas } from "../core/canvas.ts";
 import { paintEmpty } from "../core/look.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { Colour } from "../kit.ts";
 import { AXIS_CELLS, LABEL_ROWS, axes, plot, span } from "./line-chart.ts";
 import { leastOf, mostOf } from "./numbers.ts";

@@ -1,0 +1,30 @@
+// The text part of the library's interface: what it exports, by name.
+
+export { Badges } from "./badge.ts";
+export type { BadgeSpec, BadgesProps } from "./badge.ts";
+export { Band } from "./band.ts";
+export type { BandProps } from "./band.ts";
+export { Byline } from "./byline.ts";
+export type { BylineProps } from "./byline.ts";
+export { Concealed } from "./concealed.ts";
+export { DoubleHeight } from "./double-height.ts";
+export { DoubleWidth } from "./double-width.ts";
+export { Flashing } from "./flashing.ts";
+export { articleLines, LinesBlock } from "./lines.ts";
+export type { Block, Line, LinesProps } from "./lines.ts";
+export { Headline, HEADLINE_LINES, pageNumber } from "./news.ts";
+export type { HeadlineProps } from "./news.ts";
+export { Newsflash } from "./newsflash.ts";
+export type { NewsflashProps } from "./newsflash.ts";
+export { PageLink } from "./page-link.ts";
+export type { PageLinkProps } from "./page-link.ts";
+export { Paragraph } from "./paragraph.ts";
+export type { ParagraphProps } from "./paragraph.ts";
+export { Placeholder } from "./placeholder.ts";
+export type { PlaceholderProps } from "./placeholder.ts";
+export { changes, layoutRuns, RichText } from "./rich-text.ts";
+export type { RichTextProps, Run, RunStyle } from "./rich-text.ts";
+export { Text } from "./styles.ts";
+export type { StyledProps, TextProps } from "./styles.ts";
+export { Ticker } from "./ticker.ts";
+export type { TickerProps } from "./ticker.ts";

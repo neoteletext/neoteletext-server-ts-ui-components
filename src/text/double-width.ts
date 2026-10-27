@@ -1,7 +1,8 @@
 // DoubleWidth: a line of text whose letters are two cells wide (Level 2.5).
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 import type { StyledProps } from "./styles.ts";

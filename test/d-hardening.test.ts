@@ -21,6 +21,7 @@ import {
   ComponentChannel,
   Countdown,
   type DateValue,
+  type Element,
   formatDate,
   Frame,
   h,
@@ -50,7 +51,7 @@ const PAST_SPREAD = 300_000;
 function viewer(...body: Child[]): Harness {
   const seen = new Harness([
     new ComponentChannel([
-      { page: PAGE, title: "Test", perViewer: true, root: () => h(Frame, { title: "Test", background: Colour.Blue, prompts: PROMPTS }, ...body) },
+      { page: PAGE, title: "Test", perViewer: true, root: (): Element => h(Frame, { title: "Test", background: Colour.Blue, prompts: PROMPTS }, ...body) },
     ]),
   ]);
   seen.join(1, PAGE);
@@ -137,6 +138,7 @@ test("a line gauge whose label is given less than no cells is drawn", () => {
 
 test("a line gauge of NaN, or of Infinity of Infinity, is empty", () => {
   // Hold Mosaics, the filled part's colour, and at once the rest's: no cell filled.
+  // oxlint-disable-next-line eslint/no-control-regex -- a teletext row holds its attribute codes; the test reads them
   const empty = /^\u001E\u0016\u0014/u;
   assert.match(drawn(viewer(h(LineGauge, { value: Number.NaN, max: 10 })), 1)[0] ?? "", empty);
   assert.match(drawn(viewer(h(LineGauge, { value: Number.POSITIVE_INFINITY, max: Number.POSITIVE_INFINITY })), 1)[0] ?? "", empty);
@@ -155,6 +157,7 @@ test("a countdown to a time that is not a number shows nought, as one whose time
 });
 
 test("a date read from outside that is null is not a date: the fallback shows", () => {
+  // oxlint-disable-next-line typescript/no-unsafe-assignment -- a program that takes its feed's dates on trust, as this test plays one
   const story: { readonly date: DateValue } = JSON.parse('{ "date": null }');
   assert.equal(formatDate(story.date, "DD MMM YYYY", "undated"), "undated");
 });
@@ -184,6 +187,7 @@ let lastShelf: CountingShelf | null = null;
 class CountingShelf extends ToastShelf {
   constructor(props: ToastShelfProps) {
     super(props);
+    // oxlint-disable-next-line typescript/no-this-alias, unicorn/no-this-assignment -- the test reaches the shelf the mount made
     lastShelf = this;
   }
 

@@ -5,7 +5,7 @@
 // until it is put right, and is sent as invalid rather than as a change.
 
 import type { Canvas } from "../core/canvas.ts";
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { isPress, type KeyEvent, type PointerEvent, type WheelEvent } from "../core/events.ts";
 import { WheelLines } from "../core/list-cursor.ts";
 import { digitOf } from "../core/keys.ts";

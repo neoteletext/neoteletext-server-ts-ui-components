@@ -1,6 +1,7 @@
 // Columns: children side by side, of given widths or a share of what is left.
 
-import { type Box, Component, type LayoutChild, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Box, type LayoutChild, type Size } from "../core/layout.ts";
 
 export interface ColumnsProps {
   /** The columns' widths in cells; one without a width shares what is left. */

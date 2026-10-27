@@ -3,7 +3,8 @@
 // of what it says, and only a click there goes.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import type { PointerEvent } from "../core/events.ts";
 import { headline } from "../core/text.ts";
 import { Colour } from "../kit.ts";

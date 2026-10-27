@@ -4,7 +4,8 @@
 // colour, or the one given; its colour's cell is the gap before it.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { Colour, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
 import { type Bitmap, sixelsOf } from "./mosaic.ts";
 

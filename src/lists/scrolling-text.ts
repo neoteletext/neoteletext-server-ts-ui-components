@@ -1,7 +1,7 @@
 // Lines that scroll in their box beside a scroll bar (scroll.ts), moved
 // with the keys (core/list-cursor.ts), the wheel and the bar.
 
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent, WheelEvent } from "../core/events.ts";
 import { listStep, WheelLines } from "../core/list-cursor.ts";

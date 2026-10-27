@@ -1,7 +1,8 @@
 // A sprite that moves: a ball bouncing round its box, a frame a tick.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { Colour, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
 import type { Bitmap } from "./mosaic.ts";
 

@@ -8,7 +8,8 @@
 // oxlint-disable import/max-dependencies -- the mount is where a page's tree, drawing, keys, pointer and timers meet
 import { Key } from "../kit.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
-import type { Box, ComponentHost } from "./component.ts";
+import type { ComponentHost } from "./component.ts";
+import type { Box } from "./layout.ts";
 import { draw, type DrawHost, type Reach, shownSubPages } from "./draw.ts";
 import type { Element } from "./element.ts";
 import { isPress, type KeyEvent, type TextEvent, typedText } from "./events.ts";

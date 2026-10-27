@@ -6,7 +6,7 @@
 // (checkbox-group.ts) draws each with drawBox.
 
 import { CHIP_CELLS, type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { CHOSEN, DISABLED, DISABLED_CHIP, LABEL } from "../core/look.ts";

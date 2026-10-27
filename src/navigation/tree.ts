@@ -7,7 +7,7 @@
 // (onHover). More than fit scroll beside a scroll bar, and with the wheel.
 
 // oxlint-disable import/max-dependencies -- a control that lays out its rows and scroll bar and takes the keys and the wheel needs each of these; its guides are a file of their own already (tree-guides.ts)
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";

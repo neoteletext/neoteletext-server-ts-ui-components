@@ -4,7 +4,8 @@
 // emptying; or dots after the words. Done, it says so and stops.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { fit } from "../core/text.ts";
 import { Colour, mosaicColour } from "../kit.ts";

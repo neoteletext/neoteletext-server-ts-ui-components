@@ -3,7 +3,8 @@
 // dashed, with a title in it if it has one.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { BOTTOM_ROW, LOWER_TWO, MIDDLE_ROW, MOSAIC_BASE, SIXEL, TOP_ROW } from "../core/mosaics.ts";
 import { cells, fit } from "../core/text.ts";
 import { Attribute, Colour, mosaicColour } from "../kit.ts";

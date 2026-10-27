@@ -2,7 +2,7 @@
 // held by and the control it is over, and each pointer, wheel and hover
 // event taken to the component drawn where it lands (grid.ts), then up.
 
-import type { Box } from "./component.ts";
+import type { Box } from "./layout.ts";
 import type { Reach } from "./draw.ts";
 import type { HoverEvent, PointerEvent, WheelEvent } from "./events.ts";
 import { inside } from "./grid.ts";

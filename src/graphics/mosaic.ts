@@ -1,7 +1,8 @@
 // Bitmaps of sixels, written as rows of text, drawn in mosaic graphics.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { Colour, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
 
 /** A bitmap as rows of text, "#" for a set sixel. */

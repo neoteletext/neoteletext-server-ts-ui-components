@@ -3,7 +3,8 @@
 // page while the dialog is up, and the page's controls under it are not
 // declared.
 
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import type { PointerEvent, WheelEvent } from "../core/events.ts";
 
 export class Shield extends Component {

@@ -2,7 +2,8 @@
 // own, as a poll's count is, without a chart's labels and figures.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { FULL_BLOCK, LEFT_HALF } from "../core/mosaics.ts";
 import { Colour, mosaicColour } from "../kit.ts";
 

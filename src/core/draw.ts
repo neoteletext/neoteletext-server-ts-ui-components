@@ -7,7 +7,7 @@
 
 import { Colour, COLUMNS, MOST_SUBPAGES, ROWS, Screen, tti as subpagesTti } from "../kit.ts";
 import { Canvas, nothingDeclared, type PageRequests, type Region } from "./canvas.ts";
-import type { Box, LayoutChild, Size } from "./component.ts";
+import type { Box, LayoutChild, Size } from "./layout.ts";
 import { controlLines, keptDeclarations } from "./controls.ts";
 import { type DeclaredControl, emptyGrid, type Grid, type Owned, type PointerArea, reachedDeclarations } from "./grid.ts";
 import type { Node } from "./node.ts";

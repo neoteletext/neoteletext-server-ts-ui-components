@@ -21,7 +21,7 @@
 // 24/18 (clause 8.3) as it makes the packets.
 
 import { COLUMNS } from "../kit.ts";
-import type { Box } from "./component.ts";
+import type { Box } from "./layout.ts";
 
 /** Clause 12.3.1: a triplet's 18 bits are its address (6 bits), its mode (5) and its data (7), from the least significant. */
 const ADDRESS_BITS = 6;

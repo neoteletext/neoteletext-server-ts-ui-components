@@ -3,7 +3,8 @@
 // walks over the tree that find components by what they take.
 
 import type { Region } from "./canvas.ts";
-import type { Box, Component } from "./component.ts";
+import type { Component } from "./component.ts";
+import type { Box } from "./layout.ts";
 import type { Element } from "./element.ts";
 
 export type AnyComponent = Component;

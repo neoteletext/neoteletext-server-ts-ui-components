@@ -1,7 +1,8 @@
 // Large digits drawn in mosaic graphics, five sixels by seven, for counters.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { Colour, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
 
 /** Each character's rows of sixels, "#" set; any other character is drawn as "-". */

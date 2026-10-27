@@ -19,29 +19,11 @@
 
 import type { Canvas } from "./canvas.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
-import type { Child, LayoutProps, WithChildren } from "./element.ts";
+import type { Child, WithChildren } from "./element.ts";
 import type { HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
 import type { PageNeeds } from "./needs.ts";
 import type { Services } from "./services.ts";
-
-/** A size in cells. */
-export interface Size {
-  readonly width: number;
-  readonly height: number;
-}
-
-/** A box of cells on the page: its top-left cell and its size. */
-export interface Box extends Size {
-  readonly row: number;
-  readonly column: number;
-}
-
-/** A child as its parent's layout sees it: measured in some space, then placed in a box. */
-export interface LayoutChild {
-  readonly props: LayoutProps;
-  measure(space: Size): Size;
-  place(box: Box): void;
-}
+import { stack, stackSize, type Size, type Box, type LayoutChild } from "./layout.ts";
 
 /** What a mounted component reaches of its mount. */
 export interface ComponentHost {
@@ -67,35 +49,6 @@ export interface ComponentHost {
 export interface TimerOptions {
   /** It runs only while someone has the page open: a clock or an animation on the copy every viewer shares, which costs nothing while nobody watches. Missed ticks run once when someone comes. */
   readonly whileViewed?: boolean;
-}
-
-/** The default stack: children top to bottom, each as tall as it measures, sharing what is left by `grow`. */
-export function stack(box: Box, children: readonly LayoutChild[]): void {
-  const heights = children.map((child) => child.props.height ?? child.measure({ width: box.width, height: box.height }).height);
-  const used = heights.reduce((sum, height) => sum + height, 0);
-  const shares = children.map((child) => child.props.grow ?? 0);
-  const total = shares.reduce((sum, share) => sum + share, 0);
-  let left = Math.max(0, box.height - used);
-  let row = box.row;
-  children.forEach((child, index) => {
-    const share = shares[index] ?? 0;
-    const extra = total > 0 ? Math.floor((left * share) / total) : 0;
-    const height = Math.min((heights[index] ?? 0) + extra, box.row + box.height - row);
-    child.place({ row, column: box.column, width: box.width, height: Math.max(0, height) });
-    row += Math.max(0, height);
-    if (share > 0) {
-      left -= extra;
-    }
-  });
-}
-
-/** The default stack's size: as wide as the space, as tall as its children together. */
-export function stackSize(space: Size, children: readonly LayoutChild[]): Size {
-  let height = 0;
-  for (const child of children) {
-    height += child.props.height ?? child.measure({ width: space.width, height: Math.max(0, space.height - height) }).height;
-  }
-  return { width: space.width, height: Math.min(height, space.height) };
 }
 
 /**

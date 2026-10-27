@@ -8,7 +8,7 @@
 // steps it, up for more. Filled, the track is thicker up to the knob.
 
 import type { Canvas } from "../core/canvas.ts";
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { isPress, type KeyEvent, type PointerEvent, type WheelEvent } from "../core/events.ts";
 import { WheelLines } from "../core/list-cursor.ts";
 import { DISABLED, FOCUSED_LABEL } from "../core/look.ts";

@@ -4,7 +4,8 @@
 // leaves no more state or timers than the shelf has rows.
 
 import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import type { PointerEvent } from "../core/events.ts";
 import type { ToastEvent } from "../core/library-events.ts";
 import { ROWS } from "../kit.ts";

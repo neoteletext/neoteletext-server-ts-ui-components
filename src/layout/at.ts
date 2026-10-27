@@ -1,6 +1,7 @@
 // At: a place given by row and column inside the parent's box, cut to it.
 
-import { type Box, Component, type LayoutChild, type Size, stack, stackSize } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/layout.ts";
 
 export interface AtProps {
   /** Cells from the top-left of the parent's box. */

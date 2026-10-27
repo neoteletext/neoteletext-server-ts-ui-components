@@ -7,7 +7,7 @@
 // coming onto a row is told to the list's user (onHover); a row may say
 // what it is on the hint row meanwhile (itemHint).
 
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent, WheelEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";

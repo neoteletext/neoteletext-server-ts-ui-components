@@ -8,7 +8,7 @@
 // page.
 
 import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
-import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/component.ts";
+import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/layout.ts";
 import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import { CHOSEN, type Kind, KINDS } from "../core/look.ts";
 import { cells, fit, wrap } from "../core/text.ts";

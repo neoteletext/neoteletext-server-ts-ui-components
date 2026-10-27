@@ -9,7 +9,7 @@
 // the wheel.
 
 // oxlint-disable import/max-dependencies -- a control that lays out its title, rows and scroll bar and takes the keys, the digits and the wheel needs each of these; its row is a file of its own already (menu-row.ts)
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { choosing, digitOf } from "../core/keys.ts";

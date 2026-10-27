@@ -1,7 +1,8 @@
 // Byline: who wrote an article and when, and its labels.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 import { DATE_FORMATS, formatDate } from "../time/date-text.ts";

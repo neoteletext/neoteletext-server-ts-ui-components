@@ -7,7 +7,8 @@
 
 import type { Canvas } from "../core/canvas.ts";
 import { paintEmpty } from "../core/look.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { fit } from "../core/text.ts";
 import { Attribute, Colour, mosaicColour } from "../kit.ts";

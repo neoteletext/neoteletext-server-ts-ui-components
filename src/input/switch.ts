@@ -3,7 +3,7 @@
 // a click on the chip, its control, turns it over.
 
 import type { Canvas } from "../core/canvas.ts";
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { DISABLED_CHIP } from "../core/look.ts";

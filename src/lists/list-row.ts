@@ -12,7 +12,8 @@
 // highlights, takes clicks and hears the pointer alike.
 
 import type { Canvas } from "../core/canvas.ts";
-import { type Box, Component, type LayoutChild, type Size, stack } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Box, type LayoutChild, type Size, stack } from "../core/layout.ts";
 import { type Child } from "../core/element.ts";
 import type { HoverEvent, PointerEvent } from "../core/events.ts";
 import { CHOSEN, DISABLED, ITEM_TEXT, LABEL, MARK, SELECTED } from "../core/look.ts";

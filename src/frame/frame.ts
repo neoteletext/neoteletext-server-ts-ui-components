@@ -3,7 +3,7 @@
 // (the browser lists sub-pages by it), the body on rows 3 to 22, a hint of
 // the keys on row 23, and the Fastext prompts on row 24 with their links.
 
-import type { Box, LayoutChild } from "../core/component.ts";
+import type { Box, LayoutChild } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import { SubPage, type SubPageLinks } from "../core/page.ts";
 import { type Colour, COLUMNS } from "../kit.ts";

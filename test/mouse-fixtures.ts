@@ -8,7 +8,7 @@ import { Colour } from "../src/kit.ts";
 
 export const PAGE = 0x150;
 
-export const PROMPTS = [
+const PROMPTS = [
   ["Index", 0x100],
   ["", null],
   ["", null],
@@ -23,7 +23,7 @@ export const HINT_ROW = 23;
 /** One notch of the wheel, down (INPUT.md section 5.4). */
 export const NOTCH = 120;
 
-export function harness(specs: readonly PageSpec[]): Harness {
+function harness(specs: readonly PageSpec[]): Harness {
   return new Harness([new ComponentChannel(specs)]);
 }
 

@@ -7,7 +7,7 @@
 // pushes it down.
 
 import { CHIP_CELLS, type Canvas } from "../core/canvas.ts";
-import type { Box, LayoutChild, Size } from "../core/component.ts";
+import type { Box, LayoutChild, Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import { DISABLED, DISABLED_BAND } from "../core/look.ts";

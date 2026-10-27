@@ -5,7 +5,8 @@
 // (line-gauge.ts).
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { FULL_BLOCK, LEFT_HALF, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Attribute, Colour, mosaicColour } from "../kit.ts";

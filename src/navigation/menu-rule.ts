@@ -1,7 +1,8 @@
 // A rule between a menu's groups (menu.ts): a line of mosaic cells in blue.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { MIDDLE_ROW } from "../core/mosaics.ts";
 import { Colour } from "../kit.ts";
 

@@ -2,7 +2,8 @@
 // lines drawn as they are, a row each.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { paintEmpty } from "../core/look.ts";
 import { fit, wrap } from "../core/text.ts";
 import { Colour } from "../kit.ts";

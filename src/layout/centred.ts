@@ -1,6 +1,7 @@
 // Centred: a stack whose children are each in the middle of the width.
 
-import { type Box, Component, type LayoutChild, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Box, type LayoutChild, type Size } from "../core/layout.ts";
 
 /** Children top to bottom, each as wide as it measures and in the middle of the width: a stack of buttons, a title. */
 export class Centred extends Component {

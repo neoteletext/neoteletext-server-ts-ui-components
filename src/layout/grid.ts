@@ -1,6 +1,7 @@
 // A grid: children left to right, then down, a cell each.
 
-import { type Box, Component, type LayoutChild, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Box, type LayoutChild, type Size } from "../core/layout.ts";
 
 export interface GridProps {
   readonly columns: number;

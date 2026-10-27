@@ -2,7 +2,8 @@
 // tag in the level's colour, and its text cut to the row.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { paintEmpty } from "../core/look.ts";
 import { fit } from "../core/text.ts";
 import { Colour, textColour } from "../kit.ts";

@@ -2,7 +2,8 @@
 // a box.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { readTti } from "../kit.ts";
 
 export interface PictureProps {

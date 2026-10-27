@@ -1,7 +1,8 @@
 // Newsflash: NEWSFLASH, flashing, before a line of news.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { fit } from "../core/text.ts";
 import { Attribute, Colour } from "../kit.ts";
 

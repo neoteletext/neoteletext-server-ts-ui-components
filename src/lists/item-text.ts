@@ -2,7 +2,8 @@
 // row's rows at word boundaries, the last cut with an ellipsis.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { fit, headline } from "../core/text.ts";
 import type { Colour } from "../kit.ts";
 

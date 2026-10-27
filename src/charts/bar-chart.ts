@@ -5,7 +5,8 @@
 
 import type { Canvas } from "../core/canvas.ts";
 import { paintEmpty } from "../core/look.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import type { HoverEvent, PointerEvent } from "../core/events.ts";
 import { FULL_BLOCK, LEFT_HALF } from "../core/mosaics.ts";
 import { fit, padStart } from "../core/text.ts";

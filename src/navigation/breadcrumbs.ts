@@ -5,7 +5,8 @@
 // joined by it, or by a slash.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import type { PointerEvent } from "../core/events.ts";
 import { cells, fit } from "../core/text.ts";
 import { Colour, englishCodes, textColour } from "../kit.ts";

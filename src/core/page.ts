@@ -6,7 +6,8 @@
 
 import { COLUMNS, type FastextLinks, ROWS } from "../kit.ts";
 import type { Canvas } from "./canvas.ts";
-import { type Box, Component, type LayoutChild, type Size } from "./component.ts";
+import { Component } from "./component.ts";
+import { type Box, type LayoutChild, type Size } from "./layout.ts";
 
 /** The whole screen, header row included: the server writes row 0's columns 8 to 39 itself. */
 export const SCREEN: Box = { row: 0, column: 0, width: COLUMNS, height: ROWS };

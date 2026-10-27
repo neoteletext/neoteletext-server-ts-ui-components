@@ -5,7 +5,7 @@
 // the whole field.
 
 import type { Canvas } from "../core/canvas.ts";
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import { cells } from "../core/text.ts";
 import type { Sound } from "../core/sound.ts";

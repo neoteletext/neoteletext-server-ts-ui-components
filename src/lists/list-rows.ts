@@ -4,7 +4,8 @@
 // the pointer alike.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import { paintEmpty } from "../core/look.ts";
 import type { Colour } from "../kit.ts";

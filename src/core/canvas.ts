@@ -14,7 +14,7 @@
 // a drag or a control will not do.
 
 import { Attribute, type Colour, COLUMNS, englishCodes, mosaicColour, type Screen, type Sixels, SIXELS_ACROSS, SIXELS_DOWN, textColour } from "../kit.ts";
-import type { Box } from "./component.ts";
+import type { Box } from "./layout.ts";
 
 /** The cells a chip takes beyond its text: its background's colour, New Background, its ink, and Black Background after. */
 export const CHIP_CELLS = 4;

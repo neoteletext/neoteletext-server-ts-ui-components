@@ -7,7 +7,8 @@
 // so choosing one never moves the others, and each is a control there.
 
 import { CHIP_CELLS, type Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import type { PointerEvent } from "../core/events.ts";
 import { CHOSEN, DISABLED, DISABLED_CHIP, LABEL } from "../core/look.ts";
 import { TOP_ROW } from "../core/mosaics.ts";

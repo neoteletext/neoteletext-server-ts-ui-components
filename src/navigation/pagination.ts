@@ -5,7 +5,7 @@
 // move it; each number, arrow or dot that goes somewhere is a control.
 
 import { CHIP_CELLS, type Canvas } from "../core/canvas.ts";
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import { CHOSEN, DISABLED, DISABLED_CHIP } from "../core/look.ts";
 import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";

@@ -1,6 +1,7 @@
 // Layers: children drawn over one another in the same box.
 
-import { type Box, Component, type LayoutChild, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Box, type LayoutChild, type Size } from "../core/layout.ts";
 
 /** Layered children: each in the whole box, later ones drawn over earlier ones; as tall as the tallest. */
 export class Layers extends Component {

@@ -6,7 +6,8 @@
 // the right, or a background's colour and New Background.
 
 import type { Canvas } from "../core/canvas.ts";
-import { type Box, Component, type LayoutChild, type Size, stack, stackSize } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/layout.ts";
 import { MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { cells, fit } from "../core/text.ts";
 import { Colour, mosaicColour } from "../kit.ts";

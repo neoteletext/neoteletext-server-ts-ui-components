@@ -8,7 +8,7 @@
 // there gives it the keys.
 
 import type { Canvas } from "../core/canvas.ts";
-import type { Size } from "../core/component.ts";
+import type { Size } from "../core/layout.ts";
 import { isPress, type KeyEvent, type PointerEvent, type TextEvent } from "../core/events.ts";
 import { DISABLED, EMPTY } from "../core/look.ts";
 import type { PageNeeds } from "../core/needs.ts";

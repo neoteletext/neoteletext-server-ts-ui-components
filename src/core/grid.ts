@@ -5,7 +5,7 @@
 
 import { COLUMNS, ROWS } from "../kit.ts";
 import type { Declared } from "./canvas.ts";
-import type { Box } from "./component.ts";
+import type { Box } from "./layout.ts";
 import type { Node } from "./node.ts";
 
 /** For each cell of a sub-page, the deepest component drawn there. */

@@ -4,7 +4,8 @@
 // and each row a control when a row can be chosen.
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import type { HoverEvent, PointerEvent } from "../core/events.ts";
 import { CHOSEN, MARK, paintEmpty, SELECTED } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";

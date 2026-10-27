@@ -1,7 +1,7 @@
 // A page's controls and pointer areas read back from its TTI, as the
 // engine reads them (its controls.rs), for tests: what controls.ts writes.
 
-import type { Box } from "./component.ts";
+import type { Box } from "./layout.ts";
 import {
   ADDRESS_MASK,
   CHARACTERS_PER_TRIPLET,

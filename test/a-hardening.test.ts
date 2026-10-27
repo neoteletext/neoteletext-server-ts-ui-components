@@ -18,6 +18,7 @@ import {
   Columns,
   ComponentChannel,
   DayPages,
+  type Element,
   Frame,
   h,
   Layers,
@@ -75,7 +76,8 @@ test("a rule in a place wider than the page is drawn on the page's row, and the 
       {
         page: PAGE,
         title: "Test",
-        root: () => h(Frame, { title: "Rule", background: Colour.Blue, prompts: PROMPTS }, h(At, { row: 0, column: 0, columns: 2 ** 32 + 1 }, h(Rule, {}))),
+        root: (): Element =>
+          h(Frame, { title: "Rule", background: Colour.Blue, prompts: PROMPTS }, h(At, { row: 0, column: 0, columns: 2 ** 32 + 1 }, h(Rule, {}))),
       },
     ]),
   ]);

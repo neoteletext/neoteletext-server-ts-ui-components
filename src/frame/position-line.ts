@@ -1,7 +1,8 @@
 // PositionLine: where a long list or text is, as "Lines 1-18 of 66".
 
 import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import { type Size } from "../core/layout.ts";
 import { Colour } from "../kit.ts";
 
 export interface PositionProps {

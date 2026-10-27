@@ -6,7 +6,7 @@ import { Colour, Key } from "../src/kit.ts";
 
 export const PAGE = 0x150;
 
-export const PROMPTS = [
+const PROMPTS = [
   ["Index", 0x100],
   ["", null],
   ["", null],
