@@ -66,5 +66,5 @@ export function stepMoves(place: WizardPlace, disabled: boolean, back: (session:
   if (place.step === 0) {
     return nextAction;
   }
-  return h(Columns, { widths: [BACK_CELLS, null], height: 1 }, h(Action, { text: "red Back", foreground: Colour.Green, disabled, onPress: back }), nextAction);
+  return h(Columns, { widths: [BACK_CELLS, null], height: 1 }, h(Action, { text: "red Back", foreground: Colour.Red, disabled, onPress: back }), nextAction);
 }

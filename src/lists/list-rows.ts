@@ -42,9 +42,9 @@ export interface ListRowsProps<T> {
   readonly itemHint?: (item: T, index: number) => string | null;
 }
 
-/** A list's choice, `index`, kept among the `count` items it has now: the last when the list shrank under it, 0 when the list is empty. */
+/** A list's choice, `index`, kept among the `count` items it has now: the last when the list shrank under it or it is past the end, 0 when the list is empty or it is no number. */
 export function within(index: number, count: number): number {
-  return Math.max(0, Math.min(count - 1, index));
+  return Number.isNaN(index) ? 0 : Math.max(0, Math.min(count - 1, Math.trunc(index)));
 }
 
 export class ListRows<T> extends Component<ListRowsProps<T>> {

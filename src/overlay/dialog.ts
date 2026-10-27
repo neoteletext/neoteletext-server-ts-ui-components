@@ -15,6 +15,7 @@ import { cells, fit, wrap } from "../core/text.ts";
 import { Attribute, Colour, englishCodes, Key, SPACE, textColour } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
 import { keyStep } from "../input/key-step.ts";
+import { within } from "../lists/list-rows.ts";
 
 export interface DialogProps extends ControlProps {
   readonly title: string;
@@ -60,7 +61,7 @@ const TITLE_ROWS = 1;
 const FOOT_ROWS = 3;
 
 export class Dialog extends Control<DialogProps, DialogState> {
-  override state: DialogState = { chosen: this.props.initial ?? 0 };
+  override state: DialogState = { chosen: within(this.props.initial ?? 0, (this.props.buttons ?? []).length) };
 
   protected override keysHint(): string {
     return (this.props.buttons ?? []).length === 0 ? "Escape closes" : "Left Right or Tab choose, Enter answers, Escape";

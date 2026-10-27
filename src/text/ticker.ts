@@ -3,6 +3,7 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
+import { framePeriod } from "../core/timers.ts";
 import { pad } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
@@ -28,7 +29,7 @@ export class Ticker extends Component<TickerProps, TickerState> {
       () => {
         this.setState((state) => ({ at: state.at + 1 }));
       },
-      this.props.everyMs,
+      framePeriod(this.props.everyMs),
       { whileViewed: true },
     );
   }

@@ -81,6 +81,9 @@ function compare(a: string, b: string): number {
 export class DataTable extends Control<DataTableProps, DataTableState> {
   override state: DataTableState = { top: 0, chosen: 0, sortBy: null, descending: false };
   readonly #wheel = new WheelLines();
+  /** The rows as last sorted, and what they were sorted from: a render, a key and the pointer coming onto a row each ask for them. */
+  #sortedFor: { readonly rows: DataTableProps["rows"]; readonly sortBy: number; readonly descending: boolean; readonly sorted: DataTableProps["rows"] } | null =
+    null;
 
   protected override keyNeeds(): PageNeeds {
     return { digits: this.props.sortable === true };
@@ -97,8 +100,15 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
     if (sortBy === null) {
       return this.props.rows;
     }
-    const sorted = this.props.rows.toSorted((a, b) => compare(a[sortBy] ?? "", b[sortBy] ?? ""));
-    return descending ? sorted.toReversed() : sorted;
+    const { rows } = this.props;
+    const cached = this.#sortedFor;
+    if (cached?.rows === rows && cached.sortBy === sortBy && cached.descending === descending) {
+      return cached.sorted;
+    }
+    const ascending = rows.toSorted((a, b) => compare(a[sortBy] ?? "", b[sortBy] ?? ""));
+    const sorted = descending ? ascending.toReversed() : ascending;
+    this.#sortedFor = { rows, sortBy, descending, sorted };
+    return sorted;
   }
 
   #sort(column: number): void {

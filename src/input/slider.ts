@@ -42,8 +42,14 @@ export class Slider extends ValueControl<number, SliderProps> {
     return this.props.min;
   }
 
-  #clamp(value: number): number {
+  /** Its step: one where it is given none, or one that is not more than nought. */
+  get #step(): number {
     const step = this.props.step ?? 1;
+    return Number.isFinite(step) && step > 0 ? step : 1;
+  }
+
+  #clamp(value: number): number {
+    const step = this.#step;
     const stepped = this.props.min + Math.round((value - this.props.min) / step) * step;
     return Math.max(this.props.min, Math.min(this.props.max, stepped));
   }
@@ -92,7 +98,7 @@ export class Slider extends ValueControl<number, SliderProps> {
     if (this.disabled) {
       return false;
     }
-    const step = this.props.step ?? 1;
+    const step = this.#step;
     const { value } = this;
     const moves: Readonly<Record<string, number>> = {
       [Key.Right]: value + step,
@@ -117,7 +123,7 @@ export class Slider extends ValueControl<number, SliderProps> {
     }
     const notches = -this.#wheel.lines(event.dy);
     if (notches !== 0) {
-      this.change(this.#clamp(this.value + notches * (this.props.step ?? 1)), event.session);
+      this.change(this.#clamp(this.value + notches * this.#step), event.session);
     }
     return true;
   }

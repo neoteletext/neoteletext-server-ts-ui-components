@@ -76,19 +76,46 @@ const INDENT = 2;
  */
 const MOST_DEPTH = COLUMNS;
 
-/** The ids of the items labelled `labels`, from `depth` down. */
-function opened(nodes: readonly TreeNode[], labels: readonly string[], prefix = "", depth = 0): string[] {
-  return nodes.flatMap((node, index) => {
-    const id = `${prefix}${index}`;
-    const below = node.children === undefined || depth + 1 >= MOST_DEPTH ? [] : opened(node.children, labels, `${id}/`, depth + 1);
-    return [...(labels.includes(node.label) ? [id] : []), ...below];
-  });
+/**
+ * The items walked, from the top: far more than a viewer pages through (a
+ * page of 20 rows, 200 times), and few enough to walk on every render and
+ * key. The depth alone does not bound a walk: a tree whose items hold the
+ * same items twice, or itself, doubles at every level. Items past it are
+ * not listed.
+ */
+const MOST_ITEMS = 4096;
+
+/** The ids of the items labelled `labels`, from the top, of the first MOST_ITEMS walked. */
+function opened(nodes: readonly TreeNode[], labels: readonly string[]): string[] {
+  const out: string[] = [];
+  let walked = 0;
+  const visit = (level: readonly TreeNode[], prefix: string, depth: number): void => {
+    for (const [index, node] of level.entries()) {
+      if (walked >= MOST_ITEMS) {
+        return;
+      }
+      walked += 1;
+      const id = `${prefix}${index}`;
+      if (labels.includes(node.label)) {
+        out.push(id);
+      }
+      if (node.children !== undefined && depth + 1 < MOST_DEPTH) {
+        visit(node.children, `${id}/`, depth + 1);
+      }
+    }
+  };
+  visit(nodes, "", 0);
+  return out;
 }
 
+/** The rows shown, open items' children under them, to MOST_ITEMS. */
 function visibleRows(nodes: readonly TreeNode[], open: ReadonlySet<string>): Visible[] {
   const out: Visible[] = [];
   const visit = (level: readonly TreeNode[], depth: number, through: readonly boolean[], prefix: string, parent: number | null): void => {
-    level.forEach((node, index) => {
+    for (const [index, node] of level.entries()) {
+      if (out.length >= MOST_ITEMS) {
+        return;
+      }
       const id = `${prefix}${index}`;
       const last = index === level.length - 1;
       const place = out.length;
@@ -96,7 +123,7 @@ function visibleRows(nodes: readonly TreeNode[], open: ReadonlySet<string>): Vis
       if (node.children !== undefined && open.has(id) && depth + 1 < MOST_DEPTH) {
         visit(node.children, depth + 1, [...through, !last], `${id}/`, place);
       }
-    });
+    }
   };
   visit(nodes, 0, [], "", null);
   return out;

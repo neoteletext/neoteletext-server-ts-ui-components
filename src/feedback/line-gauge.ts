@@ -22,6 +22,9 @@ export interface LineGaugeProps {
   readonly labelCells?: number;
 }
 
+/** The line's codes besides its cells: Hold Mosaics, the filled colour, the rest's colour and Release Mosaics. */
+const LINE_CODES = 4;
+
 export class LineGauge extends Component<LineGaugeProps> {
   override measure(space: Size): Size {
     return { width: space.width, height: Math.min(1, space.height) };
@@ -34,7 +37,7 @@ export class LineGauge extends Component<LineGaugeProps> {
       canvas.coloured(0, 0, Colour.White, fit(this.props.label, labelCells - 1));
     }
     // Hold Mosaics, the filled colour, the filled line, the rest's colour (showing the held line), the rest.
-    const cells = Math.max(2, canvas.width - labelCells - 3 - PERCENT_CELLS);
+    const cells = Math.max(2, canvas.width - labelCells - LINE_CODES - PERCENT_CELLS);
     const filled = Math.round(cells * fraction);
     const codes = [
       Attribute.HoldMosaics,

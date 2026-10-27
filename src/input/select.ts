@@ -14,7 +14,7 @@ import { DISABLED, DISABLED_BAND } from "../core/look.ts";
 import { listStep, moveChoice } from "../core/list-cursor.ts";
 import { pad } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
-import { ListRows } from "../lists/list-rows.ts";
+import { ListRows, within } from "../lists/list-rows.ts";
 import { type ValueProps, ValueControl, type ValueState } from "./value-control.ts";
 
 export interface SelectProps extends ValueProps<number> {
@@ -44,7 +44,11 @@ function turnOf(event: KeyEvent): number {
 }
 
 export class Select extends ValueControl<number, SelectProps, SelectState> {
-  override state: SelectState = { own: this.props.initial ?? 0, open: false, chosen: this.props.initial ?? 0 };
+  override state: SelectState = {
+    own: within(this.props.initial ?? 0, this.props.items.length),
+    open: false,
+    chosen: within(this.props.initial ?? 0, this.props.items.length),
+  };
 
   protected empty(): number {
     return 0;

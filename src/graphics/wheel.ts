@@ -22,6 +22,18 @@ const WHEEL_SEGMENTS = 12;
 const WHEEL_ROWS = 5;
 const WHEEL_COLUMNS = 8;
 
+/**
+ * The most segments drawn: a ring of these radii steps through at most one
+ * row or one column a cell, so it has no more cells than its rows and
+ * columns round it, and more segments only draw over each other.
+ */
+const MOST_SEGMENTS = 4 * (WHEEL_ROWS + WHEEL_COLUMNS);
+
+/** `segments` as a count to draw: whole, from none to the most the ring has cells for. */
+function segmentCount(segments: number): number {
+  return Number.isNaN(segments) ? 0 : Math.max(0, Math.min(MOST_SEGMENTS, Math.trunc(segments)));
+}
+
 /** A ring of coloured blocks, one lit white. */
 export class Wheel extends Component<WheelProps> {
   override measure(space: Size): Size {
@@ -29,7 +41,7 @@ export class Wheel extends Component<WheelProps> {
   }
 
   override paint(canvas: Canvas): void {
-    const segments = this.props.segments ?? WHEEL_SEGMENTS;
+    const segments = segmentCount(this.props.segments ?? WHEEL_SEGMENTS);
     for (let segment = 0; segment < segments; segment += 1) {
       const angle = (2 * Math.PI * segment) / segments;
       const row = WHEEL_ROWS - Math.round(WHEEL_ROWS * Math.cos(angle));
