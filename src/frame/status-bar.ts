@@ -14,7 +14,7 @@ export interface Segment {
 
 export interface StatusBarProps {
   readonly segments: readonly Segment[];
-  /** Text on the right. */
+  /** Text on the right, in yellow. */
   readonly right?: string;
   readonly background?: Colour;
   /** The bar flashes: something is wrong. */
@@ -25,6 +25,8 @@ export interface StatusBarProps {
 const LEAD = 2;
 /** The space kept between segments, beyond each one's colour cell. */
 const SEGMENT_GAP = 1;
+/** The cells the right-hand text takes beyond its own: its colour's before it, and the box's last after it, where the background ends. */
+const RIGHT_CODES = 2;
 
 export class StatusBar extends Component<StatusBarProps> {
   override measure(space: Size): Size {
@@ -38,15 +40,17 @@ export class StatusBar extends Component<StatusBarProps> {
       canvas.code(0, column, Attribute.Flash);
       column += 1;
     }
-    const right = this.props.right === undefined ? "" : this.props.right;
-    const rightAt = canvas.width - cells(right) - 2;
+    // Cut to what is left after the lead, or a long one would be written over the background's and the flash's cells.
+    const right = fit(this.props.right ?? "", Math.max(0, canvas.width - column - RIGHT_CODES));
+    const rightAt = canvas.width - cells(right) - RIGHT_CODES;
     for (const segment of this.props.segments) {
+      // Less the segment's colour cell and a space before the right-hand text.
       const room = rightAt - column - 2;
       if (room <= 0) {
         break;
       }
       const shown = fit(segment.text, room);
-      canvas.codes(0, column, [textColour(segment.foreground ?? Colour.White)]);
+      canvas.code(0, column, textColour(segment.foreground ?? Colour.White));
       canvas.text(0, column + 1, shown);
       column += 1 + cells(shown) + SEGMENT_GAP;
     }

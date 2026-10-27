@@ -1,13 +1,13 @@
-// Columns: split from layouts.ts; the comments pass writes this file's header.
+// Columns: children side by side, of given widths or a share of what is left.
 
 import { type Box, Component, type LayoutChild, type Size } from "../core/component.ts";
 
 export interface ColumnsProps {
-  /** The columns' widths; one without a width shares what is left. */
+  /** The columns' widths in cells; one without a width shares what is left. */
   readonly widths?: readonly (number | null)[];
 }
 
-/** Children side by side, each as tall as the tallest. Each column's first cell is its own: its colour attribute (canvas.ts). */
+/** Children side by side, each as tall as the tallest. Each column's first cell is its own: its colour attribute (core/canvas.ts). */
 export class Columns extends Component<ColumnsProps> {
   #widths(width: number, children: readonly LayoutChild[]): number[] {
     const given = children.map((child, index) => this.props.widths?.[index] ?? child.props.width ?? null);
@@ -19,7 +19,8 @@ export class Columns extends Component<ColumnsProps> {
 
   override measure(space: Size, children: readonly LayoutChild[]): Size {
     const widths = this.#widths(space.width, children);
-    const height = Math.max(0, ...children.map((child, index) => child.measure({ width: widths[index] ?? 0, height: space.height }).height));
+    // A reduce, not Math.max over a spread: a spread of more than about a hundred thousand children overflows the stack.
+    const height = children.reduce((most, child, index) => Math.max(most, child.measure({ width: widths[index] ?? 0, height: space.height }).height), 0);
     return { width: space.width, height: Math.min(height, space.height) };
   }
 

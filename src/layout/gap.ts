@@ -1,8 +1,9 @@
-// Gap: split from layouts.ts; the comments pass writes this file's header.
+// Gap: empty rows between components.
 
 import { Component, type Size } from "../core/component.ts";
 
 export interface GapProps {
+  /** One when absent. */
   readonly rows?: number;
 }
 

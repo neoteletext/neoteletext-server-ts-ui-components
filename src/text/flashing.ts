@@ -1,13 +1,14 @@
-// Flashing: split from styles.ts; the comments pass writes this file's header.
+// Flashing: a line of text that flashes.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import { cells, fit } from "../core/text.ts";
 import { Attribute, Colour } from "../kit.ts";
-import { type StyledProps } from "./styles.ts";
+import type { StyledProps } from "./styles.ts";
 
 /** Flashing text (Table 26), steady again after it. */
 export class Flashing extends Component<StyledProps> {
+  /** Its colour, Flash and Steady each take a cell beside the text. */
   override measure(space: Size): Size {
     return { width: Math.min(space.width, cells(this.props.text) + 3), height: Math.min(1, space.height) };
   }

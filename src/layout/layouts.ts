@@ -1,8 +1,7 @@
-// The layouts every page is built from: a stack of rows, columns side by
-// side, a place given by row and column, a stack centred across, layers
-// drawn over one another, and a gap.
+// Rows: the default stack (core/component.ts), named; the other layouts
+// have a file each in this folder.
 
 import { Component } from "../core/component.ts";
 
-/** Children top to bottom (the default layout, named). */
+/** Children top to bottom, each as tall as it measures, sharing what is left by `grow`. */
 export class Rows extends Component {}

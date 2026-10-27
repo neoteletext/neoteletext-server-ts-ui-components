@@ -26,14 +26,17 @@ const CHARACTER: Readonly<Record<RuleStyle, number>> = {
   dashed: MOSAIC_BASE | SIXEL.middleLeft,
 };
 
-/** The cells before the line: its mosaic colour, and Separated for a dotted one. */
+/** The cells after the line's mosaic colour and before its run: Separated for a dotted one. */
 function lead(style: RuleStyle): number[] {
   return style === "dotted" ? [Attribute.Separated] : [];
 }
 
-/** The cells of line before a title. */
+/** The cells of line before a title, and kept after it. */
 const TITLE_AT = 3;
+/** The title's colour cell and the mosaic colour's after it. */
+const TITLE_CODES = 2;
 
+/** A line across its box, a row high, with its title in it. */
 export class Rule extends Component<RuleProps> {
   override measure(space: Size): Size {
     return { width: space.width, height: Math.min(1, space.height) };
@@ -43,11 +46,11 @@ export class Rule extends Component<RuleProps> {
     const style = this.props.style ?? "thin";
     const foreground = this.props.foreground ?? Colour.Blue;
     const before = lead(style);
-    const line = new Array<number>(Math.max(0, canvas.width - 1 - before.length)).fill(CHARACTER[style]);
+    const line = Array.from({ length: Math.max(0, canvas.width - 1 - before.length) }, () => CHARACTER[style]);
     canvas.codes(0, 0, [mosaicColour(foreground), ...before, ...line]);
     if (this.props.title !== undefined) {
       const at = 1 + before.length + TITLE_AT;
-      const title = fit(this.props.title, Math.max(0, canvas.width - at - TITLE_AT - 2));
+      const title = fit(this.props.title, Math.max(0, canvas.width - at - TITLE_AT - TITLE_CODES));
       canvas.coloured(0, at, this.props.titleForeground ?? Colour.Yellow, title);
       canvas.code(0, at + 1 + cells(title), mosaicColour(foreground));
     }

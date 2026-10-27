@@ -1,6 +1,5 @@
-// Text in teletext's styles: a line, wrapped paragraphs, the display
-// attributes (double height and width, flashing, concealed) and a band on a
-// background of its own.
+// Text: one line of text in a colour, and the props of the styled lines
+// (double height and width, flashing, concealed) that have a file each.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";

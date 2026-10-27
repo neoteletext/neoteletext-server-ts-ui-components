@@ -1,10 +1,10 @@
-// DoubleHeight: split from styles.ts; the comments pass writes this file's header.
+// DoubleHeight: a line of text two rows high.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import { fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
-import { type StyledProps } from "./styles.ts";
+import type { StyledProps } from "./styles.ts";
 
 /** Double height: the text covers its row and the row below, across the whole page (clause 12.3). */
 export class DoubleHeight extends Component<StyledProps> {

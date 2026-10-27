@@ -1,7 +1,6 @@
-// Pages of several sub-pages: a document's lines over named sub-pages
-// ("Help 2/4"), an article's home (its text, its picture, its links with a
-// QR code, and where else it appears), and headlines a sub-page a day. Each
-// renders several Frames; the mount publishes them as one page.
+// Document: a document's lines over named sub-pages ("Help 2/4"), and what
+// the other pages of several sub-pages (story-pages.ts, day-pages.ts) share.
+// Each renders several Frames; the mount publishes them as one page.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
@@ -12,14 +11,20 @@ import { type Block, type Line, LinesBlock } from "../text/lines.ts";
 /** Rows of a document's text under its band. */
 export const DOCUMENT_ROWS = 20;
 
-/** `lines` in screens: `first` lines on the first, `rest` on each after. */
+/**
+ * `lines` in screens: `first` lines on the first, `rest` on each after.
+ * Counts are taken as whole and `rest` as one at least, since a screen of
+ * none would never use the lines up.
+ */
 export function chunks<T>(lines: readonly T[], first: number, rest: number): T[][] {
-  if (lines.length <= first) {
+  const head = Math.max(0, Math.floor(first));
+  const each = Math.max(1, Math.floor(rest));
+  if (lines.length <= head) {
     return [[...lines]];
   }
-  const out: T[][] = [lines.slice(0, first)];
-  for (let start = first; start < lines.length; start += rest) {
-    out.push(lines.slice(start, start + rest));
+  const out: T[][] = [lines.slice(0, head)];
+  for (let start = head; start < lines.length; start += each) {
+    out.push(lines.slice(start, start + each));
   }
   return out;
 }
@@ -36,6 +41,7 @@ export interface Framing {
   readonly index?: number;
 }
 
+/** A Frame of `framing`'s colours and prompts, titled, over `body`. */
 export function framed(framing: Framing, title: string, key: string, ...body: Child[]): Child {
   const { background, foreground, prompts, index } = framing;
   return h(Frame, { key, title, background, prompts, ...(foreground === undefined ? {} : { foreground }), ...(index === undefined ? {} : { index }) }, ...body);
@@ -44,7 +50,7 @@ export function framed(framing: Framing, title: string, key: string, ...body: Ch
 export interface DocumentProps extends Framing {
   readonly title: string;
   readonly lines: readonly Line[];
-  /** The most sub-pages it takes. */
+  /** The most sub-pages it takes; as many as the lines need when absent. */
   readonly maxSubPages?: number;
 }
 
@@ -56,11 +62,12 @@ export class Document extends Component<DocumentProps> {
   }
 }
 
-/** What the kitchensink knows of an article (content.ts). */
+/** What a channel knows of an article. */
 export interface Article {
   readonly page: number;
   readonly title: string;
   readonly writer: string;
+  /** Milliseconds since the Unix epoch. */
   readonly date: number;
   readonly summary: string;
   readonly blocks: readonly Block[];

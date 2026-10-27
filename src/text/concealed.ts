@@ -1,10 +1,10 @@
-// Concealed: split from styles.ts; the comments pass writes this file's header.
+// Concealed: text hidden until the viewer presses Reveal.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import { fit } from "../core/text.ts";
 import { Attribute, Colour } from "../kit.ts";
-import { type StyledProps } from "./styles.ts";
+import type { StyledProps } from "./styles.ts";
 
 /** Concealed text: shown when the viewer presses Reveal (Table 26). */
 export class Concealed extends Component<StyledProps> {

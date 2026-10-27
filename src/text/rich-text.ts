@@ -9,7 +9,6 @@ import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import { Attribute, Colour, COLUMNS, englishCodes, SPACE, textColour } from "../kit.ts";
 
-/** One run's style. */
 export interface RunStyle {
   readonly foreground?: Colour;
   /** A background of its own; black when absent. */

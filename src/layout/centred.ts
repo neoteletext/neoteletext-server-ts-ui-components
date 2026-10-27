@@ -1,4 +1,4 @@
-// Centred: split from layouts.ts; the comments pass writes this file's header.
+// Centred: a stack whose children are each in the middle of the width.
 
 import { type Box, Component, type LayoutChild, type Size } from "../core/component.ts";
 
@@ -17,9 +17,13 @@ export class Centred extends Component {
   override arrange(box: Box, children: readonly LayoutChild[]): void {
     let row = box.row;
     for (const child of children) {
-      const size = child.measure({ width: box.width, height: Math.max(0, box.row + box.height - row) });
-      child.place({ row, column: box.column + Math.floor((box.width - size.width) / 2), width: size.width, height: size.height });
-      row += size.height;
+      const left = Math.max(0, box.row + box.height - row);
+      const size = child.measure({ width: box.width, height: left });
+      // A child that measures bigger than it was offered is cut to the box, so it cannot be placed left of it or past its end.
+      const width = Math.min(box.width, Math.max(0, size.width));
+      const height = Math.min(left, Math.max(0, size.height));
+      child.place({ row, column: box.column + Math.floor((box.width - width) / 2), width, height });
+      row += height;
     }
   }
 }

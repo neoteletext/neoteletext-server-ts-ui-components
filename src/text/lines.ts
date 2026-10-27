@@ -1,5 +1,5 @@
 // Lines of a document: an article's blocks laid out as coloured lines, and
-// lines drawn as they are.
+// lines drawn as they are, a row each.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -19,15 +19,34 @@ export interface Line {
   readonly text: string;
 }
 
+/** An item's mark, on its first line, and the indent of the lines after it: as wide as each other. */
+const ITEM_MARK = "* ";
+const ITEM_INDENT = "  ";
+
+function blockColour(kind: Exclude<Block["kind"], "item">): Colour {
+  if (kind === "heading") {
+    return Colour.Yellow;
+  }
+  if (kind === "quote") {
+    return Colour.Cyan;
+  }
+  return Colour.White;
+}
+
 /** An article's blocks as lines of `width`: headings yellow, quotations cyan, items marked, a blank line after each block. */
 export function articleLines(blocks: readonly Block[], width: number): Line[] {
   const lines: Line[] = [];
   for (const block of blocks) {
     if (block.kind === "item") {
-      wrap(block.text, width - 2).forEach((line, index) => lines.push({ foreground: Colour.White, text: `${index === 0 ? "* " : "  "}${line}` }));
+      for (const [index, line] of wrap(block.text, width - ITEM_MARK.length).entries()) {
+        lines.push({ foreground: Colour.White, text: `${index === 0 ? ITEM_MARK : ITEM_INDENT}${line}` });
+      }
     } else {
-      const foreground = block.kind === "heading" ? Colour.Yellow : block.kind === "quote" ? Colour.Cyan : Colour.White;
-      lines.push(...wrap(block.text, width).map((text) => ({ foreground, text })));
+      const foreground = blockColour(block.kind);
+      // A push each, not a spread: a block of a few hundred thousand lines would overflow the stack as arguments.
+      for (const text of wrap(block.text, width)) {
+        lines.push({ foreground, text });
+      }
     }
     lines.push({ foreground: Colour.White, text: "" });
   }

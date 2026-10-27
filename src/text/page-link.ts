@@ -1,4 +1,4 @@
-// PageLink: split from news.ts; the comments pass writes this file's header.
+// PageLink: a page number and what is there, which a click follows.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";

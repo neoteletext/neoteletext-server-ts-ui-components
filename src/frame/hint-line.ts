@@ -1,4 +1,5 @@
-// HintLine: split from frame.ts; the comments pass writes this file's header.
+// HintLine: row 23 of the frame, what the keys or the control under the
+// pointer do.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
