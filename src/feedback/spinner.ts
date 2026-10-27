@@ -45,6 +45,7 @@ const FRAME_MS = 250;
 
 export class Spinner extends Component<SpinnerProps, SpinnerState> {
   override state: SpinnerState = { frame: 0 };
+  /** The frames' timer, -1 for none: none once it is done. */
   #timer = -1;
 
   override componentDidMount(): void {
@@ -79,6 +80,7 @@ export class Spinner extends Component<SpinnerProps, SpinnerState> {
   }
 
   /** The mosaic cells this frame. */
+  // oxlint-disable-next-line typescript/consistent-return -- every style has a case that returns; the rule does not see that the switch is exhaustive, which tsc checks (noImplicitReturns, switch-exhaustiveness-check)
   #cells(): number[] {
     const { frame } = this.state;
     switch (this.props.style ?? "orbit") {
@@ -94,6 +96,7 @@ export class Spinner extends Component<SpinnerProps, SpinnerState> {
         return Array.from({ length: BOUNCE_CELLS }, (_, cell) => (cell === at ? FULL_BLOCK : MOSAIC_BASE));
       }
       case "dots": {
+        // Its frames are dots after the words.
         return [];
       }
     }

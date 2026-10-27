@@ -7,12 +7,15 @@ import { Colour, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
 /** A bitmap as rows of text, "#" for a set sixel. */
 export type Bitmap = readonly string[];
 
-/** A bitmap's sixels. */
+/** A bitmap's sixels, as wide as its longest row; a page's at most (Sixels). */
 export function sixelsOf(bitmap: Bitmap): Sixels {
-  const width = Math.max(0, ...bitmap.map((line) => line.length));
+  // By a loop, not Math.max(...): a bitmap of more rows than a call takes arguments would throw a RangeError.
+  const width = bitmap.reduce((widest, line) => Math.max(widest, line.length), 0);
   const sixels = new Sixels(width, bitmap.length);
   bitmap.forEach((line, y) => {
-    [...line].forEach((sixel, x) => sixels.set(x, y, sixel === "#"));
+    Array.from(line).forEach((sixel, x) => {
+      sixels.set(x, y, sixel === "#");
+    });
   });
   return sixels;
 }

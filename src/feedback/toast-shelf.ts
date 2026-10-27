@@ -1,15 +1,19 @@
-// ToastShelf: split from notice.ts; the comments pass writes this file's header.
+// Where toasts show (notice.ts): the newest at the foot, as many as it may
+// show, each going after its time or at a click on it. A toast it can no
+// longer show goes at once, and its timer with it, so a burst of toasts
+// leaves no more state or timers than the shelf has rows.
 
 import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import type { PointerEvent } from "../core/events.ts";
 import type { ToastEvent } from "../core/library-events.ts";
+import { ROWS } from "../kit.ts";
 import { paintNotice } from "./notice.ts";
 
 export interface ToastShelfProps {
   /** The most toasts shown at once; older ones go first. */
   readonly maxShown?: number;
-  /** How long each stays. */
+  /** How long each stays, in milliseconds. */
   readonly forMs?: number;
 }
 
@@ -32,16 +36,22 @@ export class ToastShelf extends Component<ToastShelfProps, ToastShelfState> {
   override state: ToastShelfState = { shown: [] };
   #unsubscribe: (() => void) | null = null;
   #next = 0;
+  /** Each toast shown's timer, by its id, oldest first: the same toasts as the state's. */
+  readonly #timers = new Map<number, number>();
+
+  /**
+   * The most toasts it keeps: a whole number from nought to a page's rows.
+   * Nought, NaN and a fraction would otherwise reach slice(-most), which
+   * for -0 and NaN keeps every toast.
+   */
+  get #most(): number {
+    const most = this.props.maxShown ?? MOST_TOASTS;
+    return Number.isNaN(most) ? MOST_TOASTS : Math.min(ROWS, Math.max(0, Math.trunc(most)));
+  }
 
   override componentDidMount(): void {
     this.#unsubscribe = this.services.bus.on("toast", (toast) => {
-      const forMs = this.props.forMs ?? TOAST_MS;
-      const shown: Shown = { id: this.#next, toast };
-      this.#next += 1;
-      this.setState((state) => ({ shown: [...state.shown, shown].slice(-(this.props.maxShown ?? MOST_TOASTS)) }));
-      this.setTimeout(() => {
-        this.setState((state) => ({ shown: state.shown.filter((each) => each.id !== shown.id) }));
-      }, forMs);
+      this.#add(toast);
     });
   }
 
@@ -49,8 +59,38 @@ export class ToastShelf extends Component<ToastShelfProps, ToastShelfState> {
     this.#unsubscribe?.();
   }
 
+  #add(toast: ToastEvent): void {
+    const most = this.#most;
+    if (most === 0) {
+      return;
+    }
+    const id = this.#next;
+    this.#next += 1;
+    this.#timers.set(
+      id,
+      this.setTimeout(() => {
+        this.#remove(id);
+      }, this.props.forMs ?? TOAST_MS),
+    );
+    this.setState((state) => ({ shown: [...state.shown, { id, toast }].slice(-most) }));
+    // The toasts the slice let go are the oldest timers.
+    for (const [old, timer] of [...this.#timers].slice(0, -most)) {
+      this.clearTimer(timer);
+      this.#timers.delete(old);
+    }
+  }
+
+  #remove(id: number): void {
+    const timer = this.#timers.get(id);
+    if (timer !== undefined) {
+      this.clearTimer(timer);
+      this.#timers.delete(id);
+    }
+    this.setState((state) => ({ shown: state.shown.filter((each) => each.id !== id) }));
+  }
+
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(space.height, this.props.maxShown ?? MOST_TOASTS) };
+    return { width: space.width, height: Math.min(space.height, this.#most) };
   }
 
   override paint(canvas: Canvas): void {
@@ -69,8 +109,7 @@ export class ToastShelf extends Component<ToastShelfProps, ToastShelfState> {
     if (event.region === undefined) {
       return false;
     }
-    const id = Number(event.region);
-    this.setState((state) => ({ shown: state.shown.filter((each) => each.id !== id) }));
+    this.#remove(Number(event.region));
     return true;
   }
 }

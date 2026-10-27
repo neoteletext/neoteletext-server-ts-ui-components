@@ -5,20 +5,20 @@
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent } from "../core/events.ts";
 import type { Sound } from "../core/sound.ts";
-import { type Article } from "../documents/document.ts";
+import type { Article } from "../documents/document.ts";
 import { Wheel } from "../graphics/wheel.ts";
-import { Colour, Key } from "../kit.ts";
+import { Key } from "../kit.ts";
 import { At } from "../layout/at.ts";
-import { Gap } from "../layout/gap.ts";
 import { Layers } from "../layout/layers.ts";
-import { Rows } from "../layout/layouts.ts";
-import { Headline } from "../text/news.ts";
-import { Paragraph } from "../text/paragraph.ts";
-import { Action } from "../input/action.ts";
 import { Control, type ControlProps } from "../input/control.ts";
+import { rouletteText } from "./roulette-text.ts";
+
+/** The spin's fast steps, before it slows. */
+const FAST_STEPS = 10;
+const FAST_STEP_MS = 60;
 
 /** The roulette's steps, in milliseconds between them: fast, then slowing to a stop. */
-export const SPIN_STEPS_MS = [...new Array<number>(10).fill(60), 80, 100, 130, 170, 220, 280, 350, 450] as const;
+export const SPIN_STEPS_MS = [...Array.from({ length: FAST_STEPS }, () => FAST_STEP_MS), 80, 100, 130, 170, 220, 280, 350, 450] as const;
 
 export interface RouletteProps extends ControlProps {
   readonly articles: readonly Article[];
@@ -38,10 +38,12 @@ interface RouletteState {
 export class Roulette extends Control<RouletteProps, RouletteState> {
   override state: RouletteState = { step: null, lit: 0, article: null };
 
+  /** The viewer who spun it, who hears its sounds. */
+  #session = 0;
+
   protected override keysHint(): string {
     return "Enter or a click spins; Enter again reads it";
   }
-  #session = 0;
 
   #spin(step: number): void {
     const wait = SPIN_STEPS_MS[step];
@@ -64,7 +66,6 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
 
   override render(): Child {
     const article = this.state.article === null ? undefined : this.props.articles[this.state.article];
-    const spinning = this.state.step !== null;
     return h(
       Layers,
       {},
@@ -72,32 +73,14 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
       h(
         At,
         { row: 13, column: 0 },
-        h(
-          Rows,
-          {},
-          article === undefined
-            ? h(Action, {
-                text: "Press Enter to spin the wheel",
-                foreground: Colour.Cyan,
-                disabled: this.disabled,
-                onPress: (session: number) => {
-                  this.#start(session);
-                },
-              })
-            : h(Headline, { title: article.title, page: article.page, foreground: spinning ? Colour.White : Colour.Yellow, linked: !spinning }),
-          h(Gap, {}),
-          spinning || article === undefined
-            ? h(Paragraph, { text: spinning ? "Spinning..." : "", foreground: Colour.Green })
-            : h(Action, {
-                text: "Enter reads it, or spin again with Space",
-                foreground: Colour.Green,
-                disabled: this.disabled,
-                hint: "A click spins again",
-                onPress: (session: number) => {
-                  this.#start(session);
-                },
-              }),
-        ),
+        rouletteText({
+          article,
+          spinning: this.state.step !== null,
+          disabled: this.disabled,
+          onSpin: (session: number) => {
+            this.#start(session);
+          },
+        }),
       ),
     );
   }
