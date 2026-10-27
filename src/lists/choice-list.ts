@@ -14,8 +14,8 @@ import { choosing } from "../core/keys.ts";
 import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
 import { Control, type ControlProps } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
-import { ListRows } from "./list-rows.ts";
-import { type RowLook } from "./list-row.ts";
+import type { RowLook } from "./list-row.ts";
+import { ListRows, within } from "./list-rows.ts";
 import { BAR_CELLS, ScrollBar } from "./scroll.ts";
 
 export interface ChoiceListProps<T = string> extends ControlProps {
@@ -54,9 +54,14 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
     return this.props.itemRows ?? 1;
   }
 
-  /** The items that fit. */
+  /** The items that fit in the rows it shows. */
   get #fit(): number {
     return Math.max(1, Math.floor(this.props.shown / this.#itemRows));
+  }
+
+  /** The chosen item, kept to the items there are now: its user may take some away, or begin it past them (initial). */
+  get #chosen(): number {
+    return within(this.state.chosen, this.props.items.length);
   }
 
   protected override keysHint(): string {
@@ -69,7 +74,7 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
 
   /** Moves the band to `index`, telling the list's user, as the keys do. */
   #moveTo(index: number, session: number): void {
-    const previous = this.state.chosen;
+    const previous = this.#chosen;
     this.setState({ chosen: index, top: keepInView(this.state.top, index, this.#fit, this.props.items.length) });
     if (index !== previous) {
       this.emit({ type: "change", value: index, previous, session, origin: "viewer" });
@@ -92,7 +97,7 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
         items: this.props.items,
         top: this.state.top,
         shown: this.#fit,
-        chosen: this.state.chosen,
+        chosen: this.#chosen,
         focused: this.focused,
         itemRows: this.#itemRows,
         empty: this.props.empty ?? "nothing to choose",
@@ -123,14 +128,14 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
       return false;
     }
     if (choosing(event)) {
-      this.#choose(this.state.chosen, event.session);
+      this.#choose(this.#chosen, event.session);
       return true;
     }
     const step = listStep(event, this.#fit);
     if (step === null) {
       return false;
     }
-    this.#moveTo(moveChoice(this.state.chosen, step, count), event.session);
+    this.#moveTo(moveChoice(this.#chosen, step, count), event.session);
     this.play("move", event.session);
     return true;
   }

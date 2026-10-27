@@ -10,7 +10,7 @@ import type { KeyEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { listStep, moveChoice } from "../core/list-cursor.ts";
 import { type ValueProps, ValueControl, type ValueState } from "../input/value-control.ts";
-import { ListRows } from "./list-rows.ts";
+import { ListRows, within } from "./list-rows.ts";
 
 export interface ToggleListProps extends ValueProps<readonly number[]> {
   readonly items: readonly string[];
@@ -38,16 +38,21 @@ export class ToggleList extends ValueControl<readonly number[], ToggleListProps,
     return { width: space.width, height: Math.min(Math.max(1, this.props.items.length), space.height) };
   }
 
+  /** The chosen item, kept to the items there are now: its user may take some away. */
+  get #chosen(): number {
+    return within(this.state.chosen, this.props.items.length);
+  }
+
   #toggle(index: number, session: number): void {
     this.setState({ chosen: index });
-    this.change(this.value.includes(index) ? this.value.filter((item) => item !== index) : [...this.value, index].sort((a, b) => a - b), session);
+    this.change(this.value.includes(index) ? this.value.filter((item) => item !== index) : [...this.value, index].toSorted((a, b) => a - b), session);
   }
 
   override render(): Child {
     return h(ListRows<string>, {
       items: this.props.items,
       shown: this.props.items.length,
-      chosen: this.state.chosen,
+      chosen: this.#chosen,
       focused: this.focused,
       empty: this.props.empty ?? "nothing to star",
       text: (item: string, index: number) => `${this.value.includes(index) ? "*" : " "} ${item}`,
@@ -60,18 +65,18 @@ export class ToggleList extends ValueControl<readonly number[], ToggleListProps,
   }
 
   override onKey(event: KeyEvent): boolean {
-    if (this.disabled) {
+    if (this.disabled || this.props.items.length === 0) {
       return false;
     }
     if (choosing(event)) {
-      this.#toggle(this.state.chosen, event.session);
+      this.#toggle(this.#chosen, event.session);
       return true;
     }
     const step = listStep(event, this.props.items.length);
     if (step === null) {
       return false;
     }
-    this.setState({ chosen: moveChoice(this.state.chosen, step, this.props.items.length) });
+    this.setState({ chosen: moveChoice(this.#chosen, step, this.props.items.length) });
     this.play("move", event.session);
     return true;
   }

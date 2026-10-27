@@ -1,4 +1,6 @@
-// Heading: split from data-table.ts; the comments pass writes this file's header.
+// A data table's heading (data-table.ts): each column's title in yellow on
+// a blue band, the sorted column marked with its direction, and each title
+// a control while the table sorts.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -11,6 +13,14 @@ import { starts, type TableColumn } from "./data-table.ts";
 const ASCENDING = "↑";
 
 const DESCENDING = "v";
+
+/** What follows a column's title: the direction of the sort when the table is sorted by it. */
+function sortMark(sorted: boolean, descending: boolean): string {
+  if (!sorted) {
+    return "";
+  }
+  return descending ? DESCENDING : ASCENDING;
+}
 
 interface HeadingProps {
   readonly columns: readonly TableColumn[];
@@ -30,7 +40,7 @@ export class Heading extends Component<HeadingProps> {
     canvas.background(0, 0, Colour.Blue);
     const at = starts(this.props.columns);
     this.props.columns.forEach((column, index) => {
-      const mark = index === this.props.sortBy ? (this.props.descending ? DESCENDING : ASCENDING) : "";
+      const mark = sortMark(index === this.props.sortBy, this.props.descending);
       canvas.coloured(0, at[index] ?? 0, Colour.Yellow, fit(`${column.title}${mark}`, column.width - 1));
       if (this.props.sortable) {
         // The column after its colour's cell.

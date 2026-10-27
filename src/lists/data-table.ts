@@ -7,6 +7,7 @@
 // can be chosen is a control, and the pointer coming onto it is told to
 // the table's user (onHover).
 
+// oxlint-disable import/max-dependencies -- a control that lays out its heading, body and scroll bar and takes the keys, the digits and the wheel needs each of these; its drawn parts are files of their own already (body.ts, heading.ts)
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent, WheelEvent } from "../core/events.ts";
 import { choosing, digitOf } from "../core/keys.ts";
@@ -16,9 +17,9 @@ import { Colour } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { Rows } from "../layout/layouts.ts";
-import { BAR_CELLS, ScrollBar } from "./scroll.ts";
 import { Body } from "./body.ts";
 import { Heading } from "./heading.ts";
+import { BAR_CELLS, ScrollBar, scrolled } from "./scroll.ts";
 
 export interface TableColumn {
   readonly title: string;
@@ -54,7 +55,7 @@ interface DataTableState {
 /** The cells before the first column: a band's colour and New Background, kept on every row so the columns line up. */
 const LEAD = 2;
 
-/** Each column's first cell. */
+/** Each column's first cell: its colour's. */
 export function starts(columns: readonly TableColumn[]): number[] {
   let column = LEAD;
   return columns.map((each) => {
@@ -64,10 +65,16 @@ export function starts(columns: readonly TableColumn[]): number[] {
   });
 }
 
+/** The number a cell starts with, "12 km" or "3.5%", its thousands' commas dropped; NaN for one that starts with none. */
+function leadingNumber(cell: string): number {
+  // oxlint-disable-next-line unicorn/prefer-number-coercion -- the number a cell starts with is meant, which Number() would not read
+  return Number.parseFloat(cell.replaceAll(",", ""));
+}
+
 /** Numbers sort as numbers, the rest as text. */
 function compare(a: string, b: string): number {
-  const x = Number.parseFloat(a.replaceAll(",", ""));
-  const y = Number.parseFloat(b.replaceAll(",", ""));
+  const x = leadingNumber(a);
+  const y = leadingNumber(b);
   return Number.isNaN(x) || Number.isNaN(y) ? a.localeCompare(b) : x - y;
 }
 
@@ -90,8 +97,8 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
     if (sortBy === null) {
       return this.props.rows;
     }
-    const sorted = [...this.props.rows].sort((a, b) => compare(a[sortBy] ?? "", b[sortBy] ?? ""));
-    return descending ? sorted.reverse() : sorted;
+    const sorted = this.props.rows.toSorted((a, b) => compare(a[sortBy] ?? "", b[sortBy] ?? ""));
+    return descending ? sorted.toReversed() : sorted;
   }
 
   #sort(column: number): void {
@@ -179,7 +186,7 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
       this.play("move", event.session);
     } else {
       const last = Math.max(0, count - this.props.shown);
-      this.setState({ top: Math.max(0, Math.min(last, Number.isFinite(step) ? this.state.top + step : step > 0 ? last : 0)) });
+      this.setState({ top: scrolled(this.state.top, step, last) });
     }
     return true;
   }

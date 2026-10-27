@@ -1,4 +1,7 @@
-// ListRows: split from list-row.ts; the comments pass writes this file's header.
+// A list's rows: as many of its items as are shown from its top, each a
+// ListRow (list-row.ts) holding the item's text or what the list's user
+// makes of it, so every list chooses, highlights, takes clicks and hears
+// the pointer alike.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -38,7 +41,11 @@ export interface ListRowsProps<T> {
   readonly itemHint?: (item: T, index: number) => string | null;
 }
 
-/** A list's rows, a ListRow each, as many as are shown from `top`. */
+/** A list's choice, `index`, kept among the `count` items it has now: the last when the list shrank under it, 0 when the list is empty. */
+export function within(index: number, count: number): number {
+  return Math.max(0, Math.min(count - 1, index));
+}
+
 export class ListRows<T> extends Component<ListRowsProps<T>> {
   /** The rows its items take, or one for what an empty list says. */
   override measure(space: Size): Size {
@@ -56,7 +63,7 @@ export class ListRows<T> extends Component<ListRowsProps<T>> {
     const { items, shown, chosen, focused } = this.props;
     const top = this.props.top ?? 0;
     const rows = this.props.itemRows ?? 1;
-    const textOf = this.props.text ?? ((item: T): string => String(item));
+    const textOf: (item: T, index: number) => string = this.props.text ?? String;
     return items.slice(top, top + shown).map((item, offset) => {
       const index = top + offset;
       const disabled = this.props.disabled?.(item, index) === true;

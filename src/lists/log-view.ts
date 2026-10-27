@@ -11,8 +11,8 @@ import { Control, type ControlProps } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { Rows } from "../layout/layouts.ts";
 import { Badges } from "../text/badge.ts";
-import { BAR_CELLS, ScrollBar } from "./scroll.ts";
 import { LogLines } from "./log-lines.ts";
+import { BAR_CELLS, ScrollBar, scrolled } from "./scroll.ts";
 
 export type LogLevel = "debug" | "info" | "warning" | "error";
 
@@ -105,7 +105,7 @@ export class LogView extends Control<LogViewProps, LogViewState> {
       return false;
     }
     const top = this.state.top ?? this.#last;
-    this.#scroll(Number.isFinite(step) ? top + step : step > 0 ? this.#last : 0);
+    this.#scroll(scrolled(top, step, this.#last));
     return true;
   }
 

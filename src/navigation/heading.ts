@@ -1,4 +1,6 @@
-// Heading: split from collapsible.ts; the comments pass writes this file's header.
+// A collapsible section's heading (collapsible.ts): its title on a band,
+// "+" while the section is shut and "-" while it is open, the band a
+// control.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -19,16 +21,26 @@ interface HeadingProps {
 /** The region a heading's band is. */
 const BAND = "band";
 
-/** A section's heading: "+" while it is shut, "-" while it is open. */
+/** The cells before the title: the band's colour and New Background. */
+const TITLE_AT = 2;
+
+function lookOf(props: HeadingProps): { readonly background: Colour; readonly foreground: Colour } {
+  if (props.disabled) {
+    return DISABLED_BAND;
+  }
+  return props.chosen ? CHOSEN : { background: props.background, foreground: Colour.White };
+}
+
 export class Heading extends Component<HeadingProps> {
   override measure(space: Size): Size {
     return { width: space.width, height: Math.min(1, space.height) };
   }
 
   override paint(canvas: Canvas): void {
-    const look = this.props.disabled ? DISABLED_BAND : this.props.chosen ? CHOSEN : { background: this.props.background, foreground: Colour.White };
+    const look = lookOf(this.props);
     canvas.background(0, 0, look.background);
-    canvas.coloured(0, 2, look.foreground, fit(`${this.props.open ? "-" : "+"} ${this.props.title}`, canvas.width - 4));
+    // The title's colour takes a cell after the band's two, and the band's Black Background the last.
+    canvas.coloured(0, TITLE_AT, look.foreground, fit(`${this.props.open ? "-" : "+"} ${this.props.title}`, canvas.width - TITLE_AT - 2));
     if (!this.props.disabled) {
       canvas.bandControl(0, 0, 1, BAND);
     }

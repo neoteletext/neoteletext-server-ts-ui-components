@@ -1,4 +1,5 @@
-// ScrollingText: split from scroll.ts; the comments pass writes this file's header.
+// Lines that scroll in their box beside a scroll bar (scroll.ts), moved
+// with the keys (core/list-cursor.ts), the wheel and the bar.
 
 import type { Size } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
@@ -7,7 +8,7 @@ import { listStep, WheelLines } from "../core/list-cursor.ts";
 import { Control, type ControlProps } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { type Line, LinesBlock } from "../text/lines.ts";
-import { BAR_CELLS, ScrollBar } from "./scroll.ts";
+import { BAR_CELLS, ScrollBar, scrolled } from "./scroll.ts";
 
 export interface ScrollingTextProps extends ControlProps {
   readonly lines: readonly Line[];
@@ -20,7 +21,6 @@ interface ScrollingTextState {
   readonly top: number;
 }
 
-/** Lines that scroll in their box with the keys, the wheel and a scroll bar. */
 export class ScrollingText extends Control<ScrollingTextProps, ScrollingTextState> {
   override state: ScrollingTextState = { top: 0 };
   readonly #wheel = new WheelLines();
@@ -61,7 +61,7 @@ export class ScrollingText extends Control<ScrollingTextProps, ScrollingTextStat
     if (step === null || this.disabled) {
       return false;
     }
-    this.setState({ top: Math.max(0, Math.min(this.#last, Number.isFinite(step) ? this.state.top + step : step > 0 ? this.#last : 0)) });
+    this.setState({ top: scrolled(this.state.top, step, this.#last) });
     return true;
   }
 

@@ -1,4 +1,5 @@
-// ItemText: split from list-row.ts; the comments pass writes this file's header.
+// The text a list's row holds by default (list-rows.ts): wrapped over the
+// row's rows at word boundaries, the last cut with an ellipsis.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -12,7 +13,6 @@ export interface ItemTextProps {
   readonly rows?: number;
 }
 
-/** A row's text in its look's foreground, wrapped over its rows at word boundaries, the last cut with an ellipsis. */
 export class ItemText extends Component<ItemTextProps> {
   override measure(space: Size): Size {
     return { width: space.width, height: Math.min(this.props.rows ?? 1, space.height) };

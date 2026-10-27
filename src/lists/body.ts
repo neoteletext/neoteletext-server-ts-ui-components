@@ -1,15 +1,41 @@
-// Body: split from data-table.ts; the comments pass writes this file's header.
+// A data table's body (data-table.ts): its rows from the top shown, each
+// cell in its column, the chosen row on the band while the table has the
+// keys (core/look.ts) and marked while it does not, rows striped when asked,
+// and each row a control when a row can be chosen.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import type { HoverEvent, PointerEvent } from "../core/events.ts";
 import { CHOSEN, MARK, paintEmpty, SELECTED } from "../core/look.ts";
-import { pad, padStart } from "../core/text.ts";
+import { cells, fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 import { starts, type TableColumn } from "./data-table.ts";
 
-function cell(text: string, column: TableColumn): string {
-  return column.align === "right" ? padStart(text, column.width - 1) : pad(text, column.width - 1);
+/**
+ * A cell's text in its column, after the column's colour cell, padded or
+ * cut to the column as pad and padStart do (core/text.ts), but of a column
+ * wider than the `room` left on the row only what falls on the row is
+ * made: the width a program gives costs no more than the row's cells.
+ */
+function cell(text: string, column: TableColumn, room: number): string {
+  const width = column.width - 1;
+  const shown = fit(text, width);
+  const space = Math.max(0, width - cells(shown));
+  if (column.align === "right") {
+    return space >= room ? " ".repeat(Math.max(0, room)) : " ".repeat(space) + shown;
+  }
+  return shown + " ".repeat(Math.min(space, Math.max(0, room - cells(shown))));
+}
+
+/** A row's foreground in every column, or null for each column's own. */
+function rowForeground(banded: boolean, chosen: boolean, stripe: boolean): Colour | null {
+  if (banded) {
+    return CHOSEN.foreground;
+  }
+  if (chosen) {
+    return SELECTED;
+  }
+  return stripe ? Colour.Cyan : null;
 }
 
 interface BodyProps {
@@ -46,15 +72,10 @@ export class Body extends Component<BodyProps> {
       } else if (chosen) {
         canvas.coloured(row, 0, SELECTED, MARK);
       }
+      const foreground = rowForeground(banded, chosen, this.props.striped && index % 2 === 1);
       this.props.columns.forEach((column, place) => {
-        const foreground = banded
-          ? CHOSEN.foreground
-          : chosen
-            ? SELECTED
-            : this.props.striped && index % 2 === 1
-              ? Colour.Cyan
-              : (column.foreground ?? Colour.White);
-        canvas.coloured(row, at[place] ?? 0, foreground, cell(values[place] ?? "", column));
+        const start = at[place] ?? 0;
+        canvas.coloured(row, start, foreground ?? column.foreground ?? Colour.White, cell(values[place] ?? "", column, canvas.width - start - 1));
       });
       if (this.props.selectable) {
         canvas.bandControl(row, 0, 1, String(index));

@@ -1,10 +1,9 @@
-// Scrolling: a scroll bar of whole cells that tells its parent where to go,
-// as React's controlled components do, and lines that scroll beside one,
-// moved with the keys (core/list-cursor.ts), the wheel and the bar.
+// A scroll bar of whole cells that tells its parent where to go, as
+// React's controlled components do: the lists, the menu, the tree and
+// ScrollingText (scrolling-text.ts) scroll beside one.
 
 import type { Canvas } from "../core/canvas.ts";
-import type { Size } from "../core/component.ts";
-import { Component } from "../core/component.ts";
+import { Component, type Size } from "../core/component.ts";
 import type { PointerEvent } from "../core/events.ts";
 import { FULL_BLOCK, LEFT_HALF } from "../core/mosaics.ts";
 import { Colour, mosaicColour } from "../kit.ts";
@@ -31,6 +30,14 @@ export function topAt(start: number, total: number, track: number, shown: number
   const room = track - length;
   const most = Math.max(0, total - shown);
   return room <= 0 || most <= 0 ? 0 : Math.max(0, Math.min(most, Math.round((start * most) / room)));
+}
+
+/** The first line shown after a key's `step` (listStep) from `top`, from 0 to `last`: Home's and End's steps are infinite, and go to the ends. */
+export function scrolled(top: number, step: number, last: number): number {
+  if (!Number.isFinite(step)) {
+    return step > 0 ? last : 0;
+  }
+  return Math.max(0, Math.min(last, top + step));
 }
 
 export interface ScrollBarProps {
