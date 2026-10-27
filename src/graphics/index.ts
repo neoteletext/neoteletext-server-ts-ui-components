@@ -4,6 +4,8 @@ export { Bouncer } from "./bouncer.ts";
 export type { BouncerProps } from "./bouncer.ts";
 export { Icon, ICONS } from "./icon.ts";
 export type { IconName, IconProps } from "./icon.ts";
+export { MapMarkers } from "./map-markers.ts";
+export type { MapBackground, MapBounds, MapMarkersProps, MapPlace } from "./map-markers.ts";
 export { Mosaic, sixelsOf } from "./mosaic.ts";
 export type { Bitmap, MosaicProps } from "./mosaic.ts";
 export { PaintCanvas } from "./paint-canvas.ts";
