@@ -2,40 +2,16 @@
 // Down choose and Enter votes, or a click on an option votes for it: each
 // option is an action (input/action.ts), a control the browser lights.
 
-import { Bar } from "../charts/bar-chart.ts";
+import { Bar } from "../charts/bar.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent } from "../core/events.ts";
 import { pad } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
 import { Rows } from "../layout/layouts.ts";
-import { Paragraph } from "../text/styles.ts";
+import { Paragraph } from "../text/paragraph.ts";
 import { Action } from "../input/action.ts";
 import { Control, type ControlProps } from "../input/control.ts";
-
-/** A poll's votes, kept by the page that makes it and told to every copy through the bus: no state is global. */
-export class Tally {
-  readonly name: string;
-  readonly options: readonly string[];
-  readonly #votes: number[];
-
-  constructor(name: string, options: readonly string[]) {
-    this.name = name;
-    this.options = options;
-    this.#votes = options.map(() => 0);
-  }
-
-  get votes(): readonly number[] {
-    return this.#votes;
-  }
-
-  /** Moves a vote from `from` (or none) to `to`. */
-  move(from: number | null, to: number): void {
-    if (from !== null && (this.#votes[from] ?? 0) > 0) {
-      this.#votes[from] = (this.#votes[from] ?? 0) - 1;
-    }
-    this.#votes[to] = (this.#votes[to] ?? 0) + 1;
-  }
-}
+import { Tally } from "./tally.ts";
 
 export interface PollProps extends ControlProps {
   readonly tally: Tally;
@@ -69,7 +45,6 @@ export class Poll extends Control<PollProps, PollState> {
     this.#unsubscribe?.();
   }
 
-
   override render(): Child {
     const { options } = this.props.tally;
     const most = Math.max(1, ...this.state.votes);
@@ -84,7 +59,9 @@ export class Poll extends Control<PollProps, PollState> {
           foreground: index === this.state.chosen ? Colour.Yellow : Colour.White,
           disabled: this.disabled,
           hint: `A click votes for ${option}`,
-          onPress: (session: number) => this.#vote(index, session),
+          onPress: (session: number) => {
+            this.#vote(index, session);
+          },
         }),
         h(Bar, { key: `bar-${index}`, value: this.state.votes[index] ?? 0, max: most, foreground: Colour.Magenta }),
       ]),

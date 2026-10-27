@@ -21,30 +21,15 @@ import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { Box, Component, ComponentHost, LayoutChild, Size } from "./component.ts";
 import { type Element, flatten, isElement } from "./element.ts";
 import { type HoverEvent, isPress, type KeyEvent, typedText, type PointerEvent, type TextEvent, type WheelEvent } from "./events.ts";
-import { RawSubPage, SCREEN, SubPage } from "./page.ts";
+import { RawSubPage } from "./raw-sub-page.ts";
+import { SCREEN, SubPage } from "./page.ts";
 import type { Services } from "./services.ts";
 import { fit } from "./text.ts";
+import { Node } from "./node.ts";
 
-type AnyComponent = Component<object, object>;
+export type AnyComponent = Component<object, object>;
 
-const EMPTY: Box = { row: 0, column: 0, width: 0, height: 0 };
-
-/** One instance in the tree, with the element it was last rendered from. */
-class Node {
-  element: Element;
-  readonly component: AnyComponent;
-  readonly parent: Node | null;
-  children: Node[] = [];
-  box: Box = EMPTY;
-  /** The regions it marked as it last painted the first sub-page (canvas.ts). */
-  regions: Region[] = [];
-
-  constructor(element: Element, component: AnyComponent, parent: Node | null) {
-    this.element = element;
-    this.component = component;
-    this.parent = parent;
-  }
-}
+export const EMPTY: Box = { row: 0, column: 0, width: 0, height: 0 };
 
 /** A timer of a component. */
 interface Timer {
@@ -252,9 +237,9 @@ export class Mount implements ComponentHost {
     const previousProps = component.props;
     const previousState = component.state;
     const nextState = component.nextState();
-    const wanted = component.shouldComponentUpdate?.(element.props as never, nextState) ?? true;
+    const wanted = component.shouldComponentUpdate?.(element.props, nextState) ?? true;
     node.element = element;
-    component.props = element.props as never;
+    component.props = element.props;
     component.commitState();
     if (wanted) {
       this.#renderChildren(node);
@@ -340,7 +325,7 @@ export class Mount implements ComponentHost {
     }
     for (const { node, props, state } of updated) {
       if (node.component.mounted) {
-        node.component.componentDidUpdate?.(props as never, state as never);
+        node.component.componentDidUpdate?.(props, state);
       }
     }
   }
@@ -365,8 +350,14 @@ export class Mount implements ComponentHost {
   #layoutChild(node: Node): LayoutChild {
     return {
       props: node.element.props,
-      measure: (space: Size): Size => node.component.measure(space, node.children.map((child) => this.#layoutChild(child))),
-      place: (box: Box): void => this.#layout(node, box),
+      measure: (space: Size): Size =>
+        node.component.measure(
+          space,
+          node.children.map((child) => this.#layoutChild(child)),
+        ),
+      place: (box: Box): void => {
+        this.#layout(node, box);
+      },
     };
   }
 
@@ -423,7 +414,13 @@ export class Mount implements ComponentHost {
       const links = component.links();
       if (component instanceof RawSubPage) {
         const { tti: text, title, background, foreground } = component.props;
-        return rawTti(text, this.page, numbered(index), links.fastext, title === undefined ? null : { title, background: background ?? Colour.Blue, foreground: foreground ?? Colour.White });
+        return rawTti(
+          text,
+          this.page,
+          numbered(index),
+          links.fastext,
+          title === undefined ? null : { title, background: background ?? Colour.Blue, foreground: foreground ?? Colour.White },
+        );
       }
       const screen = new Screen();
       const requests: PageRequests = { cursor: null };
@@ -457,7 +454,10 @@ export class Mount implements ComponentHost {
       const areas = declared.areas.flatMap(({ area }) => (area === null ? [] : [area]));
       // The rollover colours go with the sub-page whose controls show them.
       const rollover = index === 0 && this.#controls.length > 0 && this.#host.rollover !== null ? [rolloverLine(this.#host.rollover)] : [];
-      return subpagesTti(this.page, [{ screen, subpage: numbered(index) }]) + [...rollover, ...controlLines(controls, { areas, wholePage })].map((line) => `${line}\n`).join("");
+      return (
+        subpagesTti(this.page, [{ screen, subpage: numbered(index) }]) +
+        [...rollover, ...controlLines(controls, { areas, wholePage })].map((line) => `${line}\n`).join("")
+      );
     });
     return { tti: parts.join("") };
   }
@@ -544,7 +544,16 @@ export class Mount implements ComponentHost {
       if (action === "release") {
         this.#captured.delete(session);
       }
-      const event: PointerEvent = { session, action, row, column, button, buttons, local: this.#local(held, row, column), ...this.#regionAt(held, row, column) };
+      const event: PointerEvent = {
+        session,
+        action,
+        row,
+        column,
+        button,
+        buttons,
+        local: this.#local(held, row, column),
+        ...this.#regionAt(held, row, column),
+      };
       held.component.onPointer?.(event);
       return true;
     }
@@ -552,7 +561,16 @@ export class Mount implements ComponentHost {
     if (action === "move" && buttons === 0) {
       let taken = false;
       for (const owner of new Set(this.#pointerAreas.filter(({ area }) => area === null || inside(area, row, column)).map(({ node }) => node))) {
-        const event: PointerEvent = { session, action, row, column, button, buttons, local: this.#local(owner, row, column), ...this.#regionAt(owner, row, column) };
+        const event: PointerEvent = {
+          session,
+          action,
+          row,
+          column,
+          button,
+          buttons,
+          local: this.#local(owner, row, column),
+          ...this.#regionAt(owner, row, column),
+        };
         taken = owner.component.onPointer?.(event) === true || taken;
       }
       return taken;
@@ -568,7 +586,16 @@ export class Mount implements ComponentHost {
       }
     }
     return this.#bubble(target, (component, node) => {
-      const event: PointerEvent = { session, action, row, column, button, buttons, local: this.#local(node, row, column), ...this.#regionAt(node, row, column) };
+      const event: PointerEvent = {
+        session,
+        action,
+        row,
+        column,
+        button,
+        buttons,
+        local: this.#local(node, row, column),
+        ...this.#regionAt(node, row, column),
+      };
       const taken = component.onPointer?.(event) === true;
       if (taken && action === "press") {
         this.#captured.set(session, node);
@@ -717,7 +744,12 @@ function reachedDeclarations(grid: Grid, owned: readonly Owned[]): { controls: C
 function clipped(box: Box): Box {
   const row = Math.max(0, box.row);
   const column = Math.max(0, box.column);
-  return { row, column, width: Math.max(0, Math.min(COLUMNS, box.column + box.width) - column), height: Math.max(0, Math.min(ROWS, box.row + box.height) - row) };
+  return {
+    row,
+    column,
+    width: Math.max(0, Math.min(COLUMNS, box.column + box.width) - column),
+    height: Math.max(0, Math.min(ROWS, box.row + box.height) - row),
+  };
 }
 
 /** Whether a click on every cell of `control` reaches `owner`: the deepest component drawn there is it or under it. */
@@ -737,11 +769,17 @@ function reaches(grid: Grid, owner: Node, control: Box): boolean {
 }
 
 /** A raw sub-page's TTI made this page's: its PN and SC lines replaced, its FL line too when the sub-page gives links, and rows 1 and 2 a named band when it has a title. */
-function rawTti(text: string, page: number, subpage: number, fastext: FastextLinks, background: { title: string; background: Colour; foreground: Colour } | null): string {
+function rawTti(
+  text: string,
+  page: number,
+  subpage: number,
+  fastext: FastextLinks,
+  background: { title: string; background: Colour; foreground: Colour } | null,
+): string {
   const linked = fastext.some((link) => link !== null);
   const banded = (line: string): boolean => background !== null && /^OL,(1|2),/u.test(line);
   const body = text
-    .replace(/\r/gu, "")
+    .replaceAll("\r", "")
     .split("\n")
     .filter((line) => line !== "" && !/^(PN|SC|DE|CT),/u.test(line) && !(linked && line.startsWith("FL,")) && !banded(line));
   if (background !== null) {
@@ -749,7 +787,9 @@ function rawTti(text: string, page: number, subpage: number, fastext: FastextLin
     screen.background(1, 0, background.background);
     screen.doubleHeight(1, 2, background.foreground, fit(background.title, COLUMNS - 5));
     screen.background(2, 0, background.background);
-    const rows = subpagesTti(page, [{ screen, subpage }]).split("\n").filter((line) => /^OL,(1|2),/u.test(line));
+    const rows = subpagesTti(page, [{ screen, subpage }])
+      .split("\n")
+      .filter((line) => /^OL,(1|2),/u.test(line));
     body.unshift(...rows);
   }
   const screen = new Screen();

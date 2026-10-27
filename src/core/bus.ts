@@ -57,7 +57,9 @@ export class EventBus<Events extends object> implements Bus<Events> {
   at(place: Place): Bus<Events> {
     return {
       on: (name, listener) => this.on(name, listener, place),
-      emit: (name, value, audience) => this.emit(name, value, audience),
+      emit: (name, value, audience) => {
+        this.emit(name, value, audience);
+      },
     };
   }
 

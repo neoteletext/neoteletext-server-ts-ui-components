@@ -41,7 +41,9 @@ export class BigDigits extends Component<BigDigitsProps> {
     const sixels = new Sixels(width, DIGIT_HEIGHT);
     [...this.props.text].forEach((character, place) => {
       (DIGITS[character] ?? DIGITS["-"] ?? []).forEach((pattern, y) => {
-        [...pattern].forEach((sixel, x) => sixels.set(place * (DIGIT_WIDTH + DIGIT_GAP) + x, y, sixel === "#"));
+        [...pattern].forEach((sixel, x) => {
+          sixels.set(place * (DIGIT_WIDTH + DIGIT_GAP) + x, y, sixel === "#");
+        });
       });
     });
     return sixels;

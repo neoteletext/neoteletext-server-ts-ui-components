@@ -8,7 +8,24 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { Harness, text } from "neottx-server-ts-protocol/testing";
-import { type Canvas, Checkbox, type Child, Component, ComponentChannel, type ComponentEvent, Frame, h, Menu, type PageSpec, type PointerEvent, Rows, Switch, TextField, Ticker, ToastShelf } from "../src/index.ts";
+import {
+  type Canvas,
+  Checkbox,
+  type Child,
+  Component,
+  ComponentChannel,
+  type ComponentEvent,
+  Frame,
+  h,
+  Menu,
+  type PageSpec,
+  type PointerEvent,
+  Rows,
+  Switch,
+  TextField,
+  Ticker,
+  ToastShelf,
+} from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 
 const PAGE = 0x150;
@@ -184,7 +201,10 @@ class Plays extends Component {
 
   override onKey(event: { readonly session: number }): boolean {
     const samples = new Int16Array(48_000).fill(1);
-    this.services.stream({ name: "three seconds", rate: 16_000, samples: () => samples, complete: true, failure: null, expected: samples.length }, event.session);
+    this.services.stream(
+      { name: "three seconds", rate: 16_000, samples: () => samples, complete: true, failure: null, expected: samples.length },
+      event.session,
+    );
     return true;
   }
 }

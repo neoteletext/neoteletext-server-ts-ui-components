@@ -15,7 +15,7 @@ import { DISABLED, FOCUSED_LABEL } from "../core/look.ts";
 import { BOTTOM_ROW, LEFT_HALF, MIDDLE_ROW, RIGHT_HALF } from "../core/mosaics.ts";
 import { padStart } from "../core/text.ts";
 import { Colour, Key, SIXELS_ACROSS } from "../kit.ts";
-import { type ValueProps, ValueControl } from "./control.ts";
+import { type ValueProps, ValueControl } from "./value-control.ts";
 
 export interface SliderProps extends ValueProps<number> {
   readonly label: string;

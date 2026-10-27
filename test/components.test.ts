@@ -7,7 +7,31 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { Harness, text } from "neottx-server-ts-protocol/testing";
-import { AudioPlayer, Button, Centred, type KeyEvent, type Child, ChoiceList, Collapsible, Columns, Component, ComponentChannel, DATE_FORMATS, DateText, DISABLED, formatDate, Frame, h, NowPlaying, type PageSpec, Pagination, Slider, TabView, Text, Tree } from "../src/index.ts";
+import {
+  AudioPlayer,
+  Button,
+  Centred,
+  type KeyEvent,
+  type Child,
+  ChoiceList,
+  Collapsible,
+  Columns,
+  Component,
+  ComponentChannel,
+  DATE_FORMATS,
+  DateText,
+  DISABLED,
+  formatDate,
+  Frame,
+  h,
+  NowPlaying,
+  type PageSpec,
+  Pagination,
+  Slider,
+  TabView,
+  Text,
+  Tree,
+} from "../src/index.ts";
 import { Colour, COLUMNS, Key } from "../src/kit.ts";
 
 const PAGE = 0x150;
@@ -47,9 +71,11 @@ test("a date is written in its pattern's tokens, UTC, whatever form it comes in"
 });
 
 test("a date component shows its date in its colour, or its fallback", () => {
-  const seen = harness([{ page: PAGE, title: "Test", root: () => frame("Dates", h(DateText, { value: "2021-07-16" }), h(DateText, { value: "", fallback: "no date" })) }]);
+  const seen = harness([
+    { page: PAGE, title: "Test", root: () => frame("Dates", h(DateText, { value: "2021-07-16" }), h(DateText, { value: "", fallback: "no date" })) },
+  ]);
   seen.join(1, PAGE);
-  assert.match(text(seen.seen(1, PAGE).rows, BODY_ROW), /^\x0716 Jul 2021 *$/u, "after its colour, white");
+  assert.match(text(seen.seen(1, PAGE).rows, BODY_ROW), /^\u000716 Jul 2021 *$/u, "after its colour, white");
   assert.match(text(seen.seen(1, PAGE).rows, BODY_ROW + 1), /no date/u);
 });
 
@@ -71,9 +97,21 @@ class Chooser extends Component<object, { readonly chosen: number; readonly pres
   override render(): Child {
     const items = ["first", "second", "third"];
     return [
-      h(ChoiceList, { items, shown: 3, onMove: (chosen: number) => this.setState({ chosen }), onChoose: () => {} }),
+      h(ChoiceList, {
+        items,
+        shown: 3,
+        onMove: (chosen: number) => {
+          this.setState({ chosen });
+        },
+        onChoose: () => {},
+      }),
       h(Text, { text: `showing ${items[this.state.chosen] ?? ""}` }),
-      h(Button, { label: "Act", onPress: () => this.setState({ pressed: items[this.state.chosen] ?? "" }) }),
+      h(Button, {
+        label: "Act",
+        onPress: () => {
+          this.setState({ pressed: items[this.state.chosen] ?? "" });
+        },
+      }),
       h(Text, { text: `acted on ${this.state.pressed}` }),
     ];
   }
@@ -100,7 +138,13 @@ test("a list's rows hold components: each item drawn by what the list's user giv
           h(ChoiceList<{ name: string; day: string }>, {
             items,
             shown: 1,
-            render: (item, look) => h(Columns, { widths: [10, null] }, h(Text, { text: item.name, foreground: look.foreground }), h(DateText, { value: item.day, foreground: look.foreground })),
+            render: (item, look) =>
+              h(
+                Columns,
+                { widths: [10, null] },
+                h(Text, { text: item.name, foreground: look.foreground }),
+                h(DateText, { value: item.day, foreground: look.foreground }),
+              ),
             onChoose: () => {},
           }),
         ),
@@ -113,7 +157,13 @@ test("a list's rows hold components: each item drawn by what the list's user giv
 test("a button fits its label with a cell each side, or its padding, or a width given, its label centred in it", () => {
   assert.equal(Button.widthOf("stop"), 10, "band, foreground, a space, four letters, a space, the cell after");
   assert.equal(Button.widthOf("stop", 2, 3), 13);
-  const seen = harness([{ page: PAGE, title: "Test", root: () => frame("Buttons", h(Button, { label: "go", width: 12, onPress: () => {} }), h(Button, { label: "go", onPress: () => {} })) }]);
+  const seen = harness([
+    {
+      page: PAGE,
+      title: "Test",
+      root: () => frame("Buttons", h(Button, { label: "go", width: 12, onPress: () => {} }), h(Button, { label: "go", onPress: () => {} })),
+    },
+  ]);
   seen.join(1, PAGE);
   const fixed = text(seen.seen(1, PAGE).rows, BODY_ROW);
   assert.equal(fixed.indexOf("go"), 6, `centred in 8 cells of room after its band: ${JSON.stringify(fixed)}`);
@@ -133,7 +183,10 @@ class Player extends Component<object, { readonly shown: string }> {
     }
     const samples = new Int16Array(48_000).fill(1);
     if (event.key === Key.Enter) {
-      this.services.stream({ name: "three seconds", rate: 16_000, samples: () => samples, complete: true, failure: null, expected: samples.length }, event.session);
+      this.services.stream(
+        { name: "three seconds", rate: 16_000, samples: () => samples, complete: true, failure: null, expected: samples.length },
+        event.session,
+      );
     } else if (event.key === "p") {
       this.services.pauseStream(event.session);
     } else if (event.key === "r") {
@@ -194,7 +247,24 @@ test("a disabled control looks it: tabs, a heading, the page now and a slider's 
 
 test("a tree's view comes up when an item is shut, so none of it is left empty", () => {
   const leaves = (count: number): { label: string }[] => Array.from({ length: count }, (_, index) => ({ label: `leaf ${index + 1}` }));
-  const seen = harness([{ page: PAGE, title: "Test", root: () => frame("Tree", h(Tree, { nodes: [{ label: "P", children: leaves(10) }, { label: "Q", children: leaves(3) }], open: ["P", "Q"], shown: 4 })) }]);
+  const seen = harness([
+    {
+      page: PAGE,
+      title: "Test",
+      root: () =>
+        frame(
+          "Tree",
+          h(Tree, {
+            nodes: [
+              { label: "P", children: leaves(10) },
+              { label: "Q", children: leaves(3) },
+            ],
+            open: ["P", "Q"],
+            shown: 4,
+          }),
+        ),
+    },
+  ]);
   seen.join(1, PAGE);
   seen.press(1, Key.End);
   for (let step = 0; step < 3; step += 1) {
@@ -209,7 +279,14 @@ test("a tree's view comes up when an item is shut, so none of it is left empty",
 
 test("a player with nothing playing draws nothing, buttons and all, or keeps its rows empty when told to", () => {
   const page = (keepRows: boolean): Harness => {
-    const seen = harness([{ page: PAGE, title: "Test", perViewer: true, root: () => frame("Test", h(AudioPlayer, { keepRows }), h(NowPlaying, { keepRows }), h(Text, { text: "below" })) }]);
+    const seen = harness([
+      {
+        page: PAGE,
+        title: "Test",
+        perViewer: true,
+        root: () => frame("Test", h(AudioPlayer, { keepRows }), h(NowPlaying, { keepRows }), h(Text, { text: "below" })),
+      },
+    ]);
     seen.join(1, PAGE);
     return seen;
   };

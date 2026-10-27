@@ -133,47 +133,47 @@ export abstract class Component<P extends object = object, S extends object = ob
   setState(change: Partial<S> | ((state: Readonly<S>, props: Readonly<P>) => Partial<S>)): void {
     const next = typeof change === "function" ? change({ ...this.state, ...Object.assign({}, ...this.#pending) }, this.props) : change;
     this.#pending.push(next);
-    this.#host?.invalidate(this as unknown as Component<object, object>);
+    this.#host?.invalidate(this);
   }
 
   /** Asks for a render although nothing in the state changed: what the component reads from elsewhere did. */
   forceUpdate(): void {
-    this.#host?.invalidate(this as unknown as Component<object, object>);
+    this.#host?.invalidate(this);
   }
 
   /** Takes the keys: typed text and keys come here first. */
   protected focus(): void {
-    this.#host?.focus(this as unknown as Component<object, object>);
+    this.#host?.focus(this);
   }
 
   /** Whether the keys come here first. */
   protected get focused(): boolean {
-    return this.#host?.isFocused(this as unknown as Component<object, object>) ?? false;
+    return this.#host?.isFocused(this) ?? false;
   }
 
   /** Whether the pointer is on one of its controls (onHover). */
   protected get hovered(): boolean {
-    return this.#host?.isHovered(this as unknown as Component<object, object>) ?? false;
+    return this.#host?.isHovered(this) ?? false;
   }
 
   /** Runs `run` once after `delay` milliseconds; cleared if the component is unmounted first. */
   protected setTimeout(run: () => void, delay: number, options: TimerOptions = {}): number {
-    return this.#host?.setTimer(this as unknown as Component<object, object>, run, delay, false, options.whileViewed === true) ?? -1;
+    return this.#host?.setTimer(this, run, delay, false, options.whileViewed === true) ?? -1;
   }
 
   /** Runs `run` every `period` milliseconds until cleared or unmounted. */
   protected setInterval(run: () => void, period: number, options: TimerOptions = {}): number {
-    return this.#host?.setTimer(this as unknown as Component<object, object>, run, period, true, options.whileViewed === true) ?? -1;
+    return this.#host?.setTimer(this, run, period, true, options.whileViewed === true) ?? -1;
   }
 
   /** The box it was last laid out in, in cells of the page: for finding where in it a click fell. */
   protected get box(): Box {
-    return this.#host?.boxOf(this as unknown as Component<object, object>) ?? { row: 0, column: 0, width: 0, height: 0 };
+    return this.#host?.boxOf(this) ?? { row: 0, column: 0, width: 0, height: 0 };
   }
 
   /** Sends an event up the tree (component-events.ts). */
   protected emit(event: ComponentEventInit): void {
-    this.#host?.emit(this as unknown as Component<object, object>, event);
+    this.#host?.emit(this, event);
   }
 
   /** What the component on the page under the viewer's pointer says its keys do, or else the focused one: for the frame's hint row. */

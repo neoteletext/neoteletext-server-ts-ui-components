@@ -36,27 +36,33 @@ export class Bouncer extends Component<BouncerProps, BouncerState> {
   }
 
   override componentDidMount(): void {
-    this.setInterval(() => {
-      this.setState((state) => {
-        let { x, y, dx, dy } = state;
-        if (x + dx < 0 || x + dx + BALL_WIDTH > this.#across) {
-          dx = -dx;
-        }
-        if (y + dy < 0 || y + dy + BALL_HEIGHT > this.#down) {
-          dy = -dy;
-        }
-        x += dx;
-        y += dy;
-        return { x, y, dx, dy, frames: state.frames + 1 };
-      });
-    }, this.props.everyMs, { whileViewed: true });
+    this.setInterval(
+      () => {
+        this.setState((state) => {
+          let { x, y, dx, dy } = state;
+          if (x + dx < 0 || x + dx + BALL_WIDTH > this.#across) {
+            dx = -dx;
+          }
+          if (y + dy < 0 || y + dy + BALL_HEIGHT > this.#down) {
+            dy = -dy;
+          }
+          x += dx;
+          y += dy;
+          return { x, y, dx, dy, frames: state.frames + 1 };
+        });
+      },
+      this.props.everyMs,
+      { whileViewed: true },
+    );
   }
 
   override paint(canvas: Canvas): void {
     this.#across = (canvas.width - 1) * SIXELS_ACROSS;
     this.#down = canvas.height * SIXELS_DOWN;
     const sixels = new Sixels(this.#across, this.#down);
-    BALL.forEach((line, y) => [...line].forEach((sixel, x) => sixels.set(this.state.x + x, this.state.y + y, sixel === "#")));
+    BALL.forEach((line, y) => {
+      [...line].forEach((sixel, x) => sixels.set(this.state.x + x, this.state.y + y, sixel === "#"));
+    });
     canvas.sixels(0, 1, Colour.Cyan, sixels);
   }
 }

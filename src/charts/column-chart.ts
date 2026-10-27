@@ -29,7 +29,12 @@ export interface ColumnChartProps {
 }
 
 /** A column's top cell, by how many of its three sixel rows are filled from the bottom. */
-const TOPS = [MOSAIC_BASE, MOSAIC_BASE | SIXEL.bottomLeft | SIXEL.bottomRight, MOSAIC_BASE | SIXEL.middleLeft | SIXEL.middleRight | SIXEL.bottomLeft | SIXEL.bottomRight, FULL_BLOCK] as const;
+const TOPS = [
+  MOSAIC_BASE,
+  MOSAIC_BASE | SIXEL.bottomLeft | SIXEL.bottomRight,
+  MOSAIC_BASE | SIXEL.middleLeft | SIXEL.middleRight | SIXEL.bottomLeft | SIXEL.bottomRight,
+  FULL_BLOCK,
+] as const;
 const COLUMN_CELLS = 2;
 /** The labels' row under the columns, and the figures' over them. */
 const LABEL_ROWS = 1;

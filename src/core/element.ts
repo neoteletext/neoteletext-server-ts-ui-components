@@ -55,7 +55,7 @@ export type AnyComponentClass = new (props: never) => { readonly props: object }
 export function h<C extends AnyComponentClass>(type: C, props: PropsOf<ClassProps<C>>, ...children: Child[]): Element {
   const { key, ...rest } = props as PropsOf<ClassProps<C>> & { readonly key?: string | number };
   const withChildren = children.length > 0 ? { ...rest, children } : rest;
-  return { type: type as unknown as ComponentClass<never>, props: withChildren as WithChildren & LayoutProps, key };
+  return { type: type as unknown as ComponentClass<never>, props: withChildren, key };
 }
 
 /** Whether `child` is an element rather than text or nothing. */

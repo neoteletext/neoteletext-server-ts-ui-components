@@ -13,7 +13,7 @@ import { DISABLED, DISABLED_CHIP } from "../core/look.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
-import { type ValueProps, ValueControl, type ValueState } from "./control.ts";
+import { type ValueProps, ValueControl, type ValueState } from "./value-control.ts";
 
 export interface NumberInputProps extends ValueProps<number> {
   readonly label: string;

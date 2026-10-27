@@ -7,10 +7,12 @@ import type { KeyEvent } from "../core/events.ts";
 import { COLOUR_KEY_NAMES, colourKeyOf } from "../core/keys.ts";
 import { type Sound } from "../core/sound.ts";
 import { pad } from "../core/text.ts";
-import { KEY_COLOURS } from "../frame/frame.ts";
+import { KEY_COLOURS } from "../frame/fastext-bar.ts";
 import { Colour } from "../kit.ts";
 import { Rows } from "../layout/layouts.ts";
-import { Concealed, Flashing, Paragraph } from "../text/styles.ts";
+import { Concealed } from "../text/concealed.ts";
+import { Flashing } from "../text/flashing.ts";
+import { Paragraph } from "../text/paragraph.ts";
 import { Action } from "../input/action.ts";
 import { Control, type ControlProps } from "../input/control.ts";
 import type { PageNeeds } from "../core/needs.ts";
@@ -35,7 +37,6 @@ interface QuizState {
   readonly last: "none" | "right" | "wrong";
 }
 
-
 /** A quiz answered with the four coloured keys (the page takes them itself) or a click on an answer; the answer is concealed until Reveal is pressed. */
 export class Quiz extends Control<QuizProps, QuizState> {
   override state: QuizState = { asked: 0, score: 0, last: "none" };
@@ -47,7 +48,6 @@ export class Quiz extends Control<QuizProps, QuizState> {
   protected override keysHint(): string {
     return "Answer with a coloured key or a click; Reveal shows";
   }
-
 
   override render(): Child {
     const question = this.props.questions[this.state.asked % this.props.questions.length];

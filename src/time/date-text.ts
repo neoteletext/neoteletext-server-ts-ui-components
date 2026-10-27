@@ -78,39 +78,53 @@ export function formatDate(value: DateValue, pattern: string = DATE_FORMATS.long
   }
   const month = MONTHS[date.getUTCMonth()] ?? "";
   const weekday = WEEKDAYS[date.getUTCDay()] ?? "";
-  return pattern.replace(TOKENS, (token: string, literal: string | undefined) => {
+  return pattern.replaceAll(TOKENS, (token: string, literal: string | undefined) => {
     if (literal !== undefined) {
       return literal;
     }
     switch (token) {
-      case "YYYY":
+      case "YYYY": {
         return String(date.getUTCFullYear()).padStart(4, "0");
-      case "YY":
+      }
+      case "YY": {
         return two(date.getUTCFullYear() % CENTURY);
-      case "MMMM":
+      }
+      case "MMMM": {
         return month;
-      case "MMM":
+      }
+      case "MMM": {
         return month.slice(0, SHORT_NAME);
-      case "MM":
+      }
+      case "MM": {
         return two(date.getUTCMonth() + 1);
-      case "M":
+      }
+      case "M": {
         return String(date.getUTCMonth() + 1);
-      case "DD":
+      }
+      case "DD": {
         return two(date.getUTCDate());
-      case "D":
+      }
+      case "D": {
         return String(date.getUTCDate());
-      case "dddd":
+      }
+      case "dddd": {
         return weekday;
-      case "ddd":
+      }
+      case "ddd": {
         return weekday.slice(0, SHORT_NAME);
-      case "HH":
+      }
+      case "HH": {
         return two(date.getUTCHours());
-      case "H":
+      }
+      case "H": {
         return String(date.getUTCHours());
-      case "mm":
+      }
+      case "mm": {
         return two(date.getUTCMinutes());
-      default:
+      }
+      default: {
         return two(date.getUTCSeconds());
+      }
     }
   });
 }

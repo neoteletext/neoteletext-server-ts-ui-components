@@ -8,22 +8,23 @@
 // (onHover). More choices than fit scroll beside a scroll bar, and with
 // the wheel.
 
-import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { type Size } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { choosing, digitOf } from "../core/keys.ts";
 import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
-import { MIDDLE_ROW } from "../core/mosaics.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { cells } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
-import { Columns, Rows } from "../layout/layouts.ts";
+import { Columns } from "../layout/columns.ts";
+import { Rows } from "../layout/layouts.ts";
 import { Text } from "../text/styles.ts";
 import { Breadcrumbs } from "./breadcrumbs.ts";
-import { ListRows, type RowLook } from "../lists/list-row.ts";
+import { ListRows } from "../lists/list-rows.ts";
+import { type RowLook } from "../lists/list-row.ts";
 import { BAR_CELLS, ScrollBar } from "../lists/scroll.ts";
+import { MenuRule } from "./menu-rule.ts";
 
 export interface MenuItem {
   readonly label: string;
@@ -65,17 +66,6 @@ function choosable(item: MenuItem | undefined): boolean {
   return item !== undefined && item.rule !== true && item.disabled !== true;
 }
 
-/** A rule between a menu's groups: a line of mosaic cells in blue. */
-class MenuRule extends Component {
-  override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(1, space.height) };
-  }
-
-  override paint(canvas: Canvas): void {
-    canvas.mosaics(0, 0, Colour.Blue, new Array<number>(Math.max(0, canvas.width - 1)).fill(MIDDLE_ROW));
-  }
-}
-
 /** A choice's row: its number when numbered, its label, and its shortcut or the mark of a menu it opens on the right. */
 function menuRow(item: MenuItem, number: number | null, look: RowLook): Child {
   if (item.rule === true) {
@@ -84,7 +74,14 @@ function menuRow(item: MenuItem, number: number | null, look: RowLook): Child {
   const right = item.items !== undefined ? OPENS : (item.shortcut ?? "");
   const label = `${number === null ? "" : `${number} `}${item.label}`;
   // The shortcut's column: its colour's cell, a space and the shortcut.
-  return right === "" ? h(Text, { text: label, foreground: look.foreground }) : h(Columns, { widths: [null, cells(right) + 2] }, h(Text, { text: label, foreground: look.foreground }), h(Text, { text: right, foreground: look.foreground }));
+  return right === ""
+    ? h(Text, { text: label, foreground: look.foreground })
+    : h(
+        Columns,
+        { widths: [null, cells(right) + 2] },
+        h(Text, { text: label, foreground: look.foreground }),
+        h(Text, { text: right, foreground: look.foreground }),
+      );
 }
 
 export class Menu extends Control<MenuProps, MenuState> {
@@ -146,13 +143,26 @@ export class Menu extends Control<MenuProps, MenuState> {
           focused: this.focused,
           empty: this.props.empty ?? "no choices",
           disabled: (item: MenuItem) => this.disabled || !choosable(item),
-          render: (item: MenuItem, look: RowLook, index: number) => menuRow(item, this.props.numbered === true ? numbers[index] ?? null : null, look),
-          onPick: (index: number, session: number) => this.#choose(index, session),
+          render: (item: MenuItem, look: RowLook, index: number) => menuRow(item, this.props.numbered === true ? (numbers[index] ?? null) : null, look),
+          onPick: (index: number, session: number) => {
+            this.#choose(index, session);
+          },
           ...(this.props.onHover === undefined
             ? {}
-            : { onHover: (index: number | null, session: number) => this.props.onHover?.(index === null || items[index] === undefined ? null : [...labels, items[index].label], session) }),
+            : {
+                onHover: (index: number | null, session: number) =>
+                  this.props.onHover?.(index === null || items[index] === undefined ? null : [...labels, items[index].label], session),
+              }),
         }),
-        h(ScrollBar, { top: this.state.top, total: items.length, shown: this.#shown, disabled: this.disabled, onScroll: (top) => this.setState({ top }) }),
+        h(ScrollBar, {
+          top: this.state.top,
+          total: items.length,
+          shown: this.#shown,
+          disabled: this.disabled,
+          onScroll: (top) => {
+            this.setState({ top });
+          },
+        }),
       ),
     );
   }
@@ -165,7 +175,16 @@ export class Menu extends Control<MenuProps, MenuState> {
     }
     const steps = [top, ...labels];
     return h(Breadcrumbs, {
-      trail: steps.map((label, depth) => (depth === steps.length - 1 || this.disabled ? { label } : { label, onPress: () => this.#backTo(depth) })),
+      trail: steps.map((label, depth) =>
+        depth === steps.length - 1 || this.disabled
+          ? { label }
+          : {
+              label,
+              onPress: () => {
+                this.#backTo(depth);
+              },
+            },
+      ),
     });
   }
 

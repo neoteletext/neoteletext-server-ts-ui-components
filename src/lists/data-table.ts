@@ -7,19 +7,18 @@
 // can be chosen is a control, and the pointer coming onto it is told to
 // the table's user (onHover).
 
-import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
-import type { HoverEvent, KeyEvent, PointerEvent, WheelEvent } from "../core/events.ts";
+import type { KeyEvent, WheelEvent } from "../core/events.ts";
 import { choosing, digitOf } from "../core/keys.ts";
 import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
-import { CHOSEN, MARK, paintEmpty, SELECTED } from "../core/look.ts";
 import type { PageNeeds } from "../core/needs.ts";
-import { fit, pad, padStart } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
-import { Columns, Rows } from "../layout/layouts.ts";
+import { Columns } from "../layout/columns.ts";
+import { Rows } from "../layout/layouts.ts";
 import { BAR_CELLS, ScrollBar } from "./scroll.ts";
+import { Body } from "./body.ts";
+import { Heading } from "./heading.ts";
 
 export interface TableColumn {
   readonly title: string;
@@ -54,12 +53,9 @@ interface DataTableState {
 
 /** The cells before the first column: a band's colour and New Background, kept on every row so the columns line up. */
 const LEAD = 2;
-/** What marks the sorted column: up for ascending; the English set has no down arrow (EN 300 706 Table 36), so a v for descending. */
-const ASCENDING = "↑";
-const DESCENDING = "v";
 
 /** Each column's first cell. */
-function starts(columns: readonly TableColumn[]): number[] {
+export function starts(columns: readonly TableColumn[]): number[] {
   let column = LEAD;
   return columns.map((each) => {
     const at = column;
@@ -70,110 +66,9 @@ function starts(columns: readonly TableColumn[]): number[] {
 
 /** Numbers sort as numbers, the rest as text. */
 function compare(a: string, b: string): number {
-  const x = Number.parseFloat(a.replace(/,/gu, ""));
-  const y = Number.parseFloat(b.replace(/,/gu, ""));
+  const x = Number.parseFloat(a.replaceAll(",", ""));
+  const y = Number.parseFloat(b.replaceAll(",", ""));
   return Number.isNaN(x) || Number.isNaN(y) ? a.localeCompare(b) : x - y;
-}
-
-function cell(text: string, column: TableColumn): string {
-  return column.align === "right" ? padStart(text, column.width - 1) : pad(text, column.width - 1);
-}
-
-interface HeadingProps {
-  readonly columns: readonly TableColumn[];
-  /** A click on a column's title sorts by it: each title is a control. */
-  readonly sortable: boolean;
-  readonly sortBy: number | null;
-  readonly descending: boolean;
-  readonly onSort: (column: number) => void;
-}
-
-class Heading extends Component<HeadingProps> {
-  override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(1, space.height) };
-  }
-
-  override paint(canvas: Canvas): void {
-    canvas.background(0, 0, Colour.Blue);
-    const at = starts(this.props.columns);
-    this.props.columns.forEach((column, index) => {
-      const mark = index === this.props.sortBy ? (this.props.descending ? DESCENDING : ASCENDING) : "";
-      canvas.coloured(0, at[index] ?? 0, Colour.Yellow, fit(`${column.title}${mark}`, column.width - 1));
-      if (this.props.sortable) {
-        // The column after its colour's cell.
-        canvas.control(0, (at[index] ?? 0) + 1, column.width - 1, 1, String(index));
-      }
-    });
-  }
-
-  override onClick(event: PointerEvent): boolean {
-    if (event.region === undefined) {
-      return false;
-    }
-    this.props.onSort(Number(event.region));
-    return true;
-  }
-}
-
-interface BodyProps {
-  readonly columns: readonly TableColumn[];
-  readonly rows: readonly (readonly string[])[];
-  readonly top: number;
-  readonly chosen: number | null;
-  readonly focused: boolean;
-  readonly striped: boolean;
-  /** A click on a row chooses it: each row is a control. */
-  readonly selectable: boolean;
-  readonly empty: string;
-  readonly onPick: (index: number, session: number) => void;
-  readonly onHover?: (index: number | null, session: number) => void;
-}
-
-class Body extends Component<BodyProps> {
-  override measure(space: Size): Size {
-    return space;
-  }
-
-  override paint(canvas: Canvas): void {
-    if (this.props.rows.length === 0) {
-      paintEmpty(canvas, this.props.empty);
-      return;
-    }
-    const at = starts(this.props.columns);
-    this.props.rows.slice(this.props.top, this.props.top + canvas.height).forEach((values, row) => {
-      const index = this.props.top + row;
-      const chosen = index === this.props.chosen;
-      const banded = chosen && this.props.focused;
-      if (banded) {
-        canvas.background(row, 0, CHOSEN.background);
-      } else if (chosen) {
-        canvas.coloured(row, 0, SELECTED, MARK);
-      }
-      this.props.columns.forEach((column, place) => {
-        const foreground = banded ? CHOSEN.foreground : chosen ? SELECTED : this.props.striped && index % 2 === 1 ? Colour.Cyan : (column.foreground ?? Colour.White);
-        canvas.coloured(row, at[place] ?? 0, foreground, cell(values[place] ?? "", column));
-      });
-      if (this.props.selectable) {
-        canvas.bandControl(row, 0, 1, String(index));
-      }
-    });
-  }
-
-  override onClick(event: PointerEvent): boolean {
-    if (event.region === undefined) {
-      return false;
-    }
-    this.props.onPick(Number(event.region), event.session);
-    return true;
-  }
-
-  override onHover(event: HoverEvent): boolean {
-    if (this.props.onHover === undefined || event.region === undefined) {
-      return false;
-    }
-    this.props.onHover(event.entered ? Number(event.region) : null, event.session);
-    return true;
-  }
 }
 
 export class DataTable extends Control<DataTableProps, DataTableState> {
@@ -185,7 +80,9 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
   }
 
   protected override keysHint(): string {
-    return [this.props.selectable === true ? "Up Down choose, Enter" : "Up Down scroll", this.props.sortable === true ? "1-9 sorts" : ""].filter((part) => part !== "").join("; ");
+    return [this.props.selectable === true ? "Up Down choose, Enter" : "Up Down scroll", this.props.sortable === true ? "1-9 sorts" : ""]
+      .filter((part) => part !== "")
+      .join("; ");
   }
 
   #sorted(): readonly (readonly string[])[] {
@@ -217,7 +114,15 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
     return h(
       Rows,
       {},
-      h(Heading, { columns: this.props.columns, sortable: this.props.sortable === true && !this.disabled, sortBy: this.state.sortBy, descending: this.state.descending, onSort: (column: number) => this.#sort(column) }),
+      h(Heading, {
+        columns: this.props.columns,
+        sortable: this.props.sortable === true && !this.disabled,
+        sortBy: this.state.sortBy,
+        descending: this.state.descending,
+        onSort: (column: number) => {
+          this.#sort(column);
+        },
+      }),
       h(
         Columns,
         { widths: [null, BAR_CELLS], height: this.props.shown },
@@ -230,10 +135,22 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
           striped: this.props.striped === true,
           selectable: this.props.selectable === true && !this.disabled,
           empty: this.props.empty ?? "no rows",
-          onPick: (index: number, session: number) => this.#choose(index, session),
-          ...(this.props.onHover === undefined ? {} : { onHover: (index: number | null, session: number) => this.props.onHover?.(index === null ? null : (this.#sorted()[index] ?? null), session) }),
+          onPick: (index: number, session: number) => {
+            this.#choose(index, session);
+          },
+          ...(this.props.onHover === undefined
+            ? {}
+            : { onHover: (index: number | null, session: number) => this.props.onHover?.(index === null ? null : (this.#sorted()[index] ?? null), session) }),
         }),
-        h(ScrollBar, { top: this.state.top, total: this.props.rows.length, shown: this.props.shown, disabled: this.disabled, onScroll: (top) => this.setState({ top }) }),
+        h(ScrollBar, {
+          top: this.state.top,
+          total: this.props.rows.length,
+          shown: this.props.shown,
+          disabled: this.disabled,
+          onScroll: (top) => {
+            this.setState({ top });
+          },
+        }),
       ),
     );
   }

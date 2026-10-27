@@ -47,7 +47,8 @@ export function changes(from: Style, to: Style): number[] {
   if (to.background !== from.background) {
     codes.push(...(to.background === Colour.Black ? [Attribute.BlackBackground] : [textColour(to.background), Attribute.NewBackground]));
   }
-  const inkChanged = to.foreground !== from.foreground || (to.background !== from.background && to.background !== Colour.Black) || (from.conceal && !to.conceal);
+  const inkChanged =
+    to.foreground !== from.foreground || (to.background !== from.background && to.background !== Colour.Black) || (from.conceal && !to.conceal);
   if (inkChanged) {
     codes.push(textColour(to.foreground));
   }

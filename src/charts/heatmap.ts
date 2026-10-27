@@ -58,7 +58,10 @@ export class Heatmap extends Component<HeatmapProps> {
 
   #codes(values: readonly number[], max: number, cells: number): number[] {
     if (this.props.scale === "density") {
-      return [mosaicColour(this.props.foreground ?? Colour.Yellow), ...values.slice(0, cells - 1).map((value) => DENSITIES[level(value, max, DENSITIES.length)] ?? MOSAIC_BASE)];
+      return [
+        mosaicColour(this.props.foreground ?? Colour.Yellow),
+        ...values.slice(0, cells - 1).map((value) => DENSITIES[level(value, max, DENSITIES.length)] ?? MOSAIC_BASE),
+      ];
     }
     const shown = values.slice(0, Math.floor((cells - 2) / COLOUR_CELLS));
     // Hold Mosaics first; then each value's colour and block; a last block so the last value is two cells too.

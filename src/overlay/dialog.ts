@@ -8,14 +8,12 @@
 // and keeps every click and turn of the wheel from the page under it.
 
 import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
-import { type Box, Component, type LayoutChild, type Size, stack, stackSize } from "../core/component.ts";
-import { type Child, type Element, h } from "../core/element.ts";
-import { isPress, type KeyEvent, type PointerEvent, type WheelEvent } from "../core/events.ts";
+import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/component.ts";
+import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import { CHOSEN, type Kind, KINDS } from "../core/look.ts";
 import { cells, fit, wrap } from "../core/text.ts";
 import { Attribute, Colour, englishCodes, Key, SPACE, textColour } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
-import { At, Layers, Rows } from "../layout/layouts.ts";
 
 export interface DialogProps extends ControlProps {
   readonly title: string;
@@ -39,18 +37,25 @@ interface DialogState {
 
 /** The margin either side when not told. */
 const INSET = 2;
+
 /** The cells a row's background takes before its text: its colour and New Background. */
 const BACKGROUND_CELLS = 2;
+
 /** A button's cells beyond its label: its background's colour, New Background, its ink, and the dialog's background again after it (two cells). */
 const BUTTON_CELLS = 5;
+
 /** The region a button's band is, by its place. */
 const BUTTON_REGION = "button-";
+
 /** Of those, the band's beyond the label: New Background and the ink's cell. */
 const BUTTON_BAND_CELLS = 2;
+
 /** The dialog's own background. */
 const BACKGROUND = Colour.Blue;
+
 /** Rows round the content: the title band, a row before the buttons, the buttons, a row under them. */
 const TITLE_ROWS = 1;
+
 const FOOT_ROWS = 3;
 
 export class Dialog extends Control<DialogProps, DialogState> {
@@ -85,7 +90,12 @@ export class Dialog extends Control<DialogProps, DialogState> {
   #inner(box: Box): Box {
     const lines = this.#message(box.width).length;
     const column = box.column + this.#inset + BACKGROUND_CELLS;
-    return { row: box.row + TITLE_ROWS + lines, column, width: Math.max(0, box.width - 2 * this.#inset - BACKGROUND_CELLS - 1), height: Math.max(0, box.height - TITLE_ROWS - lines - FOOT_ROWS) };
+    return {
+      row: box.row + TITLE_ROWS + lines,
+      column,
+      width: Math.max(0, box.width - 2 * this.#inset - BACKGROUND_CELLS - 1),
+      height: Math.max(0, box.height - TITLE_ROWS - lines - FOOT_ROWS),
+    };
   }
 
   override measure(space: Size, children: readonly LayoutChild[]): Size {
@@ -119,7 +129,9 @@ export class Dialog extends Control<DialogProps, DialogState> {
       canvas.code(row, right, Attribute.BlackBackground);
     }
     canvas.coloured(0, inset + BACKGROUND_CELLS, look.foreground, fit(this.props.title, right - inset - BACKGROUND_CELLS - 1));
-    this.#message(canvas.width).forEach((line, index) => canvas.coloured(TITLE_ROWS + index, inset + BACKGROUND_CELLS, Colour.White, line));
+    this.#message(canvas.width).forEach((line, index) => {
+      canvas.coloured(TITLE_ROWS + index, inset + BACKGROUND_CELLS, Colour.White, line);
+    });
     if (this.#buttons.length === 0) {
       return;
     }
@@ -128,7 +140,14 @@ export class Dialog extends Control<DialogProps, DialogState> {
       const chosen = index === this.state.chosen && this.focused;
       const background = chosen ? CHOSEN.background : Colour.White;
       const label = this.#buttons[index] ?? "";
-      canvas.codes(row, start, [textColour(background), Attribute.NewBackground, textColour(chosen ? CHOSEN.foreground : Colour.Black), ...englishCodes(label), textColour(BACKGROUND), Attribute.NewBackground]);
+      canvas.codes(row, start, [
+        textColour(background),
+        Attribute.NewBackground,
+        textColour(chosen ? CHOSEN.foreground : Colour.Black),
+        ...englishCodes(label),
+        textColour(BACKGROUND),
+        Attribute.NewBackground,
+      ]);
       // Its band: from its New Background to the cell before the dialog's background comes back.
       canvas.control(row, start + NEW_BACKGROUND_CELL, cells(label) + BUTTON_BAND_CELLS, 1, `${BUTTON_REGION}${index}`);
     });
@@ -171,42 +190,5 @@ export class Dialog extends Control<DialogProps, DialogState> {
       this.#answer(Number(event.region.slice(BUTTON_REGION.length)), event.session);
     }
     return true;
-  }
-}
-
-/** What lies between a dialog and the page under it: it takes every click and turn of the wheel there, so none reaches the page while the dialog is up, and the page's controls under it are not declared. */
-class Shield extends Component {
-  /** No rows of its own: the layers give it the modal's whole box, whatever it measures. */
-  override measure(space: Size): Size {
-    return { width: space.width, height: 0 };
-  }
-
-  override onPointer(_event: PointerEvent): boolean {
-    return true;
-  }
-
-  override onWheel(_event: WheelEvent): boolean {
-    return true;
-  }
-}
-
-export interface ModalProps {
-  /** The dialog over the page, or null while there is none. */
-  readonly dialog: Element | null;
-  /** The row its top is on, in the content's box. */
-  readonly row?: number;
-}
-
-/** A page with a dialog over it: the children are the page. */
-export class Modal extends Component<ModalProps> {
-  override render(): Child {
-    const { dialog } = this.props;
-    return h(
-      Layers,
-      {},
-      h(Rows, { key: "content" }, ...(this.props.children ?? [])),
-      dialog === null ? null : h(Shield, { key: "shield" }),
-      dialog === null ? null : h(At, { key: "dialog", row: this.props.row ?? 2, column: 0 }, dialog),
-    );
   }
 }

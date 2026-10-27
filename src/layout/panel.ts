@@ -56,7 +56,12 @@ export class Panel extends Component<PanelProps> {
       return { row: box.row + 1, column: box.column + LINE_SIDE, width: Math.max(0, box.width - 2 * LINE_SIDE), height: Math.max(0, box.height - LINE_ROWS) };
     }
     const top = this.props.title === undefined ? 0 : BAND_TITLE_ROWS;
-    return { row: box.row + top, column: box.column + BAND_LEFT, width: Math.max(0, box.width - BAND_LEFT - BAND_RIGHT), height: Math.max(0, box.height - top) };
+    return {
+      row: box.row + top,
+      column: box.column + BAND_LEFT,
+      width: Math.max(0, box.width - BAND_LEFT - BAND_RIGHT),
+      height: Math.max(0, box.height - top),
+    };
   }
 
   override measure(space: Size, children: readonly LayoutChild[]): Size {

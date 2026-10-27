@@ -8,7 +8,7 @@ import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { DISABLED_CHIP } from "../core/look.ts";
 import { Colour } from "../kit.ts";
-import { type ValueProps, ValueControl } from "./control.ts";
+import { type ValueProps, ValueControl } from "./value-control.ts";
 
 export interface SwitchProps extends ValueProps<boolean> {
   readonly label: string;
@@ -41,7 +41,11 @@ export class Switch extends ValueControl<boolean, SwitchProps> {
 
   override paint(canvas: Canvas): void {
     const at = Math.min(this.paintLabel(canvas), canvas.width - ON.length - 5);
-    const look = this.disabled ? DISABLED_CHIP : this.value ? { background: Colour.Green, foreground: Colour.Black } : { background: Colour.Red, foreground: Colour.White };
+    const look = this.disabled
+      ? DISABLED_CHIP
+      : this.value
+        ? { background: Colour.Green, foreground: Colour.Black }
+        : { background: Colour.Red, foreground: Colour.White };
     const after = canvas.chip(0, at, look.background, look.foreground, this.value ? ON : OFF);
     if (!this.disabled) {
       canvas.chipControl(0, at, after, CHIP);

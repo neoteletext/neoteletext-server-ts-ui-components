@@ -3,19 +3,16 @@
 // until the viewer scrolls back, and says so; End, or a click on the
 // PAUSED badge, follows again.
 
-import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { listStep, WheelLines } from "../core/list-cursor.ts";
-import { paintEmpty } from "../core/look.ts";
-import { fit } from "../core/text.ts";
-import { Colour, Key, textColour } from "../kit.ts";
+import { Colour, Key } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
-import { Columns, Rows } from "../layout/layouts.ts";
+import { Columns } from "../layout/columns.ts";
+import { Rows } from "../layout/layouts.ts";
 import { Badges } from "../text/badge.ts";
 import { BAR_CELLS, ScrollBar } from "./scroll.ts";
-import { DATE_FORMATS, formatDate } from "../time/date-text.ts";
+import { LogLines } from "./log-lines.ts";
 
 export type LogLevel = "debug" | "info" | "warning" | "error";
 
@@ -36,43 +33,6 @@ export interface LogViewProps extends ControlProps {
 interface LogViewState {
   /** The first entry shown, or null while it follows the newest. */
   readonly top: number | null;
-}
-
-/** Each level's tag and colour: the tag says it without colour. */
-const LEVELS: Readonly<Record<LogLevel, { readonly tag: string; readonly foreground: Colour }>> = {
-  debug: { tag: "DBG", foreground: Colour.Blue },
-  info: { tag: "INF", foreground: Colour.Cyan },
-  warning: { tag: "WRN", foreground: Colour.Yellow },
-  error: { tag: "ERR", foreground: Colour.Red },
-};
-/** Where an entry's parts start: its time after the line's colour cell ("HH:MM:SS"), its tag after its colour's cell, its text after its own. */
-const TIME_CELLS = 8;
-const TAG_AT = 1 + TIME_CELLS;
-const TAG_CELLS = 3;
-const TEXT_AT = TAG_AT + 1 + TAG_CELLS;
-
-function time(epochMs: number): string {
-  return formatDate(epochMs, DATE_FORMATS.seconds);
-}
-
-class LogLines extends Component<{ readonly entries: readonly LogEntry[]; readonly empty: string }> {
-  override measure(space: Size): Size {
-    return space;
-  }
-
-  override paint(canvas: Canvas): void {
-    if (this.props.entries.length === 0) {
-      paintEmpty(canvas, this.props.empty);
-      return;
-    }
-    this.props.entries.forEach((entry, row) => {
-      const level = LEVELS[entry.level];
-      canvas.codes(row, 0, [textColour(Colour.White)]);
-      canvas.text(row, 1, time(entry.at));
-      canvas.coloured(row, TAG_AT, level.foreground, level.tag);
-      canvas.coloured(row, TEXT_AT, entry.level === "error" ? Colour.Red : Colour.White, fit(entry.text, canvas.width - TEXT_AT - 1));
-    });
-  }
 }
 
 export class LogView extends Control<LogViewProps, LogViewState> {
@@ -97,13 +57,36 @@ export class LogView extends Control<LogViewProps, LogViewState> {
         Columns,
         { widths: [null, BAR_CELLS], height: this.props.shown },
         h(LogLines, { entries: this.props.entries.slice(top, top + this.props.shown), empty: this.props.empty ?? "no entries yet" }),
-        h(ScrollBar, { top, total: this.props.entries.length, shown: this.props.shown, disabled: this.disabled, onScroll: (to) => this.#scroll(to) }),
+        h(ScrollBar, {
+          top,
+          total: this.props.entries.length,
+          shown: this.props.shown,
+          disabled: this.disabled,
+          onScroll: (to) => {
+            this.#scroll(to);
+          },
+        }),
       ),
       h(
         Badges,
         following
           ? { badges: [{ text: "LIVE", background: Colour.Red, flash: true }], text: `${this.props.entries.length} entries` }
-          : { badges: [{ text: "PAUSED", background: Colour.Blue, ...(this.disabled ? {} : { onPress: () => this.setState({ top: null }) }) }], text: "End follows the newest again" },
+          : {
+              badges: [
+                {
+                  text: "PAUSED",
+                  background: Colour.Blue,
+                  ...(this.disabled
+                    ? {}
+                    : {
+                        onPress: () => {
+                          this.setState({ top: null });
+                        },
+                      }),
+                },
+              ],
+              text: "End follows the newest again",
+            },
       ),
     );
   }

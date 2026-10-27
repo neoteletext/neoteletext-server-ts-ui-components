@@ -57,7 +57,7 @@ export class Sparkline extends Component<SparklineProps> {
       }
     });
     canvas.sixels(0, labelCells + 1, this.props.foreground ?? Colour.Green, sixels);
-    const last = shown[shown.length - 1];
+    const last = shown.at(-1);
     if (this.props.last !== false && last !== undefined) {
       canvas.coloured(this.#rows - 1, labelCells + 1 + cells, Colour.Cyan, padStart(String(last), LAST_CELLS - 1));
     }

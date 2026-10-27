@@ -64,7 +64,13 @@ export class Spinner extends Component<SpinnerProps, SpinnerState> {
   #start(): void {
     this.clearTimer(this.#timer);
     if (this.props.done !== true) {
-      this.#timer = this.setInterval(() => this.setState((state) => ({ frame: state.frame + 1 })), this.props.everyMs ?? FRAME_MS, { whileViewed: true });
+      this.#timer = this.setInterval(
+        () => {
+          this.setState((state) => ({ frame: state.frame + 1 }));
+        },
+        this.props.everyMs ?? FRAME_MS,
+        { whileViewed: true },
+      );
     }
   }
 
@@ -76,17 +82,20 @@ export class Spinner extends Component<SpinnerProps, SpinnerState> {
   #cells(): number[] {
     const { frame } = this.state;
     switch (this.props.style ?? "orbit") {
-      case "orbit":
+      case "orbit": {
         return [ORBIT[frame % ORBIT.length] ?? MOSAIC_BASE];
-      case "fill":
+      }
+      case "fill": {
         return [FILL[frame % FILL.length] ?? MOSAIC_BASE];
+      }
       case "bounce": {
         const span = 2 * (BOUNCE_CELLS - 1);
         const at = frame % span < BOUNCE_CELLS ? frame % span : span - (frame % span);
         return Array.from({ length: BOUNCE_CELLS }, (_, cell) => (cell === at ? FULL_BLOCK : MOSAIC_BASE));
       }
-      case "dots":
+      case "dots": {
         return [];
+      }
     }
   }
 

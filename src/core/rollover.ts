@@ -92,7 +92,9 @@ export function rolloverTriplets(rollover: ColourTable = ROLLOVER_COLOURS): numb
   const triplets = new Array<number>(TRIPLETS_PER_PACKET).fill(0);
   triplets[0] = (DESIGNATION_LATIN_ENGLISH << DEFAULT_DESIGNATION_SHIFT) | ((NO_SECOND_G0 & NIBBLE) << SECOND_DESIGNATION_LOW_SHIFT);
   triplets[1] = NO_SECOND_G0 >> SECOND_DESIGNATION_LOW_BITS;
-  [...LEVEL_1_COLOURS, ...rollover].forEach((colour, index) => setBits(triplets, COLOUR_WORDS_START + index * COLOUR_WORD_BITS, COLOUR_WORD_BITS, colourWord(colour)));
+  [...LEVEL_1_COLOURS, ...rollover].forEach((colour, index) => {
+    setBits(triplets, COLOUR_WORDS_START + index * COLOUR_WORD_BITS, COLOUR_WORD_BITS, colourWord(colour));
+  });
   triplets[LAST_TRIPLET] = (triplets[LAST_TRIPLET] ?? 0) | (REMAPPING_CLUT_2 << REMAPPING_SHIFT);
   return triplets;
 }

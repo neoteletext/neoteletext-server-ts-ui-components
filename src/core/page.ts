@@ -4,7 +4,7 @@
 // its own and publishes them together, numbered 1 to n, or 0 when there is
 // one (docs/applications.md section 3.2).
 
-import { type Colour, COLUMNS, type FastextLinks, ROWS } from "../kit.ts";
+import { COLUMNS, type FastextLinks, ROWS } from "../kit.ts";
 import type { Canvas } from "./canvas.ts";
 import { type Box, Component, type LayoutChild, type Size } from "./component.ts";
 
@@ -46,14 +46,3 @@ export class SubPage<P extends SubPageProps = SubPageProps> extends Component<P>
 
   override paint(_canvas: Canvas): void {}
 }
-
-/** A sub-page given whole as TTI, such as a converted picture's page with its enhancement packets: published as it is, but for its page number and links. */
-export interface RawProps extends SubPageProps {
-  readonly tti: string;
-  /** A name for the sub-page, which the browser lists it by: drawn as a band over rows 1 and 2, as a frame's title band. */
-  readonly title?: string;
-  readonly background?: Colour;
-  readonly foreground?: Colour;
-}
-
-export class RawSubPage extends SubPage<RawProps> {}

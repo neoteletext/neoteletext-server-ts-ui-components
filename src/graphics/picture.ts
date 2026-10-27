@@ -17,7 +17,7 @@ export class Picture extends Component<PictureProps> {
   #rows(): readonly (readonly number[])[] {
     // A tool that ends its lines CR LF (the host's neottx does) would leave each CR in the row as code 0x0D,
     // Double Height, which hides the row below across the whole page.
-    return readTti(this.props.tti.replace(/\r/gu, ""))[0]?.rows ?? [];
+    return readTti(this.props.tti.replaceAll("\r", ""))[0]?.rows ?? [];
   }
 
   override measure(space: Size): Size {
@@ -28,6 +28,8 @@ export class Picture extends Component<PictureProps> {
     const first = this.props.firstRow ?? 0;
     this.#rows()
       .slice(first)
-      .forEach((codes, row) => canvas.codes(row, 0, codes));
+      .forEach((codes, row) => {
+        canvas.codes(row, 0, codes);
+      });
   }
 }

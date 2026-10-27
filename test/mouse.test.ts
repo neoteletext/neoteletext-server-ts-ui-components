@@ -66,7 +66,9 @@ function harness(specs: readonly PageSpec[]): Harness {
 
 /** One viewer's page of `body`, every component its own. */
 function viewer(...body: Child[]): Harness {
-  const seen = harness([{ page: PAGE, title: "Test", perViewer: true, root: () => h(Frame, { title: "Test", background: Colour.Blue, prompts: PROMPTS }, ...body) }]);
+  const seen = harness([
+    { page: PAGE, title: "Test", perViewer: true, root: () => h(Frame, { title: "Test", background: Colour.Blue, prompts: PROMPTS }, ...body) },
+  ]);
   seen.join(1, PAGE);
   return seen;
 }
@@ -74,7 +76,9 @@ function viewer(...body: Child[]): Harness {
 /** The controls of the copy of the page the viewer sees, in reading order: its own while it has one, else the channel's, as Harness.seen reads the rows. */
 function controls(page: Harness): Box[] {
   const ofPage = page.sent.filter((message) => Number.parseInt(String(message["page"]), 16) === PAGE);
-  const own = ofPage.findLast((message) => (message["type"] === "publish" || message["type"] === "release") && message[message["type"] === "publish" ? "owner" : "session"] === 1);
+  const own = ofPage.findLast(
+    (message) => (message["type"] === "publish" || message["type"] === "release") && message[message["type"] === "publish" ? "owner" : "session"] === 1,
+  );
   const seen = own?.["type"] === "publish" ? own : ofPage.findLast((message) => message["type"] === "publish" && message["owner"] === "channel");
   assert.ok(seen !== undefined, "the page was published");
   return [...(readControls(String(seen["tti"]))[0] ?? [])].sort((a, b) => a.row - b.row || a.column - b.column);
@@ -106,7 +110,11 @@ function click(page: Harness, control: Box): void {
 
 test("an action is a control over its text from its first character; a click there acts, beside it does not; disabled, it declares nothing; it never takes the keys", () => {
   const pressed: string[] = [];
-  const page = viewer(h(Button, { label: "keys", onPress: () => pressed.push("button") }), h(Action, { text: "Do it", onPress: () => pressed.push("action") }), h(Action, { text: "Not now", disabled: true, onPress: () => pressed.push("never") }));
+  const page = viewer(
+    h(Button, { label: "keys", onPress: () => pressed.push("button") }),
+    h(Action, { text: "Do it", onPress: () => pressed.push("action") }),
+    h(Action, { text: "Not now", disabled: true, onPress: () => pressed.push("never") }),
+  );
   const action = controlBy(page, "Do it");
   assert.deepEqual(action, { row: BODY_ROW + 1, column: 1, width: "Do it".length, height: 1 });
   assert.equal(controls(page).length, 2, "the button and the action, not the disabled action");
@@ -140,11 +148,13 @@ test("a crumb with an action is a control a click acts on; a menu's way down is 
   click(crumbs, controlBy(crumbs, "Top"));
   assert.deepEqual(pressed, ["top"]);
 
-  const page = viewer(h(Menu, { title: "Main", items: [{ label: "Tools", items: [{ label: "Saw", items: [{ label: "Blade" }] }] }, { label: "Help" }], onChoose: () => {} }));
+  const page = viewer(
+    h(Menu, { title: "Main", items: [{ label: "Tools", items: [{ label: "Saw", items: [{ label: "Blade" }] }] }, { label: "Help" }], onChoose: () => {} }),
+  );
   page.press(1, Key.Enter);
   page.press(1, Key.Enter);
   // The English set's → is 0x5D (EN 300 706 Table 36), which the row's text shows as "]"; the arrows are blue.
-  assert.match(row(page, BODY_ROW), /Main.\]\x06Tools.\]\x07Saw/u, "two menus down, the one open white");
+  assert.match(row(page, BODY_ROW), /Main.\]\u0006Tools.\]\u0007Saw/u, "two menus down, the one open white");
   assert.match(row(page, BODY_ROW + 1), /Blade/u);
   const [main, tools] = controls(page).filter((control) => control.row === BODY_ROW);
   assert.ok(main !== undefined && tools !== undefined, "the two menus above are controls; the one open is not");
@@ -170,7 +180,16 @@ test("a list's user hears the pointer come onto a row and leave it: a choice lis
   const toggles = viewer(h(ToggleList, { items: ["one", "two"], onHover: hear }));
   enterAndLeave(toggles, controlBy(toggles, "two"));
   const nodes: TreeNode[] = [{ label: "root", children: [{ label: "leaf" }] }];
-  const tree = viewer(h(Tree, { nodes, shown: 3, open: ["root"], onHover: (node: TreeNode | null) => hear(node?.label ?? null) }));
+  const tree = viewer(
+    h(Tree, {
+      nodes,
+      shown: 3,
+      open: ["root"],
+      onHover: (node: TreeNode | null) => {
+        hear(node?.label ?? null);
+      },
+    }),
+  );
   enterAndLeave(tree, controlBy(tree, "leaf"));
   const menu = viewer(h(Menu, { title: "Main", items: [{ label: "Tools", items: [{ label: "Saw" }] }], onChoose: () => {}, onHover: hear }));
   menu.press(1, Key.Enter);
@@ -206,16 +225,36 @@ test("a click on a poll's option votes for it, on every copy, as Enter does", ()
 test("a click on a quiz's answer answers it, as its coloured key does", () => {
   const page = viewer(h(Quiz, { questions: [{ question: "Two and two?", answers: ["three", "four", "five", "six"], right: 1 }] }));
   click(page, controlBy(page, "four"));
-  assert.match(page.seen(1, PAGE).rows.map((codes) => text([codes], 0)).join("\n"), /score 1 of 1/u);
+  assert.match(
+    page
+      .seen(1, PAGE)
+      .rows.map((codes) => text([codes], 0))
+      .join("\n"),
+    /score 1 of 1/u,
+  );
 });
 
 test("a wizard's Next and Back are actions, and a step done is a badge a click goes back to", () => {
   const steps: number[] = [];
-  const page = viewer(h(Wizard, { steps: ["One", "Two", "Three"], onStep: (step: number) => steps.push(step) }, h(Action, { text: "first", onPress: () => {} }), h(Action, { text: "second", onPress: () => {} }), h(Action, { text: "third", onPress: () => {} })));
+  const page = viewer(
+    h(
+      Wizard,
+      { steps: ["One", "Two", "Three"], onStep: (step: number) => steps.push(step) },
+      h(Action, { text: "first", onPress: () => {} }),
+      h(Action, { text: "second", onPress: () => {} }),
+      h(Action, { text: "third", onPress: () => {} }),
+    ),
+  );
   click(page, controlBy(page, "green Next"));
   click(page, controlBy(page, "green Next"));
   assert.deepEqual(steps, [1, 2]);
-  assert.match(page.seen(1, PAGE).rows.map((codes) => text([codes], 0)).join("\n"), /green Finish/u);
+  assert.match(
+    page
+      .seen(1, PAGE)
+      .rows.map((codes) => text([codes], 0))
+      .join("\n"),
+    /green Finish/u,
+  );
   const done = controls(page).filter((control) => control.row === BODY_ROW);
   assert.equal(done.length, 2, "the two steps done are controls; the step shown is not");
   click(page, done[0] as Box);
@@ -232,13 +271,22 @@ test("a roulette spins on a click on its prompt; while it spins its headline is 
   click(page, controlBy(page, "spin the wheel"));
   wait(page, SPIN_STEPS_MS[0]);
   assert.deepEqual(controls(page), [], "spinning: nothing to click");
-  wait(page, SPIN_STEPS_MS.reduce((sum, step) => sum + step, 0));
+  wait(
+    page,
+    SPIN_STEPS_MS.reduce((sum, step) => sum + step, 0),
+  );
   const headline = controlBy(page, "A robot arm");
   click(page, headline);
   assert.deepEqual(page.gotos(1), [0x201]);
   click(page, controlBy(page, "spin again"));
   wait(page, SPIN_STEPS_MS[0]);
-  assert.match(page.seen(1, PAGE).rows.map((codes) => text([codes], 0)).join("\n"), /Spinning/u);
+  assert.match(
+    page
+      .seen(1, PAGE)
+      .rows.map((codes) => text([codes], 0))
+      .join("\n"),
+    /Spinning/u,
+  );
 });
 
 test("a click on the field turns the snake toward it; crashed, the line that says so is a control and a click plays again", () => {
@@ -260,7 +308,10 @@ test("a click on the field turns the snake toward it; crashed, the line that say
 
 test("a text field's band is a control, and a click there gives it the keys", () => {
   const typed: string[] = [];
-  const page = viewer(h(Button, { label: "first", onPress: () => {} }), h(TextField, { label: "Name", longest: 10, onChange: (value: string) => typed.push(value) }));
+  const page = viewer(
+    h(Button, { label: "first", onPress: () => {} }),
+    h(TextField, { label: "Name", longest: 10, onChange: (value: string) => typed.push(value) }),
+  );
   // The band, from its prompt; the label before it is not the field's.
   const field = controlBy(page, "> ");
   page.typeText(1, "x");
@@ -272,7 +323,10 @@ test("a text field's band is a control, and a click there gives it the keys", ()
 
 test("the wheel steps a slider and a number, up for more", () => {
   const values: number[] = [];
-  const page = viewer(h(Slider, { label: "Volume", min: 0, max: 10, initial: 5, onChange: (value: number) => values.push(value) }), h(NumberInput, { label: "Count", min: 0, max: 9, initial: 3, onChange: (value: number) => values.push(value) }));
+  const page = viewer(
+    h(Slider, { label: "Volume", min: 0, max: 10, initial: 5, onChange: (value: number) => values.push(value) }),
+    h(NumberInput, { label: "Count", min: 0, max: 9, initial: 3, onChange: (value: number) => values.push(value) }),
+  );
   page.wheel(1, -NOTCH, 20, BODY_ROW);
   page.wheel(1, 2 * NOTCH, 20, BODY_ROW + 1);
   assert.deepEqual(values, [6, 1], "two notches in one turn are two steps at once");
@@ -281,7 +335,12 @@ test("the wheel steps a slider and a number, up for more", () => {
 /** An action that raises a toast for its viewer, as any component sends one on the bus. */
 class RaiseToast extends Component {
   override render(): Child {
-    return h(Action, { text: "raise", onPress: (session: number) => this.services.bus.emit("toast", { kind: "info", text: "Saved" }, { session }) });
+    return h(Action, {
+      text: "raise",
+      onPress: (session: number) => {
+        this.services.bus.emit("toast", { kind: "info", text: "Saved" }, { session });
+      },
+    });
   }
 }
 
@@ -316,7 +375,9 @@ test("a chart whose bars or columns can be chosen makes each a control; a click 
 });
 
 test("a choice list's row says what it is on the hint row while the pointer is on it, and the list's own hint comes back as it leaves", () => {
-  const page = viewer(h(ChoiceList<string>, { items: ["one", "two"], shown: 2, onChoose: () => {}, itemHint: (item: string) => (item === "two" ? "the second of two" : null) }));
+  const page = viewer(
+    h(ChoiceList<string>, { items: ["one", "two"], shown: 2, onChoose: () => {}, itemHint: (item: string) => (item === "two" ? "the second of two" : null) }),
+  );
   const one = controlBy(page, "one");
   const two = controlBy(page, "two");
   page.hover(1, "enter", two.column, two.row);

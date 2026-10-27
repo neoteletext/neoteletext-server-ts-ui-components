@@ -10,7 +10,7 @@ import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import { DISABLED, FOCUSED_LABEL, LABEL } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
 import { Key } from "../kit.ts";
-import { type ValueProps, ValueControl } from "./control.ts";
+import { type ValueProps, ValueControl } from "./value-control.ts";
 
 export interface RadioGroupProps extends ValueProps<number> {
   readonly items: readonly string[];

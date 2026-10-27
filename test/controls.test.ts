@@ -80,7 +80,9 @@ function frame(title: string, ...body: Child[]): ReturnType<typeof h> {
 /** The TTI of the copy of `page` viewer 1 sees: its own while it has one, else the channel's (a viewer's copy that comes to match the channel's is released, not published again). */
 function latestTti(harness: Harness, page: number): string {
   const ofPage = harness.sent.filter((message) => Number.parseInt(String(message["page"]), 16) === page);
-  const own = ofPage.findLast((message) => (message["type"] === "publish" || message["type"] === "release") && message[message["type"] === "publish" ? "owner" : "session"] === 1);
+  const own = ofPage.findLast(
+    (message) => (message["type"] === "publish" || message["type"] === "release") && message[message["type"] === "publish" ? "owner" : "session"] === 1,
+  );
   const seen = own?.["type"] === "publish" ? own : ofPage.findLast((message) => message["type"] === "publish" && message["owner"] === "channel");
   assert.ok(seen !== undefined, `page ${page.toString(16)} was published`);
   return String(seen["tti"]);
@@ -133,7 +135,7 @@ test("an X/26 packet is an OL,26 line: its designation code, then thirteen tripl
   // 0x0013C: 0x3C, 0x04, 0x00, each with bit 6 set.
   assert.equal(body.slice(1, 4), "|D@");
   // 0x03FFF: 0x3F, 0x3F, 0x03; the rest of the packet is Termination Markers too.
-  assert.equal(body.slice(4), "\x7f\x7fC".repeat(12));
+  assert.equal(body.slice(4), "\x7F\x7FC".repeat(12));
   assert.deepEqual(
     enhancementLines(new Array<number>(14).fill(TERMINATION)).map((each) => each.slice(0, 7)),
     ["OL,26,@", "OL,26,A"],
@@ -176,7 +178,13 @@ test("each row's runs follow its Set Active Position triplet, left to right; a t
 
 test("a button's band is a control: from its New Background cell to the cell before its Black Background; a disabled one declares none", () => {
   const width = Button.widthOf("press");
-  const seen = harness([{ page: PAGE, title: "Test", root: () => frame("Buttons", h(Button, { label: "press", onPress: () => {} }), h(Button, { label: "off", disabled: true, onPress: () => {} })) }]);
+  const seen = harness([
+    {
+      page: PAGE,
+      title: "Test",
+      root: () => frame("Buttons", h(Button, { label: "press", onPress: () => {} }), h(Button, { label: "off", disabled: true, onPress: () => {} })),
+    },
+  ]);
   seen.join(1, PAGE);
   assert.deepEqual(controlsOf(seen, PAGE), [{ row: BODY_ROW, column: 1, width: width - 2, height: 1 }]);
   assert.doesNotMatch(latestTti(seen, PAGE), /^IM,/m, "the page asks for no input: every event is sent (INPUT.md section 6.3)");
@@ -184,7 +192,11 @@ test("a button's band is a control: from its New Background cell to the cell bef
 
 test("a list's rows are controls, a taller item's rows joined, and its page stays one copy every viewer shares", () => {
   const components = new ComponentChannel([
-    { page: PAGE, title: "Test", root: () => frame("Rows", h(ChoiceList, { items: ["first", "second"], shown: 4, itemRows: 2, shared: true, onChoose: () => {} })) },
+    {
+      page: PAGE,
+      title: "Test",
+      root: () => frame("Rows", h(ChoiceList, { items: ["first", "second"], shown: 4, itemRows: 2, shared: true, onChoose: () => {} })),
+    },
   ]);
   assert.equal(components.perViewer(PAGE), false);
   const seen = new Harness([components]);
@@ -198,7 +210,9 @@ test("a list's rows are controls, a taller item's rows joined, and its page stay
 });
 
 test("a disabled list declares no controls", () => {
-  const seen = harness([{ page: PAGE, title: "Test", root: () => frame("Rows", h(ChoiceList, { items: ["first", "second"], shown: 2, disabled: true, onChoose: () => {} })) }]);
+  const seen = harness([
+    { page: PAGE, title: "Test", root: () => frame("Rows", h(ChoiceList, { items: ["first", "second"], shown: 2, disabled: true, onChoose: () => {} })) },
+  ]);
   seen.join(1, PAGE);
   assert.deepEqual(controlsOf(seen, PAGE), []);
   assert.ok(!latestTti(seen, PAGE).includes("OL,26,"), "no packet X/26");
@@ -209,7 +223,8 @@ test("a dialog over a page has the controls: the buttons under it cannot be clic
     {
       page: PAGE,
       title: "Test",
-      root: () => frame("Modal", h(Modal, { dialog: h(Dialog, { title: "Sure?", buttons: ["Yes", "No"] }), row: 0 }, h(Button, { label: "under", onPress: () => {} }))),
+      root: () =>
+        frame("Modal", h(Modal, { dialog: h(Dialog, { title: "Sure?", buttons: ["Yes", "No"] }), row: 0 }, h(Button, { label: "under", onPress: () => {} }))),
     },
   ]);
   seen.join(1, PAGE);
@@ -239,9 +254,22 @@ test("the whole page's area comes first; each row's controls and areas follow it
     ],
     wholePage: true,
   };
-  assert.deepEqual(controlTriplets(controls, pointer), [WHOLE_PAGE_POINTER_AREA, setActivePosition(4), 0x03282, 0x03282, 0x05154, setActivePosition(5), 0x23282, TERMINATION]);
+  assert.deepEqual(controlTriplets(controls, pointer), [
+    WHOLE_PAGE_POINTER_AREA,
+    setActivePosition(4),
+    0x03282,
+    0x03282,
+    0x05154,
+    setActivePosition(5),
+    0x23282,
+    TERMINATION,
+  ]);
   assert.deepEqual(controlTriplet(20, 10, false), 0x05154);
-  assert.deepEqual(readDeclarations(`PN,15000\n${controlLines(controls, pointer).join("\n")}\n`), [{ controls, pointer }], "areas may overlap each other and the controls");
+  assert.deepEqual(
+    readDeclarations(`PN,15000\n${controlLines(controls, pointer).join("\n")}\n`),
+    [{ controls, pointer }],
+    "areas may overlap each other and the controls",
+  );
   assert.deepEqual(controlLines([], { areas: [], wholePage: false }), [], "nothing, no packet");
 });
 
@@ -325,7 +353,10 @@ test("a whole-page pointer area is one triplet, and takes every move on the page
 test("only the first sub-page declares controls: a click is found on its cells alone, so a hand on another would point at the first's component", () => {
   class Two extends Component {
     override render(): Child {
-      return [h(Frame, { key: "one", title: "One", background: Colour.Blue, prompts: PROMPTS }, h(Button, { label: "one", onPress: () => {} })), h(Frame, { key: "two", title: "Two", background: Colour.Blue, prompts: PROMPTS }, h(Button, { label: "two", onPress: () => {} }))];
+      return [
+        h(Frame, { key: "one", title: "One", background: Colour.Blue, prompts: PROMPTS }, h(Button, { label: "one", onPress: () => {} })),
+        h(Frame, { key: "two", title: "Two", background: Colour.Blue, prompts: PROMPTS }, h(Button, { label: "two", onPress: () => {} })),
+      ];
     }
   }
   const seen = harness([{ page: PAGE, title: "Test", root: () => h(Two, {}) }]);
@@ -375,7 +406,9 @@ test("a dialog's button answers only on its band, not on the dialog's background
 
 test("a layer placed with At covers only what it places: the button under it keeps its control and its click", () => {
   const pressed: string[] = [];
-  const page = viewer(h(Layers, {}, h(Button, { label: "under", onPress: () => pressed.push("under") }), h(At, { row: 5, column: 0 }, h(Text, { text: "over" }))));
+  const page = viewer(
+    h(Layers, {}, h(Button, { label: "under", onPress: () => pressed.push("under") }), h(At, { row: 5, column: 0 }, h(Text, { text: "over" }))),
+  );
   assert.deepEqual(controlsOf(page, PAGE), [{ row: BODY_ROW, column: 1, width: Button.widthOf("under") - 2, height: 1 }]);
   page.clickLeft(1, 3, BODY_ROW);
   assert.deepEqual(pressed, ["under"]);
@@ -414,7 +447,8 @@ test("a calendar's controls are its arrows and the chosen week's days; a click o
     { row: BODY_ROW, column: at, width: 2, height: 1 },
     { row: BODY_ROW, column: at + heading.length - 2, width: 2, height: 1 },
   ];
-  const week = (row: number, from: number): { row: number; column: number; width: number; height: number }[] => Array.from({ length: 7 - from }, (_, day) => ({ row, column: 4 * (from + day) + 1, width: 3, height: 1 }));
+  const week = (row: number, from: number): { row: number; column: number; width: number; height: number }[] =>
+    Array.from({ length: 7 - from }, (_, day) => ({ row, column: 4 * (from + day) + 1, width: 3, height: 1 }));
   assert.deepEqual(inOrder(controlsOf(page, PAGE)), [...arrows, ...week(BODY_ROW + 2, 3)]);
   // 15 October is the third week's Thursday.
   page.clickLeft(1, 4 * 3 + 2, BODY_ROW + 4);
@@ -429,7 +463,10 @@ test("a slider's track is its control; a scroll bar that scrolls is one, the who
   const page = viewer(h(Slider, { label: "Volume", min: 0, max: 10 }), h(ChoiceList, { items, shown: 4, onChoose: () => {} }));
   const track = COLUMNS - 12 - 1 - 6;
   const rows = Array.from({ length: 4 }, (_, row) => ({ row: BODY_ROW + 1 + row, column: 1, width: COLUMNS - BAR_CELLS - 2, height: 1 }));
-  assert.deepEqual(inOrder(controlsOf(page, PAGE)), inOrder([{ row: BODY_ROW, column: 13, width: track, height: 1 }, ...rows, { row: BODY_ROW + 1, column: COLUMNS - BAR_CELLS, width: BAR_CELLS, height: 4 }]));
+  assert.deepEqual(
+    inOrder(controlsOf(page, PAGE)),
+    inOrder([{ row: BODY_ROW, column: 13, width: track, height: 1 }, ...rows, { row: BODY_ROW + 1, column: COLUMNS - BAR_CELLS, width: BAR_CELLS, height: 4 }]),
+  );
   const off = viewer(h(Slider, { label: "Volume", min: 0, max: 10, disabled: true }), h(ChoiceList, { items, shown: 4, disabled: true, onChoose: () => {} }));
   assert.deepEqual(controlsOf(off, PAGE), []);
   off.wheel(1, 120, 5, BODY_ROW + 1);
@@ -438,7 +475,10 @@ test("a slider's track is its control; a scroll bar that scrolls is one, the who
 });
 
 test("a disabled select does not open to a click, and a disabled table does not sort", () => {
-  const page = viewer(h(Select, { label: "Pick", items: ["one", "two"], disabled: true }), h(DataTable, { columns: [{ title: "Name", width: 10 }], rows: [["b"], ["a"]], shown: 2, sortable: true, disabled: true }));
+  const page = viewer(
+    h(Select, { label: "Pick", items: ["one", "two"], disabled: true }),
+    h(DataTable, { columns: [{ title: "Name", width: 10 }], rows: [["b"], ["a"]], shown: 2, sortable: true, disabled: true }),
+  );
   assert.deepEqual(controlsOf(page, PAGE), []);
   page.clickLeft(1, 16, BODY_ROW);
   page.clickLeft(1, 4, BODY_ROW + 1);
@@ -469,7 +509,11 @@ test("a list's row is pressed only on its band: a click under a select's label, 
   const page = viewer(h(Select, { label: "Pick", items: ["one", "two", "three"], onChange: (value: number) => changes.push(value) }));
   page.press(1, Key.Enter);
   const rows = controlsOf(page, PAGE).filter((control) => control.row > BODY_ROW);
-  assert.deepEqual(rows[0], { row: BODY_ROW + 1, column: 13, width: COLUMNS - 13, height: 1 }, "after the label's 12 cells, from New Background to the row's end");
+  assert.deepEqual(
+    rows[0],
+    { row: BODY_ROW + 1, column: 13, width: COLUMNS - 13, height: 1 },
+    "after the label's 12 cells, from New Background to the row's end",
+  );
   page.clickLeft(1, 3, BODY_ROW + 2);
   assert.deepEqual(changes, []);
   page.clickLeft(1, 15, BODY_ROW + 2);
@@ -486,7 +530,14 @@ class HoverWatcher extends Component<{ readonly seen: string[] }> {
 
 test("a hover goes to the component whose control begins at its cell, and up; the hint row says what the hovered control does while the pointer is on it", () => {
   const seen: string[] = [];
-  const page = viewer(h(HoverWatcher, { seen }, h(Button, { label: "one", hint: "one is pressed", onPress: () => {} }), h(Button, { label: "two", hint: "two is pressed", onPress: () => {} })));
+  const page = viewer(
+    h(
+      HoverWatcher,
+      { seen },
+      h(Button, { label: "one", hint: "one is pressed", onPress: () => {} }),
+      h(Button, { label: "two", hint: "two is pressed", onPress: () => {} }),
+    ),
+  );
   const [one, two, ...more] = inOrder(controlsOf(page, PAGE));
   assert.ok(one !== undefined && two !== undefined && more.length === 0, "two controls");
   assert.match(text(page.seen(1, PAGE).rows, 23), /one is pressed/u, "the first button has the keys");
@@ -497,7 +548,12 @@ test("a hover goes to the component whose control begins at its cell, and up; th
   page.hover(1, "enter", one.column, one.row);
   page.hover(1, "leave", one.column, one.row);
   assert.match(text(page.seen(1, PAGE).rows, 23), /one is pressed/u, "off every control, the focused one's hint again");
-  assert.deepEqual(seen, [`enter ${two.row},${two.column}`, `leave ${two.row},${two.column}`, `enter ${one.row},${one.column}`, `leave ${one.row},${one.column}`]);
+  assert.deepEqual(seen, [
+    `enter ${two.row},${two.column}`,
+    `leave ${two.row},${two.column}`,
+    `enter ${one.row},${one.column}`,
+    `leave ${one.row},${one.column}`,
+  ]);
 });
 
 test("a hover where no control begins is dropped, as is a leave with no enter; an enter with a leave missed leaves the control before first", () => {
@@ -511,12 +567,16 @@ test("a hover where no control begins is dropped, as is a leave with no enter; a
   page.hover(1, "enter", one.column, one.row);
   page.hover(1, "enter", one.column, one.row);
   page.hover(1, "enter", two.column, two.row);
-  assert.deepEqual(seen, [`enter ${one.row},${one.column}`, `leave ${one.row},${one.column}`, `enter ${two.row},${two.column}`], "an enter again says nothing new");
+  assert.deepEqual(
+    seen,
+    [`enter ${one.row},${one.column}`, `leave ${one.row},${one.column}`, `enter ${two.row},${two.column}`],
+    "an enter again says nothing new",
+  );
 });
 
 /** The thirteen triplet values of a packed OL line. */
 function lineTriplets(line: string): number[] {
-  const codes = [...line.slice(line.indexOf(",", 3) + 1)].map((character) => character.charCodeAt(0) & 0x3f);
+  const codes = Array.from(line.slice(line.indexOf(",", 3) + 1), (character) => (character.codePointAt(0) ?? 0) & 0x3f);
   const [, ...body] = codes;
   return Array.from({ length: 13 }, (_, index) => (body[3 * index] ?? 0) | ((body[3 * index + 1] ?? 0) << 6) | ((body[3 * index + 2] ?? 0) << 12));
 }
@@ -537,12 +597,18 @@ test("the rollover packet is X/28/0 format 1 (Table 4): a basic English page, CL
   const triplets = lineTriplets(line);
   assert.equal(triplets[0], 0xf << 14, "page function and coding 0, default designation Latin English, the second G0 set's low bits 1111");
   assert.equal(triplets[1]! & 0x3ff, 0x7, "the second G0 set's high bits 111 (none), no side panels");
-  const words = Array.from({ length: 16 }, (_, index) => streamBits(triplets, 28 + 12 * index, 12)).map((word) => ((word & 0xf) << 8) | (word & 0xf0) | ((word >> 8) & 0xf));
+  const words = Array.from({ length: 16 }, (_, index) => streamBits(triplets, 28 + 12 * index, 12)).map(
+    (word) => ((word & 0xf) << 8) | (word & 0xf0) | ((word >> 8) & 0xf),
+  );
   assert.deepEqual(words, [...LEVEL_1_COLOURS, ...ROLLOVER_COLOURS]);
   assert.equal((triplets[12]! >> 4) & 0x7ff, 0, "screen and row colour 0, no substitution");
   assert.equal((triplets[12]! >> 15) & 0x7, 6, "re-mapping: foreground and background CLUT 2");
   const own: ColourTable = [0x111, 0x222, 0x333, 0x444, 0x555, 0x666, 0x777, 0x888];
-  assert.deepEqual(Array.from({ length: 8 }, (_, index) => streamBits(lineTriplets(rolloverLine(own)), 28 + 12 * (8 + index), 12)), own.map((colour) => ((colour & 0xf) << 8) | (colour & 0xf0) | ((colour >> 8) & 0xf)), "a page's own colours in CLUT 3");
+  assert.deepEqual(
+    Array.from({ length: 8 }, (_, index) => streamBits(lineTriplets(rolloverLine(own)), 28 + 12 * (8 + index), 12)),
+    own.map((colour) => ((colour & 0xf) << 8) | (colour & 0xf0) | ((colour >> 8) & 0xf)),
+    "a page's own colours in CLUT 3",
+  );
 });
 
 test("a page with controls sends the rollover packet with its first sub-page; one without, or whose spec says null, does not", () => {
@@ -550,7 +616,9 @@ test("a page with controls sends the rollover packet with its first sub-page; on
   const lines = (spec: Partial<PageSpec>): string[] => {
     const seen = harness([{ page: PAGE, title: "Test", perViewer: true, root: button, ...spec }]);
     seen.join(1, PAGE);
-    return latestTti(seen, PAGE).split("\n").filter((line) => line.startsWith("OL,28,"));
+    return latestTti(seen, PAGE)
+      .split("\n")
+      .filter((line) => line.startsWith("OL,28,"));
   };
   assert.deepEqual(lines({}), [rolloverLine()]);
   const own: ColourTable = [0x111, 0x222, 0x333, 0x444, 0x555, 0x666, 0x777, 0x888];
@@ -561,7 +629,17 @@ test("a page with controls sends the rollover packet with its first sub-page; on
 
 test("on a page whose frame says what its keys do, the hint row says what the hovered control does while the pointer is on it", () => {
   const page = harness([
-    { page: PAGE, title: "Test", perViewer: true, root: () => h(Frame, { title: "Test", background: Colour.Blue, prompts: PROMPTS, hint: "the page's own words" }, h(Button, { label: "one", hint: "one is pressed", onPress: () => {} })) },
+    {
+      page: PAGE,
+      title: "Test",
+      perViewer: true,
+      root: () =>
+        h(
+          Frame,
+          { title: "Test", background: Colour.Blue, prompts: PROMPTS, hint: "the page's own words" },
+          h(Button, { label: "one", hint: "one is pressed", onPress: () => {} }),
+        ),
+    },
   ]);
   page.join(1, PAGE);
   const [one] = controlsOf(page, PAGE);

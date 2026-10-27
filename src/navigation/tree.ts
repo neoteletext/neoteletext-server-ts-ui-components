@@ -6,8 +6,7 @@
 // does, and the pointer coming onto an item is told to the tree's user
 // (onHover). More than fit scroll beside a scroll bar, and with the wheel.
 
-import type { Canvas } from "../core/canvas.ts";
-import { Component, type Size } from "../core/component.ts";
+import { type Size } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
@@ -15,9 +14,10 @@ import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-curso
 import { LEFT_HALF, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { Colour, Key } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
-import { Columns } from "../layout/layouts.ts";
-import { ListRows } from "../lists/list-row.ts";
+import { Columns } from "../layout/columns.ts";
+import { ListRows } from "../lists/list-rows.ts";
 import { BAR_CELLS, ScrollBar } from "../lists/scroll.ts";
+import { TreeGuides } from "./tree-guides.ts";
 
 export interface TreeNode {
   readonly label: string;
@@ -59,8 +59,11 @@ interface Visible {
 
 /** The guides' cells (EN 300 706 Table 47): a line down, a branch to an item, the last branch. */
 const DOWN = LEFT_HALF;
+
 const BRANCH = LEFT_HALF | SIXEL.middleRight;
+
 const LAST_BRANCH = MOSAIC_BASE | SIXEL.topLeft | SIXEL.middleLeft | SIXEL.middleRight;
+
 /** Indentation without guides, a level. */
 const INDENT = 2;
 
@@ -86,13 +89,6 @@ function visibleRows(nodes: readonly TreeNode[], open: ReadonlySet<string>): Vis
   };
   visit(nodes, 0, [], "", null);
   return out;
-}
-
-/** The mosaic lines that join an item to its parent, in blue after their colour's cell. */
-class TreeGuides extends Component<{ readonly codes: readonly number[] }> {
-  override paint(canvas: Canvas): void {
-    canvas.mosaics(0, 0, Colour.Blue, [...this.props.codes]);
-  }
 }
 
 /** An item's guide lines: one cell a level above it, a line down where that level goes on, then its branch. */
@@ -137,10 +133,22 @@ export class Tree extends Control<TreeProps, TreeState> {
         text: (item: Visible) => `${item.node.children === undefined ? " " : this.state.open.has(item.id) ? "-" : "+"} ${item.node.label}`,
         foreground: (item: Visible) => (item.node.children === undefined ? Colour.White : Colour.Cyan),
         disabled: () => this.disabled,
-        onPick: (index: number, session: number) => this.#activate(index, session),
-        ...(this.props.onHover === undefined ? {} : { onHover: (index: number | null, session: number) => this.props.onHover?.(index === null ? null : (rows[index]?.node ?? null), session) }),
+        onPick: (index: number, session: number) => {
+          this.#activate(index, session);
+        },
+        ...(this.props.onHover === undefined
+          ? {}
+          : { onHover: (index: number | null, session: number) => this.props.onHover?.(index === null ? null : (rows[index]?.node ?? null), session) }),
       }),
-      h(ScrollBar, { top, total: rows.length, shown: this.props.shown, disabled: this.disabled, onScroll: (to) => this.setState({ top: to }) }),
+      h(ScrollBar, {
+        top,
+        total: rows.length,
+        shown: this.props.shown,
+        disabled: this.disabled,
+        onScroll: (to) => {
+          this.setState({ top: to });
+        },
+      }),
     );
   }
 

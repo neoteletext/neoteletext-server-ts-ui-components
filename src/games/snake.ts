@@ -63,14 +63,15 @@ export class Snake extends Control<SnakeProps, SnakeState> {
   override componentDidMount(): void {
     // The copy every viewer shares is the title screen; a viewer's own copy plays.
     if (this.services.session !== null) {
-      this.#timer = this.setInterval(() => this.#frame(), this.props.everyMs);
+      this.#timer = this.setInterval(() => {
+        this.#frame();
+      }, this.props.everyMs);
     }
   }
 
   override componentWillUnmount(): void {
     this.clearTimer(this.#timer);
   }
-
 
   #frame(): void {
     const state = this.state;
@@ -82,7 +83,8 @@ export class Snake extends Control<SnakeProps, SnakeState> {
       return;
     }
     const next = { x: head.x + state.heading.x, y: head.y + state.heading.y };
-    const crashed = next.x < 0 || next.x >= FIELD_ACROSS || next.y < 0 || next.y >= this.#down || state.body.some((point) => point.x === next.x && point.y === next.y);
+    const crashed =
+      next.x < 0 || next.x >= FIELD_ACROSS || next.y < 0 || next.y >= this.#down || state.body.some((point) => point.x === next.x && point.y === next.y);
     if (crashed) {
       this.setState({ over: true });
       if (this.props.crash !== undefined) {

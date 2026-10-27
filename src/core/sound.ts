@@ -41,8 +41,7 @@ export function tone(frequency: number, milliseconds: number, wave: Wave = "sine
   for (let index = 0; index < count; index += 1) {
     const phase = (index * frequency) / RATE;
     const fraction = phase - Math.floor(phase);
-    const value =
-      wave === "sine" ? Math.sin(2 * Math.PI * phase) : wave === "square" ? (fraction < 0.5 ? 1 : -1) : 4 * Math.abs(fraction - 0.5) - 1;
+    const value = wave === "sine" ? Math.sin(2 * Math.PI * phase) : wave === "square" ? (fraction < 0.5 ? 1 : -1) : 4 * Math.abs(fraction - 0.5) - 1;
     samples[index] = Math.round(value * PEAK * gain * envelope(index, count));
   }
   return samples;

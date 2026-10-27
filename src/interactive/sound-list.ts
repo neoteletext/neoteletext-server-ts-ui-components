@@ -2,11 +2,11 @@
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
-import { RATE, type Sound, sound } from "../core/sound.ts";
+import { RATE, type Sound } from "../core/sound.ts";
 import { Colour } from "../kit.ts";
 import { Rows } from "../layout/layouts.ts";
 import { ChoiceList } from "../lists/choice-list.ts";
-import { Flashing } from "../text/styles.ts";
+import { Flashing } from "../text/flashing.ts";
 
 export interface SoundListProps {
   readonly sounds: readonly Sound[];

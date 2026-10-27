@@ -31,7 +31,7 @@ export function articleLines(blocks: readonly Block[], width: number): Line[] {
     }
     lines.push({ foreground: Colour.White, text: "" });
   }
-  while (lines.length > 0 && lines[lines.length - 1]?.text === "") {
+  while (lines.length > 0 && lines.at(-1)?.text === "") {
     lines.pop();
   }
   return lines;

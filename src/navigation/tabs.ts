@@ -8,24 +8,18 @@
 
 import { CHIP_CELLS, type Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
-import { type Child, h } from "../core/element.ts";
-import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
-import { colourKeyOf, digitOf } from "../core/keys.ts";
+import { type PointerEvent } from "../core/events.ts";
 import { CHOSEN, DISABLED, DISABLED_CHIP, LABEL } from "../core/look.ts";
 import { TOP_ROW } from "../core/mosaics.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { cells } from "../core/text.ts";
-import { Colour, Key } from "../kit.ts";
-import { KEY_COLOURS } from "../frame/frame.ts";
-import { type ValueProps, ValueControl } from "../input/control.ts";
-import { Rows } from "../layout/layouts.ts";
+import { Colour } from "../kit.ts";
+import { KEY_COLOURS } from "../frame/fastext-bar.ts";
 
 export type TabStyle = "chips" | "fastext" | "numbered" | "underline";
 
 /** Where a tab's text starts in its slot: after a chip's background colour, New Background and foreground. */
 const TEXT_IN_SLOT = 3;
-/** The most tabs the digits choose: 1 to 9. */
-const MOST_NUMBERED = 9;
 
 /** What a tab shows: its name, numbered in that style. */
 function shown(name: string, index: number, style: TabStyle): string {
@@ -33,20 +27,8 @@ function shown(name: string, index: number, style: TabStyle): string {
 }
 
 /** What a style takes from page selection. */
-function styleNeeds(style: TabStyle): PageNeeds {
+export function styleNeeds(style: TabStyle): PageNeeds {
   return { colourKeys: style === "fastext", digits: style === "numbered" };
-}
-
-/** The tab a key chooses in `style`, or null. */
-function tabForKey(event: KeyEvent, style: TabStyle, count: number, active: number): number | null {
-  if (isPress(event, Key.Right)) {
-    return (active + 1) % count;
-  }
-  if (isPress(event, Key.Left)) {
-    return (active + count - 1) % count;
-  }
-  const index = style === "fastext" ? colourKeyOf(event) : style === "numbered" ? (digitOf(event) ?? 0) - 1 : null;
-  return index !== null && index >= 0 && index < Math.min(count, MOST_NUMBERED) ? index : null;
 }
 
 export interface TabStripProps {
@@ -123,46 +105,6 @@ export class TabStrip extends Component<TabStripProps> {
       return false;
     }
     this.props.onChange(Number(event.region), event.session);
-    return true;
-  }
-}
-
-export interface TabViewProps extends ValueProps<number> {
-  readonly tabs: readonly string[];
-  readonly style?: TabStyle;
-}
-
-/** Tabs and the chosen one's content: its children are the views, one for each tab. Left and Right, a click, or the style's keys choose. */
-export class TabView extends ValueControl<number, TabViewProps> {
-  protected empty(): number {
-    return 0;
-  }
-
-  protected override keyNeeds(): PageNeeds {
-    return styleNeeds(this.props.style ?? "chips");
-  }
-
-  protected override keysHint(): string {
-    const style = this.props.style ?? "chips";
-    return style === "fastext" ? "The coloured keys choose a tab" : style === "numbered" ? "1-9 or Left Right choose a tab" : "Left Right or a click choose a tab";
-  }
-
-  override render(): Child {
-    const views = this.props.children ?? [];
-    return h(
-      Rows,
-      {},
-      h(TabStrip, { tabs: this.props.tabs, active: this.value, style: this.props.style ?? "chips", focused: this.focused, disabled: this.disabled, onChange: (index: number, session: number) => this.change(index, session) }),
-      views[this.value] ?? null,
-    );
-  }
-
-  override onKey(event: KeyEvent): boolean {
-    const index = this.disabled ? null : tabForKey(event, this.props.style ?? "chips", this.props.tabs.length, this.value);
-    if (index === null) {
-      return false;
-    }
-    this.change(index, event.session);
     return true;
   }
 }

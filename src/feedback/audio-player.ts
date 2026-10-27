@@ -9,8 +9,11 @@ import { type Child, h } from "../core/element.ts";
 import type { Listening } from "../core/stream.ts";
 import type { Colour } from "../kit.ts";
 import { Button } from "../input/button.ts";
-import { Columns, Gap, Rows } from "../layout/layouts.ts";
-import { LISTENING_ROWS, ListeningView, LOOK_MS, nothingPlaying, playing } from "./now-playing.ts";
+import { Columns } from "../layout/columns.ts";
+import { Gap } from "../layout/gap.ts";
+import { Rows } from "../layout/layouts.ts";
+import { LISTENING_ROWS, LOOK_MS, nothingPlaying, playing } from "./now-playing.ts";
+import { ListeningView } from "./listening-view.ts";
 
 const PAUSE = "pause";
 const RESUME = "resume";
@@ -41,7 +44,13 @@ export class AudioPlayer extends Component<AudioPlayerProps, { readonly listenin
       return;
     }
     this.#look();
-    this.setInterval(() => this.#look(), LOOK_MS, { whileViewed: true });
+    this.setInterval(
+      () => {
+        this.#look();
+      },
+      LOOK_MS,
+      { whileViewed: true },
+    );
   }
 
   override render(): Child {

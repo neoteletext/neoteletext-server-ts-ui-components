@@ -6,7 +6,21 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { Harness, text } from "neottx-server-ts-protocol/testing";
-import { type Canvas, type Child, Component, ComponentChannel, Frame, h, Headline, type KeyEvent, type PageSpec, Picture, ScrollingText, type Size, Ticker } from "../src/index.ts";
+import {
+  type Canvas,
+  type Child,
+  Component,
+  ComponentChannel,
+  Frame,
+  h,
+  Headline,
+  type KeyEvent,
+  type PageSpec,
+  Picture,
+  ScrollingText,
+  type Size,
+  Ticker,
+} from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 
 const PAGE = 0x150;
@@ -72,7 +86,7 @@ test("a page every viewer shares is published once at the start, with its frame"
   const harness = channel([{ page: PAGE, title: "Test", root: () => frame("Shared page", h(Headline, { title: "A headline", page: OTHER })) }]);
   const rows = harness.shared(PAGE);
   assert.match(text(rows, 1), /Shared page/u);
-  assert.match(text(rows, 3), /151\x07A headline/u);
+  assert.match(text(rows, 3), /151\u0007A headline/u);
   assert.match(text(rows, 24), /Index/u);
   assert.equal(harness.sharedPublications(PAGE), 1);
 });
@@ -86,7 +100,10 @@ test("a viewer's own copy is sent only once it differs from the shared one, and 
   assert.match(text(harness.own(7, PAGE), 3), /count 1/u);
   assert.match(text(harness.shared(PAGE), 3), /count 0/u, "the shared copy is unchanged");
   harness.open(7, OTHER);
-  assert.ok(harness.sent.some((message) => message["type"] === "release" && message["session"] === 7), "leaving releases its own copy");
+  assert.ok(
+    harness.sent.some((message) => message["type"] === "release" && message["session"] === 7),
+    "leaving releases its own copy",
+  );
   // Each copy's counter is given the keys at its first draw and renders again for it (the mount forces it: what a component renders may say whether it has the keys), so each mount has one update with nothing changed.
   assert.deepEqual(events, ["mount count", "update count 0->0", "mount count", "update count 0->0", "update count 0->1", "unmount count"]);
 });
@@ -113,7 +130,9 @@ test("scrolling text moves with the keys and its scroll bar can be dragged", () 
 });
 
 test("a timer runs while its component is on the page and stops when it leaves", () => {
-  const harness = channel([{ page: PAGE, title: "Test", perViewer: true, root: () => frame("Ticker", h(Ticker, { items: ["one", "two", "three"], everyMs: 1_000 })) }]);
+  const harness = channel([
+    { page: PAGE, title: "Test", perViewer: true, root: () => frame("Ticker", h(Ticker, { items: ["one", "two", "three"], everyMs: 1_000 })) },
+  ]);
   harness.join(5, PAGE);
   harness.advance(1_000);
   // The shared copy ticks in step with the viewer's, so the viewer is sent nothing of its own.
@@ -128,7 +147,7 @@ test("a timer runs while its component is on the page and stops when it leaves",
 });
 
 test("a picture's TTI with CR LF line ends draws no Double Height: a CR kept in a row would hide the row below", () => {
-  const tti = "PN,10000\r\nOL,2,\u001bWABC\r\nOL,3,\u001bWDEF\r\n";
+  const tti = "PN,10000\r\nOL,2,\u001BWABC\r\nOL,3,\u001BWDEF\r\n";
   const harness = channel([{ page: PAGE, title: "Test", root: () => frame("QR", h(Picture, { tti, firstRow: 2 })) }]);
   const rows = harness.shared(PAGE);
   // Row 1 is the title band, double height on purpose; the picture is under it.

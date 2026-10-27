@@ -11,7 +11,9 @@ export type Bitmap = readonly string[];
 export function sixelsOf(bitmap: Bitmap): Sixels {
   const width = Math.max(0, ...bitmap.map((line) => line.length));
   const sixels = new Sixels(width, bitmap.length);
-  bitmap.forEach((line, y) => [...line].forEach((sixel, x) => sixels.set(x, y, sixel === "#")));
+  bitmap.forEach((line, y) => {
+    [...line].forEach((sixel, x) => sixels.set(x, y, sixel === "#"));
+  });
   return sixels;
 }
 

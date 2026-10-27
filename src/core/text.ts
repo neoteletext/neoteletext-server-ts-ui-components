@@ -64,7 +64,7 @@ export function headline(title: string, width: number, most: number): string[] {
     return lines;
   }
   const kept = lines.slice(0, most);
-  let last = kept[kept.length - 1] ?? "";
+  let last = kept.at(-1) ?? "";
   while (last !== "" && cells(`${last}${HEADLINE_CUT}`) > width) {
     last = last.includes(" ") ? last.slice(0, last.lastIndexOf(" ")) : last.slice(0, -1);
   }

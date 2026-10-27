@@ -13,8 +13,9 @@ import type { KeyEvent, WheelEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
 import { Control, type ControlProps } from "../input/control.ts";
-import { Columns } from "../layout/layouts.ts";
-import { ListRows, type RowLook } from "./list-row.ts";
+import { Columns } from "../layout/columns.ts";
+import { ListRows } from "./list-rows.ts";
+import { type RowLook } from "./list-row.ts";
 import { BAR_CELLS, ScrollBar } from "./scroll.ts";
 
 export interface ChoiceListProps<T = string> extends ControlProps {
@@ -98,11 +99,21 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
         ...(this.props.render === undefined ? {} : { render: this.props.render }),
         ...(this.props.text === undefined ? {} : { text: this.props.text }),
         disabled: () => this.disabled,
-        onPick: (index: number, session: number) => this.#choose(index, session),
+        onPick: (index: number, session: number) => {
+          this.#choose(index, session);
+        },
         ...(this.props.onHover === undefined ? {} : { onHover: this.props.onHover }),
         ...(this.props.itemHint === undefined ? {} : { itemHint: this.props.itemHint }),
       }),
-      h(ScrollBar, { top: this.state.top, total: this.props.items.length, shown: this.#fit, disabled: this.disabled, onScroll: (top) => this.setState({ top }) }),
+      h(ScrollBar, {
+        top: this.state.top,
+        total: this.props.items.length,
+        shown: this.#fit,
+        disabled: this.disabled,
+        onScroll: (top) => {
+          this.setState({ top });
+        },
+      }),
     );
   }
 

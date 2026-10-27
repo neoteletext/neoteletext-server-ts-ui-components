@@ -14,7 +14,7 @@ import { DISABLED, EMPTY } from "../core/look.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { cells, fit } from "../core/text.ts";
 import { Colour, CursorFlag, Key } from "../kit.ts";
-import { type ValueProps, ValueControl } from "./control.ts";
+import { type ValueProps, ValueControl } from "./value-control.ts";
 
 /** The prompt before what is typed. */
 const PROMPT = "> ";

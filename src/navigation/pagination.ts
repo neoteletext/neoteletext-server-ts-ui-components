@@ -11,7 +11,7 @@ import { CHOSEN, DISABLED, DISABLED_CHIP } from "../core/look.ts";
 import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { cells } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
-import { type ValueProps, ValueControl } from "../input/control.ts";
+import { type ValueProps, ValueControl } from "../input/value-control.ts";
 
 export type PaginationStyle = "numbers" | "count" | "dots";
 
@@ -114,7 +114,15 @@ export class Pagination extends ValueControl<number, PaginationProps> {
 
   override onKey(event: KeyEvent): boolean {
     const current = this.value;
-    const to = isPress(event, Key.Right) ? current + 1 : isPress(event, Key.Left) ? current - 1 : isPress(event, Key.Home) ? 0 : isPress(event, Key.End) ? this.props.count - 1 : null;
+    const to = isPress(event, Key.Right)
+      ? current + 1
+      : isPress(event, Key.Left)
+        ? current - 1
+        : isPress(event, Key.Home)
+          ? 0
+          : isPress(event, Key.End)
+            ? this.props.count - 1
+            : null;
     if (to === null || this.disabled) {
       return false;
     }

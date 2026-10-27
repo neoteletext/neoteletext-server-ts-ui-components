@@ -14,8 +14,8 @@ import { DISABLED, DISABLED_BAND } from "../core/look.ts";
 import { listStep, moveChoice } from "../core/list-cursor.ts";
 import { pad } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
-import { ListRows } from "../lists/list-row.ts";
-import { type ValueProps, ValueControl, type ValueState } from "./control.ts";
+import { ListRows } from "../lists/list-rows.ts";
+import { type ValueProps, ValueControl, type ValueState } from "./value-control.ts";
 
 export interface SelectProps extends ValueProps<number> {
   readonly label: string;
@@ -96,7 +96,9 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
       indent: () => this.labelCells,
       foreground: (_item: string, index: number) => (index === this.value ? Colour.Cyan : Colour.White),
       disabled: () => this.disabled,
-      onPick: (index: number, session: number) => this.#take(index, session),
+      onPick: (index: number, session: number) => {
+        this.#take(index, session);
+      },
     });
   }
 

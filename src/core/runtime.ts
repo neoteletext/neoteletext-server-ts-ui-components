@@ -65,7 +65,6 @@ interface Stream {
 /** The sound channels the program plays on (the engine's audio profile has four). */
 const SOUND_CHANNEL = 0;
 
-
 /** Every sound here is made once, so its generation never changes. */
 const GENERATION = 1;
 
@@ -228,7 +227,9 @@ export class ComponentChannel implements Application {
   }
 
   stats(stats: ServerStats, context: Context): void {
-    this.#run(context, () => this.bus.emit("stats", stats));
+    this.#run(context, () => {
+      this.bus.emit("stats", stats);
+    });
   }
 
   // The mounts.
@@ -281,16 +282,32 @@ export class ComponentChannel implements Application {
       bus: this.bus.at({ page, session }),
       now: () => context().now(),
       epochMs: () => context().epochMs(),
-      goto: (to, target, params) => this.#goto(context(), to, target, params),
-      stream: (source, to) => this.#startStream(context(), to, page, source),
-      stopStream: (to) => this.#stopStream(context(), to),
-      pauseStream: (to) => this.#pauseStream(context(), to),
-      resumeStream: (to) => this.#resumeStream(context(), to),
+      goto: (to, target, params) => {
+        this.#goto(context(), to, target, params);
+      },
+      stream: (source, to) => {
+        this.#startStream(context(), to, page, source);
+      },
+      stopStream: (to) => {
+        this.#stopStream(context(), to);
+      },
+      pauseStream: (to) => {
+        this.#pauseStream(context(), to);
+      },
+      resumeStream: (to) => {
+        this.#resumeStream(context(), to);
+      },
       listening: (to) => this.#listening(to),
-      title: (text) => context().title(page, fit(text, LONGEST_TITLE)),
+      title: (text) => {
+        context().title(page, fit(text, LONGEST_TITLE));
+      },
       below: (bound) => context().below(bound),
-      log: (text) => context().log(text),
-      play: (sound, to) => this.#play(context(), sound, to ?? session, page),
+      log: (text) => {
+        context().log(text);
+      },
+      play: (sound, to) => {
+        this.#play(context(), sound, to ?? session, page);
+      },
     };
   }
 
@@ -396,7 +413,10 @@ export class ComponentChannel implements Application {
         // The last block is filled out with silence.
         const blocks = new Int16Array(count * BLOCK_SAMPLES);
         blocks.set(samples.subarray(stream.sent, Math.min(samples.length, stream.sent + blocks.length)));
-        context.sound({ session }, { blocks: { handle: STREAM_HANDLE, generation: stream.generation, rate: source.rate, first: stream.nextBlock, samples: blocks } });
+        context.sound(
+          { session },
+          { blocks: { handle: STREAM_HANDLE, generation: stream.generation, rate: source.rate, first: stream.nextBlock, samples: blocks } },
+        );
         stream.sent += blocks.length;
         stream.nextBlock = (stream.nextBlock + count) % WRAP;
       }
@@ -499,25 +519,33 @@ export class ComponentChannel implements Application {
 /** Gives `input` to `mount`: answers whether a component took it. */
 function dispatch(mount: Mount, session: number, input: Input): boolean {
   switch (input.kind) {
-    case "key":
+    case "key": {
       return mount.key({ session, key: input.key, action: input.action, ...(input.text === undefined ? {} : { text: input.text }) });
-    case "text":
+    }
+    case "text": {
       return mount.text({ session, text: input.text });
-    case "paste":
+    }
+    case "paste": {
       return mount.paste({ session, text: input.text });
-    case "mouse":
+    }
+    case "mouse": {
       return input.action === "move"
         ? mount.pointer(session, "move", input.row, input.column, 0, input.buttons)
         : mount.pointer(session, input.action, input.row, input.column, input.button, input.action === "press" ? 1 << input.button : 0);
-    case "wheel":
+    }
+    case "wheel": {
       return mount.wheel(session, input.row, input.column, input.dx, input.dy);
-    case "hover":
+    }
+    case "hover": {
       return mount.hover(session, input.action === "enter", input.row, input.column);
-    case "focus":
+    }
+    case "focus": {
       mount.focusChanged(true);
       return false;
-    case "blur":
+    }
+    case "blur": {
       mount.focusChanged(false);
       return false;
+    }
   }
 }

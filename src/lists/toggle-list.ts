@@ -9,8 +9,8 @@ import { type Child, h } from "../core/element.ts";
 import type { KeyEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { listStep, moveChoice } from "../core/list-cursor.ts";
-import { type ValueProps, ValueControl, type ValueState } from "../input/control.ts";
-import { ListRows } from "./list-row.ts";
+import { type ValueProps, ValueControl, type ValueState } from "../input/value-control.ts";
+import { ListRows } from "./list-rows.ts";
 
 export interface ToggleListProps extends ValueProps<readonly number[]> {
   readonly items: readonly string[];
@@ -52,7 +52,9 @@ export class ToggleList extends ValueControl<readonly number[], ToggleListProps,
       empty: this.props.empty ?? "nothing to star",
       text: (item: string, index: number) => `${this.value.includes(index) ? "*" : " "} ${item}`,
       disabled: () => this.disabled,
-      onPick: (index: number, session: number) => this.#toggle(index, session),
+      onPick: (index: number, session: number) => {
+        this.#toggle(index, session);
+      },
       ...(this.props.onHover === undefined ? {} : { onHover: this.props.onHover }),
     });
   }

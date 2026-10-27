@@ -230,7 +230,9 @@ export function packedLine(packet: number, designation: number, triplets: readon
   if (triplets.length !== TRIPLETS_PER_PACKET) {
     throw new RangeError(`a packet holds ${TRIPLETS_PER_PACKET} triplets`);
   }
-  const characters = triplets.flatMap((value) => Array.from({ length: CHARACTERS_PER_TRIPLET }, (_, place) => PACKED_CHARACTER_BASE | ((value >> (place * PACKED_CHARACTER_BITS)) & PACKED_CHARACTER_MASK)));
+  const characters = triplets.flatMap((value) =>
+    Array.from({ length: CHARACTERS_PER_TRIPLET }, (_, place) => PACKED_CHARACTER_BASE | ((value >> (place * PACKED_CHARACTER_BITS)) & PACKED_CHARACTER_MASK)),
+  );
   return `OL,${packet},${String.fromCharCode(PACKED_CHARACTER_BASE | designation, ...characters)}`;
 }
 
@@ -290,11 +292,11 @@ export function readDeclarations(tti: string): Declarations[] {
       pages.push(new Map());
     }
     const prefix = `OL,${ENHANCEMENT_PACKET},`;
-    const packets = pages[pages.length - 1];
+    const packets = pages.at(-1);
     if (!line.startsWith(prefix) || packets === undefined) {
       continue;
     }
-    const codes = [...line.slice(prefix.length)].map((character) => character.charCodeAt(0) & PACKED_CHARACTER_MASK);
+    const codes = Array.from(line.slice(prefix.length), (character) => (character.codePointAt(0) ?? 0) & PACKED_CHARACTER_MASK);
     const [designation = 0, ...body] = codes;
     packets.set(
       designation,

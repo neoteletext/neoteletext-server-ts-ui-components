@@ -5,12 +5,15 @@
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent } from "../core/events.ts";
 import type { Sound } from "../core/sound.ts";
-import type { Article } from "../documents/document.ts";
+import { type Article } from "../documents/document.ts";
 import { Wheel } from "../graphics/wheel.ts";
 import { Colour, Key } from "../kit.ts";
-import { At, Gap, Layers, Rows } from "../layout/layouts.ts";
+import { At } from "../layout/at.ts";
+import { Gap } from "../layout/gap.ts";
+import { Layers } from "../layout/layers.ts";
+import { Rows } from "../layout/layouts.ts";
 import { Headline } from "../text/news.ts";
-import { Paragraph } from "../text/styles.ts";
+import { Paragraph } from "../text/paragraph.ts";
 import { Action } from "../input/action.ts";
 import { Control, type ControlProps } from "../input/control.ts";
 
@@ -40,7 +43,6 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
   }
   #session = 0;
 
-
   #spin(step: number): void {
     const wait = SPIN_STEPS_MS[step];
     const article = this.services.below(this.props.articles.length);
@@ -55,7 +57,9 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
     if (this.props.tick !== undefined) {
       this.services.play(this.props.tick, this.#session);
     }
-    this.setTimeout(() => this.#spin(step + 1), wait);
+    this.setTimeout(() => {
+      this.#spin(step + 1);
+    }, wait);
   }
 
   override render(): Child {
@@ -72,12 +76,27 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
           Rows,
           {},
           article === undefined
-            ? h(Action, { text: "Press Enter to spin the wheel", foreground: Colour.Cyan, disabled: this.disabled, onPress: (session: number) => this.#start(session) })
+            ? h(Action, {
+                text: "Press Enter to spin the wheel",
+                foreground: Colour.Cyan,
+                disabled: this.disabled,
+                onPress: (session: number) => {
+                  this.#start(session);
+                },
+              })
             : h(Headline, { title: article.title, page: article.page, foreground: spinning ? Colour.White : Colour.Yellow, linked: !spinning }),
           h(Gap, {}),
           spinning || article === undefined
             ? h(Paragraph, { text: spinning ? "Spinning..." : "", foreground: Colour.Green })
-            : h(Action, { text: "Enter reads it, or spin again with Space", foreground: Colour.Green, disabled: this.disabled, hint: "A click spins again", onPress: (session: number) => this.#start(session) }),
+            : h(Action, {
+                text: "Enter reads it, or spin again with Space",
+                foreground: Colour.Green,
+                disabled: this.disabled,
+                hint: "A click spins again",
+                onPress: (session: number) => {
+                  this.#start(session);
+                },
+              }),
         ),
       ),
     );

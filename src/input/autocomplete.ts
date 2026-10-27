@@ -9,8 +9,8 @@ import { isPress, type KeyEvent } from "../core/events.ts";
 import { listStep, moveChoice } from "../core/list-cursor.ts";
 import { Key } from "../kit.ts";
 import { Rows } from "../layout/layouts.ts";
-import { ListRows } from "../lists/list-row.ts";
-import { type ValueProps, ValueControl, type ValueState } from "./control.ts";
+import { ListRows } from "../lists/list-rows.ts";
+import { type ValueProps, ValueControl, type ValueState } from "./value-control.ts";
 import { TextField } from "./text-field.ts";
 
 export interface AutocompleteProps extends ValueProps<string> {
@@ -73,7 +73,9 @@ export class Autocomplete extends ValueControl<string, AutocompleteProps, Autoco
         hint: "Type; Up Down choose, Tab completes, Enter takes",
         ...(this.props.label === undefined ? {} : { label: this.props.label, labelCells: this.labelCells }),
         ...(this.props.placeholder === undefined ? {} : { placeholder: this.props.placeholder }),
-        onChange: (typed: string) => this.setState({ typed, chosen: 0 }),
+        onChange: (typed: string) => {
+          this.setState({ typed, chosen: 0 });
+        },
       }),
       this.state.typed === "" && this.props.showAll !== true
         ? null

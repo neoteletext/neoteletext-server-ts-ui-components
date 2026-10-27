@@ -109,7 +109,9 @@ export class Calendar extends Control<CalendarProps, CalendarState> {
       canvas.control(0, headingAt + 1, ARROW_CELLS, 1, BACK);
       canvas.control(0, headingAt + 1 + cells(heading) - ARROW_CELLS, ARROW_CELLS, 1, ON);
     }
-    WEEKDAYS.forEach((name, index) => canvas.coloured(1, index * DAY_CELLS, index >= WEEKEND ? Colour.Cyan : Colour.White, ` ${name}`));
+    WEEKDAYS.forEach((name, index) => {
+      canvas.coloured(1, index * DAY_CELLS, index >= WEEKEND ? Colour.Cyan : Colour.White, ` ${name}`);
+    });
     const today = this.props.today === undefined ? null : new Date(this.props.today);
     const first = firstWeekday(year, month);
     const chosenWeek = Math.floor((first + this.state.day - 1) / DAYS_IN_WEEK);
@@ -149,12 +151,24 @@ export class Calendar extends Control<CalendarProps, CalendarState> {
       return false;
     }
     const moves: Record<string, () => void> = {
-      [Key.Left]: () => this.#move(-1),
-      [Key.Right]: () => this.#move(1),
-      [Key.Up]: () => this.#move(-DAYS_IN_WEEK),
-      [Key.Down]: () => this.#move(DAYS_IN_WEEK),
-      [Key.PageUp]: () => this.#turn(-1),
-      [Key.PageDown]: () => this.#turn(1),
+      [Key.Left]: () => {
+        this.#move(-1);
+      },
+      [Key.Right]: () => {
+        this.#move(1);
+      },
+      [Key.Up]: () => {
+        this.#move(-DAYS_IN_WEEK);
+      },
+      [Key.Down]: () => {
+        this.#move(DAYS_IN_WEEK);
+      },
+      [Key.PageUp]: () => {
+        this.#turn(-1);
+      },
+      [Key.PageDown]: () => {
+        this.#turn(1);
+      },
     };
     if (isPress(event, Key.Enter)) {
       this.activate({ ...this.state }, event.session);

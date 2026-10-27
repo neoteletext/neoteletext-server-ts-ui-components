@@ -10,12 +10,13 @@ import { fit, padStart } from "../core/text.ts";
 import { Colour, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
 
 /** The cells the values' axis takes on the left: a figure and its colour's cell. */
-const AXIS_CELLS = 5;
+export const AXIS_CELLS = 5;
+
 /** The labels' row under the plot. */
-const LABEL_ROWS = 1;
+export const LABEL_ROWS = 1;
 
 /** A span to divide by: a series that does not vary is drawn level. */
-function span(low: number, high: number): number {
+export function span(low: number, high: number): number {
   return high > low ? high - low : 1;
 }
 
@@ -51,18 +52,20 @@ interface Plot {
 }
 
 /** A plot of `rows` rows filling the rest of `width` after the axis. */
-function plot(width: number, rows: number): Plot {
+export function plot(width: number, rows: number): Plot {
   const cells = Math.max(1, width - AXIS_CELLS - 1);
   return { sixels: new Sixels(cells * SIXELS_ACROSS, rows * SIXELS_DOWN), cells };
 }
 
 /** The values' axis, the most at the top and the least at the bottom, and the labels under the plot. */
-function axes(canvas: Canvas, rows: number, least: number, most: number, labels: readonly string[] | undefined, cells: number): void {
+export function axes(canvas: Canvas, rows: number, least: number, most: number, labels: readonly string[] | undefined, cells: number): void {
   canvas.coloured(0, 0, Colour.Cyan, padStart(String(most), AXIS_CELLS - 1));
   canvas.coloured(rows - 1, 0, Colour.Cyan, padStart(String(least), AXIS_CELLS - 1));
   if (labels !== undefined && labels.length > 0) {
     const pitch = Math.max(1, Math.floor(cells / labels.length));
-    labels.forEach((label, index) => canvas.coloured(rows, AXIS_CELLS + index * pitch, Colour.White, fit(label, pitch - 1)));
+    labels.forEach((label, index) => {
+      canvas.coloured(rows, AXIS_CELLS + index * pitch, Colour.White, fit(label, pitch - 1));
+    });
   }
 }
 
@@ -115,45 +118,6 @@ export class LineChart extends Component<LineChartProps> {
       }
     }
     canvas.sixels(0, AXIS_CELLS + 1, this.props.foreground ?? Colour.Green, sixels);
-    axes(canvas, this.props.plotRows, least, most, this.props.labels, cells);
-  }
-}
-
-export interface ScatterPlotProps {
-  readonly points: readonly (readonly [x: number, y: number])[];
-  readonly plotRows: number;
-  readonly empty?: string;
-  readonly foreground?: Colour;
-  readonly labels?: readonly string[];
-}
-
-/** A point is a block of four sixels, so a single one stands out. */
-const POINT_SIXELS = 2;
-
-export class ScatterPlot extends Component<ScatterPlotProps> {
-  override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(space.height, this.props.plotRows + LABEL_ROWS) };
-  }
-
-  override paint(canvas: Canvas): void {
-    if (this.props.points.length === 0) {
-      paintEmpty(canvas, this.props.empty ?? "no data");
-      return;
-    }
-    const { sixels, cells } = plot(canvas.width, this.props.plotRows);
-    const xs = this.props.points.map(([x]) => x);
-    const ys = this.props.points.map(([, y]) => y);
-    const [left, right, least, most] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-    for (const [x, y] of this.props.points) {
-      const across = Math.round(((x - left) / span(left, right)) * (sixels.width - POINT_SIXELS));
-      const down = Math.round(((most - y) / span(least, most)) * (sixels.height - POINT_SIXELS));
-      for (let dy = 0; dy < POINT_SIXELS; dy += 1) {
-        for (let dx = 0; dx < POINT_SIXELS; dx += 1) {
-          sixels.set(across + dx, down + dy, true);
-        }
-      }
-    }
-    canvas.sixels(0, AXIS_CELLS + 1, this.props.foreground ?? Colour.Yellow, sixels);
     axes(canvas, this.props.plotRows, least, most, this.props.labels, cells);
   }
 }
