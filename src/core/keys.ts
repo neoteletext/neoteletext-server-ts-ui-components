@@ -28,5 +28,5 @@ export function digitOf(event: KeyEvent): number | null {
   if (event.action === "release" || !/^[0-9]$/u.test(event.key)) {
     return null;
   }
-  return Number.parseInt(event.key, 10);
+  return Number(event.key);
 }

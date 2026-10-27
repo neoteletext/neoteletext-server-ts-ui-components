@@ -23,12 +23,20 @@ export function listStep(event: KeyEvent, shown: number): number | null {
   return steps[event.key] ?? null;
 }
 
+/** Where a step from `chosen` lands: a finite step counts from it, an infinite one (Home, End) is an end. */
+function landing(chosen: number, step: number, count: number): number {
+  if (Number.isFinite(step)) {
+    return chosen + step;
+  }
+  return step > 0 ? count - 1 : 0;
+}
+
 /** The item `step` from `chosen` among `count`, passing over those `can` refuses. */
 export function moveChoice(chosen: number, step: number, count: number, can: (index: number) => boolean = () => true): number {
   if (count <= 0) {
     return 0;
   }
-  const target = Math.max(0, Math.min(count - 1, Number.isFinite(step) ? chosen + step : step > 0 ? count - 1 : 0));
+  const target = Math.max(0, Math.min(count - 1, landing(chosen, step, count)));
   const direction = step >= 0 ? 1 : -1;
   for (let index = target; index >= 0 && index < count; index += direction) {
     if (can(index)) {
@@ -45,7 +53,12 @@ export function moveChoice(chosen: number, step: number, count: number, can: (in
 
 /** The first item shown so `chosen` is in view of `shown`, from `top`. */
 export function keepInView(top: number, chosen: number, shown: number, count: number): number {
-  const kept = chosen < top ? chosen : chosen >= top + shown ? chosen - shown + 1 : top;
+  let kept = top;
+  if (chosen < top) {
+    kept = chosen;
+  } else if (chosen >= top + shown) {
+    kept = chosen - shown + 1;
+  }
   return Math.max(0, Math.min(kept, Math.max(0, count - shown)));
 }
 

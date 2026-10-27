@@ -27,26 +27,26 @@ import type { Box } from "./component.ts";
 const ADDRESS_BITS = 6;
 const MODE_BITS = 5;
 const DATA_BITS = 7;
-const MODE_SHIFT = ADDRESS_BITS;
-const DATA_SHIFT = ADDRESS_BITS + MODE_BITS;
-const ADDRESS_MASK = (1 << ADDRESS_BITS) - 1;
-const MODE_MASK = (1 << MODE_BITS) - 1;
-const DATA_MASK = (1 << DATA_BITS) - 1;
+export const MODE_SHIFT = ADDRESS_BITS;
+export const DATA_SHIFT = ADDRESS_BITS + MODE_BITS;
+export const ADDRESS_MASK = (1 << ADDRESS_BITS) - 1;
+export const MODE_MASK = (1 << MODE_BITS) - 1;
+export const DATA_MASK = (1 << DATA_BITS) - 1;
 /** Table 28, the row address group: Set Active Position. */
-const MODE_SET_ACTIVE_POSITION = 0b00100;
+export const MODE_SET_ACTIVE_POSITION = 0b00100;
 /** Table 29, a column mode EN 300 706 reserves: NeoTeletext's control (INPUT.md section 7.3). */
-const MODE_CONTROL = 0b00101;
+export const MODE_CONTROL = 0b00101;
 /** Table 29, another reserved column mode: NeoTeletext's pointer area (INPUT.md section 7.4). */
-const MODE_POINTER_AREA = 0b01010;
+export const MODE_POINTER_AREA = 0b01010;
 /** Clause 12.3.1: row addresses are 40 to 63, 40 meaning row 24 and 41 to 63 rows 1 to 23. */
-const ROW_ADDRESS_BASE = 40;
+export const ROW_ADDRESS_BASE = 40;
 /** Table 28: the Termination Marker, address 63 and mode 11111; its type, data 111, says the local enhancement data ends and no Local Object definitions follow. */
-const TERMINATION_ADDRESS = 63;
-const MODE_TERMINATION = 0b11111;
+export const TERMINATION_ADDRESS = 63;
+export const MODE_TERMINATION = 0b11111;
 const TERMINATION_DATA = 0b111;
 /** INPUT.md sections 7.3 and 7.4: D6 joins a run to the control (or pointer area) on the row above at the same column and width; D5 to D0 are its width. */
-const JOINED = 0x40;
-const WIDTH_MASK = 0x3f;
+export const JOINED = 0x40;
+export const WIDTH_MASK = 0x3f;
 /** The rows a control may be on: not the header, not the Fastext row (the engine's FIRST_CONTROL_ROW and LAST_CONTROL_ROW). */
 export const FIRST_CONTROL_ROW = 1;
 export const LAST_CONTROL_ROW = 23;
@@ -55,18 +55,18 @@ export const MAX_CONTROLS = 32;
 /** The most pointer areas a page has (the engine's MAX_POINTER_AREAS, decision E.128). */
 export const MAX_POINTER_AREAS = 8;
 /** Clause 12.3.1: a packet X/26 holds 13 triplets after its designation code, which runs 0 to 15. */
-const TRIPLETS_PER_PACKET = 13;
+export const TRIPLETS_PER_PACKET = 13;
 const DESIGNATION_CODES = 16;
 /** The local enhancement data's triplets: 16 packets of 13 (the engine's LOCAL_TRIPLETS). */
 const LOCAL_TRIPLETS = DESIGNATION_CODES * TRIPLETS_PER_PACKET;
 /** The packet number of local enhancement data, written as the OL line's row. */
-const ENHANCEMENT_PACKET = 26;
+export const ENHANCEMENT_PACKET = 26;
 /** A packed character: bit 6 set, six bits of a triplet below it (the engine's TTI_PACKED_CHARACTER_BASE and TTI_TRIPLET_CHARACTER_BITS). */
 const PACKED_CHARACTER_BASE = 0x40;
-const PACKED_CHARACTER_BITS = 6;
-const PACKED_CHARACTER_MASK = 0x3f;
+export const PACKED_CHARACTER_BITS = 6;
+export const PACKED_CHARACTER_MASK = 0x3f;
 /** The characters of one triplet in a packed line. */
-const CHARACTERS_PER_TRIPLET = 3;
+export const CHARACTERS_PER_TRIPLET = 3;
 if (CHARACTERS_PER_TRIPLET * PACKED_CHARACTER_BITS !== ADDRESS_BITS + MODE_BITS + DATA_BITS) {
   throw new Error("a triplet's 18 bits are three packed characters of six");
 }
@@ -212,7 +212,7 @@ export function controlTriplets(controls: readonly Box[], pointer: PointerAreas 
   const triplets: number[] = pointer.wholePage ? [WHOLE_PAGE_POINTER_AREA] : [];
   const runs = [...controls.map((box) => ({ box, encode: controlTriplet })), ...pointer.areas.map((box) => ({ box, encode: pointerAreaTriplet }))];
   for (let row = FIRST_CONTROL_ROW; row <= LAST_CONTROL_ROW; row += 1) {
-    const onRow = runs.filter(({ box }) => row >= box.row && row < box.row + box.height).sort((a, b) => a.box.column - b.box.column);
+    const onRow = runs.filter(({ box }) => row >= box.row && row < box.row + box.height).toSorted((a, b) => a.box.column - b.box.column);
     if (onRow.length === 0) {
       continue;
     }
@@ -233,7 +233,7 @@ export function packedLine(packet: number, designation: number, triplets: readon
   const characters = triplets.flatMap((value) =>
     Array.from({ length: CHARACTERS_PER_TRIPLET }, (_, place) => PACKED_CHARACTER_BASE | ((value >> (place * PACKED_CHARACTER_BITS)) & PACKED_CHARACTER_MASK)),
   );
-  return `OL,${packet},${String.fromCharCode(PACKED_CHARACTER_BASE | designation, ...characters)}`;
+  return `OL,${packet},${String.fromCodePoint(PACKED_CHARACTER_BASE | designation, ...characters)}`;
 }
 
 /** Triplets as packed OL,26 lines, without newlines, designation codes from 0; the last packet's unused triplets are Termination Markers. */
@@ -256,88 +256,4 @@ export function enhancementLines(triplets: readonly number[]): string[] {
 export function controlLines(controls: readonly Box[], pointer: PointerAreas = NO_POINTER_AREAS): string[] {
   const held = keptDeclarations(controls, pointer);
   return enhancementLines(controlTriplets(held.controls, held.pointer));
-}
-
-/** What a sub-page declares, as a receiver reads it back. */
-export interface Declarations {
-  readonly controls: Box[];
-  readonly pointer: { readonly areas: Box[]; readonly wholePage: boolean };
-}
-
-/** A run on `row` from `address` into `list`: a new one, or the one above it made taller when joined and there is one to join; one of no width is dropped, as the engine drops it. */
-function readRun(list: { row: number; column: number; width: number; height: number }[], row: number, address: number, data: number): void {
-  const width = data & WIDTH_MASK;
-  if (width === 0) {
-    return;
-  }
-  const above = (data & JOINED) === 0 ? undefined : list.find((each) => each.row + each.height === row && each.column === address && each.width === width);
-  if (above === undefined) {
-    list.push({ row, column: address, width, height: 1 });
-  } else {
-    above.height += 1;
-  }
-}
-
-/**
- * The controls and pointer areas each sub-page of `tti` declares, read back
- * as the engine reads them (its controls.rs): its OL,26 lines in
- * designation order to the first Termination Marker, the row from each Set
- * Active Position, a joined run making the one above it taller, a pointer
- * area of width 0 not joined the whole page. For tests.
- */
-export function readDeclarations(tti: string): Declarations[] {
-  const pages: Map<number, number[]>[] = [];
-  for (const line of tti.split("\n")) {
-    if (line.startsWith("PN,")) {
-      pages.push(new Map());
-    }
-    const prefix = `OL,${ENHANCEMENT_PACKET},`;
-    const packets = pages.at(-1);
-    if (!line.startsWith(prefix) || packets === undefined) {
-      continue;
-    }
-    const codes = Array.from(line.slice(prefix.length), (character) => (character.codePointAt(0) ?? 0) & PACKED_CHARACTER_MASK);
-    const [designation = 0, ...body] = codes;
-    packets.set(
-      designation,
-      Array.from({ length: TRIPLETS_PER_PACKET }, (_, index) => {
-        const [low = 0, middle = 0, high = 0] = body.slice(index * CHARACTERS_PER_TRIPLET, (index + 1) * CHARACTERS_PER_TRIPLET);
-        return low | (middle << PACKED_CHARACTER_BITS) | (high << (2 * PACKED_CHARACTER_BITS));
-      }),
-    );
-  }
-  return pages.map((packets) => {
-    const found = { controls: [] as Box[], pointer: { areas: [] as Box[], wholePage: false } };
-    const controls: { row: number; column: number; width: number; height: number }[] = [];
-    const areas: { row: number; column: number; width: number; height: number }[] = [];
-    let row = 0;
-    const triplets = [...packets.entries()].sort(([a], [b]) => a - b).flatMap(([, values]) => values);
-    for (const value of triplets) {
-      const address = value & ADDRESS_MASK;
-      const mode = (value >> MODE_SHIFT) & MODE_MASK;
-      const data = (value >> DATA_SHIFT) & DATA_MASK;
-      if (address === TERMINATION_ADDRESS && mode === MODE_TERMINATION) {
-        break;
-      }
-      if (address >= ROW_ADDRESS_BASE && mode === MODE_SET_ACTIVE_POSITION) {
-        row = address === ROW_ADDRESS_BASE ? LAST_CONTROL_ROW + 1 : address - ROW_ADDRESS_BASE;
-      } else if (address < ROW_ADDRESS_BASE && mode === MODE_CONTROL) {
-        readRun(controls, row, address, data);
-      } else if (address < ROW_ADDRESS_BASE && mode === MODE_POINTER_AREA) {
-        if (data === 0) {
-          found.pointer.wholePage = true;
-        } else {
-          readRun(areas, row, address, data);
-        }
-      }
-    }
-    found.controls.push(...controls);
-    found.pointer.areas.push(...areas);
-    return found;
-  });
-}
-
-/** The controls each sub-page of `tti` declares (readDeclarations). For tests. */
-export function readControls(tti: string): Box[][] {
-  return readDeclarations(tti).map((each) => each.controls);
 }

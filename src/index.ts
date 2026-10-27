@@ -61,14 +61,14 @@ export {
   NO_POINTER_AREAS,
   packedLine,
   pointerAreaTriplet,
-  readControls,
-  readDeclarations,
   setActivePosition,
   TERMINATION,
   triplet,
   WHOLE_PAGE_POINTER_AREA,
 } from "./core/controls.ts";
-export type { Declarations, Kept, PointerAreas } from "./core/controls.ts";
+export { readControls, readDeclarations } from "./core/read-controls.ts";
+export type { Kept, PointerAreas } from "./core/controls.ts";
+export type { Declarations } from "./core/read-controls.ts";
 export { flatten, h, isElement } from "./core/element.ts";
 export type { AnyComponentClass, Child, ClassProps, ComponentClass, Element, LayoutProps, PropsOf, WithChildren } from "./core/element.ts";
 export { isPress, NOTCH, typedText } from "./core/events.ts";
@@ -105,7 +105,7 @@ export type { RawProps } from "./core/raw-sub-page.ts";
 export { LEVEL_1_COLOURS, ROLLOVER_COLOURS, rolloverLine, rolloverTriplets } from "./core/rollover.ts";
 export type { ColourTable, Rgb12 } from "./core/rollover.ts";
 export { ComponentChannel } from "./core/runtime.ts";
-export type { PageSpec } from "./core/runtime.ts";
+export type { PageSpec } from "./core/page-spec.ts";
 export type { PageParams, Services } from "./core/services.ts";
 export { noise, RATE, sequence, sound, tone } from "./core/sound.ts";
 export type { Sound, Wave } from "./core/sound.ts";

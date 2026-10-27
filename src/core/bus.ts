@@ -46,8 +46,10 @@ export class EventBus<Events extends object> implements Bus<Events> {
 
   /** Tells every listener of `name` that `audience` reaches. */
   emit<Name extends keyof Events>(name: Name, value: Events[Name], audience: Audience = {}): void {
-    for (const { listener, place } of [...(this.#listeners.get(name) ?? [])]) {
+    // A copy: a listener may unsubscribe, or subscribe another, as it is told.
+    for (const { listener, place } of Array.from(this.#listeners.get(name) ?? [])) {
       if (place === null || reaches(audience, place)) {
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- every name's listeners share one map; one listed under `name` was added for `name`'s values
         (listener as (value: Events[Name]) => void)(value);
       }
     }

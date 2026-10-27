@@ -46,3 +46,8 @@ export class SubPage<P extends SubPageProps = SubPageProps> extends Component<P>
 
   override paint(_canvas: Canvas): void {}
 }
+
+/** Whether `component` is a sub-page: `instanceof` alone would make it one of any props. */
+export function isSubPage(component: Component): component is SubPage {
+  return component instanceof SubPage;
+}

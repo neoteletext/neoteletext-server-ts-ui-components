@@ -11,6 +11,7 @@ import {
   type Child,
   Component,
   ComponentChannel,
+  type Element,
   Frame,
   h,
   Headline,
@@ -83,9 +84,10 @@ function channel(specs: readonly PageSpec[]): Harness {
 }
 
 test("a page every viewer shares is published once at the start, with its frame", () => {
-  const harness = channel([{ page: PAGE, title: "Test", root: () => frame("Shared page", h(Headline, { title: "A headline", page: OTHER })) }]);
+  const harness = channel([{ page: PAGE, title: "Test", root: (): Element => frame("Shared page", h(Headline, { title: "A headline", page: OTHER })) }]);
   const rows = harness.shared(PAGE);
   assert.match(text(rows, 1), /Shared page/u);
+  // oxlint-disable-next-line eslint/no-control-regex -- a teletext row holds its colour codes; the test reads them
   assert.match(text(rows, 3), /151\u0007A headline/u);
   assert.match(text(rows, 24), /Index/u);
   assert.equal(harness.sharedPublications(PAGE), 1);
@@ -93,7 +95,7 @@ test("a page every viewer shares is published once at the start, with its frame"
 
 test("a viewer's own copy is sent only once it differs from the shared one, and released when it matches again", () => {
   events.length = 0;
-  const harness = channel([{ page: PAGE, title: "Test", perViewer: true, root: () => frame("Counter", h(Counter, { label: "count" })) }]);
+  const harness = channel([{ page: PAGE, title: "Test", perViewer: true, root: (): Element => frame("Counter", h(Counter, { label: "count" })) }]);
   harness.join(7, PAGE);
   assert.equal(harness.ownPages(7, PAGE), undefined, "nothing differs yet, so nothing of its own is sent");
   harness.press(7, Key.Enter);
@@ -109,7 +111,9 @@ test("a viewer's own copy is sent only once it differs from the shared one, and 
 });
 
 test("keys go to the focused component; pointer clicks to the component drawn in the cell", () => {
-  const harness = channel([{ page: PAGE, title: "Test", perViewer: true, root: () => frame("Links", h(Headline, { title: "Go to 151", page: OTHER })) }]);
+  const harness = channel([
+    { page: PAGE, title: "Test", perViewer: true, root: (): Element => frame("Links", h(Headline, { title: "Go to 151", page: OTHER })) },
+  ]);
   harness.join(3, PAGE);
   harness.clickLeft(3, 10, 3);
   assert.deepEqual(harness.gotos(3), [OTHER]);
@@ -117,7 +121,7 @@ test("keys go to the focused component; pointer clicks to the component drawn in
 
 test("scrolling text moves with the keys and its scroll bar can be dragged", () => {
   const lines = Array.from({ length: 50 }, (_, index) => ({ foreground: Colour.White, text: `Line ${index + 1}` }));
-  const harness = channel([{ page: PAGE, title: "Test", perViewer: true, root: () => frame("Scroll", h(ScrollingText, { lines, shown: 10 })) }]);
+  const harness = channel([{ page: PAGE, title: "Test", perViewer: true, root: (): Element => frame("Scroll", h(ScrollingText, { lines, shown: 10 })) }]);
   harness.join(4, PAGE);
   harness.press(4, Key.PageDown);
   assert.match(text(harness.own(4, PAGE), 3), /Line 10/u, "a screen less one line");
@@ -131,7 +135,7 @@ test("scrolling text moves with the keys and its scroll bar can be dragged", () 
 
 test("a timer runs while its component is on the page and stops when it leaves", () => {
   const harness = channel([
-    { page: PAGE, title: "Test", perViewer: true, root: () => frame("Ticker", h(Ticker, { items: ["one", "two", "three"], everyMs: 1_000 })) },
+    { page: PAGE, title: "Test", perViewer: true, root: (): Element => frame("Ticker", h(Ticker, { items: ["one", "two", "three"], everyMs: 1_000 })) },
   ]);
   harness.join(5, PAGE);
   harness.advance(1_000);
@@ -148,7 +152,7 @@ test("a timer runs while its component is on the page and stops when it leaves",
 
 test("a picture's TTI with CR LF line ends draws no Double Height: a CR kept in a row would hide the row below", () => {
   const tti = "PN,10000\r\nOL,2,\u001BWABC\r\nOL,3,\u001BWDEF\r\n";
-  const harness = channel([{ page: PAGE, title: "Test", root: () => frame("QR", h(Picture, { tti, firstRow: 2 })) }]);
+  const harness = channel([{ page: PAGE, title: "Test", root: (): Element => frame("QR", h(Picture, { tti, firstRow: 2 })) }]);
   const rows = harness.shared(PAGE);
   // Row 1 is the title band, double height on purpose; the picture is under it.
   assert.ok(!rows.slice(3).some((codes) => codes.includes(0x0d)), "no code 0x0D under the band");

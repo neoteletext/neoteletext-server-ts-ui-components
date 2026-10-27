@@ -22,6 +22,17 @@ export interface Sound {
 /** A wave's shape. */
 export type Wave = "sine" | "square" | "triangle";
 
+/** A wave's value, -1 to 1, at `phase` cycles, `fraction` into its cycle: a square is high for its first half, a triangle falls then rises. */
+function waveAt(wave: Wave, phase: number, fraction: number): number {
+  if (wave === "sine") {
+    return Math.sin(2 * Math.PI * phase);
+  }
+  if (wave === "square") {
+    return fraction < 0.5 ? 1 : -1;
+  }
+  return 4 * Math.abs(fraction - 0.5) - 1;
+}
+
 function length(milliseconds: number): number {
   return Math.max(1, Math.round((RATE * milliseconds) / MILLISECONDS));
 }
@@ -41,7 +52,7 @@ export function tone(frequency: number, milliseconds: number, wave: Wave = "sine
   for (let index = 0; index < count; index += 1) {
     const phase = (index * frequency) / RATE;
     const fraction = phase - Math.floor(phase);
-    const value = wave === "sine" ? Math.sin(2 * Math.PI * phase) : wave === "square" ? (fraction < 0.5 ? 1 : -1) : 4 * Math.abs(fraction - 0.5) - 1;
+    const value = waveAt(wave, phase, fraction);
     samples[index] = Math.round(value * PEAK * gain * envelope(index, count));
   }
   return samples;

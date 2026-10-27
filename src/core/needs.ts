@@ -8,8 +8,7 @@
 // them by a probe: each element is made and rendered, down the tree,
 // without mounting it, so no lifecycle runs and no timer starts.
 
-import type { Component } from "./component.ts";
-import { type Element, flatten, isElement } from "./element.ts";
+import { type Element, flatten, instantiate, isElement } from "./element.ts";
 
 export interface PageNeeds {
   readonly digits?: boolean;
@@ -27,8 +26,7 @@ export function probeNeeds(root: Element): Required<PageNeeds> {
     if (depth > MOST_DEPTH) {
       return;
     }
-    const Type = element.type as unknown as new (props: object) => Component<object, object>;
-    const component = new Type(element.props);
+    const component = instantiate(element);
     const needs = component.needs();
     found.digits ||= needs.digits === true;
     found.colourKeys ||= needs.colourKeys === true;

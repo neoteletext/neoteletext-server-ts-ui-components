@@ -46,17 +46,17 @@ export interface LayoutChild {
 /** What a mounted component reaches of its mount. */
 export interface ComponentHost {
   readonly services: Services;
-  invalidate(component: Component<object, object>): void;
-  focus(component: Component<object, object>): void;
-  isFocused(component: Component<object, object>): boolean;
+  invalidate(component: Component): void;
+  focus(component: Component): void;
+  isFocused(component: Component): boolean;
   /** Whether the pointer is on a control the component declared, for any viewer of this copy. */
-  isHovered(component: Component<object, object>): boolean;
-  setTimer(component: Component<object, object>, run: () => void, delay: number, every: boolean, whileViewed: boolean): number;
+  isHovered(component: Component): boolean;
+  setTimer(component: Component, run: () => void, delay: number, every: boolean, whileViewed: boolean): number;
   clearTimer(id: number): void;
   /** The box the component was last laid out in. */
-  boxOf(component: Component<object, object>): Box;
+  boxOf(component: Component): Box;
   /** Sends `event` up the tree from the component. */
-  emit(component: Component<object, object>, event: ComponentEventInit): void;
+  emit(component: Component, event: ComponentEventInit): void;
   /** What the component under the viewer's pointer, or else the focused one, says its keys do, or null. */
   focusedHint(): string | null;
   /** What the control under the viewer's pointer says it does, or null when it is on none or none says. */
@@ -107,12 +107,14 @@ export abstract class Component<P extends object = object, S extends object = ob
   /** The props, replaced when the parent renders it again. */
   props: Readonly<P & WithChildren>;
   /** The state: set it in the class body, change it with setState. */
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a component with no state of its own has none; one with state sets it in its class body
   state: Readonly<S> = {} as S;
   #host: ComponentHost | undefined;
   #pending: Partial<S>[] = [];
 
   constructor(props: P) {
     // The mount makes components with the element's props, children included.
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- h() adds the children to the props the element carries
     this.props = props as Readonly<P & WithChildren>;
   }
 
@@ -131,7 +133,7 @@ export abstract class Component<P extends object = object, S extends object = ob
 
   /** Merges `change` into the state and asks for a render, as React's setState: batched until the event is handled. */
   setState(change: Partial<S> | ((state: Readonly<S>, props: Readonly<P>) => Partial<S>)): void {
-    const next = typeof change === "function" ? change({ ...this.state, ...Object.assign({}, ...this.#pending) }, this.props) : change;
+    const next = typeof change === "function" ? change(this.nextState(), this.props) : change;
     this.#pending.push(next);
     this.#host?.invalidate(this);
   }
@@ -267,13 +269,26 @@ export abstract class Component<P extends object = object, S extends object = ob
   // For the mount only.
 
   /** @internal The mount gives the component its host, or takes it away. */
-  attach(host: ComponentHost | undefined): void {
+  attach(host: ComponentHost): void {
     this.#host = host;
+  }
+
+  /** @internal The mount takes its host away: it unmounted. */
+  detach(): void {
+    this.#host = undefined;
   }
 
   /** @internal The state the pending changes make, without applying them. */
   nextState(): Readonly<S> {
-    return this.#pending.length === 0 ? this.state : ({ ...this.state, ...Object.assign({}, ...this.#pending) } as S);
+    if (this.#pending.length === 0) {
+      return this.state;
+    }
+    const next: Partial<S> = { ...this.state };
+    for (const change of this.#pending) {
+      Object.assign(next, change);
+    }
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the whole state with each pending part of it laid over: every field is there
+    return next as Readonly<S>;
   }
 
   /** @internal Applies the pending changes. */

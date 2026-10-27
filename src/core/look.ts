@@ -46,9 +46,17 @@ export interface ControlLook {
   readonly disabled: boolean;
 }
 
+/** A label's colour: blue while disabled, yellow while it has the keys. */
+function labelColour(look: ControlLook): Colour {
+  if (look.disabled) {
+    return DISABLED;
+  }
+  return look.focused ? FOCUSED_LABEL : LABEL;
+}
+
 /** A control's label in `width` cells: marked and yellow while it has the keys, blue while disabled. */
 export function paintLabel(canvas: Canvas, row: number, label: string, width: number, look: ControlLook): void {
-  const foreground = look.disabled ? DISABLED : look.focused ? FOCUSED_LABEL : LABEL;
+  const foreground = labelColour(look);
   canvas.coloured(row, 0, foreground, fit(`${look.focused && !look.disabled ? MARK : " "}${label}`, width - 1));
 }
 

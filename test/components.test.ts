@@ -1,56 +1,12 @@
-// Components whose behaviour pages rely on: dates written one way
-// everywhere, a centred stack, a list whose choice by a click moves its
-// band, so what shows beside it is the item chosen, controls that look
-// disabled when they are, and a tree whose view keeps full as it shuts.
+// The library's components as they draw: dates, centred stacks, lists
+// and buttons.
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness, text } from "neottx-server-ts-protocol/testing";
-import {
-  AudioPlayer,
-  Button,
-  Centred,
-  type KeyEvent,
-  type Child,
-  ChoiceList,
-  Collapsible,
-  Columns,
-  Component,
-  ComponentChannel,
-  DATE_FORMATS,
-  DateText,
-  DISABLED,
-  formatDate,
-  Frame,
-  h,
-  NowPlaying,
-  type PageSpec,
-  Pagination,
-  Slider,
-  TabView,
-  Text,
-  Tree,
-} from "../src/index.ts";
-import { Colour, COLUMNS, Key } from "../src/kit.ts";
-
-const PAGE = 0x150;
-const PROMPTS = [
-  ["Index", 0x100],
-  ["", null],
-  ["", null],
-  ["", null],
-] as const;
-/** The frame's first body row, where a page's first component is drawn. */
-const BODY_ROW = 3;
-
-function frame(title: string, ...body: Child[]): ReturnType<typeof h> {
-  return h(Frame, { title, background: Colour.Blue, prompts: PROMPTS }, ...body);
-}
-
-function harness(specs: readonly PageSpec[]): Harness {
-  return new Harness([new ComponentChannel(specs)]);
-}
+import { text } from "neottx-server-ts-protocol/testing";
+import { Button, Centred, ChoiceList, Columns, DATE_FORMATS, DateText, type Element, formatDate, h, Text } from "../src/index.ts";
+import { PAGE, BODY_ROW, frame, harness, middle, Chooser } from "./components-fixtures.ts";
 
 test("a date is written in its pattern's tokens, UTC, whatever form it comes in", () => {
   const moment = Date.UTC(2026, 9, 7, 14, 5, 9);
@@ -72,53 +28,28 @@ test("a date is written in its pattern's tokens, UTC, whatever form it comes in"
 
 test("a date component shows its date in its colour, or its fallback", () => {
   const seen = harness([
-    { page: PAGE, title: "Test", root: () => frame("Dates", h(DateText, { value: "2021-07-16" }), h(DateText, { value: "", fallback: "no date" })) },
+    { page: PAGE, title: "Test", root: (): Element => frame("Dates", h(DateText, { value: "2021-07-16" }), h(DateText, { value: "", fallback: "no date" })) },
   ]);
   seen.join(1, PAGE);
+  // oxlint-disable-next-line eslint/no-control-regex -- a teletext row holds its colour codes; the test reads them
   assert.match(text(seen.seen(1, PAGE).rows, BODY_ROW), /^\u000716 Jul 2021 *$/u, "after its colour, white");
   assert.match(text(seen.seen(1, PAGE).rows, BODY_ROW + 1), /no date/u);
 });
 
 test("a centred stack puts each child in the middle of the width at its own size", () => {
-  const seen = harness([{ page: PAGE, title: "Test", root: () => frame("Centred", h(Centred, {}, h(Text, { text: "ab" }), h(Text, { text: "abcdef" }))) }]);
+  const seen = harness([
+    { page: PAGE, title: "Test", root: (): Element => frame("Centred", h(Centred, {}, h(Text, { text: "ab" }), h(Text, { text: "abcdef" }))) },
+  ]);
   seen.join(1, PAGE);
   const rows = seen.seen(1, PAGE).rows;
   const short = text(rows, BODY_ROW);
   const long = text(rows, BODY_ROW + 1);
-  const middle = (line: string, word: string): number => line.indexOf(word) + word.length / 2;
   assert.ok(Math.abs(middle(short, "ab") - middle(long, "abcdef")) <= 1, `${JSON.stringify(short)} over ${JSON.stringify(long)}`);
   assert.ok(short.indexOf("ab") > 10, "not at the left");
 });
 
-/** A list beside what its chosen item is, as the rounds page has. */
-class Chooser extends Component<object, { readonly chosen: number; readonly pressed: string }> {
-  override state = { chosen: 0, pressed: "none" };
-
-  override render(): Child {
-    const items = ["first", "second", "third"];
-    return [
-      h(ChoiceList, {
-        items,
-        shown: 3,
-        onMove: (chosen: number) => {
-          this.setState({ chosen });
-        },
-        onChoose: () => {},
-      }),
-      h(Text, { text: `showing ${items[this.state.chosen] ?? ""}` }),
-      h(Button, {
-        label: "Act",
-        onPress: () => {
-          this.setState({ pressed: items[this.state.chosen] ?? "" });
-        },
-      }),
-      h(Text, { text: `acted on ${this.state.pressed}` }),
-    ];
-  }
-}
-
 test("a click on a list's item moves its band there, so what shows beside the list and its buttons act on that item", () => {
-  const seen = harness([{ page: PAGE, title: "Test", perViewer: true, root: () => frame("Choose", h(Chooser, {})) }]);
+  const seen = harness([{ page: PAGE, title: "Test", perViewer: true, root: (): Element => frame("Choose", h(Chooser, {})) }]);
   seen.join(1, PAGE);
   seen.clickLeft(1, 5, BODY_ROW + 2);
   assert.match(text(seen.own(1, PAGE), BODY_ROW + 3), /showing third/u);
@@ -132,7 +63,7 @@ test("a list's rows hold components: each item drawn by what the list's user giv
     {
       page: PAGE,
       title: "Test",
-      root: () =>
+      root: (): Element =>
         frame(
           "Rows",
           h(ChoiceList<{ name: string; day: string }>, {
@@ -161,138 +92,10 @@ test("a button fits its label with a cell each side, or its padding, or a width 
     {
       page: PAGE,
       title: "Test",
-      root: () => frame("Buttons", h(Button, { label: "go", width: 12, onPress: () => {} }), h(Button, { label: "go", onPress: () => {} })),
+      root: (): Element => frame("Buttons", h(Button, { label: "go", width: 12, onPress: () => {} }), h(Button, { label: "go", onPress: () => {} })),
     },
   ]);
   seen.join(1, PAGE);
   const fixed = text(seen.seen(1, PAGE).rows, BODY_ROW);
   assert.equal(fixed.indexOf("go"), 6, `centred in 8 cells of room after its band: ${JSON.stringify(fixed)}`);
-});
-
-/** Plays three seconds on Enter, pauses on "p", resumes on "r", and shows what plays. */
-class Player extends Component<object, { readonly shown: string }> {
-  override state = { shown: "" };
-
-  override focusable(): boolean {
-    return true;
-  }
-
-  override onKey(event: KeyEvent): boolean {
-    if (event.action === "release") {
-      return false;
-    }
-    const samples = new Int16Array(48_000).fill(1);
-    if (event.key === Key.Enter) {
-      this.services.stream(
-        { name: "three seconds", rate: 16_000, samples: () => samples, complete: true, failure: null, expected: samples.length },
-        event.session,
-      );
-    } else if (event.key === "p") {
-      this.services.pauseStream(event.session);
-    } else if (event.key === "r") {
-      this.services.resumeStream(event.session);
-    }
-    const listening = this.services.listening(event.session);
-    this.setState({ shown: `${listening?.state ?? "none"} ${listening?.heardMs ?? 0}` });
-    return true;
-  }
-
-  override render(): Child {
-    return h(Text, { text: this.state.shown });
-  }
-}
-
-test("a stream pauses where it was heard to, sending nothing, and resumes from there as a new stream", () => {
-  const seen = harness([{ page: PAGE, title: "Test", perViewer: true, root: () => frame("Player", h(Player, {})) }]);
-  seen.join(1, PAGE);
-  seen.press(1, Key.Enter);
-  seen.runUntil(1_000);
-  seen.press(1, "p");
-  assert.match(text(seen.own(1, PAGE), BODY_ROW), /paused 1000/u);
-  assert.ok("stop" in (seen.sounds(1).at(-1) ?? {}), "the receiver stops it");
-  const sent = seen.sounds(1).length;
-  seen.runUntil(3_000);
-  assert.equal(seen.sounds(1).length, sent, "nothing is sent while paused");
-  seen.press(1, "r");
-  const generations = seen.sounds(1).flatMap((message) => ("live" in message ? [(message["live"] as { generation: number }).generation] : []));
-  assert.deepEqual(generations, [1, 2], "resumed as a new stream");
-  seen.runUntil(3_500);
-  seen.press(1, "x");
-  assert.match(text(seen.own(1, PAGE), BODY_ROW), /playing 1500/u, "heard from where it paused");
-});
-
-test("a disabled control looks it: tabs, a heading, the page now and a slider's value in the disabled look, not their own", () => {
-  const seen = harness([
-    {
-      page: PAGE,
-      title: "Test",
-      root: () =>
-        frame(
-          "Disabled",
-          h(TabView, { tabs: ["One", "Two"], disabled: true }),
-          h(Collapsible, { titles: ["A"], disabled: true }),
-          h(Pagination, { count: 5, disabled: true }),
-          h(Slider, { label: "Volume", min: 0, max: 10, disabled: true }),
-        ),
-    },
-  ]);
-  seen.join(1, PAGE);
-  const rows = seen.seen(1, PAGE).rows;
-  // The chosen tab's chip on blue, the other's name, after its colour's cell in its slot, in DISABLED.
-  assert.deepEqual([rows[BODY_ROW]?.[0], rows[BODY_ROW]?.["One".length + 4 + 2]], [Colour.Blue, DISABLED]);
-  assert.deepEqual([rows[BODY_ROW + 1]?.[0], rows[BODY_ROW + 1]?.[2]], [Colour.Black, DISABLED], "no band, its title dim");
-  assert.equal(rows[BODY_ROW + 2]?.[2], Colour.Blue, "the page now on a dim chip, after the dim arrow's two cells");
-  assert.equal(rows[BODY_ROW + 3]?.[COLUMNS - 6], DISABLED, "the value after the track");
-});
-
-test("a tree's view comes up when an item is shut, so none of it is left empty", () => {
-  const leaves = (count: number): { label: string }[] => Array.from({ length: count }, (_, index) => ({ label: `leaf ${index + 1}` }));
-  const seen = harness([
-    {
-      page: PAGE,
-      title: "Test",
-      root: () =>
-        frame(
-          "Tree",
-          h(Tree, {
-            nodes: [
-              { label: "P", children: leaves(10) },
-              { label: "Q", children: leaves(3) },
-            ],
-            open: ["P", "Q"],
-            shown: 4,
-          }),
-        ),
-    },
-  ]);
-  seen.join(1, PAGE);
-  seen.press(1, Key.End);
-  for (let step = 0; step < 3; step += 1) {
-    seen.press(1, Key.Up);
-  }
-  // Q, shut, is the last of the twelve rows left: the view shows the four that end with it.
-  seen.press(1, Key.Enter);
-  const rows = seen.seen(1, PAGE).rows;
-  assert.match(text(rows, BODY_ROW + 3), /\+ Q/u);
-  assert.match(text(rows, BODY_ROW), /leaf 8/u);
-});
-
-test("a player with nothing playing draws nothing, buttons and all, or keeps its rows empty when told to", () => {
-  const page = (keepRows: boolean): Harness => {
-    const seen = harness([
-      {
-        page: PAGE,
-        title: "Test",
-        perViewer: true,
-        root: () => frame("Test", h(AudioPlayer, { keepRows }), h(NowPlaying, { keepRows }), h(Text, { text: "below" })),
-      },
-    ]);
-    seen.join(1, PAGE);
-    return seen;
-  };
-  const bare = page(false).seen(1, PAGE).rows;
-  assert.match(text(bare, BODY_ROW), /below/u, "nothing above it: no Nothing playing, no pause or stop");
-  const kept = page(true).seen(1, PAGE).rows;
-  assert.match(text(kept, BODY_ROW + 5), /below/u, "under the player's three rows and the display's two");
-  assert.doesNotMatch(text(kept, BODY_ROW), /Nothing playing|pause/u);
 });

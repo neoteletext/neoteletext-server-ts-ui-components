@@ -18,5 +18,12 @@
     "eslint/no-use-before-define": "error",
     "eslint/no-nested-ternary": "error",
     "unicorn/switch-case-braces": "error"
-  }
+  },
+  "overrides": [
+    {
+      // A test's components are written beside the test that uses them, where it is read.
+      "files": ["**/test/**/*.ts"],
+      "rules": { "eslint/max-classes-per-file": "off" }
+    }
+  ]
 }

@@ -15,6 +15,7 @@ import {
   Component,
   ComponentChannel,
   type ComponentEvent,
+  type Element,
   Frame,
   h,
   Menu,
@@ -57,7 +58,7 @@ class Listener extends Component {
 }
 
 test("Tab moves the keys to the next control in the order they are drawn, and row 23 says what that control's keys do", () => {
-  const { harness } = channel([{ page: PAGE, title: "Test", root: () => frame("Form", h(Checkbox, { label: "One" }), h(Switch, { label: "Two" })) }]);
+  const { harness } = channel([{ page: PAGE, title: "Test", root: (): Element => frame("Form", h(Checkbox, { label: "One" }), h(Switch, { label: "Two" })) }]);
   harness.join(1, PAGE);
   assert.match(text(harness.seen(1, PAGE).rows, 23), /ticks/u, "the first control has the keys");
   harness.press(1, Key.Tab);
@@ -69,7 +70,7 @@ test("Tab moves the keys to the next control in the order they are drawn, and ro
 
 test("a control's change goes up the tree with its value and who did it", () => {
   Listener.heard = [];
-  const { harness } = channel([{ page: PAGE, title: "Test", root: () => frame("Events", h(Listener, {}, h(Checkbox, { label: "Tick" }))) }]);
+  const { harness } = channel([{ page: PAGE, title: "Test", root: (): Element => frame("Events", h(Listener, {}, h(Checkbox, { label: "Tick" }))) }]);
   harness.join(2, PAGE);
   harness.press(2, " ");
   assert.deepEqual(Listener.heard, ["change:true:viewer"]);
@@ -77,8 +78,8 @@ test("a control's change goes up the tree with its value and who did it", () => 
 
 test("what components need is found before the program starts: digits for a numbered menu, a copy for each viewer for a control", () => {
   const { components } = channel([
-    { page: PAGE, title: "Menu", root: () => frame("Menu", h(Menu, { shared: true, numbered: true, items: [{ label: "One" }], onChoose: () => {} })) },
-    { page: OTHER, title: "Box", root: () => frame("Box", h(Rows, {}, h(Checkbox, { label: "Tick" }))) },
+    { page: PAGE, title: "Menu", root: (): Element => frame("Menu", h(Menu, { shared: true, numbered: true, items: [{ label: "One" }], onChoose: () => {} })) },
+    { page: OTHER, title: "Box", root: (): Element => frame("Box", h(Rows, {}, h(Checkbox, { label: "Tick" }))) },
   ]);
   const entries = new Map(components.pages().map((entry) => [entry.page, entry]));
   assert.equal(entries.get(PAGE)?.ownsDigits, true);
@@ -107,7 +108,7 @@ class Regions extends Component<object, { readonly clicked: string }> {
 }
 
 test("a click carries the region the component marked round it", () => {
-  const { harness } = channel([{ page: PAGE, title: "Test", perViewer: true, root: () => frame("Regions", h(Regions, {})) }]);
+  const { harness } = channel([{ page: PAGE, title: "Test", perViewer: true, root: (): Element => frame("Regions", h(Regions, {})) }]);
   harness.join(3, PAGE);
   harness.clickLeft(3, 10, 3);
   assert.match(text(harness.own(3, PAGE), 3), /right +$/u);
@@ -116,7 +117,9 @@ test("a click carries the region the component marked round it", () => {
 });
 
 test("a timer that runs only while viewed waits while nobody watches, and catches up when someone comes", () => {
-  const { harness } = channel([{ page: PAGE, title: "Test", root: () => frame("Ticker", h(Ticker, { items: ["one", "two", "three"], everyMs: 1_000 })) }]);
+  const { harness } = channel([
+    { page: PAGE, title: "Test", root: (): Element => frame("Ticker", h(Ticker, { items: ["one", "two", "three"], everyMs: 1_000 })) },
+  ]);
   assert.ok(harness.sharedPublications(PAGE) >= 1, "published at the start");
   harness.advance(5_000);
   assert.equal(harness.sharedPublications(PAGE), 0, "nothing published while nobody watched");
@@ -136,7 +139,7 @@ test("an event on the bus reaches only its audience: a toast for one viewer show
       return true;
     }
   }
-  const { harness } = channel([{ page: PAGE, title: "Test", perViewer: true, root: () => frame("Toasts", h(Sender, {}), h(ToastShelf, {})) }]);
+  const { harness } = channel([{ page: PAGE, title: "Test", perViewer: true, root: (): Element => frame("Toasts", h(Sender, {}), h(ToastShelf, {})) }]);
   harness.join(6, PAGE);
   harness.join(7, PAGE);
   harness.press(7, Key.Enter);
@@ -145,12 +148,12 @@ test("an event on the bus reaches only its audience: a toast for one viewer show
 });
 
 test("a field keeps the digits: a page with one owns them", () => {
-  const { components } = channel([{ page: PAGE, title: "Test", root: () => frame("Field", h(TextField, { longest: 10 })) }]);
+  const { components } = channel([{ page: PAGE, title: "Test", root: (): Element => frame("Field", h(TextField, { longest: 10 })) }]);
   assert.equal(components.pages()[0]?.ownsDigits, true);
 });
 
 test("a field takes typing from each key's press with its text, and raw text from a phone (INPUT.md section 6.3)", () => {
-  const { harness } = channel([{ page: PAGE, title: "Test", root: () => frame("Field", h(TextField, { longest: 10 })) }]);
+  const { harness } = channel([{ page: PAGE, title: "Test", root: (): Element => frame("Field", h(TextField, { longest: 10 })) }]);
   harness.join(1, PAGE);
   harness.typeKeys(1, "ab");
   harness.typeText(1, "cd");
@@ -184,8 +187,8 @@ class Sends extends Component {
 
 test("a viewer sent to a page with what it is to show sees it there: the page's root is made with it", () => {
   const { harness } = channel([
-    { page: PAGE, title: "From", root: () => frame("From", h(Sends, {})) },
-    { page: OTHER, title: "To", perViewer: true, root: (params) => frame("To", h(Shows, { what: String(params?.["what"] ?? "nothing") })) },
+    { page: PAGE, title: "From", root: (): Element => frame("From", h(Sends, {})) },
+    { page: OTHER, title: "To", perViewer: true, root: (params): Element => frame("To", h(Shows, { what: String(params?.["what"] ?? "nothing") })) },
   ]);
   harness.join(8, PAGE);
   harness.press(8, Key.Enter);
@@ -211,8 +214,8 @@ class Plays extends Component {
 
 test("a stream is sent as a live sound, its blocks ahead of real time a tick at a time, and stopped when the viewer leaves its page", () => {
   const { harness } = channel([
-    { page: PAGE, title: "Player", perViewer: true, root: () => frame("Player", h(Plays, {})) },
-    { page: OTHER, title: "Other", root: () => frame("Other") },
+    { page: PAGE, title: "Player", perViewer: true, root: (): Element => frame("Player", h(Plays, {})) },
+    { page: OTHER, title: "Other", root: (): Element => frame("Other") },
   ]);
   harness.join(9, PAGE);
   harness.press(9, Key.Enter);

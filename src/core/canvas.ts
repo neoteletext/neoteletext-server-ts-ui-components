@@ -207,7 +207,12 @@ export class Canvas {
 
   /** Fills `count` cells from `column` with `code`. */
   fill(row: number, column: number, count: number, code: number): void {
-    this.codes(row, column, new Array<number>(Math.max(0, count)).fill(code));
+    // No more than a row holds: a count from props is not taken on trust.
+    this.codes(
+      row,
+      column,
+      Array.from({ length: Math.max(0, Math.min(count, COLUMNS)) }, () => code),
+    );
   }
 
   /** Draws `sixels` in `colour` with its top-left cell at `row`, `column`: the mosaic colour takes the cell before. */
