@@ -5,18 +5,25 @@
 //
 //   core/         elements, components, the canvas, controls and their rollover
 //                 colours, mounts, the runtime, sound
-//   layout/       rows, columns, places, layers, gaps, grids, panels, rules
+//   layout/       rows, columns, places, layers, gaps, grids, panels, joined
+//                 panels, rules, jump labels
 //   frame/        the page frame: title band, hint, Fastext, status bar, key help
-//   text/         styles, news, lines, rich text, badges
-//   navigation/   tabs, breadcrumbs, pagination, menus, trees, collapsibles
-//   lists/        scrolling, choosing, numbered rows, tables, logs
+//   text/         styles, news, lines, rich text, badges, large text
+//   navigation/   tabs, breadcrumbs, pagination, menus, trees, collapsibles,
+//                 a page finder
+//   lists/        scrolling, choosing, numbered rows, tables, logs, lists
+//                 that narrow as the viewer types
 //   input/        actions, text fields, buttons, check boxes, radios, switches,
-//                 sliders, numbers, selects, autocomplete, forms
-//   feedback/     progress, gauges, spinners, notices, toasts
-//   overlay/      dialogs
-//   charts/       bars, columns, sparklines, line charts, heat maps
-//   time/         dates as text, large digits, clocks, countdowns, calendars
-//   graphics/     mosaics, icons, pictures, painting, sprites, a wheel
+//                 sliders, numbers, selects, autocomplete, forms, digit
+//                 segments, phone-keypad typing
+//   feedback/     progress, gauges, spinners, notices, toasts, task lists,
+//                 metric cards, loading and skeletons, an audio player
+//   overlay/      dialogs, shadows, scrims, confirming by typing
+//   charts/       bars, columns, sparklines, line charts, heat maps,
+//                 breakdowns, pies, brackets, spectra
+//   time/         dates as text, large digits, clocks, countdowns, stopwatches,
+//                 calendars
+//   graphics/     mosaics, icons, pictures, painting, sprites, a wheel, maps
 //   documents/    pages of several sub-pages
 //   interactive/  quizzes, polls, sound lists
 //   composition/  wizards

@@ -85,14 +85,25 @@ props from the class, not from the props given beside it.
 
 ## What is in it
 
-Layout (rows, columns, layers, grids, panels), the frame, text (styles,
-rich text, news, badges), navigation (tabs, menus, trees, pagination),
-lists (choosing, scrolling, tables, logs), input (fields, buttons, check
-boxes, radios, switches, sliders, selects, autocomplete), feedback
-(progress, spinners, toasts, what is playing), dialogs, charts (bars,
-columns, lines, sparklines, heat maps), time (dates, clocks, countdowns,
-calendars), graphics (mosaics, pictures, painting), documents of several
-sub-pages, polls, quizzes, wizards and games. Each part of `src/` has an
+Layout (rows, columns, layers, grids, panels, joined panels, jump
+labels), the frame, text (styles, rich text, news, badges, big letters),
+navigation (tabs, menus, trees, pagination, a page finder), lists
+(choosing, picking by a digit or a coloured key, narrowing as the viewer
+types, scrolling, tables, logs), input (fields, buttons, check boxes,
+radios, switches, sliders, selects, autocomplete, digit segments,
+phone-keypad typing), feedback (progress, task lists, metric cards,
+spinners, loading and skeletons, toasts that undo, an audio player with a
+queue, speed, a loop, a sleep timer and a spectrum), dialogs (shadows, a
+scrim, confirming by typing), charts (bars, columns, lines, sparklines,
+heat maps, breakdowns, pies, brackets, spectra), time (dates, clocks,
+countdowns, stopwatches, calendars), graphics (mosaics, pictures,
+painting, maps with markers), documents of several sub-pages, polls,
+quizzes, wizards and games.
+
+The keys go back to where they were when a dialog closes, an arrow no
+control takes moves them to the control nearest that way, and each
+control says its keys once, for the hint row and for KeyHelp's help on
+the control that has them. Each part of `src/` has an
 `index.ts` that names what it exports; everything is exported from the
 package's root.
 
