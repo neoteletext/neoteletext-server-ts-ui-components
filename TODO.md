@@ -21,3 +21,6 @@ hackaday-next to a repository of its own), the owner's cleanup of
 6. **The API and structure of a component library:** one that makes
    sense and is easy to use, learned from similar libraries. A change
    to the API is a new major version, and every consumer moves to it.
+7. **A README** (the owner, 28 October 2026): what the library is, how to
+   install and use it, its API, and its licence, MIT; written once the
+   cleanup above has settled the API.
