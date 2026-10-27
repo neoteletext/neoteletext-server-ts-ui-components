@@ -13,7 +13,7 @@ import { isPress, type KeyEvent, type PointerEvent, type TextEvent } from "../co
 import { DISABLED, EMPTY } from "../core/look.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { cells, fit } from "../core/text.ts";
-import { Colour, CursorFlag, Key } from "../kit.ts";
+import { Colour, CONTROL_CHARACTER, CursorFlag, Key } from "../kit.ts";
 import { type ValueProps, ValueControl } from "./value-control.ts";
 
 /** The prompt before what is typed. */
@@ -24,6 +24,34 @@ const MASK = "*";
 const BACKGROUND_CELLS = 2;
 /** The region its band is. */
 const FIELD = "field";
+
+/**
+ * The first `most` characters of `text` that `keep` keeps, whole code
+ * points, so a cut never halves a surrogate pair. It reads no further than
+ * it keeps, so a paste as long as the server's line costs no more than the
+ * field holds.
+ */
+function firstCharacters(text: string, most: number, keep: (character: string) => boolean = () => true): string {
+  // As String.slice does, a most that is no number keeps nothing.
+  const limit = Number.isNaN(most) ? 0 : most;
+  let kept = "";
+  let count = 0;
+  for (const character of text) {
+    if (count >= limit) {
+      break;
+    }
+    if (keep(character)) {
+      kept += character;
+      count += 1;
+    }
+  }
+  return kept;
+}
+
+/** A control character is never text (INPUT.md section 5.3): typed or pasted, a field does not keep it. */
+function isText(character: string): boolean {
+  return !CONTROL_CHARACTER.test(character);
+}
 
 export interface TextFieldProps extends ValueProps<string> {
   /** The most characters it takes. */
@@ -91,7 +119,8 @@ export class TextField extends ValueControl<string, TextFieldProps> {
     if (this.disabled) {
       return false;
     }
-    this.change(`${this.value}${event.text}`.slice(0, this.props.longest), event.session);
+    const { longest } = this.props;
+    this.change(firstCharacters(`${this.value}${firstCharacters(event.text, longest, isText)}`, longest), event.session);
     return true;
   }
 

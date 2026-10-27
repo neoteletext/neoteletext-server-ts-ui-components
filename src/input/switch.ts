@@ -39,13 +39,16 @@ export class Switch extends ValueControl<boolean, SwitchProps> {
     return { width: space.width, height: Math.min(1, space.height) };
   }
 
+  get #look(): { readonly background: Colour; readonly foreground: Colour } {
+    if (this.disabled) {
+      return DISABLED_CHIP;
+    }
+    return this.value ? { background: Colour.Green, foreground: Colour.Black } : { background: Colour.Red, foreground: Colour.White };
+  }
+
   override paint(canvas: Canvas): void {
     const at = Math.min(this.paintLabel(canvas), canvas.width - ON.length - 5);
-    const look = this.disabled
-      ? DISABLED_CHIP
-      : this.value
-        ? { background: Colour.Green, foreground: Colour.Black }
-        : { background: Colour.Red, foreground: Colour.White };
+    const look = this.#look;
     const after = canvas.chip(0, at, look.background, look.foreground, this.value ? ON : OFF);
     if (!this.disabled) {
       canvas.chipControl(0, at, after, CHIP);

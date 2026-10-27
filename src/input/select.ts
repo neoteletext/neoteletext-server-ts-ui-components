@@ -35,6 +35,14 @@ const SHOWN = 6;
 /** The arrows either side of the field, each after its colour's cell. */
 const ARROW_CELLS = 2;
 
+/** Shut, Right turns on an item and Left back. */
+function turnOf(event: KeyEvent): number {
+  if (isPress(event, Key.Right)) {
+    return 1;
+  }
+  return isPress(event, Key.Left) ? -1 : 0;
+}
+
 export class Select extends ValueControl<number, SelectProps, SelectState> {
   override state: SelectState = { own: this.props.initial ?? 0, open: false, chosen: this.props.initial ?? 0 };
 
@@ -142,7 +150,7 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
       this.setState({ open: true, chosen: this.value });
       return true;
     }
-    const turn = isPress(event, Key.Right) ? 1 : isPress(event, Key.Left) ? -1 : 0;
+    const turn = turnOf(event);
     if (turn === 0) {
       return false;
     }

@@ -1,4 +1,7 @@
-// ValueControl: split from control.ts; the comments pass writes this file's header.
+// A control with a value (control.ts): the value kept by its parent
+// (`value`) or by the control itself (`initial`), checked as it changes,
+// and each change sent up the tree (core/component-events.ts) as change
+// or invalid as well as to onChange.
 
 import { Control, type ControlProps } from "./control.ts";
 
@@ -22,6 +25,7 @@ function same(a: unknown, b: unknown): boolean {
 }
 
 export abstract class ValueControl<T, P extends ValueProps<T> = ValueProps<T>, S extends ValueState<T> = ValueState<T>> extends Control<P, S> {
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a subclass with more state sets its own; one with none has exactly ValueState<T>, which TypeScript cannot prove S is
   override state = { own: this.props.initial ?? this.empty() } as S;
 
   /** Its value when it is given none. */
@@ -29,10 +33,10 @@ export abstract class ValueControl<T, P extends ValueProps<T> = ValueProps<T>, S
 
   /** The value: the parent's when it keeps it, its own otherwise. */
   get value(): T {
-    return this.props.value !== undefined ? this.props.value : this.state.own;
+    // oxlint-disable-next-line typescript/prefer-nullish-coalescing -- null may be a value (a ValueControl<T | null>); only undefined says the parent keeps none
+    return this.props.value === undefined ? this.state.own : this.props.value;
   }
 
-  /** What is wrong with the value, or null. */
   get complaint(): string | null {
     return this.props.validate?.(this.value) ?? null;
   }
@@ -44,14 +48,15 @@ export abstract class ValueControl<T, P extends ValueProps<T> = ValueProps<T>, S
       return;
     }
     if (this.props.value === undefined) {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- `own` is ValueState<T>'s, which every S extends, but TypeScript cannot prove a subclass did not narrow it
       this.setState({ own: value } as Partial<S>);
     }
     const reason = this.props.validate?.(value) ?? null;
-    if (reason !== null) {
+    if (reason === null) {
+      this.play("change", session);
+    } else {
       this.emit({ type: "invalid", value, reason, session, origin: "viewer" });
       this.play("error", session);
-    } else {
-      this.play("change", session);
     }
     this.emit({ type: "change", value, previous, session, origin: "viewer" });
     this.props.onChange?.(value, session);

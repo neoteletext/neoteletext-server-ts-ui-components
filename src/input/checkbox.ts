@@ -1,13 +1,13 @@
-// Check boxes. Teletext has no box character, so a box is a chip (core/
+// A check box. Teletext has no box character, so a box is a chip (core/
 // canvas.ts): a white square of background holding "x" when ticked, "-"
-// when mixed, nothing when not, so the state shows without colour. One on
-// its own is pressed with Enter, Space or a click; a group goes Up and
-// Down, or across in two columns, and each box is ticked as one is. A box
-// and its text are one control, and a click ticks only there.
+// when mixed, nothing when not, so the state shows without colour. It is
+// pressed with Enter, Space or a click; a box and its text are one
+// control, and a click ticks only there. A group of boxes
+// (checkbox-group.ts) draws each with drawBox.
 
 import { CHIP_CELLS, type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
 import type { Size } from "../core/component.ts";
-import { type KeyEvent, type PointerEvent } from "../core/events.ts";
+import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { CHOSEN, DISABLED, DISABLED_CHIP, LABEL } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
@@ -18,6 +18,13 @@ export type Ticked = boolean | "mixed";
 
 /** What the box holds for each state. */
 const MARKS = { true: "x", false: " ", mixed: "-" } as const;
+
+function markOf(ticked: Ticked): string {
+  if (ticked === "mixed") {
+    return MARKS.mixed;
+  }
+  return ticked ? MARKS.true : MARKS.false;
+}
 
 /** The region of a box on its own. */
 const BOX = "box";
@@ -37,7 +44,7 @@ export function drawBox(
   width: number,
   id: string,
 ): void {
-  const after = canvas.chip(row, column, look.disabled ? DISABLED_CHIP.background : Colour.White, Colour.Black, MARKS[String(ticked) as keyof typeof MARKS]);
+  const after = canvas.chip(row, column, look.disabled ? DISABLED_CHIP.background : Colour.White, Colour.Black, markOf(ticked));
   const room = width - (after - column) - 1;
   let end: number;
   if (look.chosen && !look.disabled) {

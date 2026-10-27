@@ -2,10 +2,9 @@
 // state that cannot be used (disabled), one look while it has the keys
 // (core/look.ts), optional sounds, a hint of its keys for the frame's row
 // 23, and what it needs of its page: a copy for each viewer unless it is
-// shared, so one viewer's ticks are never everyone's. A control with a
-// value takes it from its parent (`value`) or keeps its own (`initial`),
-// checks it, and sends change, invalid and activate events up the tree
-// (core/component-events.ts) as well as calling its own callbacks.
+// shared, so one viewer's ticks are never everyone's. It sends activate
+// and cancel up the tree (core/component-events.ts); a control with a
+// value is a ValueControl (value-control.ts).
 
 import { Component } from "../core/component.ts";
 import type { Origin } from "../core/component-events.ts";

@@ -33,6 +33,7 @@ interface AutocompleteState extends ValueState<string> {
   readonly chosen: number;
 }
 
+/** The most characters typed when not told. */
 const LONGEST = 30;
 
 export class Autocomplete extends ValueControl<string, AutocompleteProps, AutocompleteState> {
