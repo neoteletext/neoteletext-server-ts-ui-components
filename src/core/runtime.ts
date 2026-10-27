@@ -212,8 +212,8 @@ export class ComponentChannel implements Application {
       goto: (to, target, params) => {
         this.#goto(context(), to, target, params);
       },
-      stream: (source, to) => {
-        this.#streams.start(context(), to, page, source);
+      stream: (source, to, fromMs = 0) => {
+        this.#streams.start(context(), to, page, source, LiveStreams.sampleAt(source, fromMs));
       },
       stopStream: (to) => {
         this.#streams.stop(context(), to);
@@ -224,7 +224,14 @@ export class ComponentChannel implements Application {
       resumeStream: (to) => {
         this.#streams.resume(context(), to);
       },
+      seekStream: (to, ms) => {
+        this.#streams.seek(context(), to, ms);
+      },
+      streamGain: (to, gain) => {
+        this.#streams.setGain(context(), to, gain);
+      },
       listening: (to) => this.#streams.listening(to, this.#context?.now() ?? 0),
+      streamPlace: (to, name) => this.#streams.place(to, name),
       title: (text) => {
         context().title(page, fit(text, LONGEST_TITLE));
       },

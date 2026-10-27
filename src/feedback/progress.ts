@@ -2,7 +2,8 @@
 // to the half cell, solid or in separated graphics (EN 300 706 clause
 // 12.2), whose colour may follow thresholds as a gauge's does. The share it
 // shows, and the label's and the share's cells, are the line gauge's too
-// (line-gauge.ts).
+// (line-gauge.ts). Given onSeek, its track is a control: a click on it
+// says how far along the click was, as a player's seek bar does.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
@@ -10,6 +11,7 @@ import { type Size } from "../core/layout.ts";
 import { FULL_BLOCK, LEFT_HALF, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Attribute, Colour, mosaicColour } from "../kit.ts";
+import type { PointerEvent } from "../core/events.ts";
 import { cellCount } from "../charts/numbers.ts";
 
 /** A colour from a share upward, as a gauge goes green, yellow, red. */
@@ -28,6 +30,8 @@ export interface ProgressProps {
   readonly labelCells?: number;
   /** The share after the bar. */
   readonly percent?: boolean;
+  /** A click on the track: how far along it, 0 to 1. */
+  readonly onSeek?: (fraction: number, session: number) => void;
 }
 
 /** The label's column when there is a label and no width is given. */
@@ -68,7 +72,21 @@ function trackCell(cell: number, halves: number): number {
   return 2 * cell + 1 === halves ? LEFT_HALF | TRACK : TRACK;
 }
 
+/** Where the track is on the bar's row: its first cell and how many. */
+interface TrackSpan {
+  readonly start: number;
+  readonly cells: number;
+}
+
+/** Half a cell: a click is taken at its cell's middle. */
+const HALF_CELL = 0.5;
+/** The region the track is, for a click. */
+const TRACK_REGION = "track";
+
 export class ProgressBar extends Component<ProgressProps> {
+  /** The track as last painted. */
+  #track: TrackSpan = { start: 0, cells: 0 };
+
   override measure(space: Size): Size {
     return { width: space.width, height: Math.min(1, space.height) };
   }
@@ -86,8 +104,22 @@ export class ProgressBar extends Component<ProgressProps> {
     const codes = Array.from({ length: cells }, (_, cell) => trackCell(cell, halves));
     const foreground = colourFor(fraction, this.props.foreground ?? Colour.Green, this.props.thresholds);
     canvas.codes(0, labelCells, [mosaicColour(foreground), ...lead, ...codes]);
+    this.#track = { start: labelCells + 1 + lead.length, cells };
+    if (this.props.onSeek !== undefined) {
+      canvas.control(0, this.#track.start, cells, 1, TRACK_REGION);
+    }
     if (this.props.percent !== false) {
       canvas.coloured(0, labelCells + 1 + lead.length + cells, Colour.White, padStart(`${Math.round(fraction * 100)}%`, PERCENT_CELLS - 1));
     }
+  }
+
+  override onClick(event: PointerEvent): boolean {
+    const { onSeek } = this.props;
+    if (onSeek === undefined || event.region !== TRACK_REGION || this.#track.cells === 0) {
+      return false;
+    }
+    // The middle of the cell clicked: a click on the first cell is a little way in, not the very start.
+    onSeek(Math.max(0, Math.min(1, (event.local.column - this.#track.start + HALF_CELL) / this.#track.cells)), event.session);
+    return true;
   }
 }

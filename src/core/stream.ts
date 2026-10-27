@@ -22,6 +22,8 @@ export interface StreamSource {
   readonly failure: string | null;
   /** Its length in samples when known in advance, or null. */
   readonly expected: number | null;
+  /** How much faster than its samples it plays what it holds: a source stretched to play faster or slower (feedback/time-stretch.ts). 1 when absent. */
+  readonly speed?: number;
 }
 
 /** A viewer's stream as a page shows it. */
@@ -32,6 +34,8 @@ export interface Listening {
   readonly lengthMs: number | null;
   readonly state: "waiting" | "playing" | "paused" | "ended" | "failed";
   readonly failure: string | null;
+  /** How loud it plays, 0 to FULL_GAIN. */
+  readonly gain: number;
 }
 
 /** The block size the server encodes a live sound's blocks in: 512 bytes of IMA ADPCM, its 4-byte header holding the first sample, two samples a byte after (the engine's audio.md). */

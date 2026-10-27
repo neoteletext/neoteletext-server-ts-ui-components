@@ -1,11 +1,14 @@
 // A stream as the viewer sees it: what it is and whether it plays, then a
-// bar of how far it has played of how long. It looks at nothing itself;
+// bar of how far it has played of how long; with nothing playing, it says
+// so and keeps the bar's row, so what is under it does not move. It looks
+// at nothing itself;
 // the player that holds it (now-playing.ts, audio-player.ts) says what plays.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import type { Listening } from "../core/stream.ts";
 import { Colour } from "../kit.ts";
+import { Gap } from "../layout/gap.ts";
 import { Rows } from "../layout/layouts.ts";
 import { Paragraph } from "../text/paragraph.ts";
 import { HOUR_S, MINUTE_S, SECOND_MS } from "../time/clock.ts";
@@ -27,6 +30,8 @@ export interface ListeningViewProps {
   /** What plays, or null for nothing. */
   readonly listening: Listening | null;
   readonly foreground?: Colour;
+  /** A click on the bar: how far along it, 0 to 1, to seek there. */
+  readonly onSeek?: (fraction: number, session: number) => void;
 }
 
 /** The colour of what a stream is doing: red when it cannot play, yellow paused, else green. */
@@ -42,7 +47,7 @@ export class ListeningView extends Component<ListeningViewProps> {
   override render(): Child {
     const { listening } = this.props;
     if (listening === null) {
-      return h(Paragraph, { text: "Nothing playing", foreground: Colour.Blue, lines: 1 });
+      return h(Rows, {}, h(Paragraph, { text: "Nothing playing", foreground: Colour.Blue, lines: 1 }), h(Gap, {}));
     }
     const states: Record<Listening["state"], string> = {
       failed: `Cannot play: ${listening.failure ?? ""}`,
@@ -67,6 +72,7 @@ export class ListeningView extends Component<ListeningViewProps> {
         max: length ?? Math.max(1, heard),
         foreground: this.props.foreground ?? Colour.Magenta,
         labelCells: TIME_CELLS,
+        ...(this.props.onSeek === undefined ? {} : { onSeek: this.props.onSeek }),
       }),
     );
   }

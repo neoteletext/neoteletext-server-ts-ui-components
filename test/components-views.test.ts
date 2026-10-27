@@ -100,6 +100,6 @@ test("a player with nothing playing draws nothing, buttons and all, or keeps its
   const bare = page(false).seen(1, PAGE).rows;
   assert.match(text(bare, BODY_ROW), /below/u, "nothing above it: no Nothing playing, no pause or stop");
   const kept = page(true).seen(1, PAGE).rows;
-  assert.match(text(kept, BODY_ROW + 5), /below/u, "under the player's three rows and the display's two");
+  assert.match(text(kept, BODY_ROW + 7), /below/u, "under the player's five rows and the display's two");
   assert.doesNotMatch(text(kept, BODY_ROW), /Nothing playing|pause/u);
 });

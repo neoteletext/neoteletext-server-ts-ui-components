@@ -26,15 +26,21 @@ export interface Services {
   title(text: string): void;
   /** Plays a sound to one viewer, or to everyone with this page open. */
   play(sound: Sound, session?: number): void;
-  /** Plays a long sound to one viewer as a live stream (stream.ts), bound to this page: it stops when they leave. A new one replaces theirs. */
-  stream(source: StreamSource, session: number): void;
+  /** Plays a long sound to one viewer as a live stream (stream.ts), bound to this page: it stops when they leave. A new one replaces theirs. It starts `fromMs` in, or at its start. */
+  stream(source: StreamSource, session: number, fromMs?: number): void;
   /** Stops the viewer's stream. */
   stopStream(session: number): void;
   /** Pauses the viewer's stream where they have heard to; resumeStream goes on from there. */
   pauseStream(session: number): void;
   resumeStream(session: number): void;
+  /** Moves the viewer's stream to `ms` from its start: paused, it stays paused there. */
+  seekStream(session: number, ms: number): void;
+  /** How loud the viewer's streams play, 0 to FULL_GAIN; it lasts until they go. */
+  streamGain(session: number, gain: number): void;
   /** The viewer's stream, or null. */
   listening(session: number): Listening | null;
+  /** Where the viewer's stream of `name` last stopped short of its end, in milliseconds, or null: for taking it up again. */
+  streamPlace(session: number, name: string): number | null;
   /** A pseudo-random number below `bound`: for games, never for secrets. */
   below(bound: number): number;
   /** Reports a line in the server's log. */
