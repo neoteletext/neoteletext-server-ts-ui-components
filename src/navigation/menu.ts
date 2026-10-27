@@ -8,23 +8,22 @@
 // (onHover). More choices than fit scroll beside a scroll bar, and with
 // the wheel.
 
-import { type Size } from "../core/component.ts";
+// oxlint-disable import/max-dependencies -- a control that lays out its title, rows and scroll bar and takes the keys, the digits and the wheel needs each of these; its row is a file of its own already (menu-row.ts)
+import type { Size } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { choosing, digitOf } from "../core/keys.ts";
 import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
 import type { PageNeeds } from "../core/needs.ts";
-import { cells } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { Rows } from "../layout/layouts.ts";
+import { ListRows } from "../lists/list-rows.ts";
+import { BAR_CELLS, ScrollBar } from "../lists/scroll.ts";
 import { Text } from "../text/styles.ts";
 import { Breadcrumbs } from "./breadcrumbs.ts";
-import { ListRows } from "../lists/list-rows.ts";
-import { type RowLook } from "../lists/list-row.ts";
-import { BAR_CELLS, ScrollBar } from "../lists/scroll.ts";
-import { MenuRule } from "./menu-rule.ts";
+import { menuRow } from "./menu-row.ts";
 
 export interface MenuItem {
   readonly label: string;
@@ -59,29 +58,8 @@ interface MenuState {
   readonly top: number;
 }
 
-/** What marks a choice that opens a menu. */
-const OPENS = "→";
-
 function choosable(item: MenuItem | undefined): boolean {
   return item !== undefined && item.rule !== true && item.disabled !== true;
-}
-
-/** A choice's row: its number when numbered, its label, and its shortcut or the mark of a menu it opens on the right. */
-function menuRow(item: MenuItem, number: number | null, look: RowLook): Child {
-  if (item.rule === true) {
-    return h(MenuRule, {});
-  }
-  const right = item.items !== undefined ? OPENS : (item.shortcut ?? "");
-  const label = `${number === null ? "" : `${number} `}${item.label}`;
-  // The shortcut's column: its colour's cell, a space and the shortcut.
-  return right === ""
-    ? h(Text, { text: label, foreground: look.foreground })
-    : h(
-        Columns,
-        { widths: [null, cells(right) + 2] },
-        h(Text, { text: label, foreground: look.foreground }),
-        h(Text, { text: right, foreground: look.foreground }),
-      );
 }
 
 export class Menu extends Control<MenuProps, MenuState> {
@@ -143,7 +121,7 @@ export class Menu extends Control<MenuProps, MenuState> {
           focused: this.focused,
           empty: this.props.empty ?? "no choices",
           disabled: (item: MenuItem) => this.disabled || !choosable(item),
-          render: (item: MenuItem, look: RowLook, index: number) => menuRow(item, this.props.numbered === true ? (numbers[index] ?? null) : null, look),
+          render: (item, look, index) => menuRow(item, this.props.numbered === true ? (numbers[index] ?? null) : null, look),
           onPick: (index: number, session: number) => {
             this.#choose(index, session);
           },

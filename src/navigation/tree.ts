@@ -6,16 +6,17 @@
 // does, and the pointer coming onto an item is told to the tree's user
 // (onHover). More than fit scroll beside a scroll bar, and with the wheel.
 
-import { type Size } from "../core/component.ts";
+// oxlint-disable import/max-dependencies -- a control that lays out its rows and scroll bar and takes the keys and the wheel needs each of these; its guides are a file of their own already (tree-guides.ts)
+import type { Size } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
 import { LEFT_HALF, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
-import { Colour, Key } from "../kit.ts";
+import { Colour, COLUMNS, Key } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
-import { ListRows } from "../lists/list-rows.ts";
+import { ListRows, within } from "../lists/list-rows.ts";
 import { BAR_CELLS, ScrollBar } from "../lists/scroll.ts";
 import { TreeGuides } from "./tree-guides.ts";
 
@@ -67,10 +68,20 @@ const LAST_BRANCH = MOSAIC_BASE | SIXEL.topLeft | SIXEL.middleLeft | SIXEL.middl
 /** Indentation without guides, a level. */
 const INDENT = 2;
 
-function opened(nodes: readonly TreeNode[], labels: readonly string[], prefix = ""): string[] {
+/**
+ * The levels walked, from the top: every level indents an item a cell at
+ * least, so none deeper than the page is wide has a cell to be drawn in,
+ * and a tree as deep as its data is walked no deeper than this, not to the
+ * end of the call stack.
+ */
+const MOST_DEPTH = COLUMNS;
+
+/** The ids of the items labelled `labels`, from `depth` down. */
+function opened(nodes: readonly TreeNode[], labels: readonly string[], prefix = "", depth = 0): string[] {
   return nodes.flatMap((node, index) => {
     const id = `${prefix}${index}`;
-    return [...(labels.includes(node.label) ? [id] : []), ...opened(node.children ?? [], labels, `${id}/`)];
+    const below = node.children === undefined || depth + 1 >= MOST_DEPTH ? [] : opened(node.children, labels, `${id}/`, depth + 1);
+    return [...(labels.includes(node.label) ? [id] : []), ...below];
   });
 }
 
@@ -82,7 +93,7 @@ function visibleRows(nodes: readonly TreeNode[], open: ReadonlySet<string>): Vis
       const last = index === level.length - 1;
       const place = out.length;
       out.push({ node, id, depth, last, through, parent });
-      if (node.children !== undefined && open.has(id)) {
+      if (node.children !== undefined && open.has(id) && depth + 1 < MOST_DEPTH) {
         visit(node.children, depth + 1, [...through, !last], `${id}/`, place);
       }
     });
@@ -94,6 +105,22 @@ function visibleRows(nodes: readonly TreeNode[], open: ReadonlySet<string>): Vis
 /** An item's guide lines: one cell a level above it, a line down where that level goes on, then its branch. */
 function guideCodes(item: Visible): number[] {
   return [...item.through.slice(1).map((down) => (down ? DOWN : MOSAIC_BASE)), item.last ? LAST_BRANCH : BRANCH];
+}
+
+/** The cells before an item's band: its guides and their colour's cell, or two cells a level without guides. */
+function indentOf(item: Visible, guides: boolean): number {
+  if (!guides) {
+    return item.depth * INDENT;
+  }
+  return item.depth > 0 ? guideCodes(item).length + 1 : 0;
+}
+
+/** What marks an item: "+" shut, "-" open, a space for one with nothing under it. */
+function markOf(item: Visible, open: ReadonlySet<string>): string {
+  if (item.node.children === undefined) {
+    return " ";
+  }
+  return open.has(item.id) ? "-" : "+";
 }
 
 export class Tree extends Control<TreeProps, TreeState> {
@@ -112,6 +139,11 @@ export class Tree extends Control<TreeProps, TreeState> {
     return visibleRows(this.props.nodes, this.state.open);
   }
 
+  /** The chosen row of `count`, kept to the rows there are now: its user may take some away. */
+  #chosen(count: number): number {
+    return within(this.state.chosen, count);
+  }
+
   override render(): Child {
     const rows = this.#rows();
     const guides = this.props.guides === true;
@@ -124,13 +156,12 @@ export class Tree extends Control<TreeProps, TreeState> {
         items: rows,
         top,
         shown: this.props.shown,
-        chosen: this.state.chosen,
+        chosen: this.#chosen(rows.length),
         focused: this.focused,
         empty: this.props.empty ?? "nothing here",
-        // With guides, the lines and their colour's cell; without, two cells a level.
-        indent: (item: Visible) => (guides ? (item.depth > 0 ? guideCodes(item).length + 1 : 0) : item.depth * INDENT),
+        indent: (item: Visible) => indentOf(item, guides),
         before: (item: Visible) => (guides && item.depth > 0 ? h(TreeGuides, { codes: guideCodes(item) }) : undefined),
-        text: (item: Visible) => `${item.node.children === undefined ? " " : this.state.open.has(item.id) ? "-" : "+"} ${item.node.label}`,
+        text: (item: Visible) => `${markOf(item, this.state.open)} ${item.node.label}`,
         foreground: (item: Visible) => (item.node.children === undefined ? Colour.White : Colour.Cyan),
         disabled: () => this.disabled,
         onPick: (index: number, session: number) => {
@@ -181,12 +212,13 @@ export class Tree extends Control<TreeProps, TreeState> {
 
   override onKey(event: KeyEvent): boolean {
     const rows = this.#rows();
-    const item = rows[this.state.chosen];
+    const current = this.#chosen(rows.length);
+    const item = rows[current];
     if (item === undefined || this.disabled) {
       return false;
     }
     if (choosing(event)) {
-      this.#activate(this.state.chosen, event.session);
+      this.#activate(current, event.session);
       return true;
     }
     if (isPress(event, Key.Right) && item.node.children !== undefined) {
@@ -205,7 +237,7 @@ export class Tree extends Control<TreeProps, TreeState> {
     if (step === null) {
       return false;
     }
-    const chosen = moveChoice(this.state.chosen, step, rows.length);
+    const chosen = moveChoice(current, step, rows.length);
     this.setState({ chosen, top: keepInView(this.state.top, chosen, this.props.shown, rows.length) });
     this.play("move", event.session);
     return true;

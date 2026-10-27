@@ -36,6 +36,20 @@ const GAP = "..";
 /** A dot for each page that is not the current one: its middle two sixels. */
 const SMALL_DOT = MOSAIC_BASE | SIXEL.middleLeft | SIXEL.middleRight;
 
+/** The page a key turns to from `current` of `count`, or null for a key that turns none. */
+function pageForKey(event: KeyEvent, current: number, count: number): number | null {
+  if (isPress(event, Key.Right)) {
+    return current + 1;
+  }
+  if (isPress(event, Key.Left)) {
+    return current - 1;
+  }
+  if (isPress(event, Key.Home)) {
+    return 0;
+  }
+  return isPress(event, Key.End) ? count - 1 : null;
+}
+
 export class Pagination extends ValueControl<number, PaginationProps> {
   protected empty(): number {
     return 0;
@@ -60,7 +74,7 @@ export class Pagination extends ValueControl<number, PaginationProps> {
     const pages = [0, count - 1, ...Array.from({ length: 2 * AROUND + 1 }, (_, offset) => current - AROUND + offset)];
     const numbers: Token[] = [];
     let last = -1;
-    for (const page of [...new Set(pages.filter((each) => each >= 0 && each < count))].sort((a, b) => a - b)) {
+    for (const page of [...new Set(pages.filter((each) => each >= 0 && each < count))].toSorted((a, b) => a - b)) {
       if (page > last + 1) {
         numbers.push({ text: GAP, target: null, current: false, arrow: false });
       }
@@ -113,16 +127,7 @@ export class Pagination extends ValueControl<number, PaginationProps> {
   }
 
   override onKey(event: KeyEvent): boolean {
-    const current = this.value;
-    const to = isPress(event, Key.Right)
-      ? current + 1
-      : isPress(event, Key.Left)
-        ? current - 1
-        : isPress(event, Key.Home)
-          ? 0
-          : isPress(event, Key.End)
-            ? this.props.count - 1
-            : null;
+    const to = pageForKey(event, this.value, this.props.count);
     if (to === null || this.disabled) {
       return false;
     }

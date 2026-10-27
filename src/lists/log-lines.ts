@@ -1,4 +1,5 @@
-// LogLines: split from log-view.ts; the comments pass writes this file's header.
+// A log's entries as lines (log-view.ts): each with its time, its level's
+// tag in the level's colour, and its text cut to the row.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -6,7 +7,7 @@ import { paintEmpty } from "../core/look.ts";
 import { fit } from "../core/text.ts";
 import { Colour, textColour } from "../kit.ts";
 import { DATE_FORMATS, formatDate } from "../time/date-text.ts";
-import { type LogEntry, type LogLevel } from "./log-view.ts";
+import type { LogEntry, LogLevel } from "./log-view.ts";
 
 /** Each level's tag and colour: the tag says it without colour. */
 const LEVELS: Readonly<Record<LogLevel, { readonly tag: string; readonly foreground: Colour }>> = {
@@ -29,6 +30,15 @@ function time(epochMs: number): string {
   return formatDate(epochMs, DATE_FORMATS.seconds);
 }
 
+function known(level: string): level is LogLevel {
+  return Object.hasOwn(LEVELS, level);
+}
+
+/** An entry's level as the log draws it: a level it does not know, as a feed taken on trust may send, is information. */
+function levelOf(level: string): (typeof LEVELS)[LogLevel] {
+  return known(level) ? LEVELS[level] : LEVELS.info;
+}
+
 export class LogLines extends Component<{ readonly entries: readonly LogEntry[]; readonly empty: string }> {
   override measure(space: Size): Size {
     return space;
@@ -40,7 +50,7 @@ export class LogLines extends Component<{ readonly entries: readonly LogEntry[];
       return;
     }
     this.props.entries.forEach((entry, row) => {
-      const level = LEVELS[entry.level];
+      const level = levelOf(entry.level);
       canvas.codes(row, 0, [textColour(Colour.White)]);
       canvas.text(row, 1, time(entry.at));
       canvas.coloured(row, TAG_AT, level.foreground, level.tag);

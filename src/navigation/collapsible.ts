@@ -10,6 +10,7 @@ import { listStep, moveChoice } from "../core/list-cursor.ts";
 import { Colour } from "../kit.ts";
 import { type ValueProps, ValueControl, type ValueState } from "../input/value-control.ts";
 import { Rows } from "../layout/layouts.ts";
+import { within } from "../lists/list-rows.ts";
 import { Heading } from "./heading.ts";
 
 export interface CollapsibleProps extends ValueProps<readonly number[]> {
@@ -35,13 +36,22 @@ export class Collapsible extends ValueControl<readonly number[], CollapsibleProp
     return "Up Down choose a heading, Enter opens or shuts";
   }
 
+  /** The chosen heading, kept to the sections there are now: its user may take some away. */
+  get #chosen(): number {
+    return within(this.state.chosen, this.props.titles.length);
+  }
+
+  /** The sections open once `index` opens or shuts. */
+  #toggled(index: number): readonly number[] {
+    if (this.value.includes(index)) {
+      return this.value.filter((item) => item !== index);
+    }
+    return this.props.accordion === true ? [index] : [...this.value, index].toSorted((a, b) => a - b);
+  }
+
   #toggle(index: number, session: number): void {
-    const open = this.value.includes(index);
     this.setState({ chosen: index });
-    this.change(
-      open ? this.value.filter((item) => item !== index) : this.props.accordion === true ? [index] : [...this.value, index].sort((a, b) => a - b),
-      session,
-    );
+    this.change(this.#toggled(index), session);
   }
 
   override render(): Child {
@@ -54,7 +64,7 @@ export class Collapsible extends ValueControl<readonly number[], CollapsibleProp
           key: `heading-${index}`,
           title,
           open: this.value.includes(index),
-          chosen: index === this.state.chosen && this.focused,
+          chosen: index === this.#chosen && this.focused,
           background: this.props.background ?? Colour.Blue,
           disabled: this.disabled,
           onToggle: (session: number) => {
@@ -67,18 +77,18 @@ export class Collapsible extends ValueControl<readonly number[], CollapsibleProp
   }
 
   override onKey(event: KeyEvent): boolean {
-    if (this.disabled) {
+    if (this.disabled || this.props.titles.length === 0) {
       return false;
     }
     if (choosing(event)) {
-      this.#toggle(this.state.chosen, event.session);
+      this.#toggle(this.#chosen, event.session);
       return true;
     }
     const step = listStep(event, this.props.titles.length);
     if (step === null) {
       return false;
     }
-    this.setState({ chosen: moveChoice(this.state.chosen, step, this.props.titles.length) });
+    this.setState({ chosen: moveChoice(this.#chosen, step, this.props.titles.length) });
     this.play("move", event.session);
     return true;
   }

@@ -57,12 +57,23 @@ const CONTENT_AT = ITEM_TEXT - 1;
 /** The region its band is. */
 const BAND = "band";
 
+/** A row's foreground in its state: the band's, the dimmed, the chosen, or its own. */
+function foregroundOf(band: boolean, disabled: boolean, chosen: boolean, own: Colour): Colour {
+  if (band) {
+    return CHOSEN.foreground;
+  }
+  if (disabled) {
+    return DISABLED;
+  }
+  return chosen ? SELECTED : own;
+}
+
 export class ListRow extends Component<ListRowProps> {
   get look(): RowLook {
     const { chosen, focused } = this.props;
     const disabled = this.props.disabled === true;
     const band = chosen && focused && !disabled;
-    const foreground = band ? CHOSEN.foreground : disabled ? DISABLED : chosen ? SELECTED : (this.props.foreground ?? LABEL);
+    const foreground = foregroundOf(band, disabled, chosen, this.props.foreground ?? LABEL);
     return { chosen, focused, disabled, band, foreground };
   }
 

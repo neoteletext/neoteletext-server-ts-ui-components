@@ -8,7 +8,7 @@
 
 import { CHIP_CELLS, type Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
-import { type PointerEvent } from "../core/events.ts";
+import type { PointerEvent } from "../core/events.ts";
 import { CHOSEN, DISABLED, DISABLED_CHIP, LABEL } from "../core/look.ts";
 import { TOP_ROW } from "../core/mosaics.ts";
 import type { PageNeeds } from "../core/needs.ts";
@@ -77,7 +77,12 @@ export class TabStrip extends Component<TabStripProps> {
       } else if (style === "underline") {
         canvas.coloured(0, start + TEXT_IN_SLOT - 1, chosen ? Colour.Yellow : LABEL, label);
         if (chosen) {
-          canvas.mosaics(1, start + TEXT_IN_SLOT - 1, Colour.Yellow, new Array<number>(cells(label)).fill(TOP_ROW));
+          canvas.mosaics(
+            1,
+            start + TEXT_IN_SLOT - 1,
+            Colour.Yellow,
+            Array.from({ length: cells(label) }, () => TOP_ROW),
+          );
         }
       } else if (style === "fastext") {
         if (chosen) {
