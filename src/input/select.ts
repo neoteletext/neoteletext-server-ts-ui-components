@@ -15,7 +15,7 @@ import { listStep, moveChoice } from "../core/list-cursor.ts";
 import { pad } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
 import { ListRows, within } from "../lists/list-rows.ts";
-import { type ValueProps, ValueControl, type ValueState } from "./value-control.ts";
+import { type ValueProps, ValueControl, type ValueState, type KeyHelpEntry } from "./value-control.ts";
 
 export interface SelectProps extends ValueProps<number> {
   readonly label: string;
@@ -54,8 +54,17 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
     return 0;
   }
 
-  protected override keysHint(): string {
-    return this.state.open ? "Up Down choose, Enter takes, Escape shuts" : "Left Right turn, Enter opens";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return this.state.open
+      ? [
+          ["Up Down", "choose"],
+          ["Enter", "takes"],
+          ["Escape", "shuts"],
+        ]
+      : [
+          ["Left Right", "turn"],
+          ["Enter", "opens"],
+        ];
   }
 
   get #shown(): number {

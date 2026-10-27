@@ -1,7 +1,8 @@
 // Moving through a list, the same in every list: Up and Down an item,
 // Page Up and Page Down a screen, Home and End to the ends; the chosen item
 // kept in view, moving the view no more than it must; the wheel a line a
-// notch, its part turns kept for the next.
+// notch, its part turns kept for the next; and a choice that follows its
+// item, not its place, when the items change under it.
 
 import { Key } from "../kit.ts";
 import { type KeyEvent, NOTCH } from "./events.ts";
@@ -60,6 +61,17 @@ export function keepInView(top: number, chosen: number, shown: number, count: nu
     kept = chosen - shown + 1;
   }
   return Math.max(0, Math.min(kept, Math.max(0, count - shown)));
+}
+
+/** Where the item chosen in `before` is in `after`, told by `keyOf`; null when it is gone or there is no key to tell it by. Items arriving above it then do not move the choice onto another item. */
+export function followItem<T>(before: readonly T[], after: readonly T[], chosen: number, keyOf: ((item: T) => string) | undefined): number | null {
+  const item = before[chosen];
+  if (keyOf === undefined || item === undefined || before === after) {
+    return null;
+  }
+  const key = keyOf(item);
+  const found = after.findIndex((each) => keyOf(each) === key);
+  return found < 0 ? null : found;
 }
 
 /** A wheel's turns as whole lines, keeping what is left of a notch for the next turn. */

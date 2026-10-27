@@ -8,12 +8,14 @@
 // oxlint-disable import/max-dependencies -- the mount is where a page's tree, drawing, keys, pointer and timers meet
 import { Key } from "../kit.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
-import type { ComponentHost } from "./component.ts";
+import type { ComponentHost, FocusableAt } from "./component.ts";
 import type { Box } from "./layout.ts";
 import { draw, type DrawHost, type Reach, shownSubPages } from "./draw.ts";
 import type { Element } from "./element.ts";
 import { isPress, type KeyEvent, type TextEvent, typedText } from "./events.ts";
+import { captured, FocusHistory, focusMove } from "./focus.ts";
 import { emptyGrid } from "./grid.ts";
+import type { KeyHelpEntry } from "./key-bindings.ts";
 import { type AnyComponent, bubble, EMPTY, firstFocusable, focusables, type Node } from "./node.ts";
 import type { ColourTable } from "./rollover.ts";
 import { Pointer } from "./pointer.ts";
@@ -45,6 +47,7 @@ export class Mount implements ComponentHost {
   #rootElement: Element;
   #dirty = true;
   #focus: Node | null = null;
+  readonly #history = new FocusHistory();
   #reach: Reach = { grid: emptyGrid(), pointerAreas: [], controls: [] };
   readonly #pointer: Pointer;
   /** The page as last answered. */
@@ -128,6 +131,15 @@ export class Mount implements ComponentHost {
     return this.hoveredHint() ?? this.#focus?.component.hint() ?? null;
   }
 
+  focusedBindings(): readonly KeyHelpEntry[] {
+    return this.#focus?.component.keyBindings() ?? [];
+  }
+
+  focusablesUnder(component: AnyComponent): readonly FocusableAt[] {
+    const node = this.#tree.nodes.get(component);
+    return node === undefined ? [] : focusables(node).flatMap((each) => (each === node ? [] : [{ component: each.component, box: each.box }]));
+  }
+
   hoveredHint(): string | null {
     // On a viewer's own copy the control under their pointer says what it is, nearest first; the copy every viewer shares follows no one's pointer.
     const { session } = this.services;
@@ -148,9 +160,9 @@ export class Mount implements ComponentHost {
       this.#dirty = false;
       this.#tree.reconcile(this.#rootElement);
       const shown = shownSubPages(this.#tree.root, this.#draw);
-      // The keys go to the first component that takes them until another is given them; chosen before painting, so a focused component draws itself so.
+      // The keys go back to what had them before the one that went (a dialog), or else to the first component that takes them; chosen before painting, so a focused component draws itself so.
       if (this.#focus === null || !this.#focus.component.mounted) {
-        this.#focusOn(firstFocusable(this.#tree.root));
+        this.#focusOn(this.#history.back() ?? firstFocusable(this.#tree.root));
       }
       const drawn = draw(shown, this.#draw);
       this.#reach = drawn.reach;
@@ -174,6 +186,7 @@ export class Mount implements ComponentHost {
   #forget(node: Node): void {
     this.#timers.clearOwner(node.component);
     this.#pointer.forget(node);
+    this.#history.forget(node);
     if (this.#focus === node) {
       this.#focus = null;
     }
@@ -187,6 +200,9 @@ export class Mount implements ComponentHost {
       return;
     }
     const before = this.#focus;
+    if (before !== null) {
+      this.#history.left(before);
+    }
     this.#focus = node;
     this.#dirty = true;
     // Both render again: what they render may say whether they have the keys.
@@ -202,21 +218,29 @@ export class Mount implements ComponentHost {
   }
 
   key(event: KeyEvent): boolean {
-    if (bubble(this.#focus ?? this.#tree.root, (component) => component.onKey?.(event))) {
+    const focus = this.#focus ?? this.#tree.root;
+    if (captured(this.#focus, event) || focus?.component.onKey?.(event) === true) {
       return true;
     }
-    // Tab no component took moves the keys to the next component that takes them, in the order they are drawn.
-    if (isPress(event, Key.Tab)) {
-      const order = focusables(this.#tree.root);
-      const next = order[(this.#focus === null ? 0 : order.indexOf(this.#focus) + 1) % Math.max(1, order.length)];
-      if (next !== undefined && next !== this.#focus) {
-        this.#focusOn(next);
-        return true;
-      }
-    }
-    // Typing comes as each key's press and repeat with its text (INPUT.md section 6.3): what no component took as a key is typed text.
+    // Typing comes as each key's press and repeat with its text (INPUT.md section 6.3): the component with the keys has it as text before any above it has it as a key, so a field types the letter a page's shortcut would take.
     const typed = typedText(event);
-    return typed !== undefined && this.text({ session: event.session, text: typed });
+    const text = typed === undefined ? null : { session: event.session, text: typed };
+    if (text !== null && focus?.component.onText?.(text) === true) {
+      return true;
+    }
+    if (
+      bubble(focus?.parent ?? null, (component) => component.onKey?.(event)) ||
+      [...this.#tree.components()].some((component) => component.onPageKey?.(event) === true)
+    ) {
+      return true;
+    }
+    const moved = this.#focus === null && !isPress(event, Key.Tab) ? null : focusMove(event, this.#focus, focusables(this.#tree.root));
+    if (moved !== null) {
+      this.#focusOn(moved);
+      return true;
+    }
+    // What no component took as a key is typed text for those above the one with the keys.
+    return text !== null && bubble(focus?.parent ?? null, (component) => component.onText?.(text));
   }
 
   text(event: TextEvent): boolean {

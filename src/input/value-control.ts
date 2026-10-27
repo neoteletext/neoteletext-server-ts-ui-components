@@ -5,6 +5,9 @@
 
 import { Control, type ControlProps } from "./control.ts";
 
+/** What a control's keys do (core/key-bindings.ts), for the controls built on this one. */
+export type { KeyHelpEntry } from "../core/key-bindings.ts";
+
 export interface ValueProps<T> extends ControlProps {
   /** The value, kept by the parent: the control shows it and reports changes, and the parent sets it again. */
   readonly value?: T;

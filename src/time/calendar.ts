@@ -7,7 +7,7 @@
 import type { Canvas } from "../core/canvas.ts";
 import type { Size } from "../core/layout.ts";
 import type { PageNeeds } from "../core/needs.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import { cells } from "../core/text.ts";
 import { Attribute, Colour, Key, textColour } from "../kit.ts";
@@ -92,8 +92,12 @@ export class Calendar extends Control<CalendarProps, CalendarState> {
     return { ownCopy: this.props.selectable === true && this.props.shared !== true };
   }
 
-  protected override keysHint(): string {
-    return "Arrows a day or week, PgUp PgDn a month, Enter";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Arrows", "a day or week"],
+      ["PgUp PgDn", "a month"],
+      ["Enter", "chooses"],
+    ];
   }
 
   override measure(space: Size): Size {

@@ -8,7 +8,7 @@ import type { KeyEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { listStep, moveChoice } from "../core/list-cursor.ts";
 import { Colour } from "../kit.ts";
-import { type ValueProps, ValueControl, type ValueState } from "../input/value-control.ts";
+import { type ValueProps, ValueControl, type ValueState, type KeyHelpEntry } from "../input/value-control.ts";
 import { Rows } from "../layout/layouts.ts";
 import { within } from "../lists/list-rows.ts";
 import { Heading } from "./heading.ts";
@@ -32,8 +32,11 @@ export class Collapsible extends ValueControl<readonly number[], CollapsibleProp
     return [];
   }
 
-  protected override keysHint(): string {
-    return "Up Down choose a heading, Enter opens or shuts";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Up Down", "choose a heading"],
+      ["Enter", "opens or shuts"],
+    ];
   }
 
   /** The chosen heading, kept to the sections there are now: its user may take some away. */

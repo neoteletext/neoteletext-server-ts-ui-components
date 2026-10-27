@@ -2,6 +2,8 @@
 
 export { ChoiceList } from "./choice-list.ts";
 export type { ChoiceListProps } from "./choice-list.ts";
+export { FilterList, matchRank } from "./filter-list.ts";
+export type { FilterListProps } from "./filter-list.ts";
 export { DataTable } from "./data-table.ts";
 export type { DataTableProps, TableColumn } from "./data-table.ts";
 export { ItemText } from "./item-text.ts";

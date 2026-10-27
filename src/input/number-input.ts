@@ -13,7 +13,7 @@ import { DISABLED, DISABLED_CHIP } from "../core/look.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
-import { type ValueProps, ValueControl, type ValueState } from "./value-control.ts";
+import { type ValueProps, ValueControl, type ValueState, type KeyHelpEntry } from "./value-control.ts";
 
 export interface NumberInputProps extends ValueProps<number> {
   readonly label: string;
@@ -61,8 +61,12 @@ export class NumberInput extends ValueControl<number, NumberInputProps, NumberIn
     return { digits: true };
   }
 
-  protected override keysHint(): string {
-    return "Up Down or the wheel step, type digits, Backspace";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Up Down or the wheel", "step"],
+      ["digits", "type"],
+      ["Backspace", "rubs out"],
+    ];
   }
 
   #inRange(value: number): boolean {

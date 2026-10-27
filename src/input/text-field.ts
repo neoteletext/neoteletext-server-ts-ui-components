@@ -14,7 +14,7 @@ import { DISABLED, EMPTY } from "../core/look.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { cells, fit } from "../core/text.ts";
 import { Colour, CONTROL_CHARACTER, CursorFlag, Key } from "../kit.ts";
-import { type ValueProps, ValueControl } from "./value-control.ts";
+import { type ValueProps, ValueControl, type KeyHelpEntry } from "./value-control.ts";
 
 /** The prompt before what is typed. */
 const PROMPT = "> ";
@@ -74,8 +74,11 @@ export class TextField extends ValueControl<string, TextFieldProps> {
     return { digits: true };
   }
 
-  protected override keysHint(): string {
-    return "Type, then Enter; Escape clears";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Type, then Enter", "sends"],
+      ["Escape", "clears"],
+    ];
   }
 
   override measure(space: Size): Size {

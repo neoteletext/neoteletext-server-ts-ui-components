@@ -10,7 +10,7 @@ import { Wheel } from "../graphics/wheel.ts";
 import { Key } from "../kit.ts";
 import { At } from "../layout/at.ts";
 import { Layers } from "../layout/layers.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { rouletteText } from "./roulette-text.ts";
 
 /** The spin's fast steps, before it slows. */
@@ -41,8 +41,11 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
   /** The viewer who spun it, who hears its sounds. */
   #session = 0;
 
-  protected override keysHint(): string {
-    return "Enter or a click spins; Enter again reads it";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Enter or a click", "spins"],
+      ["Enter again", "reads it"],
+    ];
   }
 
   #spin(step: number): void {

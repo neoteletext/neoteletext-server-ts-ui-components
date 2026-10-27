@@ -14,7 +14,7 @@ import { choosing } from "../core/keys.ts";
 import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
 import { LEFT_HALF, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { Colour, COLUMNS, Key } from "../kit.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { ListRows, within } from "../lists/list-rows.ts";
 import { BAR_CELLS, ScrollBar } from "../lists/scroll.ts";
@@ -154,8 +154,13 @@ export class Tree extends Control<TreeProps, TreeState> {
   override state: TreeState = { open: new Set(opened(this.props.nodes, this.props.open ?? [])), chosen: 0, top: 0 };
   readonly #wheel = new WheelLines();
 
-  protected override keysHint(): string {
-    return "Up Down; Right opens, Left shuts; Enter";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Up Down", "move"],
+      ["Right", "opens"],
+      ["Left", "shuts"],
+      ["Enter", "chooses"],
+    ];
   }
 
   override measure(space: Size): Size {

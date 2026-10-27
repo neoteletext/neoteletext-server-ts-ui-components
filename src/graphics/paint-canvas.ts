@@ -12,7 +12,7 @@ import { digitOf } from "../core/keys.ts";
 import { SIXEL } from "../core/mosaics.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { Colour, Key, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 
 export interface PaintProps extends ControlProps {
   /** The canvas's size in cells; its colour takes the first column. */
@@ -53,8 +53,12 @@ export class PaintCanvas extends Control<PaintProps, PaintState> {
     return { digits: true };
   }
 
-  protected override keysHint(): string {
-    return "Drag to draw; 1-7 colour; Backspace clears";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Drag", "draws"],
+      ["1-7", "colour"],
+      ["Backspace", "clears"],
+    ];
   }
 
   override measure(space: Size): Size {

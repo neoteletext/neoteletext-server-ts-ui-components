@@ -10,7 +10,7 @@ import { Colour, Key } from "../kit.ts";
 import { Rows } from "../layout/layouts.ts";
 import { Paragraph } from "../text/paragraph.ts";
 import { Action } from "../input/action.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Tally } from "./tally.ts";
 
 export interface PollProps extends ControlProps {
@@ -41,8 +41,11 @@ export class Poll extends Control<PollProps, PollState> {
 
   readonly #unsubscribe: (() => void)[] = [];
 
-  protected override keysHint(): string {
-    return "Up Down choose, Enter or a click votes";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Up Down", "choose"],
+      ["Enter or a click", "votes"],
+    ];
   }
 
   override componentDidMount(): void {

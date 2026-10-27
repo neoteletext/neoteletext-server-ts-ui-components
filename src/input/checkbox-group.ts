@@ -8,7 +8,7 @@ import type { Size } from "../core/layout.ts";
 import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { Key } from "../kit.ts";
-import { type ValueProps, ValueControl, type ValueState } from "./value-control.ts";
+import { type ValueProps, ValueControl, type ValueState, type KeyHelpEntry } from "./value-control.ts";
 import { drawBox } from "./checkbox.ts";
 import { keyStep } from "./key-step.ts";
 
@@ -31,8 +31,11 @@ export class CheckboxGroup extends ValueControl<readonly number[], CheckboxGroup
     return [];
   }
 
-  protected override keysHint(): string {
-    return this.#columns > 1 ? "Arrows choose, Enter or Space ticks" : "Up Down choose, Enter or Space ticks";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      [this.#columns > 1 ? "Arrows" : "Up Down", "choose"],
+      ["Enter or Space", "ticks"],
+    ];
   }
 
   get #columns(): number {

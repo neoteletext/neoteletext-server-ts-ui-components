@@ -10,7 +10,7 @@ import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import { cells } from "../core/text.ts";
 import type { Sound } from "../core/sound.ts";
 import { Colour, COLUMNS, Key, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 
 /** A snake's cell on the field, in sixel pairs: two sixels across a step, so it moves a cell's width. */
 interface Point {
@@ -48,8 +48,11 @@ const AGAIN = "again";
 export class Snake extends Control<SnakeProps, SnakeState> {
   override state: SnakeState = this.#fresh();
 
-  protected override keysHint(): string {
-    return "The arrows or a click turn; Enter plays again";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["The arrows or a click", "turn"],
+      ["Enter", "plays again"],
+    ];
   }
   #timer = -1;
 

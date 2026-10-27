@@ -11,7 +11,7 @@ import { CHOSEN, DISABLED, DISABLED_CHIP } from "../core/look.ts";
 import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { cells } from "../core/text.ts";
 import { Colour, Key } from "../kit.ts";
-import { type ValueProps, ValueControl } from "../input/value-control.ts";
+import { type ValueProps, ValueControl, type KeyHelpEntry } from "../input/value-control.ts";
 
 export type PaginationStyle = "numbers" | "count" | "dots";
 
@@ -55,8 +55,8 @@ export class Pagination extends ValueControl<number, PaginationProps> {
     return 0;
   }
 
-  protected override keysHint(): string {
-    return "Left Right, Home End or a click turn the page";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [["Left Right, Home End or a click", "turn the page"]];
   }
 
   override measure(space: Size): Size {

@@ -6,7 +6,7 @@ import { isPress, type KeyEvent } from "../core/events.ts";
 import { colourKeyOf, digitOf } from "../core/keys.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { Key } from "../kit.ts";
-import { type ValueProps, ValueControl } from "../input/value-control.ts";
+import { type ValueProps, ValueControl, type KeyHelpEntry } from "../input/value-control.ts";
 import { Rows } from "../layout/layouts.ts";
 import { TabStrip, styleNeeds, type TabStyle } from "./tabs.ts";
 
@@ -14,11 +14,11 @@ import { TabStrip, styleNeeds, type TabStyle } from "./tabs.ts";
 const MOST_NUMBERED = 9;
 
 /** What the hint row says of each style's keys. */
-const KEYS_HINTS: Readonly<Record<TabStyle, string>> = {
-  chips: "Left Right or a click choose a tab",
-  fastext: "The coloured keys choose a tab",
-  numbered: "1-9 or Left Right choose a tab",
-  underline: "Left Right or a click choose a tab",
+const KEYS_HINTS: Readonly<Record<TabStyle, KeyHelpEntry>> = {
+  chips: ["Left Right or a click", "choose a tab"],
+  fastext: ["The coloured keys", "choose a tab"],
+  numbered: ["1-9 or Left Right", "choose a tab"],
+  underline: ["Left Right or a click", "choose a tab"],
 };
 
 /** The tab a coloured key or a digit names in `style`, counting from 0, or null. */
@@ -58,8 +58,8 @@ export class TabView extends ValueControl<number, TabViewProps> {
     return styleNeeds(this.props.style ?? "chips");
   }
 
-  protected override keysHint(): string {
-    return KEYS_HINTS[this.props.style ?? "chips"];
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [KEYS_HINTS[this.props.style ?? "chips"]];
   }
 
   override render(): Child {

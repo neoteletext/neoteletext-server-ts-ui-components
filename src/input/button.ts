@@ -14,7 +14,7 @@ import { choosing } from "../core/keys.ts";
 import { CHOSEN, DISABLED_BAND } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
 import { Attribute, Colour } from "../kit.ts";
-import { Control, type ControlProps } from "./control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "./control.ts";
 
 export interface ButtonProps extends ControlProps {
   readonly label: string;
@@ -51,8 +51,11 @@ export class Button extends Control<ButtonProps> {
     return { width: Math.min(space.width, this.#width), height: Math.min(1, space.height) };
   }
 
-  protected override keysHint(): string {
-    return "Enter or a click presses; Tab moves on";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Enter or a click", "presses"],
+      ["Tab", "moves on"],
+    ];
   }
 
   get #look(): { readonly background: Colour; readonly foreground: Colour } {

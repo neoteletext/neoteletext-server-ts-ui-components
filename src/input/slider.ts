@@ -15,7 +15,7 @@ import { DISABLED, FOCUSED_LABEL } from "../core/look.ts";
 import { BOTTOM_ROW, LEFT_HALF, MIDDLE_ROW, RIGHT_HALF } from "../core/mosaics.ts";
 import { padStart } from "../core/text.ts";
 import { Colour, Key, SIXELS_ACROSS } from "../kit.ts";
-import { type ValueProps, ValueControl } from "./value-control.ts";
+import { type ValueProps, ValueControl, type KeyHelpEntry } from "./value-control.ts";
 
 export interface SliderProps extends ValueProps<number> {
   readonly label: string;
@@ -54,8 +54,12 @@ export class Slider extends ValueControl<number, SliderProps> {
     return Math.max(this.props.min, Math.min(this.props.max, stepped));
   }
 
-  protected override keysHint(): string {
-    return "Left Right or the wheel step, PgUp PgDn more, drag the knob";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Left Right or the wheel", "step"],
+      ["PgUp PgDn", "more"],
+      ["the knob", "drags"],
+    ];
   }
 
   /** The track's cells, after its mosaic colour's cell. */

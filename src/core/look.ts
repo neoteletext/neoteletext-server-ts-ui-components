@@ -2,6 +2,13 @@
 // control, a disabled one, an empty list and a notice's kind look the same
 // on every page. Teletext has eight colours (EN 300 706 Table 26); each
 // state is also told by a mark or a word, never by colour alone.
+//
+// How far a thing stands off the page is told the same way everywhere,
+// in four steps: flat text and controls; a panel, in a frame of line or
+// band (layout/panel.ts, layout/joined-panels.ts); a dialog, with a drop
+// shadow (overlay/dialog.ts, shadow); and a modal, its dialog over the
+// page dimmed by a scrim (overlay/modal.ts, overlay/scrim.ts), whose
+// dialog takes the shadow too.
 
 import { Colour } from "../kit.ts";
 import type { Canvas } from "./canvas.ts";

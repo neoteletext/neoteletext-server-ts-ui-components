@@ -7,7 +7,7 @@ import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { listStep, WheelLines } from "../core/list-cursor.ts";
 import { Colour, Key } from "../kit.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { Rows } from "../layout/layouts.ts";
 import { Badges } from "../text/badge.ts";
@@ -39,8 +39,11 @@ export class LogView extends Control<LogViewProps, LogViewState> {
   override state: LogViewState = { top: null };
   readonly #wheel = new WheelLines();
 
-  protected override keysHint(): string {
-    return "Up PgUp scroll back, End or a click on PAUSED follows";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Up PgUp", "scroll back"],
+      ["End or a click on PAUSED", "follows"],
+    ];
   }
 
   get #last(): number {

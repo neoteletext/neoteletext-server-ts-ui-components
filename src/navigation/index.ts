@@ -6,6 +6,8 @@ export { Collapsible } from "./collapsible.ts";
 export type { CollapsibleProps } from "./collapsible.ts";
 export { Menu } from "./menu.ts";
 export type { MenuItem, MenuProps } from "./menu.ts";
+export { PageFinder } from "./page-finder.ts";
+export type { FoundPage, PageFinderProps } from "./page-finder.ts";
 export { Pagination } from "./pagination.ts";
 export type { PaginationProps, PaginationStyle } from "./pagination.ts";
 export { TabView } from "./tab-view.ts";

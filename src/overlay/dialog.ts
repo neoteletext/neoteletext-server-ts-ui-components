@@ -10,12 +10,13 @@
 import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
 import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/layout.ts";
 import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
-import { CHOSEN, type Kind, KINDS } from "../core/look.ts";
+import { CHOSEN, DISABLED_BAND, type Kind, KINDS } from "../core/look.ts";
 import { cells, fit, wrap } from "../core/text.ts";
 import { Attribute, Colour, englishCodes, Key, SPACE, textColour } from "../kit.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { keyStep } from "../input/key-step.ts";
 import { within } from "../lists/list-rows.ts";
+import { paintShadow, SHADOW_MARGIN, SHADOW_ROWS } from "./drop-shadow.ts";
 
 export interface DialogProps extends ControlProps {
   readonly title: string;
@@ -25,8 +26,12 @@ export interface DialogProps extends ControlProps {
   readonly buttons?: readonly string[];
   /** The button chosen to begin with. */
   readonly initial?: number;
+  /** Buttons, by place, that cannot be pressed now: drawn in the disabled look (core/look.ts), and Enter or a click on one answers nothing. */
+  readonly disabledButtons?: readonly number[];
   /** The cells of margin either side. */
   readonly inset?: number;
+  /** A drop shadow (drop-shadow.ts): a stipple to its right and a row beneath, so it stands off the page. */
+  readonly shadow?: boolean;
   /** Its children have the keys first: a field to type in. */
   readonly childFirst?: boolean;
   /** The button pressed, or null for Escape. */
@@ -63,8 +68,15 @@ const FOOT_ROWS = 3;
 export class Dialog extends Control<DialogProps, DialogState> {
   override state: DialogState = { chosen: within(this.props.initial ?? 0, (this.props.buttons ?? []).length) };
 
-  protected override keysHint(): string {
-    return (this.props.buttons ?? []).length === 0 ? "Escape closes" : "Left Right or Tab choose, Enter answers, Escape";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    // Short enough for the hint row's 39 cells: Left and Right choose too.
+    return (this.props.buttons ?? []).length === 0
+      ? [["Escape", "closes"]]
+      : [
+          ["Tab", "chooses"],
+          ["Enter", "answers"],
+          ["Esc", "cancels"],
+        ];
   }
 
   override componentDidMount(): void {
@@ -77,6 +89,15 @@ export class Dialog extends Control<DialogProps, DialogState> {
     return this.props.inset ?? INSET;
   }
 
+  /** The margin on the right: wide enough for a shadow when it has one. */
+  get #right(): number {
+    return this.props.shadow === true ? Math.max(this.#inset, SHADOW_MARGIN) : this.#inset;
+  }
+
+  get #shadowRows(): number {
+    return this.props.shadow === true ? SHADOW_ROWS : 0;
+  }
+
   get #buttons(): readonly string[] {
     return this.props.buttons ?? [];
   }
@@ -86,7 +107,7 @@ export class Dialog extends Control<DialogProps, DialogState> {
   }
 
   #textCells(width: number): number {
-    return Math.max(1, width - 2 * this.#inset - BACKGROUND_CELLS - 2);
+    return Math.max(1, width - this.#inset - this.#right - BACKGROUND_CELLS - 2);
   }
 
   #inner(box: Box): Box {
@@ -95,8 +116,8 @@ export class Dialog extends Control<DialogProps, DialogState> {
     return {
       row: box.row + TITLE_ROWS + lines,
       column,
-      width: Math.max(0, box.width - 2 * this.#inset - BACKGROUND_CELLS - 1),
-      height: Math.max(0, box.height - TITLE_ROWS - lines - FOOT_ROWS),
+      width: Math.max(0, box.width - this.#inset - this.#right - BACKGROUND_CELLS - 1),
+      height: Math.max(0, box.height - TITLE_ROWS - lines - FOOT_ROWS - this.#shadowRows),
     };
   }
 
@@ -104,7 +125,7 @@ export class Dialog extends Control<DialogProps, DialogState> {
     const inner = this.#inner({ row: 0, column: 0, ...space });
     const content = stackSize({ width: inner.width, height: inner.height }, children).height;
     const foot = this.#buttons.length === 0 ? 1 : FOOT_ROWS;
-    return { width: space.width, height: Math.min(space.height, TITLE_ROWS + this.#message(space.width).length + content + foot) };
+    return { width: space.width, height: Math.min(space.height, TITLE_ROWS + this.#message(space.width).length + content + foot + this.#shadowRows) };
   }
 
   override arrange(box: Box, children: readonly LayoutChild[]): void {
@@ -124,8 +145,9 @@ export class Dialog extends Control<DialogProps, DialogState> {
   override paint(canvas: Canvas): void {
     const inset = this.#inset;
     const look = KINDS[this.props.kind ?? "info"];
-    const right = canvas.width - inset - 1;
-    for (let row = 0; row < canvas.height; row += 1) {
+    const right = canvas.width - this.#right - 1;
+    const bodyRows = canvas.height - this.#shadowRows;
+    for (let row = 0; row < bodyRows; row += 1) {
       canvas.codes(
         row,
         0,
@@ -138,28 +160,45 @@ export class Dialog extends Control<DialogProps, DialogState> {
     this.#message(canvas.width).forEach((line, index) => {
       canvas.coloured(TITLE_ROWS + index, inset + BACKGROUND_CELLS, Colour.White, line);
     });
+    if (this.props.shadow === true) {
+      paintShadow(canvas, inset, right, bodyRows);
+    }
     if (this.#buttons.length === 0) {
       return;
     }
-    const row = canvas.height - 2;
+    const row = bodyRows - 2;
     this.#buttonStarts().forEach((start, index) => {
       const chosen = index === this.state.chosen && this.focused;
-      const background = chosen ? CHOSEN.background : Colour.White;
+      const off = this.#off(index);
+      let band: { readonly background: Colour; readonly foreground: Colour } = chosen ? CHOSEN : { background: Colour.White, foreground: Colour.Black };
+      if (off) {
+        band = DISABLED_BAND;
+      }
       const label = this.#buttons[index] ?? "";
       canvas.codes(row, start, [
-        textColour(background),
+        textColour(band.background),
         Attribute.NewBackground,
-        textColour(chosen ? CHOSEN.foreground : Colour.Black),
+        textColour(band.foreground),
         ...englishCodes(label),
         textColour(BACKGROUND),
         Attribute.NewBackground,
       ]);
+      if (off) {
+        return;
+      }
       // Its band: from its New Background to the cell before the dialog's background comes back.
       canvas.control(row, start + NEW_BACKGROUND_CELL, cells(label) + BUTTON_BAND_CELLS, 1, `${BUTTON_REGION}${index}`);
     });
   }
 
+  #off(button: number): boolean {
+    return this.props.disabledButtons?.includes(button) === true;
+  }
+
   #answer(button: number | null, session: number): void {
+    if (button !== null && this.#off(button)) {
+      return;
+    }
     if (button === null) {
       this.cancel(session);
     } else {

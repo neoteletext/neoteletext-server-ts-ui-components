@@ -8,6 +8,8 @@ import type { ServerStats } from "../kit.ts";
 export interface ToastEvent {
   readonly text: string;
   readonly kind: "info" | "success" | "warning" | "error";
+  /** What undoes what the toast tells of, for the viewer who asks: the shelf says so, and its key or a click on the toast runs it, once. */
+  readonly undo?: (session: number) => void;
 }
 
 export interface LibraryEvents {

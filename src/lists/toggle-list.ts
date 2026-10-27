@@ -9,7 +9,7 @@ import { type Child, h } from "../core/element.ts";
 import type { KeyEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { listStep, moveChoice } from "../core/list-cursor.ts";
-import { type ValueProps, ValueControl, type ValueState } from "../input/value-control.ts";
+import { type ValueProps, ValueControl, type ValueState, type KeyHelpEntry } from "../input/value-control.ts";
 import { ListRows, within } from "./list-rows.ts";
 
 export interface ToggleListProps extends ValueProps<readonly number[]> {
@@ -30,8 +30,11 @@ export class ToggleList extends ValueControl<readonly number[], ToggleListProps,
     return [];
   }
 
-  protected override keysHint(): string {
-    return "Up Down, then Enter or a click to star";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Up Down", "choose"],
+      ["Enter or a click", "stars"],
+    ];
   }
 
   override measure(space: Size): Size {

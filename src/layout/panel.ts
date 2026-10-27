@@ -24,7 +24,7 @@ export interface PanelProps {
 }
 
 /** The line's characters: a frame whose top runs along the bottom of its first row and whose sides run down the inner halves of its edge cells. */
-const LINE = {
+export const LINE = {
   top: MOSAIC_BASE | SIXEL.bottomLeft | SIXEL.bottomRight,
   bottom: MOSAIC_BASE | SIXEL.topLeft | SIXEL.topRight,
   left: MOSAIC_BASE | SIXEL.topRight | SIXEL.middleRight | SIXEL.bottomRight,
@@ -36,7 +36,7 @@ const LINE = {
 } as const;
 
 /** The cells a line frame takes on the left of each row (the mosaic colour, the edge) and on the right (the same). */
-const LINE_SIDE = 2;
+export const LINE_SIDE = 2;
 /** The cells a band takes on the left of each row (its colour, New Background) and on the right (Black Background). */
 const BAND_LEFT = 2;
 const BAND_RIGHT = 1;

@@ -10,7 +10,7 @@ import { type Child, h } from "../core/element.ts";
 import type { KeyEvent } from "../core/events.ts";
 import { colourKeyOf } from "../core/keys.ts";
 import type { PageNeeds } from "../core/needs.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Colour } from "../kit.ts";
 import { Gap } from "../layout/gap.ts";
 import { Rows } from "../layout/layouts.ts";
@@ -43,8 +43,12 @@ export class Wizard extends Control<WizardProps, WizardState> {
     return { colourKeys: true };
   }
 
-  protected override keysHint(): string {
-    return "red Back, green Next, or a click; Tab to a step's fields";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["red", "Back"],
+      ["green", "Next"],
+      ["Tab", "to a step's fields"],
+    ];
   }
 
   override render(): Child {

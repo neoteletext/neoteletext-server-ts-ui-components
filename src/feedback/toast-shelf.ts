@@ -1,12 +1,14 @@
 // Where toasts show (notice.ts): the newest at the foot, as many as it may
-// show, each going after its time or at a click on it. A toast it can no
+// show, each going after its time or at a click on it. A toast that can be
+// undone says so, and its undo runs, once, at a click on it or at the undo
+// key, which the shelf hears wherever the keys are (onPageKey). A toast it can no
 // longer show goes at once, and its timer with it, so a burst of toasts
 // leaves no more state or timers than the shelf has rows.
 
 import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
-import type { PointerEvent } from "../core/events.ts";
+import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import type { ToastEvent } from "../core/library-events.ts";
 import { ROWS } from "../kit.ts";
 import { paintNotice } from "./notice.ts";
@@ -26,6 +28,10 @@ interface Shown {
 interface ToastShelfState {
   readonly shown: readonly Shown[];
 }
+
+/** The key that undoes the newest toast that can be undone, and what such a toast says of it. */
+const UNDO_KEY = "u";
+const UNDO_WORDS = " (u undoes)";
 
 /** How long a toast stays when not told: long enough to read a line. */
 const TOAST_MS = 4_000;
@@ -96,7 +102,7 @@ export class ToastShelf extends Component<ToastShelfProps, ToastShelfState> {
 
   override paint(canvas: Canvas): void {
     this.state.shown.forEach(({ id, toast }, row) => {
-      const end = paintNotice(canvas, row, toast.kind, toast.text);
+      const end = paintNotice(canvas, row, toast.kind, toast.undo === undefined ? toast.text : `${toast.text}${UNDO_WORDS}`);
       // From the mark's band to the end of the text.
       canvas.control(row, NEW_BACKGROUND_CELL, end - NEW_BACKGROUND_CELL, 1, String(id));
     });
@@ -106,11 +112,26 @@ export class ToastShelf extends Component<ToastShelfProps, ToastShelfState> {
     return "A click puts the message away";
   }
 
+  /** Puts toast `id` away, undoing what it told of when it can be undone. */
+  #dismiss(id: number, session: number): void {
+    this.state.shown.find((each) => each.id === id)?.toast.undo?.(session);
+    this.#remove(id);
+  }
+
   override onClick(event: PointerEvent): boolean {
     if (event.region === undefined) {
       return false;
     }
-    this.#remove(Number(event.region));
+    this.#dismiss(Number(event.region), event.session);
+    return true;
+  }
+
+  override onPageKey(event: KeyEvent): boolean {
+    const newest = this.state.shown.findLast((each) => each.toast.undo !== undefined);
+    if (newest === undefined || !isPress(event, UNDO_KEY)) {
+      return false;
+    }
+    this.#dismiss(newest.id, event.session);
     return true;
   }
 }

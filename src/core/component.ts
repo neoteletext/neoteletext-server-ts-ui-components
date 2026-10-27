@@ -21,6 +21,7 @@ import type { Canvas } from "./canvas.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { Child, WithChildren } from "./element.ts";
 import type { HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
+import { bindingsText, type KeyHelpEntry } from "./key-bindings.ts";
 import type { PageNeeds } from "./needs.ts";
 import type { Services } from "./services.ts";
 import { stack, stackSize, type Size, type Box, type LayoutChild } from "./layout.ts";
@@ -43,6 +44,16 @@ export interface ComponentHost {
   focusedHint(): string | null;
   /** What the control under the viewer's pointer says it does, or null when it is on none or none says. */
   hoveredHint(): string | null;
+  /** What the focused component's keys do, entry by entry: for help on the control with the keys. */
+  focusedBindings(): readonly KeyHelpEntry[];
+  /** The components under `component` that take the keys, in the order they are drawn, with their boxes. */
+  focusablesUnder(component: Component): readonly FocusableAt[];
+}
+
+/** A component that takes the keys, and where it was laid out. */
+export interface FocusableAt {
+  readonly component: Component;
+  readonly box: Box;
 }
 
 /** How a timer runs. */
@@ -101,6 +112,16 @@ export abstract class Component<P extends object = object, S extends object = ob
     this.#host?.focus(this);
   }
 
+  /** Gives the keys to `component`, one under this one: for a component that moves them among its own (layout/jump-labels.ts). */
+  protected focusOn(component: Component): void {
+    this.#host?.focus(component);
+  }
+
+  /** The components under this one that take the keys, with their boxes. */
+  protected get focusablesWithin(): readonly FocusableAt[] {
+    return this.#host?.focusablesUnder(this) ?? [];
+  }
+
   /** Whether the keys come here first. */
   protected get focused(): boolean {
     return this.#host?.isFocused(this) ?? false;
@@ -139,6 +160,11 @@ export abstract class Component<P extends object = object, S extends object = ob
   /** What the control under the viewer's pointer says it does, or null: for a hint row that says something of its own otherwise. */
   protected get hoveredHint(): string | null {
     return this.#host?.hoveredHint() ?? null;
+  }
+
+  /** What the focused component's keys do, entry by entry: for KeyHelp's help on the control with the keys. */
+  protected get focusedBindings(): readonly KeyHelpEntry[] {
+    return this.#host?.focusedBindings() ?? [];
   }
 
   /** Clears a timer. */
@@ -186,9 +212,14 @@ export abstract class Component<P extends object = object, S extends object = ob
     return {};
   }
 
-  /** What its keys do, for the frame's hint row while it has the keys or the pointer is on one of its controls; null for nothing. */
+  /** What its keys do, each key and its action: what the hint row says and KeyHelp lists. None by default. */
+  keyBindings(): readonly KeyHelpEntry[] {
+    return [];
+  }
+
+  /** What its keys do, for the frame's hint row while it has the keys or the pointer is on one of its controls; null for nothing. Its key bindings in a line by default. */
   hint(): string | null {
-    return null;
+    return bindingsText(this.keyBindings());
   }
 
   // The lifecycle, as React's.
@@ -204,6 +235,10 @@ export abstract class Component<P extends object = object, S extends object = ob
   // Input. Answer true when it is taken; otherwise it goes to the parent.
 
   onKey?(event: KeyEvent): boolean | void;
+  /** A key on its way down to the focused component, offered to each component above it first, from the root: true takes it before the focused one sees it. */
+  onKeyCapture?(event: KeyEvent): boolean | void;
+  /** A key no component on the focus's way took, offered to every component on the page before Tab or an arrow moves the keys: a page-wide key, such as a toast's undo. */
+  onPageKey?(event: KeyEvent): boolean | void;
   onText?(event: TextEvent): boolean | void;
   onPaste?(event: TextEvent): boolean | void;
   /** A left press on a cell: the common case of onPointer. */

@@ -1,0 +1,28 @@
+# Each cell one character. Attributes: k r g y b m c w alphanumeric black red green yellow blue magenta cyan white;
+# K R G Y B M C W mosaic colours; F flash S steady n normal size D double height E double width Z double size;
+# ? conceal | contiguous : separated _ black background N new background H hold L release; ~ another; █ the solid block, 0x7F.
+                                        
+bNDwJoined                              
+bN                                      
+B`pyNewsBpppppppppppppySportBpppppppppp0
+BjwRain later      B5wRovers win      B5
+B"#####################################!
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+rIndex                                  

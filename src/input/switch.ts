@@ -8,7 +8,7 @@ import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { DISABLED_CHIP } from "../core/look.ts";
 import { Colour } from "../kit.ts";
-import { type ValueProps, ValueControl } from "./value-control.ts";
+import { type ValueProps, ValueControl, type KeyHelpEntry } from "./value-control.ts";
 
 export interface SwitchProps extends ValueProps<boolean> {
   readonly label: string;
@@ -31,8 +31,8 @@ export class Switch extends ValueControl<boolean, SwitchProps> {
     return this.props.labelCells ?? SWITCH_LABEL_CELLS;
   }
 
-  protected override keysHint(): string {
-    return "Enter, Space or a click turns it over";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [["Enter, Space or a click", "turns it over"]];
   }
 
   override measure(space: Size): Size {

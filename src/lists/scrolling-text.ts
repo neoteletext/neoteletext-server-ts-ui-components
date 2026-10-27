@@ -5,7 +5,7 @@ import type { Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent, WheelEvent } from "../core/events.ts";
 import { listStep, WheelLines } from "../core/list-cursor.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { type Line, LinesBlock } from "../text/lines.ts";
 import { BAR_CELLS, ScrollBar, scrolled } from "./scroll.ts";
@@ -25,8 +25,11 @@ export class ScrollingText extends Control<ScrollingTextProps, ScrollingTextStat
   override state: ScrollingTextState = { top: 0 };
   readonly #wheel = new WheelLines();
 
-  protected override keysHint(): string {
-    return "PgDn PgUp arrows Home End, wheel, drag the bar";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["PgDn PgUp arrows Home End", "scroll"],
+      ["wheel or the bar", "too"],
+    ];
   }
 
   override measure(space: Size): Size {

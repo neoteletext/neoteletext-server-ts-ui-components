@@ -12,7 +12,7 @@ import { choosing } from "../core/keys.ts";
 import { CHOSEN, DISABLED, DISABLED_CHIP, LABEL } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
-import { type ValueProps, ValueControl } from "./value-control.ts";
+import { type ValueProps, ValueControl, type KeyHelpEntry } from "./value-control.ts";
 
 export type Ticked = boolean | "mixed";
 
@@ -69,8 +69,8 @@ export class Checkbox extends ValueControl<Ticked, CheckboxProps> {
     return false;
   }
 
-  protected override keysHint(): string {
-    return "Enter, Space or a click ticks";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [["Enter, Space or a click", "ticks"]];
   }
 
   override measure(space: Size): Size {

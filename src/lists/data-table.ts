@@ -11,10 +11,10 @@
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent, WheelEvent } from "../core/events.ts";
 import { choosing, digitOf } from "../core/keys.ts";
-import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
+import { followItem, keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { Colour } from "../kit.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { Rows } from "../layout/layouts.ts";
 import { Body } from "./body.ts";
@@ -43,6 +43,8 @@ export interface DataTableProps extends ControlProps {
   readonly onChoose?: (row: readonly string[], session: number) => void;
   /** The pointer came onto a row that can be chosen, or left it (null). Moving from one row to the next is a leave, then an enter. */
   readonly onHover?: (row: readonly string[] | null, session: number) => void;
+  /** What tells one row from another, so the chosen row stays chosen as rows come and go: a live table. */
+  readonly rowKey?: (row: readonly string[]) => string;
 }
 
 interface DataTableState {
@@ -78,6 +80,15 @@ function compare(a: string, b: string): number {
   return Number.isNaN(x) || Number.isNaN(y) ? a.localeCompare(b) : x - y;
 }
 
+/** `rows` sorted by the column `sortBy`, or as they are when it is null. */
+function sortRows(rows: DataTableProps["rows"], sortBy: number | null, descending: boolean): DataTableProps["rows"] {
+  if (sortBy === null) {
+    return rows;
+  }
+  const ascending = rows.toSorted((a, b) => compare(a[sortBy] ?? "", b[sortBy] ?? ""));
+  return descending ? ascending.toReversed() : ascending;
+}
+
 export class DataTable extends Control<DataTableProps, DataTableState> {
   override state: DataTableState = { top: 0, chosen: 0, sortBy: null, descending: false };
   readonly #wheel = new WheelLines();
@@ -89,10 +100,11 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
     return { digits: this.props.sortable === true };
   }
 
-  protected override keysHint(): string {
-    return [this.props.selectable === true ? "Up Down choose, Enter" : "Up Down scroll", this.props.sortable === true ? "1-9 sorts" : ""]
-      .filter((part) => part !== "")
-      .join("; ");
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      this.props.selectable === true ? (["Up Down, Enter", "choose"] as const) : (["Up Down", "scroll"] as const),
+      ...(this.props.sortable === true ? [["1-9", "sorts"] as const] : []),
+    ];
   }
 
   #sorted(): readonly (readonly string[])[] {
@@ -105,10 +117,21 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
     if (cached?.rows === rows && cached.sortBy === sortBy && cached.descending === descending) {
       return cached.sorted;
     }
-    const ascending = rows.toSorted((a, b) => compare(a[sortBy] ?? "", b[sortBy] ?? ""));
-    const sorted = descending ? ascending.toReversed() : ascending;
+    const sorted = sortRows(rows, sortBy, descending);
     this.#sortedFor = { rows, sortBy, descending, sorted };
     return sorted;
+  }
+
+  /** The rows changed under the chosen one: it stays chosen where it went, when its key says which it is. */
+  override componentDidUpdate(previous: Readonly<DataTableProps>): void {
+    if (previous.rows === this.props.rows || this.props.rowKey === undefined) {
+      return;
+    }
+    const { sortBy, descending, chosen, top } = this.state;
+    const followed = followItem(sortRows(previous.rows, sortBy, descending), this.#sorted(), chosen, this.props.rowKey);
+    if (followed !== null && followed !== chosen) {
+      this.setState({ chosen: followed, top: keepInView(top, followed, this.props.shown, this.props.rows.length) });
+    }
   }
 
   #sort(column: number): void {

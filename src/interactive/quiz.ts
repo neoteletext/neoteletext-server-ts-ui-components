@@ -7,7 +7,7 @@ import type { KeyEvent } from "../core/events.ts";
 import { colourKeyOf } from "../core/keys.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import type { Sound } from "../core/sound.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Colour } from "../kit.ts";
 import { Rows } from "../layout/layouts.ts";
 import { Paragraph } from "../text/paragraph.ts";
@@ -41,8 +41,11 @@ export class Quiz extends Control<QuizProps, QuizState> {
     return { colourKeys: true };
   }
 
-  protected override keysHint(): string {
-    return "Answer with a coloured key or a click; Reveal shows";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["A coloured key or a click", "answers"],
+      ["Reveal", "shows"],
+    ];
   }
 
   override render(): Child {

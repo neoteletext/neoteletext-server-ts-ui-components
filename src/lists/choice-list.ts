@@ -5,14 +5,17 @@
 // ListRow (list-row.ts), holding the item's text or what `render` makes of
 // it, a control the browser lights as the pointer passes, and the pointer
 // coming onto a row is told to the list's user (onHover); a row may say
-// what it is on the hint row meanwhile (itemHint).
+// what it is on the hint row meanwhile (itemHint). Told to pick by key,
+// the rows shown are numbered and a digit chooses one, or the first four
+// are lettered for the coloured keys (R G Y C) and a coloured key chooses
+// one: a remote reaches any row shown in one press.
 
 import type { Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent, WheelEvent } from "../core/events.ts";
-import { choosing } from "../core/keys.ts";
-import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { choosing, COLOUR_KEY_NAMES, colourKeyOf, digitOf } from "../core/keys.ts";
+import { followItem, keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
+import { Control, type ControlProps, type KeyHelpEntry, type PageNeeds } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import type { RowLook } from "./list-row.ts";
 import { ListRows, within } from "./list-rows.ts";
@@ -39,7 +42,14 @@ export interface ChoiceListProps<T = string> extends ControlProps {
   /** The item chosen to begin with. */
   readonly initial?: number;
   readonly empty?: string;
+  /** What tells one item from another, so the chosen item stays chosen as items come and go: a live list. */
+  readonly itemKey?: (item: T) => string;
+  /** The rows shown chosen by a digit, numbered 1 to 9, or by a coloured key, lettered; the page then takes those keys. Marks show on rows drawn as text. */
+  readonly pick?: "digits" | "colours";
 }
+
+/** The rows a digit picks among: one digit each, 1 to 9. */
+const DIGIT_PICKS = 9;
 
 interface ChoiceListState {
   readonly chosen: number;
@@ -64,8 +74,45 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
     return within(this.state.chosen, this.props.items.length);
   }
 
-  protected override keysHint(): string {
-    return "Up Down, wheel or click; Enter chooses";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    const pick: KeyHelpEntry[] = [];
+    if (this.props.pick === "digits") {
+      pick.push(["1-9", "chooses a row"]);
+    } else if (this.props.pick === "colours") {
+      pick.push(["A coloured key", "chooses"]);
+    }
+    return [["Up Down, wheel or click", "move"], ["Enter", "chooses"], ...pick];
+  }
+
+  protected override keyNeeds(): PageNeeds {
+    return { digits: this.props.pick === "digits", colourKeys: this.props.pick === "colours" };
+  }
+
+  /** The mark before item `index`'s text when it may be picked by a key: its digit or its coloured key's letter; none past those. */
+  #pickMark(index: number): string {
+    const shown = index - this.state.top;
+    if (this.props.pick === "digits" && shown < DIGIT_PICKS) {
+      return `${shown + 1} `;
+    }
+    const colour = this.props.pick === "colours" ? COLOUR_KEY_NAMES[shown] : undefined;
+    return colour === undefined ? "" : `${colour.charAt(0).toUpperCase()} `;
+  }
+
+  /** The item shown `place` rows from the top that a key picks, or null. */
+  #picked(event: KeyEvent): number | null {
+    const digit = this.props.pick === "digits" ? digitOf(event) : null;
+    const colour = this.props.pick === "colours" ? colourKeyOf(event) : null;
+    const place = digit !== null && digit >= 1 ? digit - 1 : colour;
+    const index = place === null ? -1 : this.state.top + place;
+    return index >= 0 && index < Math.min(this.props.items.length, this.state.top + this.#fit) ? index : null;
+  }
+
+  /** The items changed under the chosen one: it stays chosen where it went, when its key says which it is. */
+  override componentDidUpdate(previous: Readonly<ChoiceListProps<T>>): void {
+    const followed = followItem(previous.items, this.props.items, this.state.chosen, this.props.itemKey);
+    if (followed !== null && followed !== this.state.chosen) {
+      this.setState({ chosen: followed, top: keepInView(this.state.top, followed, this.#fit, this.props.items.length) });
+    }
   }
 
   override measure(space: Size): Size {
@@ -102,7 +149,9 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
         itemRows: this.#itemRows,
         empty: this.props.empty ?? "nothing to choose",
         ...(this.props.render === undefined ? {} : { render: this.props.render }),
-        ...(this.props.text === undefined ? {} : { text: this.props.text }),
+        ...(this.props.pick === undefined && this.props.text === undefined
+          ? {}
+          : { text: (item: T, index: number) => `${this.#pickMark(index)}${this.props.text?.(item, index) ?? String(item)}` }),
         disabled: () => this.disabled,
         onPick: (index: number, session: number) => {
           this.#choose(index, session);
@@ -129,6 +178,11 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
     }
     if (choosing(event)) {
       this.#choose(this.#chosen, event.session);
+      return true;
+    }
+    const picked = this.#picked(event);
+    if (picked !== null) {
+      this.#choose(picked, event.session);
       return true;
     }
     const step = listStep(event, this.#fit);

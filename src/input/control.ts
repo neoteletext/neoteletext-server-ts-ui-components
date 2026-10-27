@@ -13,6 +13,10 @@ import type { Canvas } from "../core/canvas.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import type { Sound } from "../core/sound.ts";
 
+/** What a control's keys do (core/key-bindings.ts) and what it needs of its page (core/needs.ts), for the controls built on this one. */
+export type { KeyHelpEntry } from "../core/key-bindings.ts";
+export type { PageNeeds } from "../core/needs.ts";
+
 /** Sounds a control plays to the viewer: as the choice moves, as one is made, as a value changes, as one is refused. */
 export interface ControlSounds {
   readonly move?: Sound;
@@ -60,12 +64,7 @@ export abstract class Control<P extends ControlProps = ControlProps, S extends o
   }
 
   override hint(): string | null {
-    return this.props.hint ?? this.keysHint();
-  }
-
-  /** What its keys do, when its user does not say. */
-  protected keysHint(): string | null {
-    return null;
+    return this.props.hint ?? super.hint();
   }
 
   /** The label's column: none without a label. */

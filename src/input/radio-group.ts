@@ -11,7 +11,7 @@ import { DISABLED, FOCUSED_LABEL, LABEL } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
 import { type Colour, Key } from "../kit.ts";
 import { keyStep } from "./key-step.ts";
-import { type ValueProps, ValueControl } from "./value-control.ts";
+import { type ValueProps, ValueControl, type KeyHelpEntry } from "./value-control.ts";
 
 export interface RadioGroupProps extends ValueProps<number> {
   readonly items: readonly string[];
@@ -30,8 +30,8 @@ export class RadioGroup extends ValueControl<number, RadioGroupProps> {
     return 0;
   }
 
-  protected override keysHint(): string {
-    return this.props.across === true ? "Left Right choose" : "Up Down choose";
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [[this.props.across === true ? "Left Right" : "Up Down", "choose"]];
   }
 
   override measure(space: Size): Size {

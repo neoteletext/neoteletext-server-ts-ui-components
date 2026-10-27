@@ -7,7 +7,7 @@ export type { FrameProps, Prompt, Prompts } from "./frame.ts";
 export { HintLine } from "./hint-line.ts";
 export type { LineProps } from "./hint-line.ts";
 export { KeyHelp } from "./key-help.ts";
-export type { KeyHelpEntry, KeyHelpProps } from "./key-help.ts";
+export type { KeyHelpProps } from "./key-help.ts";
 export { PositionLine } from "./position-line.ts";
 export type { PositionProps } from "./position-line.ts";
 export { StatusBar } from "./status-bar.ts";

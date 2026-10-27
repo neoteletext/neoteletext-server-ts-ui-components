@@ -13,10 +13,10 @@ import type { Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { choosing, digitOf } from "../core/keys.ts";
-import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
+import { followItem, keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { Colour, Key } from "../kit.ts";
-import { Control, type ControlProps } from "../input/control.ts";
+import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { Rows } from "../layout/layouts.ts";
 import { ListRows } from "../lists/list-rows.ts";
@@ -49,6 +49,8 @@ export interface MenuProps extends ControlProps {
   readonly onChoose: (path: readonly string[], session: number) => void;
   /** The pointer came onto a choice, or left it (null): the labels from the top menu down to it. Moving from one choice to the next is a leave, then an enter. */
   readonly onHover?: (path: readonly string[] | null, session: number) => void;
+  /** What tells one choice from another, so the chosen one stays chosen as the open menu's choices come and go. */
+  readonly itemKey?: (item: MenuItem) => string;
 }
 
 interface MenuState {
@@ -62,6 +64,21 @@ function choosable(item: MenuItem | undefined): boolean {
   return item !== undefined && item.rule !== true && item.disabled !== true;
 }
 
+/** The menu `path` opens in `items`, and the labels down to it. */
+function openAt(items: readonly MenuItem[], path: readonly number[]): { items: readonly MenuItem[]; labels: string[] } {
+  let open = items;
+  const labels: string[] = [];
+  for (const index of path) {
+    const item = open[index];
+    if (item?.items === undefined) {
+      break;
+    }
+    labels.push(item.label);
+    open = item.items;
+  }
+  return { items: open, labels };
+}
+
 export class Menu extends Control<MenuProps, MenuState> {
   override state: MenuState = { path: [], chosen: Math.max(0, this.props.items.findIndex(choosable)), top: 0 };
   readonly #wheel = new WheelLines();
@@ -70,23 +87,27 @@ export class Menu extends Control<MenuProps, MenuState> {
     return { digits: this.props.numbered === true };
   }
 
-  protected override keysHint(): string {
-    return `Up Down, Enter chooses${this.props.numbered === true ? ", or its number" : ""}; Left goes back`;
+  override keyBindings(): readonly KeyHelpEntry[] {
+    return [
+      ["Up Down", "move"],
+      [this.props.numbered === true ? "Enter or its number" : "Enter", "chooses"],
+      ["Left", "goes back"],
+    ];
   }
 
   /** The menu open now and the labels down to it. */
   #open(): { items: readonly MenuItem[]; labels: string[] } {
-    let items = this.props.items;
-    const labels: string[] = [];
-    for (const index of this.state.path) {
-      const item = items[index];
-      if (item?.items === undefined) {
-        break;
-      }
-      labels.push(item.label);
-      items = item.items;
+    return openAt(this.props.items, this.state.path);
+  }
+
+  /** The open menu's choices changed under the chosen one: it stays chosen where it went, when its key says which it is. */
+  override componentDidUpdate(previous: Readonly<MenuProps>): void {
+    const { path, chosen, top } = this.state;
+    const after = this.#open().items;
+    const followed = followItem(openAt(previous.items, path).items, after, chosen, this.props.itemKey);
+    if (followed !== null && followed !== chosen) {
+      this.setState({ chosen: followed, top: keepInView(top, followed, this.#shown, after.length) });
     }
-    return { items, labels };
   }
 
   get #titled(): boolean {
