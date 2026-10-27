@@ -26,15 +26,9 @@ export interface WithChildren {
 /** A component class, made with its props. */
 export type ComponentClass<P extends object> = new (props: P) => Component<P>;
 
-/**
- * A function component: what it renders from its props, as React's are.
- * It keeps no state and has no lifecycle; a component that does is a class.
- */
-export type FunctionComponent<P extends object = object> = (props: Readonly<P & WithChildren>) => Child;
-
 /** One element: a component, its props, children included, and its key among its siblings. */
 export interface Element {
-  readonly type: ComponentClass<never> | FunctionComponent<never>;
+  readonly type: ComponentClass<never>;
   readonly props: WithChildren & LayoutProps;
   readonly key: string | number | undefined;
 }
@@ -56,16 +50,14 @@ export type AnyComponentClass = new (props: never) => { readonly props: object }
 /**
  * An element of `type` with `props` and `children`, as React's
  * createElement, with no JSX, since Node runs the channel's TypeScript as
- * it is. `type` is a class component or a function component.
+ * it is. Every component is a class (CLAUDE.md).
  */
-export function h<C extends AnyComponentClass>(type: C, props: PropsOf<ClassProps<C>>, ...children: Child[]): Element;
-export function h<P extends object>(type: FunctionComponent<P>, props: PropsOf<P>, ...children: Child[]): Element;
-export function h(type: AnyComponentClass | FunctionComponent<never>, props: PropsOf<object>, ...children: Child[]): Element {
+export function h<C extends AnyComponentClass>(type: C, props: PropsOf<ClassProps<C>>, ...children: Child[]): Element {
   const { key, ...rest } = props;
   const withChildren = children.length > 0 ? { ...rest, children } : rest;
-  // An element erases its component's props, so a tree holds elements of any component; instantiate gives each its own back.
+  // An element erases its component's props, so a tree holds elements of any component; instantiate.ts gives each its own back.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the erasure, undone only by instantiate with the props it was made with
-  return { type: type as unknown as ComponentClass<never> | FunctionComponent<never>, props: withChildren, key };
+  return { type: type as unknown as ComponentClass<never>, props: withChildren, key };
 }
 
 /** Whether `child` is an element rather than text or nothing. */

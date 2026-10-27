@@ -24,3 +24,10 @@ channels in TypeScript, over the server's channel protocol
 - **The protocol is a release too.** It comes from
   `vendor/neottx-server-ts-protocol-<version>.tgz`, and the peer
   dependency names the version the library is built against.
+- **Components are classes. Hooks and function components are never to
+  be implemented in this architecture**, on the owner's instruction of
+  28 October 2026. A component keeps its state in `state` and changes it
+  with `setState`, and its lifecycle is its methods
+  (`componentDidMount`, `componentWillUnmount`, …). This overrides the
+  global rule's "function components and hooks only" for this library
+  and every program built on it.

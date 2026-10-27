@@ -23,12 +23,14 @@ It needs Node 22.18 or later.
 import { Colour, Key, runChannel } from "neottx-server-ts-protocol";
 import { type Child, Component, ComponentChannel, Frame, h, isPress, type KeyEvent, Text } from "neottx-server-ts-ui-components";
 
-/** A function component: what it renders from its props. */
-function Greeting({ name }: { readonly name: string }): Child {
-  return h(Text, { text: `Hello, ${name}` });
+/** A component that keeps nothing: what it renders from its props. */
+class Greeting extends Component<{ readonly name: string }> {
+  override render(): Child {
+    return h(Text, { text: `Hello, ${this.props.name}` });
+  }
 }
 
-/** A class component, for state: a count that Enter raises. */
+/** A component with state: a count that Enter raises. */
 class Counter extends Component<object, { readonly count: number }> {
   override state = { count: 0 };
 
@@ -63,10 +65,11 @@ await runChannel([
 
 - **`h(type, props, ...children)`** makes an element, as React's
   `createElement`: there is no JSX, since Node runs the TypeScript as it
-  is. `type` is a function component, a function of its props that keeps
-  nothing, or a class component, which has state (`setState`), a
+  is. `type` is a component class, with props, state (`setState`), a
   lifecycle (`componentDidMount`, `componentWillUnmount`, …) and input
-  handlers (`onKey`, `onPointer`, `onWheel`, `onHover`).
+  handlers (`onKey`, `onPointer`, `onWheel`, `onHover`). Every component
+  is a class: the library has no function components and no hooks, by
+  design.
 - **`ComponentChannel`** is the protocol's `Application` for pages of
   components: each `PageSpec` names its page, title and root, and whether
   each viewer gets a copy of their own (`perViewer`).

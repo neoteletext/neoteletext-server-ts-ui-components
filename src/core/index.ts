@@ -11,7 +11,7 @@ export type { Box, LayoutChild, Size } from "./layout.ts";
 export { readControls, readDeclarations } from "./read-controls.ts";
 export type { Declarations } from "./read-controls.ts";
 export { h } from "./element.ts";
-export type { AnyComponentClass, Child, ClassProps, ComponentClass, Element, FunctionComponent, LayoutProps, PropsOf, WithChildren } from "./element.ts";
+export type { AnyComponentClass, Child, ClassProps, ComponentClass, Element, LayoutProps, PropsOf, WithChildren } from "./element.ts";
 export { isPress, NOTCH, typedText } from "./events.ts";
 export type { Cell, HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
 export { choosing, COLOUR_KEY_NAMES, COLOUR_KEYS, colourKeyOf, digitOf, FUNCTION_KEYS } from "./keys.ts";
