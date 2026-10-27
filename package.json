@@ -1,6 +1,6 @@
 {
   "name": "neottx-server-ts-ui-components",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "The NeoTeletext component library: class components for teletext channels in TypeScript, over the server's channel protocol (neottx-server-ts-protocol)",
   "private": true,
   "license": "MIT",
