@@ -32,10 +32,12 @@ export interface SliderProps extends ValueProps<number> {
 const VALUE_CELLS = 6;
 /** Page Up and Page Down move this many steps. */
 const PAGE_STEPS = 10;
+/** The region its track is. */
 const TRACK = "track";
 
 export class Slider extends ValueControl<number, SliderProps> {
   readonly #wheel = new WheelLines();
+
   protected empty(): number {
     return this.props.min;
   }
@@ -59,6 +61,13 @@ export class Slider extends ValueControl<number, SliderProps> {
     return { width: space.width, height: Math.min(1, space.height) };
   }
 
+  get #ink(): Colour {
+    if (this.disabled) {
+      return DISABLED;
+    }
+    return this.focused ? FOCUSED_LABEL : (this.props.foreground ?? Colour.Cyan);
+  }
+
   override paint(canvas: Canvas): void {
     const at = this.paintLabel(canvas);
     const track = this.#trackCells(canvas.width);
@@ -72,8 +81,7 @@ export class Slider extends ValueControl<number, SliderProps> {
       const before = (cell + 1) * SIXELS_ACROSS - 1 < knob;
       return this.props.filled === true && before ? MIDDLE_ROW | BOTTOM_ROW : MIDDLE_ROW;
     });
-    const foreground = this.disabled ? DISABLED : this.focused ? FOCUSED_LABEL : (this.props.foreground ?? Colour.Cyan);
-    const after = canvas.mosaics(0, at, foreground, codes);
+    const after = canvas.mosaics(0, at, this.#ink, codes);
     if (!this.disabled) {
       canvas.control(0, at + 1, track, 1, TRACK);
     }

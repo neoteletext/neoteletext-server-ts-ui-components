@@ -6,10 +6,11 @@
 
 import type { Canvas } from "../core/canvas.ts";
 import type { Size } from "../core/component.ts";
-import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
+import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { DISABLED, FOCUSED_LABEL, LABEL } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
-import { Key } from "../kit.ts";
+import { type Colour, Key } from "../kit.ts";
+import { keyStep } from "./key-step.ts";
 import { type ValueProps, ValueControl } from "./value-control.ts";
 
 export interface RadioGroupProps extends ValueProps<number> {
@@ -38,6 +39,13 @@ export class RadioGroup extends ValueControl<number, RadioGroupProps> {
     return { width: space.width, height: Math.min(space.height, rows) };
   }
 
+  #ink(chosen: boolean): Colour {
+    if (this.disabled) {
+      return DISABLED;
+    }
+    return chosen && this.focused ? FOCUSED_LABEL : LABEL;
+  }
+
   override paint(canvas: Canvas): void {
     const across = this.props.across === true;
     let column = across ? this.paintLabel(canvas) : 0;
@@ -48,9 +56,8 @@ export class RadioGroup extends ValueControl<number, RadioGroupProps> {
       if (!across && index === 0) {
         this.paintLabel(canvas);
       }
-      const foreground = this.disabled ? DISABLED : chosen && this.focused ? FOCUSED_LABEL : LABEL;
       const shown = fit(option(text, chosen), canvas.width - at - 1);
-      canvas.coloured(row, at, foreground, shown);
+      canvas.coloured(row, at, this.#ink(chosen), shown);
       if (!this.disabled) {
         // The option's text, after its colour's cell.
         canvas.control(row, at + 1, cells(shown), 1, String(index));
@@ -64,7 +71,7 @@ export class RadioGroup extends ValueControl<number, RadioGroupProps> {
       return false;
     }
     const across = this.props.across === true;
-    const step = isPress(event, across ? Key.Right : Key.Down) ? 1 : isPress(event, across ? Key.Left : Key.Up) ? -1 : 0;
+    const step = across ? keyStep(event, Key.Right, Key.Left) : keyStep(event, Key.Down, Key.Up);
     if (step === 0) {
       return false;
     }

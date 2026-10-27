@@ -12,14 +12,10 @@ import { colourKeyOf } from "../core/keys.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { Control, type ControlProps } from "../input/control.ts";
 import { Colour } from "../kit.ts";
-import { ProgressBar } from "../feedback/progress.ts";
 import { Gap } from "../layout/gap.ts";
 import { Rows } from "../layout/layouts.ts";
 import { Paragraph } from "../text/paragraph.ts";
-import { Badges } from "../text/badge.ts";
-import { Action } from "../input/action.ts";
-import { Columns } from "../layout/columns.ts";
-import { CHOSEN } from "../core/look.ts";
+import { stepBadges, stepMoves, stepProgress, type WizardPlace } from "./wizard-parts.ts";
 
 export interface WizardProps extends ControlProps {
   /** The steps' names; the children are their contents, in order. */
@@ -39,8 +35,6 @@ interface WizardState {
 /** Back and Next: the red and green keys. */
 const BACK = 0;
 const NEXT = 1;
-/** The cells Back takes before Next: its colour's cell, its text and two of space, so Next's colour takes the third. */
-const BACK_CELLS = 1 + "red Back".length + 2;
 
 export class Wizard extends Control<WizardProps, WizardState> {
   override state: WizardState = { step: 0, finished: false, complaint: null };
@@ -54,61 +48,34 @@ export class Wizard extends Control<WizardProps, WizardState> {
   }
 
   override render(): Child {
-    const { steps } = this.props;
     const { step, finished } = this.state;
-    const last = step === steps.length - 1;
-    const badges = steps.map((name, index) => ({
-      text: `${index < step || finished ? "x" : String(index + 1)} ${name}`,
-      background: index === step && !finished ? CHOSEN.background : index < step || finished ? Colour.Green : Colour.Blue,
-      foreground: index === step && !finished ? CHOSEN.foreground : index < step || finished ? Colour.Black : Colour.White,
-      // A step done, before the one shown, is a way back to it.
-      ...(index < step && !finished && !this.disabled
-        ? {
-            onPress: (session: number) => {
-              this.#go(index, session);
-            },
-          }
-        : {}),
-    }));
-    const nextAction = h(Action, {
-      text: `green ${last ? "Finish" : "Next"}`,
-      foreground: Colour.Green,
-      disabled: this.disabled,
-      onPress: (session: number) => {
-        this.#next(session);
-      },
-    });
+    const place: WizardPlace = { steps: this.props.steps, step, finished };
+    const go = this.disabled
+      ? null
+      : (to: number, session: number): void => {
+          this.#go(to, session);
+        };
     return h(
       Rows,
       {},
-      h(Badges, { badges }),
-      h(ProgressBar, {
-        label: finished ? "Done" : `Step ${step + 1} of ${steps.length}`,
-        value: finished ? steps.length : step,
-        max: steps.length,
-        foreground: Colour.Cyan,
-      }),
+      stepBadges(place, go),
+      stepProgress(place),
       h(Gap, {}),
       finished ? h(Paragraph, { text: "All done. Thank you.", foreground: Colour.Green }) : ((this.props.children ?? [])[step] ?? null),
       h(Gap, { rows: 0, grow: 1 }),
       this.state.complaint === null ? null : h(Paragraph, { text: `! ${this.state.complaint}`, foreground: Colour.Red }),
       finished
         ? null
-        : step === 0
-          ? nextAction
-          : h(
-              Columns,
-              { widths: [BACK_CELLS, null], height: 1 },
-              h(Action, {
-                text: "red Back",
-                foreground: Colour.Green,
-                disabled: this.disabled,
-                onPress: (session: number) => {
-                  this.#back(session);
-                },
-              }),
-              nextAction,
-            ),
+        : stepMoves(
+            place,
+            this.disabled,
+            (session) => {
+              this.#back(session);
+            },
+            (session) => {
+              this.#next(session);
+            },
+          ),
     );
   }
 

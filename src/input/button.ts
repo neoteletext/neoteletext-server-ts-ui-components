@@ -55,8 +55,15 @@ export class Button extends Control<ButtonProps> {
     return "Enter or a click presses; Tab moves on";
   }
 
+  get #look(): { readonly background: Colour; readonly foreground: Colour } {
+    if (this.disabled) {
+      return DISABLED_BAND;
+    }
+    return this.focused ? CHOSEN : { background: this.props.background ?? Colour.Cyan, foreground: Colour.Blue };
+  }
+
   override paint(canvas: Canvas): void {
-    const look = this.disabled ? DISABLED_BAND : this.focused ? CHOSEN : { background: this.props.background ?? Colour.Cyan, foreground: Colour.Blue };
+    const look = this.#look;
     // Its own width, in a box as wide as a stack's row may be: the band ends there.
     const width = Math.min(canvas.width, this.#width);
     canvas.background(0, 0, look.background);
@@ -70,9 +77,12 @@ export class Button extends Control<ButtonProps> {
     }
     const room = Math.max(0, width - LEAD_CELLS - TAIL_CELLS);
     const label = fit(this.props.label, room);
-    // A fixed width centres the label; otherwise the padding places it.
+    // A fixed width centres the label; otherwise the padding places it. The
+    // padding is cut to one cell more than the room, which fit cuts just as
+    // it would the whole, so a program's huge padding allocates no more.
     const before = this.props.width === undefined ? (this.props.paddingLeft ?? PADDING) : Math.floor((room - cells(label)) / 2);
-    canvas.coloured(0, LEAD_CELLS - 1, look.foreground, fit(`${" ".repeat(Math.max(0, before))}${label}`, room).padEnd(room));
+    const spaces = " ".repeat(Math.max(0, Math.min(before, room + 1)));
+    canvas.coloured(0, LEAD_CELLS - 1, look.foreground, fit(`${spaces}${label}`, room).padEnd(room));
   }
 
   #press(session: number): boolean {

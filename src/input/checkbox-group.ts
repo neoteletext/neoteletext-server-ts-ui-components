@@ -1,12 +1,16 @@
-// CheckboxGroup: split from checkbox.ts; the comments pass writes this file's header.
+// A group of check boxes (checkbox.ts), any of them ticked: a multiple
+// choice. Up and Down choose a box, or the arrows across two columns, and
+// Enter, Space or a click ticks it. Its value is the ticked boxes' places,
+// in order.
 
-import { type Canvas } from "../core/canvas.ts";
+import type { Canvas } from "../core/canvas.ts";
 import type { Size } from "../core/component.ts";
-import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
+import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { Key } from "../kit.ts";
 import { type ValueProps, ValueControl, type ValueState } from "./value-control.ts";
 import { drawBox } from "./checkbox.ts";
+import { keyStep } from "./key-step.ts";
 
 export interface CheckboxGroupProps extends ValueProps<readonly number[]> {
   readonly items: readonly string[];
@@ -20,7 +24,6 @@ interface CheckboxGroupState extends ValueState<readonly number[]> {
   readonly chosen: number;
 }
 
-/** Several boxes, any of them ticked: a multiple choice. */
 export class CheckboxGroup extends ValueControl<readonly number[], CheckboxGroupProps, CheckboxGroupState> {
   override state: CheckboxGroupState = { own: this.props.initial ?? [], chosen: 0 };
 
@@ -55,7 +58,17 @@ export class CheckboxGroup extends ValueControl<readonly number[], CheckboxGroup
       return;
     }
     this.setState({ chosen: index });
-    this.change(this.value.includes(index) ? this.value.filter((item) => item !== index) : [...this.value, index].sort((a, b) => a - b), session);
+    this.change(this.value.includes(index) ? this.value.filter((item) => item !== index) : [...this.value, index].toSorted((a, b) => a - b), session);
+  }
+
+  /** Up and Down a row, Left and Right a box across two columns. */
+  #step(event: KeyEvent): number {
+    const columns = this.#columns;
+    const down = keyStep(event, Key.Down, Key.Up);
+    if (down !== 0) {
+      return down * columns;
+    }
+    return columns > 1 ? keyStep(event, Key.Right, Key.Left) : 0;
   }
 
   override onKey(event: KeyEvent): boolean {
@@ -66,16 +79,7 @@ export class CheckboxGroup extends ValueControl<readonly number[], CheckboxGroup
       this.#toggle(this.state.chosen, event.session);
       return true;
     }
-    const columns = this.#columns;
-    const step = isPress(event, Key.Down)
-      ? columns
-      : isPress(event, Key.Up)
-        ? -columns
-        : isPress(event, Key.Right) && columns > 1
-          ? 1
-          : isPress(event, Key.Left) && columns > 1
-            ? -1
-            : 0;
+    const step = this.#step(event);
     if (step === 0) {
       return false;
     }

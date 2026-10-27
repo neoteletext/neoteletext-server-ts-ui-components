@@ -24,14 +24,26 @@ interface PollState {
   readonly votes: readonly number[];
 }
 
-/** A live poll: Up and Down choose, Enter or a click on an option votes; every viewer's copy hears each vote through the bus. */
+/** An option's text cells, and its count's after it. */
+const OPTION_CELLS = 26;
+const COUNT_CELLS = 4;
+
+/** Down chooses the next option and Up the one before. */
+function stepOf(event: KeyEvent): number {
+  if (isPress(event, Key.Down)) {
+    return 1;
+  }
+  return isPress(event, Key.Up) ? -1 : 0;
+}
+
 export class Poll extends Control<PollProps, PollState> {
   override state: PollState = { chosen: 0, mine: null, votes: this.props.tally.votes.slice() };
+
+  #unsubscribe: (() => void) | null = null;
 
   protected override keysHint(): string {
     return "Up Down choose, Enter or a click votes";
   }
-  #unsubscribe: (() => void) | null = null;
 
   override componentDidMount(): void {
     this.#unsubscribe = this.services.bus.on("poll", ({ name, votes }) => {
@@ -55,7 +67,7 @@ export class Poll extends Control<PollProps, PollState> {
       ...options.flatMap((option, index) => [
         h(Action, {
           key: `option-${index}`,
-          text: `${index === this.state.chosen ? ">" : " "}${this.state.mine === index ? "*" : " "}${pad(option, 26)}${String(this.state.votes[index] ?? 0).padStart(4)}`,
+          text: `${index === this.state.chosen ? ">" : " "}${this.state.mine === index ? "*" : " "}${pad(option, OPTION_CELLS)}${String(this.state.votes[index] ?? 0).padStart(COUNT_CELLS)}`,
           foreground: index === this.state.chosen ? Colour.Yellow : Colour.White,
           disabled: this.disabled,
           hint: `A click votes for ${option}`,
@@ -85,11 +97,15 @@ export class Poll extends Control<PollProps, PollState> {
       return false;
     }
     const count = this.props.tally.options.length;
+    // With no options there is nothing to choose or vote for.
+    if (count === 0) {
+      return false;
+    }
     if (isPress(event, Key.Enter)) {
       this.#vote(this.state.chosen, event.session);
       return true;
     }
-    const step = isPress(event, Key.Down) ? 1 : isPress(event, Key.Up) ? -1 : 0;
+    const step = stepOf(event);
     if (step === 0) {
       return false;
     }

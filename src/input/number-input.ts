@@ -32,6 +32,23 @@ const MINUS = " - ";
 const PLUS = " + ";
 const NUMBER_CELLS = 7;
 
+/**
+ * The number `text` says. Backspace on a value shown as "1.5" or "1e+21"
+ * leaves "1." or "1e+2", and what is read is the whole number before the
+ * point or the exponent; "" and "-" are no number.
+ */
+function readNumber(text: string): number {
+  // oxlint-disable-next-line unicorn/prefer-number-coercion -- the prefix reading is meant: Number("1e+2") is 100 and Number("") is 0, where the digits typed say 1 and nothing
+  return Number.parseInt(text, 10);
+}
+
+function inkOf(disabled: boolean, valid: boolean): Colour {
+  if (disabled) {
+    return DISABLED;
+  }
+  return valid ? Colour.White : Colour.Red;
+}
+
 export class NumberInput extends ValueControl<number, NumberInputProps, NumberInputState> {
   override state: NumberInputState = { own: this.props.initial ?? this.props.min, typing: null };
   readonly #wheel = new WheelLines();
@@ -64,8 +81,8 @@ export class NumberInput extends ValueControl<number, NumberInputProps, NumberIn
       canvas.chipControl(0, start, column, "minus");
     }
     const text = this.state.typing ?? String(this.value);
-    const valid = this.#inRange(Number.parseInt(text, 10));
-    canvas.coloured(0, column, this.disabled ? DISABLED : valid ? Colour.White : Colour.Red, padStart(text, NUMBER_CELLS - 2));
+    const valid = this.#inRange(readNumber(text));
+    canvas.coloured(0, column, inkOf(this.disabled, valid), padStart(text, NUMBER_CELLS - 2));
     const plusAt = column + NUMBER_CELLS - 1;
     column = canvas.chip(0, plusAt, chip, Colour.Black, PLUS);
     if (!this.disabled) {
@@ -78,7 +95,7 @@ export class NumberInput extends ValueControl<number, NumberInputProps, NumberIn
 
   #typed(text: string, session: number): void {
     this.setState({ typing: text });
-    const value = Number.parseInt(text, 10);
+    const value = readNumber(text);
     if (this.#inRange(value)) {
       this.change(value, session);
     } else if (text !== "") {

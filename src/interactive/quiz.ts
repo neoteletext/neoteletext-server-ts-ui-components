@@ -4,18 +4,14 @@
 
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent } from "../core/events.ts";
-import { COLOUR_KEY_NAMES, colourKeyOf } from "../core/keys.ts";
-import { type Sound } from "../core/sound.ts";
-import { pad } from "../core/text.ts";
-import { KEY_COLOURS } from "../frame/fastext-bar.ts";
+import { colourKeyOf } from "../core/keys.ts";
+import type { PageNeeds } from "../core/needs.ts";
+import type { Sound } from "../core/sound.ts";
+import { Control, type ControlProps } from "../input/control.ts";
 import { Colour } from "../kit.ts";
 import { Rows } from "../layout/layouts.ts";
-import { Concealed } from "../text/concealed.ts";
-import { Flashing } from "../text/flashing.ts";
 import { Paragraph } from "../text/paragraph.ts";
-import { Action } from "../input/action.ts";
-import { Control, type ControlProps } from "../input/control.ts";
-import type { PageNeeds } from "../core/needs.ts";
+import { answerActions, type Verdict, verdictRows } from "./quiz-parts.ts";
 
 /** One question of a quiz. */
 export interface Question {
@@ -34,7 +30,7 @@ export interface QuizProps extends ControlProps {
 interface QuizState {
   readonly asked: number;
   readonly score: number;
-  readonly last: "none" | "right" | "wrong";
+  readonly last: Verdict;
 }
 
 /** A quiz answered with the four coloured keys (the page takes them itself) or a click on an answer; the answer is concealed until Reveal is pressed. */
@@ -54,7 +50,6 @@ export class Quiz extends Control<QuizProps, QuizState> {
     if (question === undefined) {
       return null;
     }
-    const verdict = this.state.last === "right" ? "RIGHT!" : this.state.last === "wrong" ? "No, sorry" : "";
     return h(
       Rows,
       {},
@@ -62,18 +57,11 @@ export class Quiz extends Control<QuizProps, QuizState> {
       h(Paragraph, { text: "" }),
       h(Paragraph, { text: question.question, foreground: Colour.White }),
       h(Paragraph, { text: "" }),
-      ...question.answers.map((answer, index) =>
-        h(Action, {
-          key: `answer-${index}`,
-          text: `${pad(COLOUR_KEY_NAMES[index] ?? "", 7)} ${answer}`,
-          foreground: KEY_COLOURS[index] ?? Colour.White,
-          disabled: this.disabled,
-          onPress: (session: number) => this.#answer(index, session),
-        }),
-      ),
+      ...answerActions(question.answers, this.disabled, (answer, session) => {
+        this.#answer(answer, session);
+      }),
       h(Paragraph, { text: "" }),
-      h(Concealed, { text: `Reveal: it is ${COLOUR_KEY_NAMES[question.right] ?? ""}`, foreground: Colour.Magenta }),
-      verdict === "" ? null : h(Flashing, { text: verdict, foreground: this.state.last === "right" ? Colour.Green : Colour.Red }),
+      ...verdictRows(question.right, this.state.last),
     );
   }
 

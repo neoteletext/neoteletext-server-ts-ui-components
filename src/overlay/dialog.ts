@@ -4,8 +4,8 @@
 // background of its own with its title on a band of its kind's colour, its
 // message, its children (a field, a spinner) and its buttons. Left, Right
 // and Tab choose a button, Enter answers with it, Escape answers with none;
-// a click on a button answers with it. A modal lays a dialog over a page,
-// and keeps every click and turn of the wheel from the page under it.
+// a click on a button answers with it. A modal (modal.ts) lays one over a
+// page.
 
 import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
 import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/component.ts";
@@ -14,6 +14,7 @@ import { CHOSEN, type Kind, KINDS } from "../core/look.ts";
 import { cells, fit, wrap } from "../core/text.ts";
 import { Attribute, Colour, englishCodes, Key, SPACE, textColour } from "../kit.ts";
 import { Control, type ControlProps } from "../input/control.ts";
+import { keyStep } from "../input/key-step.ts";
 
 export interface DialogProps extends ControlProps {
   readonly title: string;
@@ -53,9 +54,9 @@ const BUTTON_BAND_CELLS = 2;
 /** The dialog's own background. */
 const BACKGROUND = Colour.Blue;
 
-/** Rows round the content: the title band, a row before the buttons, the buttons, a row under them. */
+/** The title band's row, above the message. */
 const TITLE_ROWS = 1;
-
+/** Rows under the content: one before the buttons, the buttons, one under them. */
 const FOOT_ROWS = 3;
 
 export class Dialog extends Control<DialogProps, DialogState> {
@@ -124,7 +125,11 @@ export class Dialog extends Control<DialogProps, DialogState> {
     const look = KINDS[this.props.kind ?? "info"];
     const right = canvas.width - inset - 1;
     for (let row = 0; row < canvas.height; row += 1) {
-      canvas.codes(row, 0, new Array<number>(canvas.width).fill(SPACE));
+      canvas.codes(
+        row,
+        0,
+        Array.from({ length: canvas.width }, () => SPACE),
+      );
       canvas.codes(row, inset, [textColour(row === 0 ? look.background : BACKGROUND), Attribute.NewBackground]);
       canvas.code(row, right, Attribute.BlackBackground);
     }
@@ -175,7 +180,7 @@ export class Dialog extends Control<DialogProps, DialogState> {
       this.#answer(this.state.chosen, event.session);
       return true;
     }
-    const step = isPress(event, Key.Right) || isPress(event, Key.Tab) ? 1 : isPress(event, Key.Left) ? -1 : 0;
+    const step = isPress(event, Key.Tab) ? 1 : keyStep(event, Key.Right, Key.Left);
     if (step !== 0) {
       this.focus();
       this.setState({ chosen: (this.state.chosen + step + count) % count });
