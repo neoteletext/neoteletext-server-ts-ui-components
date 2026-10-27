@@ -13,7 +13,7 @@ runs on the server's channel protocol, `neottx-server-ts-protocol`.
 The library is released as a built tarball, not to a registry. Commit
 its release and the protocol's under your `vendor/` and depend on both:
 
-    npm install ./vendor/neottx-server-ts-protocol-0.2.0.tgz ./vendor/neottx-server-ts-ui-components-1.0.0.tgz
+    npm install ./vendor/neottx-server-ts-protocol-0.2.0.tgz ./vendor/neottx-server-ts-ui-components-2.0.0.tgz
 
 It needs Node 22.18 or later.
 
