@@ -3,32 +3,26 @@
 // (the browser lists sub-pages by it), the body on rows 3 to 22, a hint of
 // the keys on row 23, and the Fastext prompts on row 24 with their links.
 
-import { type Box, type LayoutChild } from "../core/component.ts";
+import type { Box, LayoutChild } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import { SubPage, type SubPageLinks } from "../core/page.ts";
-import { Colour, COLUMNS, type FastextLinks } from "../kit.ts";
+import { type Colour, COLUMNS } from "../kit.ts";
 import { Rows } from "../layout/layouts.ts";
-import { FastextBar } from "./fastext-bar.ts";
+import { FastextBar, fastextLinks } from "./fastext-bar.ts";
 import { HintLine } from "./hint-line.ts";
 import { TitleBand } from "./title-band.ts";
 
-/** The rows of the frame. */
+/** The rows of the frame, from row 0 (the server's header) to row 24. */
 export const BAND_ROW = 1;
-
 export const BAND_ROWS = 2;
-
 export const BODY_ROW = 3;
-
 export const BODY_ROWS = 20;
-
 export const HINT_ROW = 23;
-
 export const FASTEXT_ROW = 24;
 
 /** One Fastext prompt: its label and the page it goes to, or none. */
 export type Prompt = readonly [label: string, page: number | null];
 
-/** The four prompts. */
 export type Prompts = readonly [Prompt, Prompt, Prompt, Prompt];
 
 export interface FrameProps {
@@ -47,8 +41,7 @@ export interface FrameProps {
 /** A sub-page with the frame: band, body, hint and prompts. Its children are the body. */
 export class Frame extends SubPage<FrameProps> {
   override links(): SubPageLinks {
-    const fastext = this.props.prompts.map(([, page]) => page) as unknown as FastextLinks;
-    return { fastext, index: this.props.index ?? null };
+    return { fastext: fastextLinks(this.props.prompts), index: this.props.index ?? null };
   }
 
   override render(): Child {
@@ -68,6 +61,7 @@ export class Frame extends SubPage<FrameProps> {
   }
 
   override arrange(_box: Box, children: readonly LayoutChild[]): void {
+    // In render's order: the band unless bare, the body, the hint, the prompts.
     const bare = this.props.bare === true;
     const [first, ...rest] = children;
     const parts = bare ? children : rest;

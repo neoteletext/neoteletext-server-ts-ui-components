@@ -1,7 +1,6 @@
-// A news service's text: headlines with their page numbers, bylines, page
-// numbers that can be clicked, a placeholder while something comes, a ticker
-// and a newsflash. What goes to a page is a control, from its number to the
-// end of what it says, and only a click there goes.
+// Headlines: a post's title after the page it is on, and how page numbers
+// are written. What goes to a page is a control, from its number to the end
+// of what it says, and only a click there goes.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";

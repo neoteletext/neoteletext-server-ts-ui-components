@@ -1,13 +1,15 @@
-// PositionLine: split from frame.ts; the comments pass writes this file's header.
+// PositionLine: where a long list or text is, as "Lines 1-18 of 66".
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import { Colour } from "../kit.ts";
 
 export interface PositionProps {
+  /** The first shown, from 0; it is written from 1. */
   readonly first: number;
   readonly shown: number;
   readonly total: number;
+  /** What is counted: "Lines" when absent. */
   readonly noun?: string;
 }
 

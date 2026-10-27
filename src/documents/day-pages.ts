@@ -1,11 +1,10 @@
-// DayPages: split from document.ts; the comments pass writes this file's header.
+// DayPages: headlines over sub-pages, one for each day.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import { Headline } from "../text/news.ts";
 import { framed, type Article, type Framing } from "./document.ts";
 
-/** A day's headlines: its name and its articles. */
 export interface Day {
   readonly name: string;
   readonly articles: readonly Article[];
@@ -23,7 +22,8 @@ export class DayPages extends Component<DayPagesProps> {
         this.props,
         day.name,
         `day-${index}`,
-        ...day.articles.map((article) => h(Headline, { key: article.page, title: article.title, page: article.page })),
+        // One list child, not a spread: a feed's day of a few hundred thousand articles would overflow the stack as arguments.
+        day.articles.map((article) => h(Headline, { key: article.page, title: article.title, page: article.page })),
       ),
     );
   }

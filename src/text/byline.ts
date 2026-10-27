@@ -1,4 +1,4 @@
-// Byline: split from news.ts; the comments pass writes this file's header.
+// Byline: who wrote an article and when, and its labels.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";

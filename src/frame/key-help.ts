@@ -6,12 +6,11 @@ import { Component, type Size } from "../core/component.ts";
 import { fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
-/** A key and what it does. */
 export type KeyHelpEntry = readonly [key: string, action: string];
 
 export interface KeyHelpProps {
   readonly keys: readonly KeyHelpEntry[];
-  /** One column or two side by side. */
+  /** One column, or two side by side; one when absent. */
   readonly columns?: 1 | 2;
   /** The cells the keys' column takes. */
   readonly keyCells?: number;

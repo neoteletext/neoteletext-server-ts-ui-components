@@ -1,4 +1,4 @@
-// Ticker: split from news.ts; the comments pass writes this file's header.
+// Ticker: a band whose text changes to the next item every few seconds.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -8,7 +8,7 @@ import { Colour } from "../kit.ts";
 export interface TickerProps {
   /** The items it shows in turn. */
   readonly items: readonly string[];
-  /** How long each shows. */
+  /** How long each shows, in milliseconds. */
   readonly everyMs: number;
   readonly background?: Colour;
 }

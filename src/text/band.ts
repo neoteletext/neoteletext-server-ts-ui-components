@@ -1,4 +1,4 @@
-// Band: split from styles.ts; the comments pass writes this file's header.
+// Band: a row of text on a background of its own colour.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -19,6 +19,7 @@ export class Band extends Component<BandProps> {
 
   override paint(canvas: Canvas): void {
     canvas.background(0, 0, this.props.background ?? Colour.Blue);
+    // After the background's colour and New Background; its Black Background may take the box's last cell.
     canvas.coloured(0, 2, this.props.foreground ?? Colour.White, fit(this.props.text, canvas.width - 4));
   }
 }

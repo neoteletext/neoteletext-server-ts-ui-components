@@ -19,7 +19,6 @@ export interface PanelProps {
   readonly style?: PanelStyle;
   /** The line's colour, or the background's. */
   readonly foreground?: Colour;
-  /** The title's colour. */
   readonly titleForeground?: Colour;
 }
 
@@ -40,17 +39,23 @@ const LINE_SIDE = 2;
 /** The cells a band takes on the left of each row (its colour, New Background) and on the right (Black Background). */
 const BAND_LEFT = 2;
 const BAND_RIGHT = 1;
-/** The rows a line frame takes above and below the children. */
+/** The rows a line frame takes, one above the children and one below. */
 const LINE_ROWS = 2;
 /** The row a band's title takes. */
 const BAND_TITLE_ROWS = 1;
+/** The cells of a line frame's top and bottom rows that are not its run: the mosaic colour and the two corners. */
+const LINE_ENDS = 3;
+/** A line frame's title's colour cell, after the mosaic colour and the corner. */
+const LINE_TITLE_COLUMN = 2;
+/** The cells of the top row a title cannot take: three before it, and after it the mosaic colour, three of line and the corner. */
+const LINE_TITLE_ROOM = 8;
 
+/** Its children in a frame of the panel's style, under its title. */
 export class Panel extends Component<PanelProps> {
   get #style(): PanelStyle {
     return this.props.style ?? "line";
   }
 
-  /** The children's box inside `box`. */
   #inner(box: Box): Box {
     if (this.#style === "line") {
       return { row: box.row + 1, column: box.column + LINE_SIDE, width: Math.max(0, box.width - 2 * LINE_SIDE), height: Math.max(0, box.height - LINE_ROWS) };
@@ -86,20 +91,20 @@ export class Panel extends Component<PanelProps> {
       }
       return;
     }
-    const across = Math.max(0, width - 3);
-    canvas.mosaics(0, 0, foreground, [LINE.topLeft, ...new Array<number>(across).fill(LINE.top), LINE.topRight]);
+    const across = Math.max(0, width - LINE_ENDS);
+    canvas.mosaics(0, 0, foreground, [LINE.topLeft, ...Array.from({ length: across }, () => LINE.top), LINE.topRight]);
     if (this.props.title !== undefined) {
       // The title sits in the top line: its colour's cell and the mosaic colour's after it are gaps either side of it.
-      const title = fit(this.props.title, Math.max(0, width - 8));
-      canvas.coloured(0, 2, this.props.titleForeground ?? Colour.Yellow, title);
-      canvas.code(0, 3 + cells(title), mosaicColour(foreground));
+      const title = fit(this.props.title, Math.max(0, width - LINE_TITLE_ROOM));
+      canvas.coloured(0, LINE_TITLE_COLUMN, this.props.titleForeground ?? Colour.Yellow, title);
+      canvas.code(0, LINE_TITLE_COLUMN + 1 + cells(title), mosaicColour(foreground));
     }
     for (let row = 1; row < height - 1; row += 1) {
       canvas.mosaics(row, 0, foreground, [LINE.left]);
       canvas.mosaics(row, width - LINE_SIDE, foreground, [LINE.right]);
     }
     if (height >= LINE_ROWS) {
-      canvas.mosaics(height - 1, 0, foreground, [LINE.bottomLeft, ...new Array<number>(across).fill(LINE.bottom), LINE.bottomRight]);
+      canvas.mosaics(height - 1, 0, foreground, [LINE.bottomLeft, ...Array.from({ length: across }, () => LINE.bottom), LINE.bottomRight]);
     }
   }
 }

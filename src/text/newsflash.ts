@@ -1,4 +1,4 @@
-// Newsflash: split from news.ts; the comments pass writes this file's header.
+// Newsflash: NEWSFLASH, flashing, before a line of news.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";

@@ -1,4 +1,5 @@
-// TitleBand: split from frame.ts; the comments pass writes this file's header.
+// TitleBand: rows 1 and 2 of the frame, the sub-page's name in double
+// height on a band of its colour.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -20,6 +21,7 @@ export class TitleBand extends Component<TitleBandProps> {
 
   override paint(canvas: Canvas): void {
     canvas.background(0, 0, this.props.background);
+    // After the background's two cells, Double Height and the ink take two more, and its Black Background the last.
     canvas.doubleHeight(0, 2, this.props.foreground ?? Colour.White, fit(this.props.title, canvas.width - 5));
     canvas.background(1, 0, this.props.background);
   }

@@ -1,4 +1,4 @@
-// Paragraph: split from styles.ts; the comments pass writes this file's header.
+// Paragraph: text wrapped to its box, a line a row.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
