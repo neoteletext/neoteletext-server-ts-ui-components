@@ -4,7 +4,7 @@ import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import { Colour, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
 
-/** Large characters, five sixels wide and seven high, for counters. */
+/** Each character's rows of sixels, "#" set; any other character is drawn as "-". */
 const DIGITS: Readonly<Record<string, readonly string[]>> = {
   "0": ["#####", "#...#", "#..##", "#.#.#", "##..#", "#...#", "#####"],
   "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
@@ -21,9 +21,8 @@ const DIGITS: Readonly<Record<string, readonly string[]>> = {
 };
 
 const DIGIT_WIDTH = 5;
-
 const DIGIT_HEIGHT = 7;
-
+/** The sixels between one character and the next. */
 const DIGIT_GAP = 1;
 
 /** The rows large digits take: seven sixels over three to a cell. */
@@ -39,9 +38,9 @@ export class BigDigits extends Component<BigDigitsProps> {
   #canvas(): Sixels {
     const width = this.props.text.length * (DIGIT_WIDTH + DIGIT_GAP);
     const sixels = new Sixels(width, DIGIT_HEIGHT);
-    [...this.props.text].forEach((character, place) => {
+    Array.from(this.props.text).forEach((character, place) => {
       (DIGITS[character] ?? DIGITS["-"] ?? []).forEach((pattern, y) => {
-        [...pattern].forEach((sixel, x) => {
+        Array.from(pattern).forEach((sixel, x) => {
           sixels.set(place * (DIGIT_WIDTH + DIGIT_GAP) + x, y, sixel === "#");
         });
       });

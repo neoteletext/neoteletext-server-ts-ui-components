@@ -1,12 +1,9 @@
-// What the viewer is listening to: the stream the runtime plays them
-// (core/stream.ts), its name, how far it has played of how long, and
-// whether it is waiting, playing, paused or cannot play. It looks again
-// twice a second while someone watches. When nothing plays, because nothing
-// was started, it was stopped or it played to the end, it draws nothing,
-// as the owner asked, or keeps its rows empty when told to so what is under
-// it does not move; the copy every viewer shares has nobody to look for,
-// and so draws nothing too. ListeningView is the display alone, for a
-// player that looks for itself (audio-player.ts).
+// What the viewer is listening to (core/stream.ts): its name, how far it
+// has played of how long, and whether it is waiting, playing, paused or
+// cannot play, looked at again twice a second while someone watches. When
+// nothing plays it draws nothing, as the owner asked, or keeps its rows
+// empty when told to so what is under it does not move; the copy every
+// viewer shares has nobody to look for, and so draws nothing too.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
@@ -37,9 +34,14 @@ export interface NowPlayingProps {
   readonly keepRows?: boolean;
 }
 
+/** What a player last saw playing for its viewer, or null for nothing. */
+export interface PlayerState {
+  readonly listening: Listening | null;
+}
+
 /** The viewer's stream, looked at again twice a second. */
-export class NowPlaying extends Component<NowPlayingProps, { readonly listening: Listening | null }> {
-  override state = { listening: null as Listening | null };
+export class NowPlaying extends Component<NowPlayingProps, PlayerState> {
+  override state: PlayerState = { listening: null };
 
   override componentDidMount(): void {
     const session = this.services.session;

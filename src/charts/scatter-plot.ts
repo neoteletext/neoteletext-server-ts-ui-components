@@ -1,10 +1,12 @@
-// ScatterPlot: split from line-chart.ts; the comments pass writes this file's header.
+// A scatter plot: points on the line chart's axes (line-chart.ts), each a
+// block of sixels, scaled from the least to the most each way.
 
 import type { Canvas } from "../core/canvas.ts";
 import { paintEmpty } from "../core/look.ts";
 import { Component, type Size } from "../core/component.ts";
 import { Colour } from "../kit.ts";
 import { AXIS_CELLS, LABEL_ROWS, axes, plot, span } from "./line-chart.ts";
+import { leastOf, mostOf } from "./numbers.ts";
 
 export interface ScatterPlotProps {
   readonly points: readonly (readonly [x: number, y: number])[];
@@ -14,7 +16,7 @@ export interface ScatterPlotProps {
   readonly labels?: readonly string[];
 }
 
-/** A point is a block of four sixels, so a single one stands out. */
+/** A point's sixels each way: a block of four, so a single one stands out. */
 const POINT_SIXELS = 2;
 
 export class ScatterPlot extends Component<ScatterPlotProps> {
@@ -30,7 +32,7 @@ export class ScatterPlot extends Component<ScatterPlotProps> {
     const { sixels, cells } = plot(canvas.width, this.props.plotRows);
     const xs = this.props.points.map(([x]) => x);
     const ys = this.props.points.map(([, y]) => y);
-    const [left, right, least, most] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    const [left, right, least, most] = [leastOf(xs), mostOf(xs), leastOf(ys), mostOf(ys)];
     for (const [x, y] of this.props.points) {
       const across = Math.round(((x - left) / span(left, right)) * (sixels.width - POINT_SIXELS));
       const down = Math.round(((most - y) / span(least, most)) * (sixels.height - POINT_SIXELS));

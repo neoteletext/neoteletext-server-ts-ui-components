@@ -11,6 +11,7 @@ import { Component, type Size } from "../core/component.ts";
 import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { fit } from "../core/text.ts";
 import { Attribute, Colour, mosaicColour } from "../kit.ts";
+import { mostOf } from "./numbers.ts";
 
 export interface HeatRow {
   readonly label: string;
@@ -43,10 +44,12 @@ const DENSITIES = [
   MOSAIC_BASE | SIXEL.topLeft | SIXEL.topRight | SIXEL.middleLeft | SIXEL.bottomLeft | SIXEL.bottomRight,
   FULL_BLOCK,
 ] as const;
+/** The label's cells, its colour's included, when not given. */
 const LABEL_CELLS = 6;
 /** The cells a value takes on a colour scale: its colour's and its block. */
 const COLOUR_CELLS = 2;
 
+/** Which of `levels` steps `value` is from nought to `max`; a value that is not a number falls back to the first step where it is used. */
 function level(value: number, max: number, levels: number): number {
   return max <= 0 ? 0 : Math.max(0, Math.min(levels - 1, Math.round((value / max) * (levels - 1))));
 }
@@ -75,7 +78,7 @@ export class Heatmap extends Component<HeatmapProps> {
       return;
     }
     const labelCells = this.props.labelCells ?? LABEL_CELLS;
-    const max = this.props.max ?? Math.max(0, ...this.props.rows.flatMap((row) => row.values));
+    const max = this.props.max ?? Math.max(0, mostOf(this.props.rows.flatMap((row) => row.values)));
     const cells = canvas.width - labelCells;
     this.props.rows.forEach((row, index) => {
       canvas.coloured(index, 0, Colour.White, fit(row.label, labelCells - 1));

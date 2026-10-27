@@ -1,5 +1,5 @@
-// Time that ticks: a countdown and a clock, each keeping time with a timer
-// of its own.
+// A clock: the time, UTC, in large digits, keeping time with a timer of
+// its own that runs only while someone watches.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
@@ -7,7 +7,11 @@ import { Colour } from "../kit.ts";
 import { BigDigits } from "./big-digits.ts";
 import { DATE_FORMATS, formatDate } from "./date-text.ts";
 
+/** A second in milliseconds: how often a clock or a countdown ticks. */
 export const SECOND_MS = 1_000;
+/** A minute and an hour in seconds, for writing a time out. */
+export const MINUTE_S = 60;
+export const HOUR_S = 3_600;
 
 export interface ClockProps {
   readonly foreground?: Colour;

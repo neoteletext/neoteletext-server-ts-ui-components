@@ -14,12 +14,11 @@ export interface WheelProps {
 /** A roulette wheel's colours round it. */
 const WHEEL_COLOURS = [Colour.Red, Colour.Yellow, Colour.Green, Colour.Cyan, Colour.Blue, Colour.Magenta] as const;
 
-/** The wheel's segments. */
+/** The segments round it when not given. */
 const WHEEL_SEGMENTS = 12;
 
 /** Its radius in rows and in columns: a cell is about 12 by 20 pixels, so 8 columns across is about 5 rows down, and it is round. */
 const WHEEL_ROWS = 5;
-
 const WHEEL_COLUMNS = 8;
 
 /** A ring of coloured blocks, one lit white. */

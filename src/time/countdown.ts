@@ -1,14 +1,12 @@
-// Countdown: split from clock.ts; the comments pass writes this file's header.
+// A countdown: the days, hours, minutes and seconds left to a time, in
+// large digits, ticking each second while someone watches; nought once the
+// time has come.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import { Colour } from "../kit.ts";
 import { BigDigits } from "./big-digits.ts";
-import { SECOND_MS } from "./clock.ts";
-
-const MINUTE_S = 60;
-
-const HOUR_S = 3_600;
+import { HOUR_S, MINUTE_S, SECOND_MS } from "./clock.ts";
 
 const DAY_S = 86_400;
 
@@ -20,6 +18,16 @@ export interface CountdownProps {
 
 interface CountdownState {
   readonly now: number;
+}
+
+function twoDigits(value: number): string {
+  return value.toString().padStart(2, "0");
+}
+
+/** The whole seconds from `now` to `until`: nought once it has passed, and nought for NaN or Infinity, which have no digits to show. */
+function secondsLeft(until: number, now: number): number {
+  const left = Math.floor((until - now) / SECOND_MS);
+  return Number.isFinite(left) ? Math.max(0, left) : 0;
 }
 
 /** Days, hours, minutes and seconds to a time, in large digits, ticking each second. */
@@ -38,9 +46,8 @@ export class Countdown extends Component<CountdownProps, CountdownState> {
   }
 
   override render(): Child {
-    const left = Math.max(0, Math.floor((this.props.until - this.state.now) / SECOND_MS));
-    const two = (value: number): string => value.toString().padStart(2, "0");
-    const text = `${Math.floor(left / DAY_S)}:${two(Math.floor((left % DAY_S) / HOUR_S))}:${two(Math.floor((left % HOUR_S) / MINUTE_S))}:${two(left % MINUTE_S)}`;
+    const left = secondsLeft(this.props.until, this.state.now);
+    const text = `${Math.floor(left / DAY_S)}:${twoDigits(Math.floor((left % DAY_S) / HOUR_S))}:${twoDigits(Math.floor((left % HOUR_S) / MINUTE_S))}:${twoDigits(left % MINUTE_S)}`;
     return h(BigDigits, { text, foreground: this.props.foreground ?? Colour.Green });
   }
 }

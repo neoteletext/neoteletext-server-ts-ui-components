@@ -1,10 +1,14 @@
-// LineGauge: split from progress.ts; the comments pass writes this file's header.
+// A line gauge: a thin line whose filled part is in one colour and the rest
+// in another. The line changes colour in a cell of its own; with Hold
+// Mosaics that cell shows the last mosaic again (EN 300 706 clause 12.2,
+// Table 26), so the line has no gap.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import { MIDDLE_ROW } from "../core/mosaics.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Attribute, Colour, mosaicColour } from "../kit.ts";
+import { cellCount } from "../charts/numbers.ts";
 import { LABEL_CELLS, PERCENT_CELLS, share } from "./progress.ts";
 
 export interface LineGaugeProps {
@@ -24,7 +28,7 @@ export class LineGauge extends Component<LineGaugeProps> {
 
   override paint(canvas: Canvas): void {
     const fraction = share(this.props.value, this.props.max);
-    const labelCells = this.props.label === undefined ? 0 : (this.props.labelCells ?? LABEL_CELLS);
+    const labelCells = this.props.label === undefined ? 0 : cellCount(this.props.labelCells ?? LABEL_CELLS);
     if (this.props.label !== undefined) {
       canvas.coloured(0, 0, Colour.White, fit(this.props.label, labelCells - 1));
     }
@@ -34,9 +38,9 @@ export class LineGauge extends Component<LineGaugeProps> {
     const codes = [
       Attribute.HoldMosaics,
       mosaicColour(this.props.foreground ?? Colour.Cyan),
-      ...new Array<number>(filled).fill(MIDDLE_ROW),
+      ...Array.from({ length: filled }, () => MIDDLE_ROW),
       mosaicColour(this.props.rest ?? Colour.Blue),
-      ...new Array<number>(Math.max(0, cells - filled)).fill(MIDDLE_ROW),
+      ...Array.from({ length: Math.max(0, cells - filled) }, () => MIDDLE_ROW),
       Attribute.ReleaseMosaics,
     ];
     canvas.codes(0, labelCells, codes);

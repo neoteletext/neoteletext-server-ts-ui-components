@@ -1,16 +1,15 @@
 // How far along something is, or how full: a progress bar of mosaic blocks
 // to the half cell, solid or in separated graphics (EN 300 706 clause
-// 12.2), whose colour may follow thresholds as a gauge's does; and a line
-// gauge, a thin line whose filled part is in one colour and the rest in
-// another. A line changes colour in a cell of its own; with Hold Mosaics
-// that cell shows the last mosaic again (clause 12.2, Table 26), so the line
-// has no gap.
+// 12.2), whose colour may follow thresholds as a gauge's does. The share it
+// shows, and the label's and the share's cells, are the line gauge's too
+// (line-gauge.ts).
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import { FULL_BLOCK, LEFT_HALF, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Attribute, Colour, mosaicColour } from "../kit.ts";
+import { cellCount } from "../charts/numbers.ts";
 
 /** A colour from a share upward, as a gauge goes green, yellow, red. */
 export type Threshold = readonly [from: number, foreground: Colour];
@@ -46,15 +45,26 @@ export const GAUGE: readonly Threshold[] = [
   [0.85, Colour.Red],
 ];
 
+/** `value` as a share of `max`, from 0 to 1. */
 export function share(value: number, max: number): number {
-  return max <= 0 ? 0 : Math.max(0, Math.min(1, value / max));
+  const fraction = value / max;
+  // NaN, from a value or a max that is not a number or from Infinity of Infinity, is none: a bar of NaN cells cannot be made.
+  return max <= 0 || Number.isNaN(fraction) ? 0 : Math.max(0, Math.min(1, fraction));
 }
 
 function colourFor(fraction: number, given: Colour, thresholds: readonly Threshold[] | undefined): Colour {
   if (thresholds === undefined) {
     return given;
   }
-  return [...thresholds].reverse().find(([from]) => fraction >= from)?.[1] ?? given;
+  return thresholds.toReversed().find(([from]) => fraction >= from)?.[1] ?? given;
+}
+
+/** The track's cell `cell` with `halves` half cells filled: full, half full, or empty. */
+function trackCell(cell: number, halves: number): number {
+  if (2 * cell + 2 <= halves) {
+    return FULL_BLOCK;
+  }
+  return 2 * cell + 1 === halves ? LEFT_HALF | TRACK : TRACK;
 }
 
 export class ProgressBar extends Component<ProgressProps> {
@@ -64,7 +74,7 @@ export class ProgressBar extends Component<ProgressProps> {
 
   override paint(canvas: Canvas): void {
     const fraction = share(this.props.value, this.props.max);
-    const labelCells = this.props.label === undefined ? 0 : (this.props.labelCells ?? LABEL_CELLS);
+    const labelCells = this.props.label === undefined ? 0 : cellCount(this.props.labelCells ?? LABEL_CELLS);
     if (this.props.label !== undefined) {
       canvas.coloured(0, 0, Colour.White, fit(this.props.label, labelCells - 1));
     }
@@ -72,7 +82,7 @@ export class ProgressBar extends Component<ProgressProps> {
     const after = this.props.percent === false ? 0 : PERCENT_CELLS;
     const cells = Math.max(1, canvas.width - labelCells - 1 - lead.length - after);
     const halves = Math.round(2 * cells * fraction);
-    const codes = Array.from({ length: cells }, (_, cell) => (2 * cell + 2 <= halves ? FULL_BLOCK : 2 * cell + 1 === halves ? LEFT_HALF | TRACK : TRACK));
+    const codes = Array.from({ length: cells }, (_, cell) => trackCell(cell, halves));
     const foreground = colourFor(fraction, this.props.foreground ?? Colour.Green, this.props.thresholds);
     canvas.codes(0, labelCells, [mosaicColour(foreground), ...lead, ...codes]);
     if (this.props.percent !== false) {

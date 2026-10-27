@@ -1,17 +1,8 @@
 // A month: its name, the days of the week, and its days in weeks from
-// Monday. A day takes four cells: its colour, a cell for Flash or Steady,
-// and its two digits, so a day can flash without moving the others. Today
-// is yellow, days with something on are green, the weekend cyan; the day
-// chosen flashes. Chosen with the arrows (a day, a week), Page Up and Page
-// Down (a month), Enter or a click; a click on an arrow of the heading
-// turns the month.
-//
-// Every day can be clicked, but only the arrows and the days of the chosen
-// week are controls: a month's 31 days and two arrows are more than the 32
-// a whole page may declare (core/controls.ts), and a calendar that took
-// them all would leave none for the page's buttons and lists. The chosen
-// week follows the keys and every click, so the hand and the looks are
-// where the viewer is choosing; nine controls at most.
+// Monday. Today is yellow, days with something on are green, the weekend
+// cyan; the day chosen flashes. Chosen with the arrows (a day, a week),
+// Page Up and Page Down (a month), Enter or a click; a click on an arrow of
+// the heading turns the month.
 
 import type { Canvas } from "../core/canvas.ts";
 import type { Size } from "../core/component.ts";
@@ -41,6 +32,7 @@ export interface CalendarProps extends ControlProps {
   readonly onChoose?: (date: CalendarDate, session: number) => void;
 }
 
+/** The month shown, and the day chosen in it. */
 interface CalendarState {
   readonly year: number;
   readonly month: number;
@@ -49,7 +41,7 @@ interface CalendarState {
 
 const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"] as const;
 const DAYS_IN_WEEK = 7;
-/** A day's cells: its colour, Flash or Steady, two digits. */
+/** A day's cells: its colour, Flash or Steady, two digits; the cell for Flash lets a day flash without moving the others. */
 const DAY_CELLS = 4;
 /** The rows over the days: the month and the days of the week. */
 const HEAD_ROWS = 2;
@@ -67,6 +59,7 @@ const BACK = "back";
 const ON = "on";
 const DAY = "day-";
 
+/** The days in the month: day nought of the next month is its last. */
 function daysIn(year: number, month: number): number {
   return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 }
@@ -74,6 +67,17 @@ function daysIn(year: number, month: number): number {
 /** The place in the week of the month's first day, Monday 0. */
 function firstWeekday(year: number, month: number): number {
   return (new Date(Date.UTC(year, month, 1)).getUTCDay() + DAYS_IN_WEEK - 1) % DAYS_IN_WEEK;
+}
+
+/** A day's colour: today and the day chosen yellow, a day with something on green, the weekend cyan. */
+function dayColour(highlighted: boolean, marked: boolean, weekday: number): Colour {
+  if (highlighted) {
+    return Colour.Yellow;
+  }
+  if (marked) {
+    return Colour.Green;
+  }
+  return weekday >= WEEKEND ? Colour.Cyan : Colour.White;
 }
 
 export class Calendar extends Control<CalendarProps, CalendarState> {
@@ -122,9 +126,13 @@ export class Calendar extends Control<CalendarProps, CalendarState> {
       const isToday = today !== null && today.getUTCFullYear() === year && today.getUTCMonth() === month && today.getUTCDate() === day;
       const marked = this.props.marked?.some((date) => date.year === year && date.month === month && date.day === day) === true;
       const chosen = this.props.selectable === true && day === this.state.day;
-      const foreground = chosen || isToday ? Colour.Yellow : marked ? Colour.Green : weekday >= WEEKEND ? Colour.Cyan : Colour.White;
+      const foreground = dayColour(chosen || isToday, marked, weekday);
       canvas.codes(row, weekday * DAY_CELLS, [textColour(foreground), chosen && this.focused ? Attribute.Flash : Attribute.Steady]);
       canvas.text(row, weekday * DAY_CELLS + 2, day.toString().padStart(2, " "));
+      // Every day can be clicked, but only the days of the chosen week are controls, with the arrows: a month's 31 days
+      // and two arrows are more than the 32 a whole page may declare (core/controls.ts), and a calendar that took them
+      // all would leave none for the page's buttons and lists. The chosen week follows the keys and every click, so the
+      // hand and the looks are where the viewer is choosing; nine controls at most.
       if (choosing && Math.floor(place / DAYS_IN_WEEK) === chosenWeek) {
         canvas.control(row, weekday * DAY_CELLS + 1, DAY_TARGET, 1, `${DAY}${day}`);
       } else if (choosing) {
@@ -142,7 +150,8 @@ export class Calendar extends Control<CalendarProps, CalendarState> {
   #turn(months: number): void {
     const { year, month, day } = this.state;
     const total = year * MONTHS_IN_YEAR + month + months;
-    const next = { year: Math.floor(total / MONTHS_IN_YEAR), month: total % MONTHS_IN_YEAR };
+    // % keeps the total's sign, so before year nought it would give a month below January.
+    const next = { year: Math.floor(total / MONTHS_IN_YEAR), month: ((total % MONTHS_IN_YEAR) + MONTHS_IN_YEAR) % MONTHS_IN_YEAR };
     this.setState({ ...next, day: Math.min(day, daysIn(next.year, next.month)) });
   }
 

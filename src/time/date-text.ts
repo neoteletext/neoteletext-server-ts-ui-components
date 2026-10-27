@@ -1,14 +1,7 @@
 // Dates and times as the pages write them: one formatter that every
-// component and channel uses, and a component that shows one date.
-//
-// A pattern is written in the tokens of Moment, Day.js and react-moment
-// ("DD MMM YYYY"), the ones most React code knows; text in [brackets] is
-// kept as it is. Unlike Intl.DateTimeFormat (react-intl's FormattedDate,
-// React Aria's useDateFormatter) the result never depends on the host's
-// locale or ICU data, so a page is the same on every server, and every token
-// but the unpadded and spelled-out ones keeps one width, so dates line up in
-// a list. Times are UTC: one channel serves viewers everywhere, and the
-// archives it shows keep their dates in UTC.
+// component and channel uses, and a component that shows one date. Times
+// are UTC: one channel serves viewers everywhere, and the archives it shows
+// keep their dates in UTC.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
@@ -46,12 +39,25 @@ const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frida
 const SHORT_NAME = 3;
 const CENTURY = 100;
 
+// A pattern is written in the tokens most JavaScript date code knows ("DD MMM YYYY"); text in [brackets] is kept as it
+// is. Unlike Intl.DateTimeFormat the result never depends on the host's locale or ICU data, so a page is the same on
+// every server, and every token but the unpadded and spelled-out ones keeps one width, so dates line up in a list.
+
 /** Longer tokens first, so "MMMM" is not read as "MM" twice. */
 const TOKENS = /\[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|DD|D|dddd|ddd|HH|H|mm|ss/gu;
 /** A calendar day alone: that day, not midnight somewhere else. */
 const DAY_ONLY = /^\d{4}-\d{2}-\d{2}$/u;
 /** A date and time with no zone, as databases keep UTC ("2026-10-27 14:05:09"). */
 const NO_ZONE = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)$/u;
+
+/** ISO 8601 `text` as Date.parse reads it in UTC: a calendar day as its midnight, a time with no zone as UTC, anything else as it is. */
+function utcText(text: string): string {
+  if (DAY_ONLY.test(text)) {
+    return `${text}T00:00:00Z`;
+  }
+  const local = NO_ZONE.exec(text);
+  return local === null ? text : `${local[1] ?? ""}T${local[2] ?? ""}Z`;
+}
 
 /** The moment `value` names, or null when it names none. */
 export function dateOf(value: DateValue): Date | null {
@@ -60,15 +66,69 @@ export function dateOf(value: DateValue): Date | null {
     epochMs = value.getTime();
   } else if (typeof value === "number") {
     epochMs = value;
+  } else if (typeof value === "string") {
+    epochMs = Date.parse(utcText(value.trim()));
   } else {
-    const text = value.trim();
-    const local = NO_ZONE.exec(text);
-    epochMs = Date.parse(DAY_ONLY.test(text) ? `${text}T00:00:00Z` : local === null ? text : `${local[1] ?? ""}T${local[2] ?? ""}Z`);
+    // A date read from outside, such as a JSON field that is null, is not one, whatever its type says.
+    epochMs = Number.NaN;
   }
   return Number.isFinite(epochMs) ? new Date(epochMs) : null;
 }
 
-const two = (value: number): string => String(value).padStart(2, "0");
+function two(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+/** What `token` writes for `date`, UTC. */
+function tokenText(token: string, date: Date): string {
+  const month = MONTHS[date.getUTCMonth()] ?? "";
+  const weekday = WEEKDAYS[date.getUTCDay()] ?? "";
+  switch (token) {
+    case "YYYY": {
+      return String(date.getUTCFullYear()).padStart(4, "0");
+    }
+    case "YY": {
+      return two(date.getUTCFullYear() % CENTURY);
+    }
+    case "MMMM": {
+      return month;
+    }
+    case "MMM": {
+      return month.slice(0, SHORT_NAME);
+    }
+    case "MM": {
+      return two(date.getUTCMonth() + 1);
+    }
+    case "M": {
+      return String(date.getUTCMonth() + 1);
+    }
+    case "DD": {
+      return two(date.getUTCDate());
+    }
+    case "D": {
+      return String(date.getUTCDate());
+    }
+    case "dddd": {
+      return weekday;
+    }
+    case "ddd": {
+      return weekday.slice(0, SHORT_NAME);
+    }
+    case "HH": {
+      return two(date.getUTCHours());
+    }
+    case "H": {
+      return String(date.getUTCHours());
+    }
+    case "mm": {
+      return two(date.getUTCMinutes());
+    }
+    default: {
+      // "ss", the one token left.
+      return two(date.getUTCSeconds());
+    }
+  }
+}
 
 /** `value` written in `pattern` (UTC), or `fallback` when it is not a date. */
 export function formatDate(value: DateValue, pattern: string = DATE_FORMATS.long, fallback = ""): string {
@@ -76,57 +136,7 @@ export function formatDate(value: DateValue, pattern: string = DATE_FORMATS.long
   if (date === null) {
     return fallback;
   }
-  const month = MONTHS[date.getUTCMonth()] ?? "";
-  const weekday = WEEKDAYS[date.getUTCDay()] ?? "";
-  return pattern.replaceAll(TOKENS, (token: string, literal: string | undefined) => {
-    if (literal !== undefined) {
-      return literal;
-    }
-    switch (token) {
-      case "YYYY": {
-        return String(date.getUTCFullYear()).padStart(4, "0");
-      }
-      case "YY": {
-        return two(date.getUTCFullYear() % CENTURY);
-      }
-      case "MMMM": {
-        return month;
-      }
-      case "MMM": {
-        return month.slice(0, SHORT_NAME);
-      }
-      case "MM": {
-        return two(date.getUTCMonth() + 1);
-      }
-      case "M": {
-        return String(date.getUTCMonth() + 1);
-      }
-      case "DD": {
-        return two(date.getUTCDate());
-      }
-      case "D": {
-        return String(date.getUTCDate());
-      }
-      case "dddd": {
-        return weekday;
-      }
-      case "ddd": {
-        return weekday.slice(0, SHORT_NAME);
-      }
-      case "HH": {
-        return two(date.getUTCHours());
-      }
-      case "H": {
-        return String(date.getUTCHours());
-      }
-      case "mm": {
-        return two(date.getUTCMinutes());
-      }
-      default: {
-        return two(date.getUTCSeconds());
-      }
-    }
-  });
+  return pattern.replaceAll(TOKENS, (token: string, literal: string | undefined) => literal ?? tokenText(token, date));
 }
 
 export interface DateTextProps {

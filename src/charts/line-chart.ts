@@ -1,13 +1,15 @@
-// Charts on axes, drawn in mosaic sixels: a line chart of a series (its
-// points joined, or the area under it filled), and a scatter plot of
-// points. Every plot row is one colour, as a row of mosaics is after its
-// colour's cell; the axes are text before and under the plot.
+// Charts on axes, drawn in mosaic sixels: a line chart of a series, its
+// points joined or the area under it filled, and the plot and axes it
+// shares with the scatter plot (scatter-plot.ts). Every plot row is one
+// colour, as a row of mosaics is after its colour's cell; the axes are text
+// before and under the plot.
 
 import type { Canvas } from "../core/canvas.ts";
 import { paintEmpty } from "../core/look.ts";
 import { Component, type Size } from "../core/component.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Colour, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
+import { leastOf, mostOf } from "./numbers.ts";
 
 /** The cells the values' axis takes on the left: a figure and its colour's cell. */
 export const AXIS_CELLS = 5;
@@ -24,6 +26,10 @@ export function span(low: number, high: number): number {
 function line(sixels: Sixels, from: readonly [number, number], to: readonly [number, number]): void {
   let [x, y] = from;
   const [x1, y1] = to;
+  // A point that is not a whole number, such as NaN from a span past the largest number, would never meet the other end.
+  if (![x, y, x1, y1].every((coordinate) => Number.isInteger(coordinate))) {
+    return;
+  }
   const dx = Math.abs(x1 - x);
   const dy = -Math.abs(y1 - y);
   const sx = x < x1 ? 1 : -1;
@@ -46,6 +52,7 @@ function line(sixels: Sixels, from: readonly [number, number], to: readonly [num
   }
 }
 
+/** A plot's sixels, and the cells they take across. */
 interface Plot {
   readonly sixels: Sixels;
   readonly cells: number;
@@ -70,6 +77,7 @@ export function axes(canvas: Canvas, rows: number, least: number, most: number, 
 }
 
 export interface LineChartProps {
+  /** The series; a value that is not a finite number is left out. */
   readonly values: readonly number[];
   readonly plotRows: number;
   readonly empty?: string;
@@ -86,14 +94,15 @@ export class LineChart extends Component<LineChartProps> {
   }
 
   override paint(canvas: Canvas): void {
-    if (this.props.values.length === 0) {
+    // The values that are numbers: NaN or Infinity has no place on the axis.
+    const values = this.props.values.filter((value) => Number.isFinite(value));
+    if (values.length === 0) {
       paintEmpty(canvas, this.props.empty ?? "no data");
       return;
     }
     const { sixels, cells } = plot(canvas.width, this.props.plotRows);
-    const values = this.props.values;
-    const least = Math.min(...values);
-    const most = Math.max(...values);
+    const least = leastOf(values);
+    const most = mostOf(values);
     const range = span(least, most);
     const point = (index: number): [number, number] => {
       const x = values.length <= 1 ? 0 : Math.round((index * (sixels.width - 1)) / (values.length - 1));

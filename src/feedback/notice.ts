@@ -1,12 +1,10 @@
 // Notices: a line that says what happened, its kind's mark on a chip of
 // its kind's colour (core/look.ts) so it shows without colour too. A notice
-// stays; a toast is a notice that goes after a few seconds. Toasts are sent
-// on the bus (core/library-events.ts), so any component can raise one and
-// every shelf the bus's audience reaches shows it: a toast for one viewer
-// shows only on their own copy of a page. A toast is a control, and a click
-// on it puts it away before its time, on the copy it is on.
+// stays; a toast is one that goes after a few seconds, sent on the bus
+// (core/library-events.ts) to every shelf (toast-shelf.ts) its audience
+// reaches, so a toast for one viewer shows only on their own copy of a page.
 
-import { type Canvas } from "../core/canvas.ts";
+import type { Canvas } from "../core/canvas.ts";
 import { Component, type Size } from "../core/component.ts";
 import { type Kind, KINDS } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";

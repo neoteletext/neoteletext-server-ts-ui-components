@@ -10,8 +10,9 @@ import type { HoverEvent, PointerEvent } from "../core/events.ts";
 import { FULL_BLOCK, LEFT_HALF } from "../core/mosaics.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Colour, mosaicColour } from "../kit.ts";
+import { cellCount, mostOf } from "./numbers.ts";
 
-/** One bar of a chart. */
+/** One bar of a chart, or one column; its colour is its label's on a bar chart and its column's on a column chart. */
 export interface ChartRow {
   readonly label: string;
   readonly value: number;
@@ -32,6 +33,9 @@ interface ChartState {
   readonly hovered: number | null;
 }
 
+/** The label's cells, its colour's included, when not given. */
+const LABEL_CELLS = 14;
+
 /** What the hint row says of the bar `index` of `bars` under the pointer. */
 export function barHint(bars: readonly ChartRow[], index: number | null): string | null {
   const bar = index === null ? undefined : bars[index];
@@ -42,6 +46,7 @@ export function barHint(bars: readonly ChartRow[], index: number | null): string
 export class BarChart extends Component<BarChartProps, ChartState> {
   override state: ChartState = { hovered: null };
 
+  /** The figure's cells: its colour's and four digits. */
   static readonly FIGURE_CELLS = 5;
 
   override measure(space: Size): Size {
@@ -53,14 +58,17 @@ export class BarChart extends Component<BarChartProps, ChartState> {
       paintEmpty(canvas, this.props.empty ?? "no data");
       return;
     }
-    const labels = this.props.labelCells ?? 14;
-    const most = Math.max(1, ...this.props.bars.map((row) => row.value));
+    const labels = cellCount(this.props.labelCells ?? LABEL_CELLS);
+    // The most of the figures that are numbers: one NaN or Infinity would leave every other bar NaN.
+    const most = Math.max(1, mostOf(this.props.bars.map((row) => row.value).filter((value) => Number.isFinite(value))));
     const barAt = labels + BarChart.FIGURE_CELLS;
     const cells = canvas.width - barAt;
     this.props.bars.forEach((entry, row) => {
       canvas.coloured(row, 0, entry.foreground ?? Colour.White, fit(entry.label, labels - 1));
       canvas.coloured(row, labels, Colour.Cyan, padStart(String(entry.value), BarChart.FIGURE_CELLS - 1));
-      const halves = Math.round((2 * (cells - 1) * entry.value) / most);
+      // NaN is no bar and Infinity a whole one: a count of cells that is NaN, or past the bar's, could not be filled.
+      const value = Number.isNaN(entry.value) ? 0 : Math.min(entry.value, most);
+      const halves = Math.round((2 * (cells - 1) * value) / most);
       canvas.code(row, barAt, mosaicColour(this.props.foreground ?? Colour.Green));
       canvas.fill(row, barAt + 1, Math.floor(halves / 2), FULL_BLOCK);
       if (halves % 2 === 1) {

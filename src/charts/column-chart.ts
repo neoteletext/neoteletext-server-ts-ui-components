@@ -13,6 +13,7 @@ import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Colour, mosaicColour, SIXELS_DOWN } from "../kit.ts";
 import { barHint, type ChartRow } from "./bar-chart.ts";
+import { mostOf } from "./numbers.ts";
 
 export interface ColumnChartProps {
   readonly bars: readonly ChartRow[];
@@ -35,12 +36,18 @@ const TOPS = [
   MOSAIC_BASE | SIXEL.middleLeft | SIXEL.middleRight | SIXEL.bottomLeft | SIXEL.bottomRight,
   FULL_BLOCK,
 ] as const;
+/** A column's cells after its colour's, when not given. */
 const COLUMN_CELLS = 2;
 /** The labels' row under the columns, and the figures' over them. */
 const LABEL_ROWS = 1;
 
-export class ColumnChart extends Component<ColumnChartProps, { readonly hovered: number | null }> {
-  override state = { hovered: null as number | null };
+/** The column under the pointer, for the hint row. */
+interface ColumnState {
+  readonly hovered: number | null;
+}
+
+export class ColumnChart extends Component<ColumnChartProps, ColumnState> {
+  override state: ColumnState = { hovered: null };
 
   get #figureRows(): number {
     return this.props.figures === true ? 1 : 0;
@@ -58,8 +65,11 @@ export class ColumnChart extends Component<ColumnChartProps, { readonly hovered:
     const across = this.props.columnCells ?? COLUMN_CELLS;
     const pitch = across + 1;
     const top = this.#figureRows;
-    const most = Math.max(1, ...this.props.bars.map((column) => column.value));
+    // The most of the figures that are numbers: one NaN would leave every other column empty.
+    const most = Math.max(1, mostOf(this.props.bars.map((column) => column.value).filter((value) => Number.isFinite(value))));
     const steps = this.props.plotRows * SIXELS_DOWN;
+    // Only the rows the canvas has: a row past its foot is not drawn, and plotRows is the program's to give.
+    const shownRows = Math.min(this.props.plotRows, canvas.height - top);
     this.props.bars.forEach((column, index) => {
       const at = index * pitch;
       if (at + pitch > canvas.width) {
@@ -67,10 +77,11 @@ export class ColumnChart extends Component<ColumnChartProps, { readonly hovered:
       }
       const height = Math.round((steps * Math.max(0, column.value)) / most);
       const foreground = column.foreground ?? this.props.foreground ?? Colour.Green;
-      for (let row = 0; row < this.props.plotRows; row += 1) {
+      for (let row = 0; row < shownRows; row += 1) {
         const fromBottom = this.props.plotRows - 1 - row;
         const filled = Math.max(0, Math.min(SIXELS_DOWN, height - fromBottom * SIXELS_DOWN));
-        canvas.codes(top + row, at, [mosaicColour(foreground), ...new Array<number>(across).fill(TOPS[filled] ?? MOSAIC_BASE)]);
+        const code = TOPS[filled] ?? MOSAIC_BASE;
+        canvas.codes(top + row, at, [mosaicColour(foreground), ...Array.from({ length: across }, () => code)]);
       }
       canvas.coloured(top + this.props.plotRows, at, Colour.White, fit(column.label, across));
       if (this.props.figures === true) {

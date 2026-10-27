@@ -6,13 +6,12 @@
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
-import type { Listening } from "../core/stream.ts";
 import type { Colour } from "../kit.ts";
 import { Button } from "../input/button.ts";
 import { Columns } from "../layout/columns.ts";
 import { Gap } from "../layout/gap.ts";
 import { Rows } from "../layout/layouts.ts";
-import { LISTENING_ROWS, LOOK_MS, nothingPlaying, playing } from "./now-playing.ts";
+import { LISTENING_ROWS, LOOK_MS, nothingPlaying, type PlayerState, playing } from "./now-playing.ts";
 import { ListeningView } from "./listening-view.ts";
 
 const PAUSE = "pause";
@@ -29,8 +28,8 @@ export interface AudioPlayerProps {
   readonly keepRows?: boolean;
 }
 
-export class AudioPlayer extends Component<AudioPlayerProps, { readonly listening: Listening | null }> {
-  override state = { listening: null as Listening | null };
+export class AudioPlayer extends Component<AudioPlayerProps, PlayerState> {
+  override state: PlayerState = { listening: null };
 
   #look(): void {
     const session = this.services.session;

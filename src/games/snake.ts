@@ -38,6 +38,9 @@ interface SnakeState {
 const FIELD_ACROSS = (COLUMNS - 2) * SIXELS_ACROSS;
 
 const START_LENGTH = 4;
+/** Where the head starts across, and the first food, in steps from the left. */
+const START_X = 10;
+const FOOD_X = 30;
 /** The region of the line that says a click plays again. */
 const AGAIN = "again";
 
@@ -50,14 +53,15 @@ export class Snake extends Control<SnakeProps, SnakeState> {
   }
   #timer = -1;
 
+  /** The field's steps down: three to a row. */
   get #down(): number {
     return this.props.rows * SIXELS_DOWN;
   }
 
   #fresh(): SnakeState {
     const y = Math.floor((this.props.rows * SIXELS_DOWN) / 2);
-    const body = Array.from({ length: START_LENGTH }, (_, index) => ({ x: 10 - index, y }));
-    return { body, heading: { x: 1, y: 0 }, food: { x: 30, y }, score: 0, over: false };
+    const body = Array.from({ length: START_LENGTH }, (_, index) => ({ x: START_X - index, y }));
+    return { body, heading: { x: 1, y: 0 }, food: { x: FOOD_X, y }, score: 0, over: false };
   }
 
   override componentDidMount(): void {
