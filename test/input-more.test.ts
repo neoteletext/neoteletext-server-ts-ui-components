@@ -1,6 +1,7 @@
 // The fields a remote can fill: digits to a template (a PIN, a date, a
 // time), and letters from the digit keys as on a phone.
 
+import { fakeOpus } from "neoteletext-server-ts-protocol/testing";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -124,7 +125,9 @@ test("a concealed segment field draws each filled slot as *, so a PIN's digits a
 });
 
 test("a segment field takes the digits from page selection; typed or pasted digits fill it, the rest of the text passed over", () => {
-  const components = new ComponentChannel([{ page: PAGE, title: "Test", root: (): Element => frame("Code", h(SegmentField, { template: "9999" })) }]);
+  const components = new ComponentChannel([{ page: PAGE, title: "Test", root: (): Element => frame("Code", h(SegmentField, { template: "9999" })) }], {
+    opus: fakeOpus(),
+  });
   assert.equal(components.pages()[0]?.ownsDigits, true);
   const changes: string[] = [];
   const page = viewer(
@@ -277,7 +280,7 @@ test("Enter takes the letter being chosen and sends submit with the text, then c
 });
 
 test("a multi-tap field takes the digits and the coloured keys from the page", () => {
-  const components = new ComponentChannel([{ page: PAGE, title: "Test", root: (): Element => frame("Name", h(MultiTapField, {})) }]);
+  const components = new ComponentChannel([{ page: PAGE, title: "Test", root: (): Element => frame("Name", h(MultiTapField, {})) }], { opus: fakeOpus() });
   const [needs] = components.pages();
   assert.deepEqual([needs?.ownsDigits, needs?.ownsColourKeys], [true, true]);
 });

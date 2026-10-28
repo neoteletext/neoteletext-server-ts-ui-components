@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 
-import { Harness } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
 import {
   Button,
   type Child,
@@ -58,7 +58,7 @@ export function inOrder<T extends { row: number; column: number }>(boxes: readon
 }
 
 export function harness(specs: readonly PageSpec[]): Harness {
-  return new Harness([new ComponentChannel(specs)]);
+  return new Harness([new ComponentChannel(specs, { opus: fakeOpus() })]);
 }
 
 /** One viewer's page, every component its own. */

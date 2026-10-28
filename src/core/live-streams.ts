@@ -1,39 +1,22 @@
 // Each viewer's live stream (stream.ts): one at a time, bound to the page
-// it was started on, sent a few blocks ahead of what has been heard as its
-// samples come, paused at what was heard and resumed from there as a new
-// generation; moved to another place the same way. Each viewer's gain is
+// it was started on, sent as Opus a little ahead of what has been heard as
+// its samples come (live-stream.ts), paused at what was heard and resumed
+// from there as a new generation; moved to another place the same way. Each viewer's gain is
 // kept across their streams, so the next plays as loud as the last, and
 // where each stream stopped short of its end, by its name and in the time
 // of what it holds (a stretched source's speed undone), so a player can
 // take it up there again at any speed.
 
-import { type Context, FULL_GAIN } from "../kit.ts";
-import { BLOCK_SAMPLES, LEAD_MS, type Listening, MOST_BLOCKS, SECOND_MS, STREAM_CHANNEL, STREAM_HANDLE, type StreamSource, WRAP } from "./stream.ts";
+import { type Context, FULL_GAIN, type OpusEncoder } from "../kit.ts";
+import { LiveStream } from "./live-stream.ts";
+import { FIRST_PACKETS_MS, type Listening, SECOND_MS, STREAM_CHANNEL, STREAM_HANDLE, type StreamSource, TICK_MS, WRAP } from "./stream.ts";
 
-interface Stream {
-  readonly source: StreamSource;
-  readonly page: number;
-  readonly generation: number;
-  /** When its first block was sent, by the channel's clock, or null while it waits for samples. */
-  startedAt: number | null;
-  /** Samples sent. */
-  sent: number;
-  nextBlock: number;
-  state: Listening["state"];
-  /** The sample this generation starts from: 0, or where it was paused. */
-  readonly from: number;
-}
-
-/** Samples of `stream` heard by `now`: what was sent and has had time to play. */
 /** The places kept for each viewer: a long listening session's worth of tracks. */
 const MOST_PLACES = 64;
 
-function heard(stream: Stream, now: number): number {
-  return stream.startedAt === null ? 0 : Math.min(stream.sent, Math.floor(((now - stream.startedAt) * stream.source.rate) / SECOND_MS));
-}
-
 export class LiveStreams {
-  readonly #streams = new Map<number, Stream>();
+  readonly #encoder: OpusEncoder;
+  readonly #streams = new Map<number, LiveStream>();
   /** Each viewer's streams so far, for the next one's generation. */
   readonly #generations = new Map<number, number>();
   /** Each viewer's gain, when they have changed it from full. */
@@ -41,15 +24,20 @@ export class LiveStreams {
   /** Where each viewer's streams stopped short of their ends, by name, in milliseconds: the most recent last. */
   readonly #places = new Map<number, Map<string, number>>();
 
+  constructor(encoder: OpusEncoder) {
+    this.#encoder = encoder;
+  }
+
   start(context: Context, session: number, page: number, source: StreamSource, from = 0): void {
     this.#keepPlace(session, context.now());
+    this.#streams.get(session)?.close();
     const generation = ((this.#generations.get(session) ?? 0) + 1) % WRAP;
     this.#generations.set(session, generation);
-    const sound = { handle: STREAM_HANDLE, generation, rate: source.rate };
-    context.sound({ session }, { live: sound });
+    const encoder = this.#encoder.stream(source.rate);
+    context.sound({ session }, { opusLive: { handle: STREAM_HANDLE, generation, packetBytes: encoder.packetBytes } });
     // Bound to the page: the receiver fades it out when the viewer leaves, before the server hears (the engine's audio.md 7.3).
-    context.sound({ session }, { play: { channel: STREAM_CHANNEL, ...sound, page, gain: this.#gain(session) } });
-    this.#streams.set(session, { source, page, generation, startedAt: null, sent: 0, nextBlock: 0, state: "waiting", from });
+    context.sound({ session }, { play: { channel: STREAM_CHANNEL, handle: STREAM_HANDLE, generation, page, gain: this.#gain(session) } });
+    this.#streams.set(session, new LiveStream(source, page, generation, from, encoder));
     this.pump(context, context.now());
   }
 
@@ -75,7 +63,7 @@ export class LiveStreams {
     const known = stream.source.samples().length;
     const at = Math.min(known, LiveStreams.sampleAt(stream.source, ms));
     if (stream.state === "paused") {
-      this.#streams.set(session, { ...stream, from: at });
+      this.#streams.set(session, LiveStream.paused(stream.source, stream.page, stream.generation, at));
       return;
     }
     this.start(context, session, stream.page, stream.source, at);
@@ -83,6 +71,7 @@ export class LiveStreams {
 
   stop(context: Context, session: number): void {
     this.#keepPlace(session, context.now());
+    this.#streams.get(session)?.close();
     if (this.#streams.delete(session)) {
       context.sound({ session }, { stop: { channel: STREAM_CHANNEL } });
     }
@@ -97,6 +86,7 @@ export class LiveStreams {
 
   /** The viewer went: everything kept for them goes. */
   forget(session: number): void {
+    this.#streams.get(session)?.close();
     this.#streams.delete(session);
     this.#generations.delete(session);
     this.#gains.delete(session);
@@ -138,9 +128,10 @@ export class LiveStreams {
     if (stream === undefined || (stream.state !== "playing" && stream.state !== "waiting")) {
       return;
     }
-    const at = stream.from + heard(stream, context.now());
+    const at = stream.from + stream.heard(context.now());
     context.sound({ session }, { stop: { channel: STREAM_CHANNEL } });
-    this.#streams.set(session, { ...stream, startedAt: null, sent: 0, nextBlock: 0, state: "paused", from: at });
+    stream.close();
+    this.#streams.set(session, LiveStream.paused(stream.source, stream.page, stream.generation, at));
   }
 
   /** A new stream, of a new generation, from where the paused one was. */
@@ -157,65 +148,32 @@ export class LiveStreams {
       return null;
     }
     const { source } = stream;
-    const at = stream.from + heard(stream, now);
+    const at = stream.from + stream.heard(now);
     const length = source.complete ? source.samples().length : source.expected;
+    const { failure } = stream;
     return {
       name: source.name,
       heardMs: Math.floor((at * SECOND_MS) / source.rate),
       lengthMs: length === null ? null : Math.floor((length * SECOND_MS) / source.rate),
-      state: source.failure === null ? stream.state : "failed",
-      failure: source.failure,
+      state: failure === null ? stream.state : "failed",
+      failure,
       gain: this.#gain(session),
     };
   }
 
-  /** Whether a stream is still sending, or still to be heard to its end: it wants its tick. */
-  active(): boolean {
-    return [...this.#streams.values()].some((stream) => stream.state === "waiting" || stream.state === "playing");
+  /** When the streams want their next tick, or null when none is sending or still to be heard: sooner while one waits for its encoder's first packets. */
+  nextTick(now: number): number | null {
+    const streams = [...this.#streams.values()];
+    if (streams.some((stream) => stream.state === "waiting" && stream.failure === null)) {
+      return now + FIRST_PACKETS_MS;
+    }
+    return streams.some((stream) => stream.state === "playing") ? now + TICK_MS : null;
   }
 
-  /** Sends each stream's blocks due by `now` and the lead, as far as its samples are known. */
+  /** Feeds and sends each stream what is due by `now`. */
   pump(context: Context, now: number): void {
     for (const [session, stream] of this.#streams) {
-      const { source } = stream;
-      if (source.failure !== null) {
-        stream.state = "failed";
-        continue;
-      }
-      if (stream.state === "paused") {
-        continue;
-      }
-      const samples = source.samples().subarray(stream.from);
-      if (stream.startedAt === null) {
-        if (samples.length < BLOCK_SAMPLES && !source.complete) {
-          continue;
-        }
-        stream.startedAt = now;
-        stream.state = "playing";
-      }
-      this.#send(context, session, stream, samples, now);
-      if (source.complete && Math.floor(((now - stream.startedAt) * source.rate) / SECOND_MS) >= samples.length) {
-        stream.state = "ended";
-      }
+      stream.pump(context, session, now);
     }
-  }
-
-  /** The blocks of `stream` due by `now`, at most a message's; the last block filled out with silence. */
-  #send(context: Context, session: number, stream: Stream, samples: Int16Array, now: number): void {
-    const { source } = stream;
-    const due = Math.floor(((now - (stream.startedAt ?? now) + LEAD_MS) * source.rate) / SECOND_MS);
-    const known = source.complete ? Math.ceil(samples.length / BLOCK_SAMPLES) * BLOCK_SAMPLES : samples.length;
-    const count = Math.min(MOST_BLOCKS, Math.floor((Math.min(due, known) - stream.sent) / BLOCK_SAMPLES));
-    if (count <= 0) {
-      return;
-    }
-    const blocks = new Int16Array(count * BLOCK_SAMPLES);
-    blocks.set(samples.subarray(stream.sent, Math.min(samples.length, stream.sent + blocks.length)));
-    context.sound(
-      { session },
-      { blocks: { handle: STREAM_HANDLE, generation: stream.generation, rate: source.rate, first: stream.nextBlock, samples: blocks } },
-    );
-    stream.sent += blocks.length;
-    stream.nextBlock = (stream.nextBlock + count) % WRAP;
   }
 }

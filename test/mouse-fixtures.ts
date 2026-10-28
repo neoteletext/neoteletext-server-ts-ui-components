@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 
-import { Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
 import { Action, type Box, type Child, Component, ComponentChannel, type Element, Frame, h, type PageSpec, readControls } from "../src/index.ts";
 import { Colour } from "../src/kit.ts";
 
@@ -24,7 +24,7 @@ export const HINT_ROW = 23;
 export const NOTCH = 120;
 
 function harness(specs: readonly PageSpec[]): Harness {
-  return new Harness([new ComponentChannel(specs)]);
+  return new Harness([new ComponentChannel(specs, { opus: fakeOpus() })]);
 }
 
 /** One viewer's page of `body`, every component its own. */

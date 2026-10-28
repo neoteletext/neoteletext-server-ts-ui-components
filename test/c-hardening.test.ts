@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
 import { BODY_ROW, Button, type Child, ComponentChannel, type Element, Frame, h, Poll, Tally, TextField } from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 
@@ -20,9 +20,10 @@ const PROMPTS = [
 /** One viewer's page of `body`, every component its own. */
 function viewer(...body: Child[]): Harness {
   const seen = new Harness([
-    new ComponentChannel([
-      { page: PAGE, title: "Test", perViewer: true, root: (): Element => h(Frame, { title: "Test", background: Colour.Blue, prompts: PROMPTS }, ...body) },
-    ]),
+    new ComponentChannel(
+      [{ page: PAGE, title: "Test", perViewer: true, root: (): Element => h(Frame, { title: "Test", background: Colour.Blue, prompts: PROMPTS }, ...body) }],
+      { opus: fakeOpus() },
+    ),
   ]);
   seen.join(1, PAGE);
   return seen;

@@ -48,6 +48,7 @@ export type { RawProps } from "./raw-sub-page.ts";
 export { ROLLOVER_COLOURS, rolloverLine } from "./rollover.ts";
 export type { ColourTable, Rgb12 } from "./rollover.ts";
 export { ComponentChannel } from "./runtime.ts";
+export type { ComponentChannelOptions } from "./runtime.ts";
 export type { PageSpec } from "./page-spec.ts";
 export type { PageParams, Services } from "./services.ts";
 export { noise, RATE, sequence, sound, tone } from "./sound.ts";

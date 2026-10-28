@@ -3,6 +3,27 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 4.0.0 (28 October 2026)
+
+### To take it
+
+- **Sound is Opus.** Receivers on macOS, Windows, Linux, iOS and Android
+  play Opus alone, which the program encodes and the server carries
+  unchanged (teletext-server's decision 21); a channel on 3.x was silent
+  on them. Every stored sound and stream now goes as Opus, encoded with
+  ffmpeg's libopus: the host has ffmpeg with libopus on its path, or the
+  channel gives `ComponentChannel` an encoder,
+  `new ComponentChannel(pages, { opus })`. A test gives the protocol's
+  `fakeOpus()`, which runs nothing. Microcontroller receivers, which
+  decode no Opus, hear nothing until they are supported.
+- **Built on `neoteletext-server-ts-protocol` 0.4.0**, which has the
+  Opus members and encoder: a program installs it beside this release.
+- **A stream starts once its encoder's first packets come**, a few tens
+  of milliseconds after it is asked for, and its listening state is
+  `waiting` until then. An encoder that fails shows as the stream's
+  failure; a sound that cannot be encoded is said in the channel's log
+  and not played.
+
 ## 3.1.0 (28 October 2026)
 
 ### Fixed

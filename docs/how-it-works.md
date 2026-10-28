@@ -92,19 +92,24 @@ repositories beside this one.
 
 ## Sound
 
-- **Short sounds** are made at 8 kHz and sent once to each viewer as a
-  stored sound, then played by a command (`src/core/sound-objects.ts`).
+- **Every sound is Opus**, the one format receivers on macOS, Windows,
+  Linux, iOS and Android play (the engine's decision E.131, the
+  browser's decision 121): mono, 48 kHz, constant-rate packets of 20 ms
+  at 16 kbit/s. The library encodes it, with ffmpeg's libopus by default
+  (the protocol kit's `ffmpegOpus`); the server checks each packet and
+  carries it unchanged (`teletext-server`, docs/applications.md §3.4,
+  decision 21).
+- **Short sounds** are made at 8 kHz, encoded once, and sent once to each
+  viewer as a stored sound, then played by a command
+  (`src/core/sound-objects.ts`).
 - **Long sounds** are a viewer's stream: one at a time, on the last of
-  the four sound channels, bound to its page, sent 800 ms ahead in ticks
-  of 250 ms (`src/core/live-streams.ts`).
-- **The server** encodes them, from the 16-bit samples the library
-  sends (`teletext-server`, docs/applications.md §3.4). Receivers on
-  macOS, Windows and Linux play only Opus; microcontrollers play IMA
-  ADPCM and PCM16 (the engine's decision E.131, the browser's decision
-  121). The server encodes IMA ADPCM today, so the desktop browser is
-  silent until it sends Opus (`TODO.md`). **The browser** mixes every
-  channel's sounds, a background tab's included (`neoteletext-browser`,
-  docs/architecture.md decisions 37, 38).
+  the four sound channels, bound to its page. Its samples go to an
+  encoder of its own about a second ahead, and its packets to the viewer
+  560 ms ahead, in ticks of 250 ms, never more than 28 of the
+  receiver's ring of 32 blocks (`src/core/live-stream.ts`).
+- **The browser** mixes every channel's sounds, a background tab's
+  included (`neoteletext-browser`, docs/architecture.md decisions 37,
+  38).
 
 [Sound](audio.md) says how a page uses them.
 

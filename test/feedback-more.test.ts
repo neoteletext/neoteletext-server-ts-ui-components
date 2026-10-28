@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { shows } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, shows } from "neoteletext-server-ts-protocol/testing";
 import {
   BigDigits,
   BigText,
@@ -232,9 +232,10 @@ test("loading told to show a skeleton shows its rows of separated blocks instead
 });
 
 test("a page whose control is still loading when its needs are found still gives each viewer a copy of their own", () => {
-  const channel = new ComponentChannel([
-    { page: PAGE, title: "Test", root: (): Element => frame("Test", h(Loading, { loading: true }, h(Switch, { label: "Sound" }))) },
-  ]);
+  const channel = new ComponentChannel(
+    [{ page: PAGE, title: "Test", root: (): Element => frame("Test", h(Loading, { loading: true }, h(Switch, { label: "Sound" }))) }],
+    { opus: fakeOpus() },
+  );
   assert.equal(channel.perViewer(PAGE), true, "the switch's own copy was not missed");
 });
 

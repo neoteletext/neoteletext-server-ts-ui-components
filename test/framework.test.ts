@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
 import {
   type Canvas,
   type Child,
@@ -80,7 +80,7 @@ class Counter extends Component<{ readonly label: string }, CounterState> {
 }
 
 function channel(specs: readonly PageSpec[]): Harness {
-  return new Harness([new ComponentChannel(specs)]);
+  return new Harness([new ComponentChannel(specs, { opus: fakeOpus() })]);
 }
 
 test("a page every viewer shares is published once at the start, with its frame", () => {

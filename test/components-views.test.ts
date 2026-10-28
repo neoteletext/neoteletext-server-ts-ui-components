@@ -21,7 +21,7 @@ test("a stream pauses where it was heard to, sending nothing, and resumes from t
   seen.runUntil(3_000);
   assert.equal(seen.sounds(1).length, sent, "nothing is sent while paused");
   seen.press(1, "r");
-  const generations = seen.sounds(1).flatMap((message) => generationOf(message["live"]) ?? []);
+  const generations = seen.sounds(1).flatMap((message) => generationOf(message["opus_live"]) ?? []);
   assert.deepEqual(generations, [1, 2], "resumed as a new stream");
   seen.runUntil(3_500);
   seen.press(1, "x");

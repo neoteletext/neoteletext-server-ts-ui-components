@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness, rowOf, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, rowOf, text } from "neoteletext-server-ts-protocol/testing";
 import {
   Action,
   Bar,
@@ -51,9 +51,10 @@ const PAST_SPREAD = 300_000;
 /** One viewer's page of `body`, joined. */
 function viewer(...body: Child[]): Harness {
   const seen = new Harness([
-    new ComponentChannel([
-      { page: PAGE, title: "Test", perViewer: true, root: (): Element => h(Frame, { title: "Test", background: Colour.Blue, prompts: PROMPTS }, ...body) },
-    ]),
+    new ComponentChannel(
+      [{ page: PAGE, title: "Test", perViewer: true, root: (): Element => h(Frame, { title: "Test", background: Colour.Blue, prompts: PROMPTS }, ...body) }],
+      { opus: fakeOpus() },
+    ),
   ]);
   seen.join(1, PAGE);
   return seen;

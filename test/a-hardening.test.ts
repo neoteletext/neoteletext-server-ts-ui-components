@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 
-import { Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
 import {
   type Article,
   articleLines,
@@ -72,14 +72,17 @@ test("At cuts its place to its parent's box, however far its props reach", () =>
 test("a rule in a place wider than the page is drawn on the page's row, and the page is published", () => {
   // Over 2^32 - 1 cells, the most an array holds: a line sized by the place's own width throws, and the page is never published.
   const seen = new Harness([
-    new ComponentChannel([
-      {
-        page: PAGE,
-        title: "Test",
-        root: (): Element =>
-          h(Frame, { title: "Rule", background: Colour.Blue, prompts: PROMPTS }, h(At, { row: 0, column: 0, columns: 2 ** 32 + 1 }, h(Rule, {}))),
-      },
-    ]),
+    new ComponentChannel(
+      [
+        {
+          page: PAGE,
+          title: "Test",
+          root: (): Element =>
+            h(Frame, { title: "Rule", background: Colour.Blue, prompts: PROMPTS }, h(At, { row: 0, column: 0, columns: 2 ** 32 + 1 }, h(Rule, {}))),
+        },
+      ],
+      { opus: fakeOpus() },
+    ),
   ]);
   seen.join(1, PAGE);
   const row = text(seen.seen(1, PAGE).rows, BODY.row);

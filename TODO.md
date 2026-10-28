@@ -4,39 +4,19 @@ What waits on another repository, or on the owner. Nothing here is
 changed from this one: the server, the protocol, the engine and the
 browser are changed by their own sessions.
 
-## Opus for desktop receivers
+## Sound for microcontroller receivers
 
-The owner's instruction of 28 October 2026: all sound on macOS, Windows
-and Linux needs Opus; PCM16 and IMA ADPCM still work with
-microcontrollers. The engine compiles both out of its desktop builds
-(its decision E.131) and the browser leaves them out (its decision 121
-item 7), so every sound this library makes is silent in the desktop
-browser until the server sends Opus.
-
-This library sends 16-bit PCM and the server encodes it
-(`teletext-server`, docs/applications.md §3.4), so a component needs no
-change of its own for the codec. What has to change, in order:
-
-1. **The server** encodes Opus for desktop receivers and IMA ADPCM or
-   PCM16 for microcontrollers, which means it knows each receiver's
-   class (from its WELCOME capabilities, or by asking) and encodes a
-   page-wide sound once for each class present. Today it encodes every
-   stored sound as IMA ADPCM in 256-byte blocks and every live block in
-   512-byte blocks.
-2. **The protocol** (`neoteletext-server-ts-protocol`): Opus takes 8, 12, 16,
-   24 and 48 kHz (RFC 6716 §2), so `SAMPLE_RATES`' 11025, 22050, 32000
-   and 44100 go or are resampled by the server; and a live sound's
-   blocks are 1,017 samples, the IMA ADPCM block's, where Opus frames
-   are 2.5 to 60 ms. The kit says the new framing.
-3. **This library**, once a protocol release says them:
-   - `BLOCK_SAMPLES` (`src/core/stream.ts`) becomes the protocol's
-     block, and `LEAD_MS` is measured again against the Opus decoder's
-     buffer.
-   - `StreamSource.rate` and `docs/audio.md` name the rates the
-     protocol then takes; `stretched` and the sound objects' 8 kHz stay
-     if 8 kHz stays.
-   - The peer dependency names that protocol release, and the library
-     takes a major version if `StreamSource` changes.
+Every sound goes as Opus, the one format receivers on macOS, Windows,
+Linux, iOS and Android play (the owner's instruction of 28 October
+2026). Microcontroller receivers (tellyboy), which decode no Opus, hear
+nothing from a channel on this library; they are not implemented yet.
+When they are, they need PCM, which the server encodes as IMA ADPCM, and
+one sound cannot go in both formats: a receiver matches a sound's DATA
+records by its handle and generation alone (the engine's `store.rs`,
+`put`), so the other format's blocks would land in it, and a channel
+plays one sound at a time, so a second play replaces the first. The
+server sending each class of receiver its own is the way
+(teletext-server's decision 21).
 
 ## Sub-pages a viewer steps to
 
@@ -57,5 +37,5 @@ only when a session's PAGE names another page or its connection closes
 (`teletext-server`, crates/teletext-runtime/src/channel.rs, `page_open`
 and `closed`). A tab switched away sends neither, and keeps the page it
 had open and its sound, as Chrome does (`neoteletext-browser`, decision
-38), so a stream going on in a background tab is meant. To confirm live
-once the server sends Opus.
+38), so a stream going on in a background tab is meant. Not yet seen live.
+

@@ -15,11 +15,10 @@
 // released, so a viewer who only reads costs the server nothing.
 
 // oxlint-disable import/max-dependencies -- the runtime is where the protocol's calls meet the mounts, streams, sounds and publication
-import { type Application, type Context, type Input, LONGEST_TITLE, type PageEntry, type ServerStats } from "../kit.ts";
+import { type Application, type Context, ffmpegOpus, type Input, LONGEST_TITLE, type OpusEncoder, type PageEntry, type ServerStats } from "../kit.ts";
 import { EventBus } from "./bus.ts";
 import type { LibraryEvents } from "./library-events.ts";
 import type { PageParams } from "./services.ts";
-import { TICK_MS } from "./stream.ts";
 import { dispatchInput } from "./dispatch-input.ts";
 import { LiveStreams } from "./live-streams.ts";
 import { Mount } from "./mount.ts";
@@ -29,6 +28,11 @@ import { SoundObjects } from "./sound-objects.ts";
 import { ROLLOVER_COLOURS } from "./rollover.ts";
 import type { Services } from "./services.ts";
 import { fit } from "./text.ts";
+
+export interface ComponentChannelOptions {
+  /** What encodes its sounds as Opus, the one format desktop and phone receivers play: ffmpeg with libopus, found on the path, when absent. */
+  readonly opus?: OpusEncoder;
+}
 
 export class ComponentChannel implements Application {
   readonly bus = new EventBus<LibraryEvents>();
@@ -40,16 +44,19 @@ export class ComponentChannel implements Application {
   readonly #own = new Map<number, Set<number>>();
   #context: Context | null = null;
   #timerId = 0;
-  readonly #sounds = new SoundObjects();
+  readonly #sounds: SoundObjects;
   /** Who has each page open. */
   readonly #watching = new Map<number, Set<number>>();
   readonly #needs = new SpecNeeds();
   /** What each viewer was last sent to each page with. */
   readonly #params = new Map<number, Map<number, PageParams>>();
-  readonly #streams = new LiveStreams();
+  readonly #streams: LiveStreams;
 
-  constructor(specs: readonly PageSpec[]) {
+  constructor(specs: readonly PageSpec[], options: ComponentChannelOptions = {}) {
     this.#specs = new Map(specs.map((spec) => [spec.page, spec]));
+    const opus = options.opus ?? ffmpegOpus();
+    this.#sounds = new SoundObjects(opus);
+    this.#streams = new LiveStreams(opus);
   }
 
   /** Whether the page's spec, or what is on it, keeps a copy for each viewer: for tests. */
@@ -273,9 +280,8 @@ export class ComponentChannel implements Application {
           earliest = earliest === null ? at : Math.min(earliest, at);
         }
       }
-      // A stream still sending, or still to be heard to its end, wants its tick.
-      if (this.#streams.active()) {
-        const tick = context.now() + TICK_MS;
+      const tick = this.#streams.nextTick(context.now());
+      if (tick !== null) {
         earliest = earliest === null ? tick : Math.min(earliest, tick);
       }
       if (earliest !== null) {

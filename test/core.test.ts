@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
 import {
   type Canvas,
   Checkbox,
@@ -27,7 +27,9 @@ import {
   Ticker,
   ToastShelf,
 } from "../src/index.ts";
-import { Colour, Key } from "../src/kit.ts";
+import { Colour, Key, OPUS_FRAME_MS, OPUS_PACKET_BYTES } from "../src/kit.ts";
+import { RING_BLOCKS, SEND_LEAD_MS } from "../src/core/stream.ts";
+import { generationOf } from "./components-fixtures.ts";
 
 const PAGE = 0x150;
 const OTHER = 0x151;
@@ -43,7 +45,7 @@ function frame(title: string, ...body: Child[]): ReturnType<typeof h> {
 }
 
 function channel(specs: readonly PageSpec[]): { harness: Harness; components: ComponentChannel } {
-  const components = new ComponentChannel(specs);
+  const components = new ComponentChannel(specs, { opus: fakeOpus() });
   return { harness: new Harness([components]), components };
 }
 
@@ -212,18 +214,47 @@ class Plays extends Component {
   }
 }
 
-test("a stream is sent as a live sound, its blocks ahead of real time a tick at a time, and stopped when the viewer leaves its page", () => {
+test("a stream is sent as a live Opus sound, its packets ahead of real time a tick at a time, and stopped when the viewer leaves its page", () => {
   const { harness } = channel([
     { page: PAGE, title: "Player", perViewer: true, root: (): Element => frame("Player", h(Plays, {})) },
     { page: OTHER, title: "Other", root: (): Element => frame("Other") },
   ]);
   harness.join(9, PAGE);
   harness.press(9, Key.Enter);
-  const kinds = (): string[] => harness.sounds(9).map((message) => Object.keys(message).find((key) => ["live", "play", "blocks", "stop"].includes(key)) ?? "");
-  assert.deepEqual(kinds().slice(0, 3), ["live", "play", "blocks"], "the live object, its play bound to the page, the first blocks");
-  const firstBlocks = harness.sounds(9).filter((message) => "blocks" in message).length;
-  harness.advance(1_000);
-  assert.ok(harness.sounds(9).filter((message) => "blocks" in message).length > firstBlocks, "more blocks as time goes");
+  const kinds = (): string[] =>
+    harness.sounds(9).map((message) => Object.keys(message).find((key) => ["opus_live", "play", "opus_packets", "stop"].includes(key)) ?? "");
+  assert.deepEqual(kinds().slice(0, 3), ["opus_live", "play", "opus_packets"], "the live object, its play bound to the page, the first packets");
+  assert.ok(!kinds().includes(""), "Opus alone: nothing in another format");
+  // The key's press and its release each start the stream: the latest generation is the one heard.
+  const latest = (): number => Math.max(...harness.sounds(9).flatMap((message) => generationOf(message["opus_live"]) ?? []));
+  const packets = (): { readonly first: number; readonly count: number }[] =>
+    harness.sounds(9).flatMap((message) => {
+      const sent = message["opus_packets"];
+      return typeof sent === "object" &&
+        sent !== null &&
+        "first" in sent &&
+        "packets" in sent &&
+        typeof sent.first === "number" &&
+        typeof sent.packets === "string" &&
+        generationOf(sent)?.[0] === latest()
+        ? [{ first: sent.first, count: Buffer.from(sent.packets, "base64").length / OPUS_PACKET_BYTES }]
+        : [];
+    });
+  const sentBy = (): number => packets().reduce((sum, each) => sum + each.count, 0);
+  assert.equal(sentBy(), SEND_LEAD_MS / OPUS_FRAME_MS, "at first, as far ahead as the receiver's ring holds, less its margin");
+  harness.runUntil(1_000);
+  assert.equal(sentBy(), (1_000 + SEND_LEAD_MS) / OPUS_FRAME_MS, "a second on, tick by tick, a second's more packets, and never more ahead");
+  harness.advance(2_000);
+  assert.equal(sentBy() - (1_000 + SEND_LEAD_MS) / OPUS_FRAME_MS, RING_BLOCKS, "a tick that comes late sends no more than the ring holds");
+  assert.deepEqual(
+    packets().map((each) => each.first),
+    packets().map((_, index) =>
+      packets()
+        .slice(0, index)
+        .reduce((sum, each) => sum + each.count, 0),
+    ),
+    "numbered on from the first, none missed",
+  );
   harness.open(9, OTHER);
   assert.equal(kinds().at(-1), "stop");
 });

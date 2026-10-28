@@ -3,10 +3,21 @@
 A page can make sounds and play long ones as they are sent. The audio
 player is built on both.
 
-The library sends 16-bit samples and the server encodes them. Receivers
-on macOS, Windows and Linux play Opus alone; microcontrollers play IMA
-ADPCM and PCM16. The server encodes IMA ADPCM today, so the desktop
-browser is silent until it sends Opus; `TODO.md` says what follows.
+Every sound goes as Opus, the one format receivers on macOS, Windows,
+Linux, iOS and Android play. The library encodes it and the server
+carries it unchanged. By default it runs ffmpeg built with libopus, found
+on the path; a channel gives another encoder, or another ffmpeg, as
+`ComponentChannel`'s `opus`:
+
+```ts
+import { ffmpegOpus } from "neoteletext-server-ts-protocol";
+
+new ComponentChannel(pages, { opus: ffmpegOpus({ path: "/usr/local/bin/ffmpeg" }) });
+```
+
+A sound that cannot be encoded is said in the channel's log and not
+played; a stream whose encoder fails shows as failed, with why. A test
+gives the protocol's `fakeOpus()`, which runs nothing.
 
 ## Short sounds
 

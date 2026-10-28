@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
 import {
   At,
   BAR_CELLS,
@@ -44,13 +44,16 @@ test("a button's band is a control: from its New Background cell to the cell bef
 });
 
 test("a list's rows are controls, a taller item's rows joined, and its page stays one copy every viewer shares", () => {
-  const components = new ComponentChannel([
-    {
-      page: PAGE,
-      title: "Test",
-      root: (): Element => frame("Rows", h(ChoiceList, { items: ["first", "second"], shown: 4, itemRows: 2, shared: true, onChoose: () => {} })),
-    },
-  ]);
+  const components = new ComponentChannel(
+    [
+      {
+        page: PAGE,
+        title: "Test",
+        root: (): Element => frame("Rows", h(ChoiceList, { items: ["first", "second"], shown: 4, itemRows: 2, shared: true, onChoose: () => {} })),
+      },
+    ],
+    { opus: fakeOpus() },
+  );
   assert.equal(components.perViewer(PAGE), false);
   const seen = new Harness([components]);
   seen.join(1, PAGE);

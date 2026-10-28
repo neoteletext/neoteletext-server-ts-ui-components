@@ -13,6 +13,9 @@ consumer takes the JavaScript and declarations in `dist/`.
 - **The protocol**, neoteletext-server-ts-protocol, as its release in
   `vendor/`: a peer dependency, which a consumer installs beside this
   library, and a development dependency here, for the tests.
+- **ffmpeg with libopus**, on the path, for a channel's sound (the
+  protocol's `ffmpegOpus`). The
+  tests do not run it: they encode with the protocol's `fakeOpus`.
 
 ## Check
 

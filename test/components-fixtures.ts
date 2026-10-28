@@ -1,6 +1,6 @@
 // What the components tests share: their pages, helpers and test components.
 
-import { Harness } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
 import { Button, type Child, ChoiceList, Component, ComponentChannel, Frame, h, type KeyEvent, type PageSpec, Text } from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 
@@ -21,10 +21,10 @@ export function frame(title: string, ...body: Child[]): ReturnType<typeof h> {
 }
 
 export function harness(specs: readonly PageSpec[]): Harness {
-  return new Harness([new ComponentChannel(specs)]);
+  return new Harness([new ComponentChannel(specs, { opus: fakeOpus() })]);
 }
 
-/** A live sound's generation, as a sound line carries it. */
+/** A live Opus sound's generation, as a sound line carries it. */
 export function generationOf(live: unknown): number[] | undefined {
   return typeof live === "object" && live !== null && "generation" in live && typeof live.generation === "number" ? [live.generation] : undefined;
 }

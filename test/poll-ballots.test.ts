@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
 import { ComponentChannel, type Element, Frame, h, Poll, Tally } from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 
@@ -17,10 +17,13 @@ const ELSEWHERE = 0x151;
 function channel(): { readonly harness: Harness; readonly tally: Tally } {
   const tally = new Tally("best", ["one", "two", "three"]);
   const harness = new Harness([
-    new ComponentChannel([
-      { page: POLL, title: "Poll", perViewer: true, root: (): Element => h(Frame, { title: "Poll", background: Colour.Blue }, h(Poll, { tally })) },
-      { page: ELSEWHERE, title: "Elsewhere", root: (): Element => h(Frame, { title: "Elsewhere", background: Colour.Blue }) },
-    ]),
+    new ComponentChannel(
+      [
+        { page: POLL, title: "Poll", perViewer: true, root: (): Element => h(Frame, { title: "Poll", background: Colour.Blue }, h(Poll, { tally })) },
+        { page: ELSEWHERE, title: "Elsewhere", root: (): Element => h(Frame, { title: "Elsewhere", background: Colour.Blue }) },
+      ],
+      { opus: fakeOpus() },
+    ),
   ]);
   return { harness, tally };
 }

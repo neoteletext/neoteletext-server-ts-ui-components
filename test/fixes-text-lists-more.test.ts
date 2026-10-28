@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
 import {
   type Article,
   Button,
@@ -155,7 +155,7 @@ function article(page: number): Article {
 
 /** The sub-pages of a whole page of `root`, as viewer 1 sees them. */
 function subPages(root: () => Element): ReturnType<Harness["sharedPages"]> {
-  const page = new Harness([new ComponentChannel([{ page: PAGE, title: "Test", perViewer: true, root }])]);
+  const page = new Harness([new ComponentChannel([{ page: PAGE, title: "Test", perViewer: true, root }], { opus: fakeOpus() })]);
   page.join(1, PAGE);
   assert.deepEqual(page.errors, [], "the channel reported no failure");
   return page.ownPages(1, PAGE) ?? page.sharedPages(PAGE);

@@ -1,12 +1,12 @@
 // Sound too long to send whole: a live sound (docs/applications.md section
 // 3.4; the engine's audio.md section 8.3), played to one viewer as it is
-// sent. The runtime sends its blocks ahead of real time, a tick at a time,
-// as the showcase's radio does: blocks of BLOCK_SAMPLES, LEAD_MS ahead,
-// never more than the receiver's ring at once. Where the samples come from
+// sent. Its samples go to an Opus encoder ahead of real time, and its
+// packets to the viewer a tick at a time, never more than the receiver's
+// ring holds ahead of what it plays. Where the samples come from
 // is the source's: one that is still being decoded says how far it has
 // got, and the stream waits for it.
 
-import type { SampleRate } from "../kit.ts";
+import { OPUS_FRAME_MS, type SampleRate } from "../kit.ts";
 
 /** A live sound's samples, as far as they are known. */
 export interface StreamSource {
@@ -42,14 +42,24 @@ export interface Listening {
   readonly gain: number;
 }
 
-/** The block size the server encodes a live sound's blocks in: 512 bytes of IMA ADPCM, its 4-byte header holding the first sample, two samples a byte after (the engine's audio.md). */
-export const BLOCK_SAMPLES = 1 + (512 - 4) * 2;
-/** How far ahead of real time blocks are sent: more than the receiver's 400 ms buffer and a tick, well inside its ring (the showcase radio's measure). */
-export const LEAD_MS = 800;
+/** The blocks a receiver keeps of a live sound: a ring, the newest replacing the oldest (the engine's LIVE_RING_BLOCKS). An Opus block is one 20 ms packet. */
+export const RING_BLOCKS = 32;
+/** Blocks of the ring left clear of what is sent ahead, for a tick that comes late. */
+const RING_MARGIN_BLOCKS = 4;
+/** How far ahead of real time packets are sent: 28 of the ring's 20 ms blocks, so none sent overwrites one still to be played. */
+export const SEND_LEAD_MS = (RING_BLOCKS - RING_MARGIN_BLOCKS) * OPUS_FRAME_MS;
 /** How often streams are topped up. */
 export const TICK_MS = 250;
-/** The most blocks one tick sends: the receiver's ring (the engine's LIVE_RING_BLOCKS). */
-export const MOST_BLOCKS = 32;
+/** How soon a stream waiting for its first packets looks again: the encoder gives them out within this of being written to (ffmpeg 8.0.1, measured 28 October 2026). */
+export const FIRST_PACKETS_MS = 50;
+/** The encoder's delay, with room: ffmpeg 8.0.1 gave packets out under 110 ms after their samples went in (measured 28 October 2026). */
+const ENCODER_DELAY_MS = 200;
+/** How far ahead of real time samples go to the encoder: what is sent ahead, a tick more, and the encoder's delay, so each tick's packets are out by then. */
+export const FEED_LEAD_MS = SEND_LEAD_MS + TICK_MS + ENCODER_DELAY_MS;
+// A tick's packets last until the next tick.
+if (SEND_LEAD_MS <= TICK_MS) {
+  throw new RangeError(`streams are sent ${SEND_LEAD_MS} ms ahead, which a tick of ${TICK_MS} ms outlasts`);
+}
 /** Block numbers and generations are two bytes, wrapping. */
 export const WRAP = 0x1_0000;
 /** The handle every viewer's stream has: the last, which stored sounds never take. */

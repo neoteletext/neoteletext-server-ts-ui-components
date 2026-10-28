@@ -38,6 +38,11 @@ The package exports `neoteletext-server-ts-ui-components`; nothing else.
 
 ## To the host
 
+A channel on the library sends its sound as Opus, encoded by ffmpeg with
+libopus (`ffmpeg -encoders` lists `libopus`): the host has it on the
+path, or the channel gives `ComponentChannel` an `opus` encoder of its
+own.
+
 teletext-server's `scripts/deploy.sh` copies neoteletext-server-channels
 to the host and runs `npm ci --omit=dev` there, which installs the
 release from its `vendor/`. That repository's `DEPLOYMENT.md` has the
