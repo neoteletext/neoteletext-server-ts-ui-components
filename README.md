@@ -13,7 +13,7 @@ runs on the server's channel protocol, `neoteletext-server-ts-protocol`.
 The library is released as a built tarball, not to a registry. Commit
 its release and the protocol's under your `vendor/` and depend on both:
 
-    npm install ./vendor/neoteletext-server-ts-protocol-0.3.0.tgz ./vendor/neoteletext-server-ts-ui-components-3.0.0.tgz
+    npm install ./vendor/neoteletext-server-ts-protocol-0.3.0.tgz ./vendor/neoteletext-server-ts-ui-components-3.1.0.tgz
 
 It needs Node 22.18 or later.
 
