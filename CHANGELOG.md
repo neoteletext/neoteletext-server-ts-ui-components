@@ -3,7 +3,7 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
-## 3.0.0 (not yet released)
+## 3.0.0 (28 October 2026)
 
 ### To take it
 
