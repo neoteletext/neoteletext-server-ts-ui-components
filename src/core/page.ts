@@ -9,7 +9,7 @@ import type { Canvas } from "./canvas.ts";
 import { Component } from "./component.ts";
 import { type Box, type LayoutChild, type Size } from "./layout.ts";
 
-/** The whole screen, header row included: the server writes row 0's columns 8 to 39 itself. */
+/** The whole screen, header row included: row 0's columns 8 to 39 are the page's own, and the receiver shows its page number in columns 0 to 7. */
 export const SCREEN: Box = { row: 0, column: 0, width: COLUMNS, height: ROWS };
 
 /** What a sub-page sets on its screen beyond its cells. */

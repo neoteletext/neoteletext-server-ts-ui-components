@@ -6,8 +6,9 @@ values are in `src/core/look.ts`.
 
 ## What teletext gives
 
-- **40 columns by 25 rows** of cells. Row 0 is the receiver's header;
-  the frame (`Frame`) puts its title band on rows 1 and 2, its hint on
+- **40 columns by 25 rows** of cells. Row 0 is the header row: columns
+  0 to 7 are the receiver's, its page number, and columns 8 to 39 the
+  page's own, blank unless the page writes there; the frame (`Frame`) puts its title band on rows 1 and 2, its hint on
   row 23 and its Fastext prompts on row 24, leaving rows 3 to 22 for the
   page.
 - **Eight colours**: black, red, green, yellow, blue, magenta, cyan and

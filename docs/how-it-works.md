@@ -43,11 +43,12 @@ repositories beside this one.
    changed; a viewer's own copy only while it differs from the shared one
    (`src/core/publish.ts`). The protocol kit writes it as a `publish`
    line, its owner the channel or a session.
-5. **The server takes it.** It checks the line whole, reads the TTI with
-   the engine's reader, and stamps row 0 with the channel's name, the
-   page, the date and the time, which it keeps up to date every second
-   (`teletext-server`, docs/applications.md §1, §3.2). A shared page is
-   encoded once for every viewer.
+5. **The server takes it.** It checks the line whole and reads the TTI
+   with the engine's reader. It writes nothing in row 0: columns 8 to 39
+   are the page's own, blank unless the page writes there, and columns 0
+   to 7 the receiver's, where the browser shows the page's number
+   (EN 300 706 clause 9.3.1.4; `teletext-server`, docs/requirements.md
+   §11). A shared page is encoded once for every viewer.
 6. **It is sent.** As 42-byte teletext packets, in binary WebSocket
    messages, beside the channel's `channel.json`, `contents.txt` and page
    files (`teletext-server`, crates/teletext-native/src/http.rs).

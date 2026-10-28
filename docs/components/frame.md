@@ -12,7 +12,7 @@ Every page's frame, as Ceefax laid it out: a title band in double height, the bo
 
 ## Frame
 
-Every page's frame, as Ceefax laid it out: the server's header on row 0, a title band in double height on rows 1 and 2 that names the sub-page (the browser lists sub-pages by it), the body on rows 3 to 22, a hint of the keys on row 23, and the Fastext prompts on row 24 with their links.
+Every page's frame, as Ceefax laid it out: row 0 left to the page (the receiver's page number in columns 0 to 7), a title band in double height on rows 1 and 2 that names the sub-page (the browser lists sub-pages by it), the body on rows 3 to 22, a hint of the keys on row 23, and the Fastext prompts on row 24 with their links.
 
 ```ts
 import { Frame } from "neoteletext-server-ts-ui-components";
