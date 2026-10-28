@@ -6,8 +6,7 @@
 // has it, changes between small letters and capitals. Typing from a
 // keyboard or a phone goes in as it is. The server draws the text, the
 // letter being chosen, a block for the cursor and, under them, the case and
-// the chosen key's letters, since the receiver's echo would show the
-// digits pressed rather than the letters they mean (text-field.ts).
+// the chosen key's letters.
 // Backspace takes back the letter being chosen, or else the last; Enter
 // sends submit up the tree; Escape clears, or sends cancel when it is
 // clear.

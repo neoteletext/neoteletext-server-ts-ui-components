@@ -91,7 +91,7 @@ import { Field } from "neoteletext-server-ts-ui-components";
 
 ## TextField
 
-A line to type on, which the receiver echoes into (INPUT.md section 7.1): the cursor stands after what is typed, and only while the field has the keys, since a page has one cursor. It may have a label, a placeholder while it is empty, its characters masked (the receiver echoes `*`), a check whose complaint shows under it, and it may be disabled. Enter sends submit up the tree; Escape clears, or sends cancel when it is clear. Its band is a control, so the browser shows it can be clicked, and a click there gives it the keys.
+A line to type on, which shows what is typed (the receiver draws none of it, the engine's E.134): the cursor stands after it, and only while the field has the keys, since a page has one cursor (INPUT.md section 7.1). It may have a label, a placeholder while it is empty, its characters masked (each shows as `*`), a check whose complaint shows under it, and it may be disabled. Enter sends submit up the tree; Escape clears, or sends cancel when it is clear. Its band is a control, so the browser shows it can be clicked, and a click there gives it the keys.
 
 ```ts
 import { TextField } from "neoteletext-server-ts-ui-components";
@@ -109,7 +109,7 @@ import { TextField } from "neoteletext-server-ts-ui-components";
 | `onSubmit` | `(text: string, session: number) => void` | Called with the text, trimmed, as Enter sends it: never when it is blank or fails validate. |
 | `background` | `Colour` | Its band's colour; blue when absent, black while disabled. |
 | `placeholder` | `string` | What the empty field shows while it does not have the keys. |
-| `masked` | `boolean` | Each character shows as `*`, and the receiver echoes `*` too: a password. |
+| `masked` | `boolean` | Each character shows as `*`: a password. |
 | `keep` | `boolean` | Enter leaves the text there rather than clearing it. |
 
 And the props of [`ValueProps`](common.md#valueprops).
@@ -207,7 +207,7 @@ page.typeKeys(1, "47");
 
 ## MultiTapField
 
-Text typed with the remote's digit keys, as on a phone's keypad: each key has its letters (2 abc to 9 wxyz, 1 punctuation, 0 a space), and pressing it again soon after goes on to its next letter, round to the first. Another key, Enter or a pause takes the letter; a key with one character types it at once. The yellow key, or `#` as a phone's keypad has it, changes between small letters and capitals. Typing from a keyboard or a phone goes in as it is. The server draws the text, the letter being chosen, a block for the cursor and, under them, the case and the chosen key's letters, since the receiver's echo would show the digits pressed rather than the letters they mean (text-field.ts). Backspace takes back the letter being chosen, or else the last; Enter sends submit up the tree; Escape clears, or sends cancel when it is clear.
+Text typed with the remote's digit keys, as on a phone's keypad: each key has its letters (2 abc to 9 wxyz, 1 punctuation, 0 a space), and pressing it again soon after goes on to its next letter, round to the first. Another key, Enter or a pause takes the letter; a key with one character types it at once. The yellow key, or `#` as a phone's keypad has it, changes between small letters and capitals. Typing from a keyboard or a phone goes in as it is. The server draws the text, the letter being chosen, a block for the cursor and, under them, the case and the chosen key's letters. Backspace takes back the letter being chosen, or else the last; Enter sends submit up the tree; Escape clears, or sends cancel when it is clear.
 
 ```ts
 import { MultiTapField } from "neoteletext-server-ts-ui-components";

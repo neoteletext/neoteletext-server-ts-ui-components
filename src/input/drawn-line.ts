@@ -1,7 +1,6 @@
-// A line of typing the server draws itself, for a field the receiver does
-// not echo into (a text field's echo, text-field.ts, shows only what the
-// receiver typed, and a letter chosen by a key's presses or a word checked
-// against a dialog's is the server's): a prompt, the end of what is typed,
+// A line of typing with a block drawn for its cursor, for a field whose
+// text is not simply the keys pressed (a letter chosen by a key's presses,
+// or a word checked against a dialog's): a prompt, the end of what is typed,
 // so the cursor is always in sight, and a block for the cursor. And what of
 // a viewer's typing such a field keeps.
 

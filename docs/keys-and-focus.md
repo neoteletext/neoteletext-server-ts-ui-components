@@ -116,8 +116,7 @@ report. A control's `hint` prop says something else instead.
 
 ## Typing without a keyboard
 
-- `TextField` relies on the receiver echoing what is typed, so it needs a
-  keyboard or a phone.
+- `TextField` takes typed text, so it needs a keyboard or a phone.
 - `SegmentField` takes digits into a template: a PIN, a date, a time.
 - `MultiTapField` takes letters from the digit keys as a phone keypad
   does (ITU-T E.161), the yellow key for capitals.

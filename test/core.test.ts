@@ -164,6 +164,16 @@ test("a field takes typing from each key's press with its text, and raw text fro
   assert.doesNotMatch(text(harness.seen(1, PAGE).rows, 3), /abcde/u, "a release types nothing");
 });
 
+test("a masked field draws what is typed as `*` itself, its cursor asking for no echo (the engine's E.134)", () => {
+  const { harness } = channel([{ page: PAGE, title: "Test", root: (): Element => frame("Field", h(TextField, { longest: 10, masked: true })) }]);
+  harness.join(1, PAGE);
+  harness.typeText(1, "pw");
+  const seen = harness.seen(1, PAGE);
+  assert.match(text(seen.rows, 3), /\*\*/u);
+  assert.doesNotMatch(text(seen.rows, 3), /pw/u);
+  assert.equal(seen.cursor?.flags, 0, "neither echo nor masked, both withdrawn");
+});
+
 /** Shows what it was opened with. */
 class Shows extends Component<{ readonly what: string }> {
   override measure(): { width: number; height: number } {

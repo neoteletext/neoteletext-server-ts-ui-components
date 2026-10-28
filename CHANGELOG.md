@@ -3,6 +3,19 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 5.0.0 (28 October 2026)
+
+### To take it
+
+- **Local echo is withdrawn** (the engine's E.134): the receiver draws
+  nothing of what is typed, and the page shows it, as `TextField` always
+  did. `Canvas.cursor` takes the row, the column and the flags, no width;
+  `CursorFlag.Echo` and `CursorFlag.Masked` are gone, `CursorFlag.Block`
+  stays. A component that drew a cursor with a width drops it.
+- **Built on `neoteletext-server-ts-protocol` 0.5.0**, whose `Screen.cursor`
+  takes no width and writes the CU line's third field as 0: a program
+  installs it beside this release.
+
 ## 4.0.0 (28 October 2026)
 
 ### To take it

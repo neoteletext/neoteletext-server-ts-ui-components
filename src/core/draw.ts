@@ -139,7 +139,7 @@ function drawScreen(node: Node, links: SubPageLinks, subpage: number, first: boo
     screen.indexLink(links.index);
   }
   if (requests.cursor !== null) {
-    screen.cursor(requests.cursor.row, requests.cursor.column, requests.cursor.width, requests.cursor.flags);
+    screen.cursor(requests.cursor.row, requests.cursor.column, requests.cursor.flags);
   }
   const declared = first ? reachedControls(grid, owned) : [];
   const enhancement = localEnhancement(

@@ -1,6 +1,6 @@
 // The line a type-to-confirm dialog (type-to-confirm.ts) is answered on:
-// what the viewer types, drawn by the server, since it is checked here and
-// not echoed by the receiver (input/drawn-line.ts), and under it whether
+// what the viewer types, drawn by the server (input/drawn-line.ts), and
+// under it whether
 // Confirm is ready, or why it was refused. It takes typing, from a
 // keyboard's keys, a phone, or the remote's digits; its dialog keeps what
 // is typed and the keys it does not take (Escape, Left, Right, Tab), and is

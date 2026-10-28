@@ -49,7 +49,7 @@ export interface Region {
 
 /** What painting asks of the sub-page as a whole: its cursor, and the display attributes in its local enhancement data, in cells of the page. */
 export interface PageRequests {
-  cursor: { row: number; column: number; width: number; flags: number } | null;
+  cursor: { row: number; column: number; flags: number } | null;
   readonly displayAttributes: DisplayAttributes[];
 }
 
@@ -285,9 +285,9 @@ export class Canvas {
     }
   }
 
-  /** Places the input cursor at `row`, `column` of the box, with `width` cells to echo into. */
-  cursor(row: number, column: number, width: number, flags: number): void {
-    this.#requests.cursor = { row: this.box.row + row, column: this.box.column + column, width, flags };
+  /** Places the input cursor at `row`, `column` of the box, with the cursor record's `flags` (`CursorFlag`). */
+  cursor(row: number, column: number, flags: number): void {
+    this.#requests.cursor = { row: this.box.row + row, column: this.box.column + column, flags };
   }
 
   /** The code at `row`, `column` of the box. */

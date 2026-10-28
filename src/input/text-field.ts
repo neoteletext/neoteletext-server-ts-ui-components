@@ -1,7 +1,8 @@
-// A line to type on, which the receiver echoes into (INPUT.md section 7.1):
-// the cursor stands after what is typed, and only while the field has the
-// keys, since a page has one cursor. It may have a label, a placeholder
-// while it is empty, its characters masked (the receiver echoes `*`), a
+// A line to type on, which shows what is typed (the receiver draws none of
+// it, the engine's E.134): the cursor stands after it, and only while the
+// field has the keys, since a page has one cursor (INPUT.md section 7.1).
+// It may have a label, a placeholder while it is empty, its characters
+// masked (each shows as `*`), a
 // check whose complaint shows under it, and it may be disabled. Enter sends
 // submit up the tree; Escape clears, or sends cancel when it is clear. Its
 // band is a control, so the browser shows it can be clicked, and a click
@@ -13,7 +14,7 @@ import { isPress, type KeyEvent, type PointerEvent, type TextEvent } from "../co
 import { DISABLED, EMPTY } from "../core/look.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { cells, fit } from "../core/text.ts";
-import { Colour, CONTROL_CHARACTER, CursorFlag, Key } from "../kit.ts";
+import { Colour, CONTROL_CHARACTER, Key } from "../kit.ts";
 import { type ValueProps, ValueControl, type KeyHelpEntry } from "./value-control.ts";
 
 /** The prompt before what is typed. */
@@ -62,7 +63,7 @@ export interface TextFieldProps extends ValueProps<string> {
   readonly background?: Colour;
   /** What the empty field shows while it does not have the keys. */
   readonly placeholder?: string;
-  /** Each character shows as `*`, and the receiver echoes `*` too: a password. */
+  /** Each character shows as `*`: a password. */
   readonly masked?: boolean;
   /** Enter leaves the text there rather than clearing it. */
   readonly keep?: boolean;
@@ -109,7 +110,7 @@ export class TextField extends ValueControl<string, TextFieldProps> {
       canvas.coloured(0, cursorAt - 1, EMPTY, fit(this.props.placeholder, room));
     }
     if (this.focused) {
-      canvas.cursor(0, cursorAt, Math.max(0, canvas.width - cursorAt - 1), CursorFlag.Echo | (this.props.masked === true ? CursorFlag.Masked : 0));
+      canvas.cursor(0, cursorAt, 0);
     }
     const complaint = this.value === "" ? null : this.complaint;
     if (complaint !== null) {

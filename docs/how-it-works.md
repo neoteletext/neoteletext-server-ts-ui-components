@@ -84,8 +84,8 @@ repositories beside this one.
    (`src/core/pointer.ts`).
 5. **The answer is a new page.** The component's state changes, the page
    is drawn again, and what changed is published. After each input the
-   server tells the browser how much input it has acted on; the browser
-   shows its own echo of what is typed until then (INPUT.md §7.1, §9.3). A
+   server tells the browser how much input it has acted on (INPUT.md
+   §7.1); the browser draws nothing of what is typed, the page does. A
    component sending the viewer elsewhere (`goto`) does it the same way.
 6. **The browser draws a control's look under the pointer itself**, and
    sends nothing for it (INPUT.md §9.7).
