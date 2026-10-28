@@ -3,7 +3,7 @@
 // Next as actions.
 
 import { type Element, h } from "../core/element.ts";
-import { CHOSEN } from "../core/look.ts";
+import { CHOSEN, inkOn } from "../core/look.ts";
 import { ProgressBar } from "../feedback/progress.ts";
 import { Action } from "../input/action.ts";
 import { Colour } from "../kit.ts";
@@ -25,7 +25,9 @@ function badgeLook(index: number, place: WizardPlace): { readonly background: Co
   if (index === place.step && !place.finished) {
     return CHOSEN;
   }
-  return index < place.step || place.finished ? { background: Colour.Green, foreground: Colour.Black } : { background: Colour.Blue, foreground: Colour.White };
+  return index < place.step || place.finished
+    ? { background: Colour.Green, foreground: inkOn(Colour.Green) }
+    : { background: Colour.Blue, foreground: inkOn(Colour.Blue) };
 }
 
 /** The steps' names, those done ticked; `go`, while there is one, goes back to a step done before the one shown. */

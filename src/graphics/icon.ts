@@ -30,7 +30,9 @@ export const ICONS: Readonly<Record<IconName, { readonly bitmap: Bitmap; readonl
 };
 
 export interface IconProps {
+  /** Which icon it draws. */
   readonly name: IconName;
+  /** Its colour; the icon's own in ICONS when absent. */
   readonly foreground?: Colour;
 }
 

@@ -1,7 +1,8 @@
 // Collapsible sections: each a heading on a band, its content under it
-// while it is open. Up and Down choose a heading, Enter, Space or a click
-// opens or shuts it; as an accordion, opening one shuts the others. Each
-// heading's band is a control. Its value is the sections open.
+// while it is open, indented so its text starts under the heading's. Up
+// and Down choose a heading, Enter, Space or a click opens or shuts it; as
+// an accordion, opening one shuts the others. Each heading's band is a
+// control. Its value is the sections open.
 
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent } from "../core/events.ts";
@@ -9,15 +10,20 @@ import { choosing } from "../core/keys.ts";
 import { listStep, moveChoice } from "../core/list-cursor.ts";
 import { Colour } from "../kit.ts";
 import { type ValueProps, ValueControl, type ValueState, type KeyHelpEntry } from "../input/value-control.ts";
+import { At } from "../layout/at.ts";
 import { Rows } from "../layout/layouts.ts";
 import { within } from "../lists/list-rows.ts";
-import { Heading } from "./heading.ts";
+import { Heading, TITLE_AT } from "./heading.ts";
+
+/** A section's content's first cell: the heading's title's colour cell, so the content's text, after its own colour's cell, starts under the heading's. */
+const CONTENT_AT = TITLE_AT;
 
 export interface CollapsibleProps extends ValueProps<readonly number[]> {
   /** Each section's heading; the children are their contents, in order. */
   readonly titles: readonly string[];
   /** Opening one shuts the others. */
   readonly accordion?: boolean;
+  /** The headings' band colour while not chosen; blue when absent. */
   readonly background?: Colour;
 }
 
@@ -74,7 +80,7 @@ export class Collapsible extends ValueControl<readonly number[], CollapsibleProp
             this.#toggle(index, session);
           },
         }),
-        this.value.includes(index) ? h(Rows, { key: `content-${index}` }, contents[index] ?? null) : null,
+        this.value.includes(index) ? h(At, { key: `content-${index}`, row: 0, column: CONTENT_AT }, contents[index] ?? null) : null,
       ]),
     );
   }

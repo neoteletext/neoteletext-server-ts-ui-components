@@ -7,8 +7,11 @@ import { fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 export interface BandProps {
+  /** Its text, cut to the row. */
   readonly text: string;
+  /** The band's colour; blue when absent. */
   readonly background?: Colour;
+  /** The text's colour; white when absent. */
   readonly foreground?: Colour;
 }
 

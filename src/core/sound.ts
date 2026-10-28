@@ -15,7 +15,9 @@ const MILLISECONDS = 1_000;
 
 /** A sound: its name, unique in the channel, and its samples at {@link RATE}. */
 export interface Sound {
+  /** Its name, unique in the channel. */
   readonly name: string;
+  /** Its samples, signed 16-bit, at RATE. */
   readonly samples: Int16Array;
 }
 

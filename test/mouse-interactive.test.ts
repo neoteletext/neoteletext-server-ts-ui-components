@@ -69,7 +69,7 @@ test("a wizard's Next and Back are actions, and a step done is a badge a click g
 });
 
 test("a roulette spins on a click on its prompt; while it spins its headline is no link; stopped, the headline goes to its page and the line under it spins again", () => {
-  const articles: Article[] = [{ title: "A robot arm", page: 0x201, writer: "Ada", date: Date.UTC(2026, 9, 28), summary: "", blocks: [], tags: [], link: "" }];
+  const articles: Article[] = [{ title: "A robot arm", page: 0x201, writer: "Ada", date: Date.UTC(2026, 9, 28), blocks: [], tags: [] }];
   const page = viewer(h(Roulette, { articles }));
   click(page, controlBy(page, "spin the wheel"));
   wait(page, SPIN_STEPS_MS[0]);
@@ -138,7 +138,7 @@ test("a chart whose bars or columns can be chosen makes each a control; a click 
   );
   const [monday] = controls(columnChart);
   assert.ok(monday !== undefined);
-  assert.equal(monday.height, 4, "the plot's rows and the label's");
+  assert.equal(monday.height, 5, "the plot's rows and the labels' two, by turns, since Mon is longer than its column");
   click(columnChart, monday);
   assert.deepEqual(chosen, [1, 0]);
   assert.deepEqual(controls(viewer(h(BarChart, { bars }))), [], "without onChoose, a chart declares nothing");

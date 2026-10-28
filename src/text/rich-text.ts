@@ -11,9 +11,11 @@ import { type Size } from "../core/layout.ts";
 import { Attribute, Colour, COLUMNS, englishCodes, SPACE, textColour } from "../kit.ts";
 
 export interface RunStyle {
+  /** Its colour; white when absent. */
   readonly foreground?: Colour;
   /** A background of its own; black when absent. */
   readonly background?: Colour;
+  /** It flashes. */
   readonly flash?: boolean;
   /** Shown only when the viewer presses Reveal. */
   readonly conceal?: boolean;
@@ -21,6 +23,7 @@ export interface RunStyle {
 
 /** Text in one style. */
 export interface Run extends RunStyle {
+  /** What it says, in its style. */
   readonly text: string;
 }
 
@@ -113,6 +116,7 @@ export function layoutRuns(runs: readonly Run[], width: number): number[][] {
 }
 
 export interface RichTextProps {
+  /** The text, in runs of their own styles, wrapped to the box. */
   readonly runs: readonly Run[];
   /** At most this many lines. */
   readonly lines?: number;

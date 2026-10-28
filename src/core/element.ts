@@ -20,6 +20,7 @@ export type Child = Element | string | number | boolean | null | undefined | rea
 
 /** Props with the children an element was given. */
 export interface WithChildren {
+  /** The children it was given after its props, in order. */
   readonly children?: readonly Child[];
 }
 
@@ -28,8 +29,11 @@ export type ComponentClass<P extends object> = new (props: P) => Component<P>;
 
 /** One element: a component, its props, children included, and its key among its siblings. */
 export interface Element {
+  /** The component class it makes. */
   readonly type: ComponentClass<never>;
+  /** The props it makes or updates its component with, its children among them. */
   readonly props: WithChildren & LayoutProps;
+  /** What tells it from its siblings, so each keeps its instance as they change; its place among them when undefined. */
   readonly key: string | number | undefined;
 }
 

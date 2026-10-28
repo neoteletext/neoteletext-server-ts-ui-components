@@ -27,8 +27,8 @@ export const FOCUSED_LABEL = Colour.Yellow;
 export const DISABLED = Colour.Blue;
 /** A band that cannot be used, a button's or a field's: no band, its text in DISABLED. */
 export const DISABLED_BAND = { background: Colour.Black, foreground: DISABLED } as const;
-/** A chip that cannot be used, a box's, a switch's, a step's: black on blue, as dim as a chip goes and still read. */
-export const DISABLED_CHIP = { background: Colour.Blue, foreground: Colour.Black } as const;
+/** A chip that cannot be used, a box's, a switch's, a step's: no band, its text in DISABLED, as a band that cannot be used. Black ink on blue is dimmer, but black ink is Level 2.5 only (EN 300 706 Table 26). */
+export const DISABLED_CHIP = { background: Colour.Black, foreground: DISABLED } as const;
 /** What a component with nothing to show says it in. */
 export const EMPTY = Colour.Cyan;
 /** A control's label column, when it has a label and is not told its width. */
@@ -36,14 +36,22 @@ export const LABEL_CELLS = 12;
 /** Where an item's text starts in a list: after the band's two cells (its colour and New Background) and the foreground's cell. */
 export const ITEM_TEXT = 3;
 
+/** The light colours, which blue ink reads on; on the dark ones (black, red, blue, magenta) ink is white. Never black: black ink has no response at Level 1 (EN 300 706 Table 26), so a page must read without it. */
+const LIGHT: ReadonlySet<Colour> = new Set([Colour.Cyan, Colour.White, Colour.Yellow, Colour.Green]);
+
+/** The ink that reads on `background`: blue on the light colours, white on the dark, never the background's own colour. */
+export function inkOn(background: Colour): Colour {
+  return LIGHT.has(background) ? Colour.Blue : Colour.White;
+}
+
 /** What a notice, a toast or a dialog means. */
 export type Kind = "info" | "success" | "warning" | "error";
 
 /** Each kind's colours and the mark that says it without colour. */
 export const KINDS: Readonly<Record<Kind, { readonly background: Colour; readonly foreground: Colour; readonly mark: string }>> = {
   info: { background: Colour.Cyan, foreground: Colour.Blue, mark: "i" },
-  success: { background: Colour.Green, foreground: Colour.Black, mark: "OK" },
-  warning: { background: Colour.Yellow, foreground: Colour.Black, mark: "!" },
+  success: { background: Colour.Green, foreground: Colour.Blue, mark: "OK" },
+  warning: { background: Colour.Yellow, foreground: Colour.Blue, mark: "!" },
   error: { background: Colour.Red, foreground: Colour.White, mark: "X" },
 };
 

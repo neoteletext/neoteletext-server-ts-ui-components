@@ -24,6 +24,7 @@ export interface StopwatchProps extends ControlProps {
   readonly lapKey?: string;
   /** The most laps kept and shown; older ones go. */
   readonly mostLaps?: number;
+  /** The time's colour; green when absent. */
   readonly foreground?: Colour;
 }
 

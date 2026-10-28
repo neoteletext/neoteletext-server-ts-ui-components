@@ -1,7 +1,7 @@
 // Which component each cell of the first sub-page reaches, and what its
-// components declared that a click can reach: a control or a pointer area
-// is kept only where the deepest component drawn on every cell of it is the
-// one that declared it, or one under it, not a dialog or layer drawn over.
+// components declared that a click can reach: a control is kept only where
+// the deepest component drawn on every cell of it is the one that declared
+// it, or one under it, not a dialog or layer drawn over.
 
 import { COLUMNS, ROWS } from "../kit.ts";
 import type { Declared } from "./canvas.ts";
@@ -17,12 +17,6 @@ export interface DeclaredControl {
   readonly control: Box;
 }
 
-/** A pointer area a sub-page keeps, and its component; a null area is the whole page. */
-export interface PointerArea {
-  readonly node: Node;
-  readonly area: Box | null;
-}
-
 /** What a component declared as it painted. */
 export interface Owned {
   readonly node: Node;
@@ -35,18 +29,6 @@ export function inside(box: Box, row: number, column: number): boolean {
 
 export function emptyGrid(): Grid {
   return Array.from({ length: ROWS }, () => Array.from({ length: COLUMNS }, (): Node | null => null));
-}
-
-/** `box` cut to the page. */
-function clipped(box: Box): Box {
-  const row = Math.max(0, box.row);
-  const column = Math.max(0, box.column);
-  return {
-    row,
-    column,
-    width: Math.max(0, Math.min(COLUMNS, box.column + box.width) - column),
-    height: Math.max(0, Math.min(ROWS, box.row + box.height) - row),
-  };
 }
 
 /** Whether a click on every cell of `control` reaches `owner`: the deepest component drawn there is it or under it. */
@@ -65,16 +47,7 @@ function reaches(grid: Grid, owner: Node, control: Box): boolean {
   return true;
 }
 
-/** What a sub-page declares of what its components did; the whole page only for a component nothing covers. */
-export function reachedDeclarations(grid: Grid, owned: readonly Owned[]): { controls: DeclaredControl[]; areas: PointerArea[] } {
-  const controls: DeclaredControl[] = [];
-  const areas: PointerArea[] = [];
-  for (const { node, declared } of owned) {
-    controls.push(...declared.controls.filter((control) => reaches(grid, node, control)).map((control) => ({ node, control })));
-    areas.push(...declared.pointerAreas.filter((area) => reaches(grid, node, area)).map((area) => ({ node, area })));
-    if (declared.wholePage && reaches(grid, node, clipped(node.box))) {
-      areas.push({ node, area: null });
-    }
-  }
-  return { controls, areas };
+/** The controls a sub-page declares of those its components did: each only where a click on it reaches its component. */
+export function reachedControls(grid: Grid, owned: readonly Owned[]): DeclaredControl[] {
+  return owned.flatMap(({ node, declared }) => declared.controls.filter((control) => reaches(grid, node, control)).map((control) => ({ node, control })));
 }

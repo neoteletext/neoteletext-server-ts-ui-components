@@ -9,14 +9,18 @@ import { cells, fit } from "../core/text.ts";
 import { Attribute, Colour, textColour } from "../kit.ts";
 
 export interface Segment {
+  /** What it says, cut to the room before the right-hand text. */
   readonly text: string;
+  /** Its colour; white when absent. */
   readonly foreground?: Colour;
 }
 
 export interface StatusBarProps {
+  /** The segments, left to right, each in its colour and cut to the room before the right-hand text. */
   readonly segments: readonly Segment[];
   /** Text on the right, in yellow. */
   readonly right?: string;
+  /** The bar's colour; blue when absent. */
   readonly background?: Colour;
   /** The bar flashes: something is wrong. */
   readonly alarm?: boolean;

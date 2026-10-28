@@ -26,7 +26,7 @@ import {
   Text,
 } from "../src/index.ts";
 import { Colour, COLUMNS, Key } from "../src/kit.ts";
-import { PAGE, PROMPTS, BODY_ROW, frame, latestTti, controlsOf, areasOf, inOrder, harness, viewer, week, HoverWatcher, button } from "./controls-fixtures.ts";
+import { PAGE, PROMPTS, BODY_ROW, frame, latestTti, controlsOf, inOrder, harness, viewer, week, HoverWatcher, button } from "./controls-fixtures.ts";
 
 test("a calendar's controls are its arrows and the chosen week's days; a click on any day chooses it and the controls follow its week", () => {
   const chosen: CalendarDate[] = [];
@@ -85,18 +85,18 @@ test("a disabled select does not open to a click, and a disabled table does not 
   assert.match(text(rows, BODY_ROW + 2), /b/u, "unsorted");
 });
 
-test("a paint canvas with a brush is a pointer area over its surface, its mark on the cell under the pointer; without, it declares none; disabled, it paints nothing", () => {
+test("a paint canvas with a brush shows its mark on the cell under the pointer, a move with no button held reaching it as every move does; disabled, it paints nothing", () => {
   const EMPTY_CELL = 0x20;
   const MARK = 0x2c;
   const page = viewer(h(PaintCanvas, { columns: 10, rows: 4, brush: true }));
-  assert.deepEqual(areasOf(page, PAGE), { areas: [{ row: BODY_ROW, column: 1, width: 9, height: 4 }], wholePage: false });
   assert.deepEqual(controlsOf(page, PAGE), [], "the surface is no control");
   page.move(1, 0, 5, BODY_ROW + 1);
   assert.equal(page.seen(1, PAGE).rows[BODY_ROW + 1]?.[5], MARK, "the middle row of an empty cell");
   page.move(1, 0, 6, BODY_ROW + 1);
   assert.deepEqual([page.seen(1, PAGE).rows[BODY_ROW + 1]?.[5], page.seen(1, PAGE).rows[BODY_ROW + 1]?.[6]], [EMPTY_CELL, MARK]);
   const plain = viewer(h(PaintCanvas, { columns: 10, rows: 4 }));
-  assert.deepEqual(areasOf(plain, PAGE), { areas: [], wholePage: false });
+  plain.move(1, 0, 5, BODY_ROW + 1);
+  assert.equal(plain.seen(1, PAGE).rows[BODY_ROW + 1]?.[5], EMPTY_CELL, "no brush, no mark");
   const off = viewer(h(PaintCanvas, { columns: 10, rows: 4, disabled: true }));
   off.clickLeft(1, 5, BODY_ROW + 1);
   assert.equal(off.seen(1, PAGE).rows[BODY_ROW + 1]?.[5], EMPTY_CELL);
@@ -117,8 +117,8 @@ test("a list's row is pressed only on its band: a click under a select's label, 
   const below = controlsOf(page, PAGE).find((control) => control.row > BODY_ROW);
   assert.deepEqual(
     below,
-    { row: BODY_ROW + 1, column: 13, width: COLUMNS - 13, height: 1 },
-    "after the label's 12 cells, from New Background to the row's end",
+    { row: BODY_ROW + 1, column: 15, width: COLUMNS - 15, height: 1 },
+    "after the label's 12 cells and the left arrow's 2, under the field's band: from New Background to the row's end",
   );
   page.clickLeft(1, 3, BODY_ROW + 2);
   assert.deepEqual(changes, []);

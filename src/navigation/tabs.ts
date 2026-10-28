@@ -6,11 +6,11 @@
 // same cells whether it is chosen or not, as a chip does (core/canvas.ts),
 // so choosing one never moves the others, and each is a control there.
 
-import { CHIP_CELLS, type Canvas } from "../core/canvas.ts";
+import { CHIP_CELLS, CHIP_HEAD_CELLS, type Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import type { PointerEvent } from "../core/events.ts";
-import { CHOSEN, DISABLED, DISABLED_CHIP, LABEL } from "../core/look.ts";
+import { CHOSEN, DISABLED, DISABLED_CHIP, inkOn, LABEL } from "../core/look.ts";
 import { TOP_ROW } from "../core/mosaics.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { cells } from "../core/text.ts";
@@ -19,8 +19,8 @@ import { KEY_COLOURS } from "../frame/fastext-bar.ts";
 
 export type TabStyle = "chips" | "fastext" | "numbered" | "underline";
 
-/** Where a tab's text starts in its slot: after a chip's background colour, New Background and foreground. */
-const TEXT_IN_SLOT = 3;
+/** Where a tab's text starts in its slot, chip or not: after a chip's head, so choosing a tab never moves its text. */
+const TEXT_IN_SLOT = CHIP_HEAD_CELLS;
 
 /** What a tab shows: its name, numbered in that style. */
 function shown(name: string, index: number, style: TabStyle): string {
@@ -33,13 +33,17 @@ export function styleNeeds(style: TabStyle): PageNeeds {
 }
 
 export interface TabStripProps {
+  /** The tabs' names, left to right; from the first that does not fit, none is drawn, so the tabs shown are always the first, in order. */
   readonly tabs: readonly string[];
+  /** The chosen tab, by its place in `tabs`. */
   readonly active: number;
+  /** Its look; chips when absent. */
   readonly style?: TabStyle;
   /** The strip is the one with the keys: the chosen tab on the band. */
   readonly focused?: boolean;
   /** Its tabs cannot be chosen: they declare no controls. */
   readonly disabled?: boolean;
+  /** A click on a tab: its place in `tabs`. */
   readonly onChange: (index: number, session: number) => void;
 }
 
@@ -60,11 +64,11 @@ export class TabStrip extends Component<TabStripProps> {
   override paint(canvas: Canvas): void {
     const style = this.#style;
     let start = 0;
-    this.props.tabs.forEach((name, index) => {
+    for (const [index, name] of this.props.tabs.entries()) {
       const label = shown(name, index, style);
       const width = cells(label) + CHIP_CELLS;
       if (start + width > canvas.width) {
-        return;
+        break;
       }
       const chosen = index === this.props.active;
       const keyColour = KEY_COLOURS[index % KEY_COLOURS.length] ?? Colour.White;
@@ -87,7 +91,7 @@ export class TabStrip extends Component<TabStripProps> {
         }
       } else if (style === "fastext") {
         if (chosen) {
-          canvas.chip(0, start, keyColour, Colour.Black, label);
+          canvas.chip(0, start, keyColour, inkOn(keyColour), label);
         } else {
           canvas.coloured(0, start + TEXT_IN_SLOT - 1, keyColour, label);
         }
@@ -103,7 +107,7 @@ export class TabStrip extends Component<TabStripProps> {
         canvas.chipControl(0, start, start + width, String(index));
       }
       start += width;
-    });
+    }
   }
 
   override onClick(event: PointerEvent): boolean {

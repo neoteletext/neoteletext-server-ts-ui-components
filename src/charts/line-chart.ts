@@ -80,8 +80,11 @@ export function axes(canvas: Canvas, rows: number, least: number, most: number, 
 export interface LineChartProps {
   /** The series; a value that is not a finite number is left out. */
   readonly values: readonly number[];
+  /** The rows the plot takes, above the labels' row. */
   readonly plotRows: number;
+  /** What it says when no value is a finite number; "no data" when absent. */
   readonly empty?: string;
+  /** The line's colour; green when absent. */
   readonly foreground?: Colour;
   /** The area under the line filled. */
   readonly area?: boolean;

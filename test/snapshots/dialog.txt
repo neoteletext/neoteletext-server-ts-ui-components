@@ -6,12 +6,12 @@ bNDwDialog
 bN                                      
 b_b under _                             
                                         
-  yNkDelete it?                     _   
-  bNwIt cannot be had back.         _W:█
-  bN                                _W:█
-  bNyNbDeletebN wNkKeepbN           _W:█
-  bN                                _W:█
-  W:████████████████████████████████████
+  yNb! Delete it?                    _  
+  bNwIt cannot be had back.         W_9 
+  bN                                W_9 
+  bNyNbDeletebN wNbKeepbN           W_9 
+  bN                                W_9 
+   W99999999999999999999999999999999999 
                                         
                                         
                                         

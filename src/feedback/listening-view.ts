@@ -1,12 +1,14 @@
 // A stream as the viewer sees it: what it is and whether it plays, then a
 // bar of how far it has played of how long; with nothing playing, it says
-// so and keeps the bar's row, so what is under it does not move. It looks
-// at nothing itself;
-// the player that holds it (now-playing.ts, audio-player.ts) says what plays.
+// so and keeps the bar's row, so what is under it does not move, as it does
+// for a stream that cannot play, which has played nothing to show. It looks
+// at nothing itself; the player that holds it (now-playing.ts,
+// audio-player.ts) says what plays.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import type { Listening } from "../core/stream.ts";
+import { cells } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 import { Gap } from "../layout/gap.ts";
 import { Rows } from "../layout/layouts.ts";
@@ -14,8 +16,10 @@ import { Paragraph } from "../text/paragraph.ts";
 import { HOUR_S, MINUTE_S, SECOND_MS } from "../time/clock.ts";
 import { ProgressBar } from "./progress.ts";
 
-/** The time's column before the bar: "1:02:03/1:02:03". */
-const TIME_CELLS = 11;
+/** The longest time the bar's label says: hours into hours. */
+const LONGEST_TIME = "1:02:03/1:02:03";
+/** The time's column before the bar: its colour's cell and the longest time. */
+const TIME_CELLS = 1 + cells(LONGEST_TIME);
 
 /** "1:02:03" or "2:03"; NaN or Infinity, which a stream's length can be, as "0:00". */
 export function clockTime(seconds: number): string {
@@ -29,6 +33,7 @@ export function clockTime(seconds: number): string {
 export interface ListeningViewProps {
   /** What plays, or null for nothing. */
   readonly listening: Listening | null;
+  /** The bar's colour; magenta when absent. */
   readonly foreground?: Colour;
   /** A click on the bar: how far along it, 0 to 1, to seek there. */
   readonly onSeek?: (fraction: number, session: number) => void;
@@ -56,16 +61,16 @@ export class ListeningView extends Component<ListeningViewProps> {
       paused: "Paused",
       ended: "Played to the end",
     };
+    const said = h(Paragraph, { text: `${states[listening.state]}: ${listening.name}`, foreground: stateColour(listening.state), lines: 1 });
+    if (listening.state === "failed") {
+      return h(Rows, {}, said, h(Gap, {}));
+    }
     const heard = Math.floor(listening.heardMs / SECOND_MS);
     const length = listening.lengthMs === null ? null : Math.floor(listening.lengthMs / SECOND_MS);
     return h(
       Rows,
       {},
-      h(Paragraph, {
-        text: `${states[listening.state]}: ${listening.name}`,
-        foreground: stateColour(listening.state),
-        lines: 1,
-      }),
+      said,
       h(ProgressBar, {
         label: `${clockTime(heard)}${length === null ? "" : `/${clockTime(length)}`}`,
         value: heard,

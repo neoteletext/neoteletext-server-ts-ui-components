@@ -1,5 +1,6 @@
 // Bars across: one to the half cell, and a chart of labelled bars scaled to
-// the largest. A chart whose bars can be chosen (onChoose) makes each bar,
+// the largest, drawn as a bar on its own is (bar.ts), the bottom sixel row
+// of each left clear so one bar stands apart from the next. A chart whose bars can be chosen (onChoose) makes each bar,
 // its label to its end, a control: a click chooses it, and while the
 // pointer is on one the hint row says what it is.
 
@@ -8,22 +9,29 @@ import { paintEmpty } from "../core/look.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import type { HoverEvent, PointerEvent } from "../core/events.ts";
-import { FULL_BLOCK, LEFT_HALF } from "../core/mosaics.ts";
 import { fit, padStart } from "../core/text.ts";
-import { Colour, mosaicColour } from "../kit.ts";
+import { Colour } from "../kit.ts";
+import { paintBar } from "./bar.ts";
 import { cellCount, mostOf } from "./numbers.ts";
 
 /** One bar of a chart, or one column; its colour is its label's on a bar chart and its column's on a column chart. */
 export interface ChartRow {
+  /** What it is: beside its bar, or under its column. */
   readonly label: string;
+  /** How much: its figure, scaled to the chart's largest. */
   readonly value: number;
+  /** Its label's colour on a bar chart, white when absent; its column's on a column chart, the chart's when absent. */
   readonly foreground?: Colour;
 }
 
 export interface BarChartProps {
+  /** The bars, a row each from the top, scaled to the largest value that is a finite number. */
   readonly bars: readonly ChartRow[];
+  /** What it says when there are no bars; "no data" when absent. */
   readonly empty?: string;
+  /** The labels' column, its colour's cell included, nought or more; 14 when absent. */
   readonly labelCells?: number;
+  /** Every bar's colour, each label taking its row's own; green when absent. */
   readonly foreground?: Colour;
   /** A click on a bar chooses it: each bar is then a control, and while the pointer is on one the hint row gives its label and figure. */
   readonly onChoose?: (index: number, session: number) => void;
@@ -70,11 +78,7 @@ export class BarChart extends Component<BarChartProps, ChartState> {
       // NaN is no bar and Infinity a whole one: a count of cells that is NaN, or past the bar's, could not be filled.
       const value = Number.isNaN(entry.value) ? 0 : Math.min(entry.value, most);
       const halves = Math.round((2 * (cells - 1) * value) / most);
-      canvas.code(row, barAt, mosaicColour(this.props.foreground ?? Colour.Green));
-      canvas.fill(row, barAt + 1, Math.floor(halves / 2), FULL_BLOCK);
-      if (halves % 2 === 1) {
-        canvas.code(row, barAt + 1 + Math.floor(halves / 2), LEFT_HALF);
-      }
+      paintBar(canvas, row, barAt, halves, this.props.foreground ?? Colour.Green);
       if (this.props.onChoose !== undefined) {
         // From the label, after its colour's cell, to the bar's end.
         canvas.control(row, 1, Math.max(1, barAt + 1 + Math.ceil(halves / 2) - 1), 1, String(row));

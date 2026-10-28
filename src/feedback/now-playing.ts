@@ -29,6 +29,7 @@ export function nothingPlaying(keepRows: boolean, rows: number): Child {
 }
 
 export interface NowPlayingProps {
+  /** The bar's colour; magenta when absent. */
   readonly foreground?: Colour;
   /** While nothing plays its rows stay, empty, so what is under it does not move. */
   readonly keepRows?: boolean;

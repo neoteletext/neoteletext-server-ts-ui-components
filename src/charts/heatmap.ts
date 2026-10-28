@@ -12,17 +12,21 @@ import { type Size } from "../core/layout.ts";
 import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { fit } from "../core/text.ts";
 import { Attribute, Colour, mosaicColour } from "../kit.ts";
-import { mostOf } from "./numbers.ts";
+import { cellCount, mostOf } from "./numbers.ts";
 
 export interface HeatRow {
+  /** What it is, in the labels' column. */
   readonly label: string;
+  /** Its values, left to right, a block each. */
   readonly values: readonly number[];
 }
 
 export interface HeatmapProps {
+  /** The rows, from the top, each its label and its values left to right; as many values as fit across. */
   readonly rows: readonly HeatRow[];
   /** By colour, or by how many sixels are set. */
   readonly scale?: "colour" | "density";
+  /** The labels' column, its colour's cell included; 6 when absent, and none for less than none. */
   readonly labelCells?: number;
   /** The highest value; the most in the rows when absent. */
   readonly max?: number;
@@ -30,6 +34,7 @@ export interface HeatmapProps {
   readonly legend?: boolean;
   /** The density scale's colour. */
   readonly foreground?: Colour;
+  /** What it says when there are no rows; "no data" when absent. */
   readonly empty?: string;
 }
 
@@ -78,7 +83,7 @@ export class Heatmap extends Component<HeatmapProps> {
       paintEmpty(canvas, this.props.empty ?? "no data");
       return;
     }
-    const labelCells = this.props.labelCells ?? LABEL_CELLS;
+    const labelCells = cellCount(this.props.labelCells ?? LABEL_CELLS);
     const max = this.props.max ?? Math.max(0, mostOf(this.props.rows.flatMap((row) => row.values)));
     const cells = canvas.width - labelCells;
     this.props.rows.forEach((row, index) => {

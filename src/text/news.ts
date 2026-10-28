@@ -15,9 +15,11 @@ export function pageNumber(page: number): string {
 }
 
 export interface HeadlineProps {
+  /** The post's title, over its lines, the last cut with an ellipsis. */
   readonly title: string;
   /** The page it is on, written before it in yellow. */
   readonly page?: number;
+  /** The title's colour; white when absent. */
   readonly foreground?: Colour;
   /** The most lines it takes; one or two, as everywhere on the channel. */
   readonly lines?: number;

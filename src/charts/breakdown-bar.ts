@@ -18,11 +18,13 @@ import { cellCount } from "./numbers.ts";
 import { amountOf, apportion, colourOf, legendAcross, markCode, paintLegend, type Share, totalOf } from "./shares.ts";
 
 export interface BreakdownBarProps {
+  /** The parts of the whole, left to right; a value that is no finite number, or is below nought, counts for none. */
   readonly parts: readonly Share[];
   /** The rows the bar is tall. */
   readonly barRows?: number;
   /** The legend's entries across a row. */
   readonly legendColumns?: number;
+  /** What it says when the parts make no whole; "no data" when absent. */
   readonly empty?: string;
 }
 

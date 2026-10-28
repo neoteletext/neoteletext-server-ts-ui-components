@@ -6,7 +6,9 @@ import type { ServerStats } from "../kit.ts";
 
 /** A notice for a toast (feedback/notice.ts): what it says and how it is meant. Sent to one viewer or page with the bus's audience. */
 export interface ToastEvent {
+  /** What it says, after its kind's mark. */
   readonly text: string;
+  /** How it is meant: its mark and its colour (core/look.ts). */
   readonly kind: "info" | "success" | "warning" | "error";
   /** What undoes what the toast tells of, for the viewer who asks: the shelf says so, and its key or a click on the toast runs it, once. */
   readonly undo?: (session: number) => void;

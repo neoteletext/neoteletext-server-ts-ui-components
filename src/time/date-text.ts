@@ -141,9 +141,11 @@ export function formatDate(value: DateValue, pattern: string = DATE_FORMATS.long
 }
 
 export interface DateTextProps {
+  /** The date: a Date, milliseconds since the Unix epoch, or an ISO 8601 string, one without a zone read as UTC. */
   readonly value: DateValue;
   /** DATE_FORMATS.long when absent. */
   readonly pattern?: string;
+  /** Its colour; white when absent. */
   readonly foreground?: Colour;
   /** What shows when `value` is not a date. */
   readonly fallback?: string;

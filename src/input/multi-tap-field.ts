@@ -26,7 +26,9 @@ import { type ValueProps, ValueControl, type ValueState, type KeyHelpEntry } fro
 export interface MultiTapFieldProps extends ValueProps<string> {
   /** The most characters it takes; LONGEST when absent. */
   readonly longest?: number;
+  /** Called with the text, trimmed, as Enter sends it: never when it is blank or fails validate. */
   readonly onSubmit?: (text: string, session: number) => void;
+  /** Its band's colour; blue when absent, black while disabled. */
   readonly background?: Colour;
   /** Enter leaves the text there rather than clearing it. */
   readonly keep?: boolean;

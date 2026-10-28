@@ -16,6 +16,7 @@ import { storyText } from "./story-text.ts";
 export const TEXT_WIDTH = COLUMNS - 2;
 
 export interface StoryProps extends Framing {
+  /** The article: its headline, byline and text, over as many "Story" sub-pages as it needs. */
   readonly article: Article;
   /** The lead picture, as the engine's converter made it, whole-page; none, and the sub-page says so. */
   readonly picture?: string;

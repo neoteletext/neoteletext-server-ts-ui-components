@@ -7,20 +7,23 @@
 // a click on a button answers with it. A modal (modal.ts) lays one over a
 // page.
 
-import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
+import { backgroundCodes, type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
 import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/layout.ts";
 import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
-import { CHOSEN, DISABLED_BAND, type Kind, KINDS } from "../core/look.ts";
+import { CHOSEN, DISABLED_BAND, inkOn, type Kind, KINDS } from "../core/look.ts";
 import { cells, fit, wrap } from "../core/text.ts";
 import { Attribute, Colour, englishCodes, Key, SPACE, textColour } from "../kit.ts";
 import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { keyStep } from "../input/key-step.ts";
 import { within } from "../lists/list-rows.ts";
-import { paintShadow, SHADOW_MARGIN, SHADOW_ROWS } from "./drop-shadow.ts";
+import { paintShadow, SHADOW_INSIDE, SHADOW_MARGIN, SHADOW_ROWS } from "./drop-shadow.ts";
 
 export interface DialogProps extends ControlProps {
+  /** What it asks, on a band of its kind's colour, cut to the band. */
   readonly title: string;
+  /** What it says under the title, wrapped to its width; none when absent. */
   readonly message?: string;
+  /** Its title band's colours (core/look.ts); info when absent. */
   readonly kind?: Kind;
   /** The buttons, left to right; none for a dialog that only says something is happening. */
   readonly buttons?: readonly string[];
@@ -85,6 +88,11 @@ export class Dialog extends Control<DialogProps, DialogState> {
     }
   }
 
+  /** Its children are drawn on its own background: a field's band ends back to it. */
+  override innerBackground(): Colour {
+    return BACKGROUND;
+  }
+
   get #inset(): number {
     return this.props.inset ?? INSET;
   }
@@ -116,7 +124,8 @@ export class Dialog extends Control<DialogProps, DialogState> {
     return {
       row: box.row + TITLE_ROWS + lines,
       column,
-      width: Math.max(0, box.width - this.#inset - this.#right - BACKGROUND_CELLS - 1),
+      // A shadow's mosaic colour takes the dialog's last cell: its children stop short of it.
+      width: Math.max(0, box.width - this.#inset - this.#right - BACKGROUND_CELLS - 1 - (this.props.shadow === true ? SHADOW_INSIDE : 0)),
       height: Math.max(0, box.height - TITLE_ROWS - lines - FOOT_ROWS - this.#shadowRows),
     };
   }
@@ -156,7 +165,8 @@ export class Dialog extends Control<DialogProps, DialogState> {
       canvas.codes(row, inset, [textColour(row === 0 ? look.background : BACKGROUND), Attribute.NewBackground]);
       canvas.code(row, right, Attribute.BlackBackground);
     }
-    canvas.coloured(0, inset + BACKGROUND_CELLS, look.foreground, fit(this.props.title, right - inset - BACKGROUND_CELLS - 1));
+    // The kind's mark before the title, so the kind shows without its colour (core/look.ts).
+    canvas.coloured(0, inset + BACKGROUND_CELLS, look.foreground, fit(`${look.mark} ${this.props.title}`, right - inset - BACKGROUND_CELLS - 1));
     this.#message(canvas.width).forEach((line, index) => {
       canvas.coloured(TITLE_ROWS + index, inset + BACKGROUND_CELLS, Colour.White, line);
     });
@@ -170,14 +180,13 @@ export class Dialog extends Control<DialogProps, DialogState> {
     this.#buttonStarts().forEach((start, index) => {
       const chosen = index === this.state.chosen && this.focused;
       const off = this.#off(index);
-      let band: { readonly background: Colour; readonly foreground: Colour } = chosen ? CHOSEN : { background: Colour.White, foreground: Colour.Black };
+      let band: { readonly background: Colour; readonly foreground: Colour } = chosen ? CHOSEN : { background: Colour.White, foreground: inkOn(Colour.White) };
       if (off) {
         band = DISABLED_BAND;
       }
       const label = this.#buttons[index] ?? "";
       canvas.codes(row, start, [
-        textColour(band.background),
-        Attribute.NewBackground,
+        ...backgroundCodes(band.background),
         textColour(band.foreground),
         ...englishCodes(label),
         textColour(BACKGROUND),

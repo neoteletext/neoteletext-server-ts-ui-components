@@ -9,7 +9,9 @@ import { ChoiceList } from "../lists/choice-list.ts";
 import { Flashing } from "../text/flashing.ts";
 
 export interface SoundListProps {
+  /** The sounds to choose from, each listed by its name and its length in seconds. */
   readonly sounds: readonly Sound[];
+  /** The rows the list shows. */
   readonly shown: number;
 }
 

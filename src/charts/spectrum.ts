@@ -23,6 +23,7 @@ export interface SpectrumProps {
   readonly bandCells?: number;
   /** One colour for every row, in place of a meter's. */
   readonly foreground?: Colour;
+  /** What it says when there are no levels; "no sound" when absent. */
   readonly empty?: string;
 }
 

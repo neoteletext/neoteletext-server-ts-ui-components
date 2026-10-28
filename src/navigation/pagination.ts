@@ -18,6 +18,7 @@ export type PaginationStyle = "numbers" | "count" | "dots";
 export interface PaginationProps extends ValueProps<number> {
   /** How many pages there are. */
   readonly count: number;
+  /** Its look: the numbers round the current page, a count, or a row of dots; the numbers when absent. */
   readonly style?: PaginationStyle;
 }
 

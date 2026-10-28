@@ -1,6 +1,7 @@
 // A sparkline: a series in one or more rows of mosaic sixels, a value to
 // each column of sixels (two to a cell), scaled from its least to its
-// most; its label before it and its last value after.
+// most; its label before it and its last value after. A value that is NaN
+// or Infinity has no level, and is left out, as the line chart leaves it.
 
 import type { Canvas } from "../core/canvas.ts";
 import { paintEmpty } from "../core/look.ts";
@@ -8,14 +9,20 @@ import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { fit, padStart } from "../core/text.ts";
 import { Colour, Sixels, SIXELS_ACROSS, SIXELS_DOWN } from "../kit.ts";
+import { cellCount, leastOf, mostOf } from "./numbers.ts";
 
 export interface SparklineProps {
+  /** The series, oldest first: the latest that fit, two to a cell, scaled from their least to their most; a value that is not a finite number is left out. */
   readonly values: readonly number[];
+  /** What it is, before it on its bottom row; no column when absent. */
   readonly label?: string;
+  /** The label's column; 8 when absent, and none for less than none. */
   readonly labelCells?: number;
   /** One row has three levels; each row more, three more. */
   readonly plotRows?: number;
+  /** What it says when no value is a finite number; "no data" when absent. */
   readonly empty?: string;
+  /** Its colour; green when absent. */
   readonly foreground?: Colour;
   /** The last value after it. */
   readonly last?: boolean;
@@ -35,20 +42,21 @@ export class Sparkline extends Component<SparklineProps> {
   }
 
   override paint(canvas: Canvas): void {
-    if (this.props.values.length === 0) {
+    const values = this.props.values.filter((value) => Number.isFinite(value));
+    if (values.length === 0) {
       paintEmpty(canvas, this.props.empty ?? "no data");
       return;
     }
-    const labelCells = this.props.label === undefined ? 0 : (this.props.labelCells ?? LABEL_CELLS);
+    const labelCells = this.props.label === undefined ? 0 : cellCount(this.props.labelCells ?? LABEL_CELLS);
     if (this.props.label !== undefined) {
       canvas.coloured(this.#rows - 1, 0, Colour.White, fit(this.props.label, labelCells - 1));
     }
     const lastCells = this.props.last === false ? 0 : LAST_CELLS;
     const cells = Math.max(1, canvas.width - labelCells - 1 - lastCells);
-    const shown = this.props.values.slice(-cells * SIXELS_ACROSS);
+    const shown = values.slice(-cells * SIXELS_ACROSS);
     const height = this.#rows * SIXELS_DOWN;
-    const least = Math.min(...shown);
-    const span = Math.max(...shown) - least;
+    const least = leastOf(shown);
+    const span = mostOf(shown) - least;
     const sixels = new Sixels(cells * SIXELS_ACROSS, height);
     shown.forEach((value, x) => {
       // Every value shows at least its bottom sixel, so a low one is not mistaken for none.

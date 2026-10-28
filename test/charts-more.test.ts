@@ -102,10 +102,10 @@ function columnsByColour(codes: readonly number[]): Map<number, number[]> {
 const PIE_ROWS = 9;
 /** The pie's middle row. */
 const PIE_MIDDLE = BODY_ROW + 4;
-/** The pie's middle column: three cells for the marks, and half of its nine. */
-const PIE_CENTRE = 7;
-/** The plot's cells, where the legend begins: the pie's nine and the marks' three either side. */
-const PLOT_CELLS = 15;
+/** The pie's middle column: Hold Mosaics, three cells for the marks, and half of its twelve. */
+const PIE_CENTRE = 10;
+/** The plot's cells, where the legend begins: Hold Mosaics, the marks' three either side of the pie's twelve, and a blank cell before the marks on the right. */
+const PLOT_CELLS = 20;
 
 test("a pie's slices run clockwise from twelve o'clock, each cell in the colour most of its sixels are", () => {
   const seen = viewer(

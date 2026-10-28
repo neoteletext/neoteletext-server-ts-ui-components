@@ -6,12 +6,12 @@ bNDwPlayer
 bN                                      
 bNothing playing                        
                                         
-yNbprev _ cNbplay _ kNbstop _ cNbnext _ 
+yNbprev _ cNbplay _ __bstop _ cNbnext _ 
 cVol --  Repeat off  Shuffle off        
 c                                       
-c>cMorning                              
-  wNoon                                 
-  wNight                                
+c>c Morning                             
+  w Noon                                
+  w Night                               
                                         
                                         
                                         

@@ -15,6 +15,7 @@ export const KEY_COLOURS = [Colour.Red, Colour.Green, Colour.Yellow, Colour.Cyan
 const PROMPT_GAP = 2;
 
 export interface FastextBarProps {
+  /** The prompts, red to cyan, each in its colour: one with no label is not drawn and takes no cells, and past four none is drawn. */
   readonly prompts: Prompts;
 }
 

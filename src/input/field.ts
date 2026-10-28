@@ -6,19 +6,21 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/layout.ts";
+import { LABEL, LABEL_CELLS } from "../core/look.ts";
 import { fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 export interface FieldProps {
+  /** What the field is, in its column, cut to the column. */
   readonly label: string;
-  /** The cells the label's column takes. */
+  /** The cells the label's column takes; a control's own label column (core/look.ts, LABEL_CELLS) when absent, so a field's controls line up with labelled ones. */
   readonly labelCells?: number;
-  /** A word under the label: what is wanted, or that it must be given. */
+  /** A word under the label, as help: what is wanted, or that it must be given. */
   readonly note?: string;
 }
 
-/** The label's column when none is given. */
-const LABEL_CELLS = 12;
+/** A note's colour: cyan, as a text field's placeholder (core/look.ts, EMPTY) is help in, never the blue of what cannot be used (DISABLED). */
+const NOTE = Colour.Cyan;
 
 /** A label and, beside it, its control: the children. */
 export class Field extends Component<FieldProps> {
@@ -40,9 +42,9 @@ export class Field extends Component<FieldProps> {
   }
 
   override paint(canvas: Canvas): void {
-    canvas.coloured(0, 0, Colour.White, fit(this.props.label, this.#labelCells - 1));
+    canvas.coloured(0, 0, LABEL, fit(this.props.label, this.#labelCells - 1));
     if (this.props.note !== undefined) {
-      canvas.coloured(1, 0, Colour.Blue, fit(this.props.note, this.#labelCells - 1));
+      canvas.coloured(1, 0, NOTE, fit(this.props.note, this.#labelCells - 1));
     }
   }
 }

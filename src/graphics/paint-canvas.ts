@@ -1,9 +1,11 @@
 // A canvas a viewer draws on with the pointer held down. Its surface is
 // not a control: the browser's hover look would recolour all of it, and
 // its pressed look turn all of it round, for as long as a stroke lasts. A
-// stroke is a drag, which is sent with its button held, so drawing needs
-// no pointer area; showing where the brush will fall before a press does,
-// and `brush` asks for one over the surface.
+// stroke is a drag; and every move over the page comes, a button held or
+// not (INPUT.md section 9.8), so `brush` can show where the brush will
+// fall before a press. The surface follows the
+// canvas's columns and rows as they change, keeping what is painted where
+// the two overlap.
 
 import type { Canvas } from "../core/canvas.ts";
 import type { Size } from "../core/layout.ts";
@@ -17,14 +19,15 @@ import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.
 export interface PaintProps extends ControlProps {
   /** The canvas's size in cells; its colour takes the first column. */
   readonly columns: number;
+  /** The canvas's rows. */
   readonly rows: number;
+  /** The colour it paints in to begin with, until the keys 1 to 7 choose another; yellow when absent. */
   readonly foreground?: Colour;
   /**
    * The cell the brush will paint shows as the pointer passes over the
    * surface, before a press: its middle row of sixels turned round. The
-   * surface is then a pointer area (INPUT.md section 7.4), so every move
-   * over it is a message to the server; the mark stays where the pointer
-   * last was on it, since a move off it is not sent.
+   * mark stays where the pointer last was on it, since a move off it goes
+   * to what is drawn there.
    */
   readonly brush?: boolean;
 }
@@ -44,10 +47,15 @@ const SURFACE_AT = 1;
 /** What the brush's mark turns round in its cell: the middle row, which shows on a painted cell and on an empty one. */
 const BRUSH_MARK = SIXEL.middleLeft | SIXEL.middleRight;
 
+/** The sixels of a surface `columns` by `rows`, less the colour's column. */
+function surfaceOf({ columns, rows }: Pick<PaintProps, "columns" | "rows">): Sixels {
+  return new Sixels((columns - SURFACE_AT) * SIXELS_ACROSS, rows * SIXELS_DOWN);
+}
+
 /** A canvas of sixels drawn on with the pointer held down: every drag arrives (INPUT.md section 6.3). */
 export class PaintCanvas extends Control<PaintProps, PaintState> {
   override state: PaintState = { foreground: this.props.foreground ?? Colour.Yellow, version: 0, brushAt: null };
-  readonly #sixels = new Sixels((this.props.columns - SURFACE_AT) * SIXELS_ACROSS, this.props.rows * SIXELS_DOWN);
+  #sixels = surfaceOf(this.props);
 
   protected override keyNeeds(): PageNeeds {
     return { digits: true };
@@ -61,19 +69,31 @@ export class PaintCanvas extends Control<PaintProps, PaintState> {
     ];
   }
 
+  /** The surface at the size the props give now: a new one when they have changed, with what was painted copied where it still fits. */
+  #surface(): Sixels {
+    const wanted = surfaceOf(this.props);
+    if (wanted.width === this.#sixels.width && wanted.height === this.#sixels.height) {
+      return this.#sixels;
+    }
+    for (let y = 0; y < Math.min(wanted.height, this.#sixels.height); y += 1) {
+      for (let x = 0; x < Math.min(wanted.width, this.#sixels.width); x += 1) {
+        wanted.set(x, y, this.#sixels.get(x, y));
+      }
+    }
+    this.#sixels = wanted;
+    return wanted;
+  }
+
   override measure(space: Size): Size {
     return { width: Math.min(space.width, this.props.columns), height: Math.min(space.height, this.props.rows) };
   }
 
   override paint(canvas: Canvas): void {
-    canvas.sixels(0, SURFACE_AT, this.state.foreground, this.#sixels);
+    const sixels = this.#surface();
+    canvas.sixels(0, SURFACE_AT, this.state.foreground, sixels);
     const { brushAt } = this.state;
-    if (this.props.brush === true && !this.disabled) {
-      // Its own columns: a stack gives it the whole row.
-      canvas.pointerArea(0, SURFACE_AT, this.props.columns - SURFACE_AT, this.props.rows);
-      if (brushAt !== null) {
-        canvas.code(brushAt.row, brushAt.column, this.#sixels.cell((brushAt.column - SURFACE_AT) * SIXELS_ACROSS, brushAt.row * SIXELS_DOWN) ^ BRUSH_MARK);
-      }
+    if (this.props.brush === true && !this.disabled && brushAt !== null) {
+      canvas.code(brushAt.row, brushAt.column, sixels.cell((brushAt.column - SURFACE_AT) * SIXELS_ACROSS, brushAt.row * SIXELS_DOWN) ^ BRUSH_MARK);
     }
   }
 
@@ -84,9 +104,10 @@ export class PaintCanvas extends Control<PaintProps, PaintState> {
 
   /** Sets the sixels under a cell: the whole cell, since a cell is the pointer's grain. */
   #set(row: number, column: number): void {
+    const sixels = this.#surface();
     for (let y = 0; y < SIXELS_DOWN; y += 1) {
       for (let x = 0; x < SIXELS_ACROSS; x += 1) {
-        this.#sixels.set((column - SURFACE_AT) * SIXELS_ACROSS + x, row * SIXELS_DOWN + y, true);
+        sixels.set((column - SURFACE_AT) * SIXELS_ACROSS + x, row * SIXELS_DOWN + y, true);
       }
     }
     this.setState({ version: this.state.version + 1 });
@@ -98,7 +119,7 @@ export class PaintCanvas extends Control<PaintProps, PaintState> {
     }
     const cell = this.#onSurface(event.local.row, event.local.column);
     if (event.action === "move" && event.buttons === 0) {
-      // A move from the pointer area: only a new cell changes the page.
+      // A move with no button held: only a new cell changes the page.
       if (cell?.row !== this.state.brushAt?.row || cell?.column !== this.state.brushAt?.column) {
         this.setState({ brushAt: cell });
       }
@@ -122,7 +143,7 @@ export class PaintCanvas extends Control<PaintProps, PaintState> {
       return true;
     }
     if (isPress(event, Key.Backspace) || isPress(event, "c")) {
-      this.#sixels.clear();
+      this.#surface().clear();
       this.setState({ version: this.state.version + 1 });
       return true;
     }

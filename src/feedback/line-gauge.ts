@@ -13,12 +13,17 @@ import { cellCount } from "../charts/numbers.ts";
 import { LABEL_CELLS, PERCENT_CELLS, share } from "./progress.ts";
 
 export interface LineGaugeProps {
+  /** What it measures, in a column of its own before the line; no column when absent. */
   readonly label?: string;
+  /** How far along, in max's units; the share it makes is kept from 0 to 1. */
   readonly value: number;
+  /** What a full line is; nought or less shows an empty one. */
   readonly max: number;
+  /** The filled part's colour; cyan when absent. */
   readonly foreground?: Colour;
   /** The rest of the line's colour. */
   readonly rest?: Colour;
+  /** The label's column, nought or more; LABEL_CELLS when absent. */
   readonly labelCells?: number;
 }
 

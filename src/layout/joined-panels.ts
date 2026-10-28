@@ -21,6 +21,7 @@ export interface JoinedPanelsProps {
   readonly widths?: readonly (number | null)[];
   /** The line's colour. */
   readonly foreground?: Colour;
+  /** The titles' colour; yellow when absent. */
   readonly titleForeground?: Colour;
 }
 

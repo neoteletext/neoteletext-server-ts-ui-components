@@ -3,33 +3,48 @@
 // step, Page Up and Page Down step ten times, Home and End go to the ends,
 // and the pointer sets it where the track is pressed or dragged. The track
 // is its control, since a press anywhere on it moves the knob there, and
-// the browser holds its pressed look while the knob is dragged; a drag is
-// sent with its button held, so it needs no pointer area. The wheel over it
-// steps it, up for more. Filled, the track is thicker up to the knob.
+// the browser holds its pressed look while the knob is dragged; a move
+// with no button held is not its. The wheel over it
+// steps it, up for more. Filled, the track is thicker up to the knob. The
+// value is in a column of its own after the track, as wide whatever its
+// unit, so sliders stacked together line up; the label alone marks the
+// keys, and the track keeps its colour.
 
 import type { Canvas } from "../core/canvas.ts";
 import type { Size } from "../core/layout.ts";
 import { isPress, type KeyEvent, type PointerEvent, type WheelEvent } from "../core/events.ts";
 import { WheelLines } from "../core/list-cursor.ts";
-import { DISABLED, FOCUSED_LABEL } from "../core/look.ts";
+import { DISABLED } from "../core/look.ts";
 import { BOTTOM_ROW, LEFT_HALF, MIDDLE_ROW, RIGHT_HALF } from "../core/mosaics.ts";
-import { padStart } from "../core/text.ts";
-import { Colour, Key, SIXELS_ACROSS } from "../kit.ts";
+import { cells, padStart } from "../core/text.ts";
+import { Colour, COLUMNS, Key, SIXELS_ACROSS } from "../kit.ts";
 import { type ValueProps, ValueControl, type KeyHelpEntry } from "./value-control.ts";
 
 export interface SliderProps extends ValueProps<number> {
+  /** What it is, in a column of its own before the track. */
   readonly label: string;
+  /** The track's left end, and its value when it is given none. */
   readonly min: number;
+  /** The track's right end. */
   readonly max: number;
+  /** What Left, Right and the wheel move it by, every value a whole number of steps from min; 1 when absent or not more than nought. */
   readonly step?: number;
+  /** The track's colour; cyan when absent. */
   readonly foreground?: Colour;
+  /** The track is thicker up to the knob. */
   readonly filled?: boolean;
   /** What follows the value: "%", "dB". */
   readonly unit?: string;
+  /** The value's text cells after the track, the unit's included: the widest of min and max with the unit, and no fewer than VALUE_TEXT, when absent. Sliders given the same line up. */
+  readonly valueCells?: number;
 }
 
-/** The value's cells after the track, its colour cell included. */
-const VALUE_CELLS = 6;
+/** The value's text cells at the least: a sign, three digits and a unit of one cell, "-100%", or two digits and one of two, "-10dB", so the common ranges line up untold. */
+const VALUE_TEXT = 5;
+/** The most text cells a value is given: a page's row, so a column from props is not taken on trust. */
+const MOST_VALUE_TEXT = COLUMNS;
+/** The value's colour, a cell before its text. */
+const VALUE_COLOUR_CELLS = 1;
 /** Page Up and Page Down move this many steps. */
 const PAGE_STEPS = 10;
 /** The region its track is. */
@@ -62,9 +77,20 @@ export class Slider extends ValueControl<number, SliderProps> {
     ];
   }
 
+  /** The value's text cells: as told, or the widest of its ends with the unit, never fewer than VALUE_TEXT. */
+  get #valueText(): number {
+    const told = this.props.valueCells;
+    if (told !== undefined && Number.isFinite(told)) {
+      return Math.max(1, Math.min(MOST_VALUE_TEXT, Math.trunc(told)));
+    }
+    const unit = cells(this.props.unit ?? "");
+    const widest = Math.max(cells(String(this.props.min)), cells(String(this.props.max))) + unit;
+    return Math.min(MOST_VALUE_TEXT, Math.max(VALUE_TEXT, widest));
+  }
+
   /** The track's cells, after its mosaic colour's cell. */
   #trackCells(width: number): number {
-    return Math.max(1, width - this.labelCells - 1 - VALUE_CELLS - (this.props.unit?.length ?? 0));
+    return Math.max(1, width - this.labelCells - 1 - VALUE_COLOUR_CELLS - this.#valueText);
   }
 
   override measure(space: Size): Size {
@@ -72,10 +98,7 @@ export class Slider extends ValueControl<number, SliderProps> {
   }
 
   get #ink(): Colour {
-    if (this.disabled) {
-      return DISABLED;
-    }
-    return this.focused ? FOCUSED_LABEL : (this.props.foreground ?? Colour.Cyan);
+    return this.disabled ? DISABLED : (this.props.foreground ?? Colour.Cyan);
   }
 
   override paint(canvas: Canvas): void {
@@ -95,7 +118,7 @@ export class Slider extends ValueControl<number, SliderProps> {
     if (!this.disabled) {
       canvas.control(0, at + 1, track, 1, TRACK);
     }
-    canvas.coloured(0, after, this.disabled ? DISABLED : Colour.White, `${padStart(String(this.value), VALUE_CELLS - 2)}${this.props.unit ?? ""}`);
+    canvas.coloured(0, after, this.disabled ? DISABLED : Colour.White, padStart(`${String(this.value)}${this.props.unit ?? ""}`, this.#valueText));
   }
 
   override onKey(event: KeyEvent): boolean {

@@ -13,6 +13,7 @@ const DAY_S = 86_400;
 export interface CountdownProps {
   /** When it reaches nought, in milliseconds since the Unix epoch. */
   readonly until: number;
+  /** The digits' colour; green when absent. */
   readonly foreground?: Colour;
 }
 

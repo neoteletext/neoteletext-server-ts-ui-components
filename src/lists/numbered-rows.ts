@@ -13,14 +13,20 @@ import { pageNumber } from "../text/news.ts";
 
 /** A row: a page, its label, and a figure. */
 export interface NumberedRow {
+  /** The page a click on it goes to, its number first in yellow. */
   readonly page: number;
+  /** What it is, cut to the room before the figure. */
   readonly label: string;
+  /** What it says on the right, in cyan; nothing when absent. */
   readonly figure?: number | string;
+  /** The label's colour; white when absent. */
   readonly foreground?: Colour;
 }
 
 export interface NumberedRowsProps {
+  /** The rows, from the top: each a page a click goes to. */
   readonly entries: readonly NumberedRow[];
+  /** What it says when there are none; "nothing listed" when absent. */
   readonly empty?: string;
 }
 

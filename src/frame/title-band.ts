@@ -9,8 +9,11 @@ import { Colour } from "../kit.ts";
 import { BAND_ROWS } from "./frame.ts";
 
 export interface TitleBandProps {
+  /** The sub-page's name, in double height, cut to the band. */
   readonly title: string;
+  /** The band's colour. */
   readonly background: Colour;
+  /** The title's colour; white when absent. */
   readonly foreground?: Colour;
 }
 

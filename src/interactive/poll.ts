@@ -14,6 +14,7 @@ import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.
 import { Tally } from "./tally.ts";
 
 export interface PollProps extends ControlProps {
+  /** The votes, kept by the page that makes the poll and told to every viewer's copy through the bus. */
   readonly tally: Tally;
 }
 

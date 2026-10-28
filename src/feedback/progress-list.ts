@@ -16,15 +16,20 @@ import { clockTime } from "./listening-view.ts";
 import { ProgressBar } from "./progress.ts";
 
 export interface ProgressItem {
+  /** What it is, before its bar. */
   readonly label: string;
+  /** How far along, in max's units; its rate is worked out from it. */
   readonly value: number;
+  /** What finished is; its time left is worked out to it. */
   readonly max: number;
   /** When it started, by the channel's clock (Services.now); its rate and time left are not known without it. */
   readonly startedMs?: number;
 }
 
 export interface ProgressListProps {
+  /** What is under way, a row each: its bar, its rate and its time left; no more than a page's rows are drawn. */
   readonly items: readonly ProgressItem[];
+  /** Every bar's colour; green when absent. */
   readonly foreground?: Colour;
   /** Each label's column, as a progress bar's. */
   readonly labelCells?: number;

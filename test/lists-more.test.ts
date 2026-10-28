@@ -7,6 +7,7 @@ import { text } from "neottx-server-ts-protocol/testing";
 import { ChoiceList, type Element, FilterList, h, matchRank, PageFinder } from "../src/index.ts";
 import { Key } from "../src/kit.ts";
 import { BODY_ROW, frame, harness, PAGE } from "./components-fixtures.ts";
+import { rowText } from "./charts-more-fixtures.ts";
 import { viewer } from "./controls-fixtures.ts";
 
 const names = ["alpha", "bravo", "charlie", "delta"];
@@ -40,7 +41,7 @@ test("a list picked by the coloured keys letters its first four rows, and a colo
       },
     }),
   );
-  assert.match(text(page.seen(1, PAGE).rows, BODY_ROW + 1), /G bravo/u);
+  assert.match(rowText(page, BODY_ROW + 1), /<green>G {2}<white>bravo/u, "the letter in its key's colour, in its column before the band");
   page.press(1, Key.Yellow);
   assert.deepEqual(chosen, [2]);
 });

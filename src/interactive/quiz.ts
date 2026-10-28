@@ -15,15 +15,20 @@ import { answerActions, type Verdict, verdictRows } from "./quiz-parts.ts";
 
 /** One question of a quiz. */
 export interface Question {
+  /** What it asks. */
   readonly question: string;
+  /** Its four answers, for the red, green, yellow and cyan keys in turn. */
   readonly answers: readonly [string, string, string, string];
   /** The right answer's place, 0 to 3. */
   readonly right: number;
 }
 
 export interface QuizProps extends ControlProps {
+  /** The questions, asked in turn and round again after the last; nothing shows when there are none. */
   readonly questions: readonly Question[];
+  /** Played to the viewer as they answer rightly. */
   readonly right?: Sound;
+  /** Played to the viewer as they answer wrongly. */
   readonly wrong?: Sound;
 }
 

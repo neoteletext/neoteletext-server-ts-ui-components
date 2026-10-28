@@ -3,6 +3,8 @@ export { EventBus } from "./bus.ts";
 export type { Audience, Bus, Place, Unsubscribe } from "./bus.ts";
 export { Canvas, CHIP_CELLS, NEW_BACKGROUND_CELL } from "./canvas.ts";
 export type { Declared, PageRequests, Region } from "./canvas.ts";
+export { DisplayAttribute } from "./enhancement.ts";
+export type { DisplayAttributes } from "./enhancement.ts";
 export type { ComponentEvent, ComponentEventInit, Origin } from "./component-events.ts";
 export { Component } from "./component.ts";
 export { stack, stackSize } from "./layout.ts";
@@ -24,6 +26,7 @@ export {
   DISABLED,
   DISABLED_BAND,
   DISABLED_CHIP,
+  inkOn,
   EMPTY,
   FOCUSED_LABEL,
   ITEM_TEXT,

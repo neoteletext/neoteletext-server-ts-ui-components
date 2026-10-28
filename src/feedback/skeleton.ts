@@ -21,6 +21,7 @@ export interface SkeletonProps {
   readonly widths?: readonly number[];
   /** A brighter band moves across. */
   readonly shimmer?: boolean;
+  /** The blocks' colour; blue when absent. */
   readonly foreground?: Colour;
   /** The band's colour. */
   readonly band?: Colour;

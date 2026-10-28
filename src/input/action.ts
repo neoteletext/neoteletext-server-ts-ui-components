@@ -16,9 +16,13 @@ import { cells, fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 export interface ActionProps {
+  /** What it says, cut to its box. */
   readonly text: string;
+  /** Called as the text is clicked; never while disabled. */
   readonly onPress: (session: number) => void;
+  /** The text's colour; white when absent. */
   readonly foreground?: Colour;
+  /** Dim, and a click on it does nothing. */
   readonly disabled?: boolean;
   /** Centred in its box. */
   readonly centre?: boolean;

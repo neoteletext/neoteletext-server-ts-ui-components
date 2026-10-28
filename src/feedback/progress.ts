@@ -1,9 +1,11 @@
 // How far along something is, or how full: a progress bar of mosaic blocks
 // to the half cell, solid or in separated graphics (EN 300 706 clause
-// 12.2), whose colour may follow thresholds as a gauge's does. The share it
-// shows, and the label's and the share's cells, are the line gauge's too
-// (line-gauge.ts). Given onSeek, its track is a control: a click on it
-// says how far along the click was, as a player's seek bar does.
+// 12.2), whose colour may follow thresholds as a gauge's does; either
+// kind spends the cell after its colour's on saying which, so solid bars
+// and separated ones start in one column. The share it shows, and the
+// label's and the share's cells, are the line gauge's too (line-gauge.ts).
+// Given onSeek, its track is a control: a click on it says how far along
+// the click was, as a player's seek bar does.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
@@ -18,9 +20,13 @@ import { cellCount } from "../charts/numbers.ts";
 export type Threshold = readonly [from: number, foreground: Colour];
 
 export interface ProgressProps {
+  /** What it measures, in a column of its own before the bar; no column when absent. */
   readonly label?: string;
+  /** How far along, in max's units; the share it makes is kept from 0 to 1. */
   readonly value: number;
+  /** What a full bar is; nought or less shows an empty one. */
   readonly max: number;
+  /** The bar's colour where no threshold is reached; green when absent. */
   readonly foreground?: Colour;
   /** Separated graphics: the bar in blocks with gaps, as segments. */
   readonly separated?: boolean;
@@ -28,7 +34,7 @@ export interface ProgressProps {
   readonly thresholds?: readonly Threshold[];
   /** The label's column. */
   readonly labelCells?: number;
-  /** The share after the bar. */
+  /** The share after the bar, as a percentage; shown unless false. */
   readonly percent?: boolean;
   /** A click on the track: how far along it, 0 to 1. */
   readonly onSeek?: (fraction: number, session: number) => void;
@@ -97,7 +103,8 @@ export class ProgressBar extends Component<ProgressProps> {
     if (this.props.label !== undefined) {
       canvas.coloured(0, 0, Colour.White, fit(this.props.label, labelCells - 1));
     }
-    const lead = this.props.separated === true ? [Attribute.Separated] : [];
+    // EN 300 706 Table 26: Contiguous is the default, but saying it keeps a solid bar's track in the separated one's column.
+    const lead = [this.props.separated === true ? Attribute.Separated : Attribute.Contiguous];
     const after = this.props.percent === false ? 0 : PERCENT_CELLS;
     const cells = Math.max(1, canvas.width - labelCells - 1 - lead.length - after);
     const halves = Math.round(2 * cells * fraction);

@@ -13,6 +13,7 @@ export interface ValueProps<T> extends ControlProps {
   readonly value?: T;
   /** The value to begin with, when the control keeps its own. */
   readonly initial?: T;
+  /** Called with each value the viewer gives it, whether or not it passes validate. */
   readonly onChange?: (value: T, session: number) => void;
   /** What is wrong with a value, or null. */
   readonly validate?: (value: T) => string | null;

@@ -11,9 +11,11 @@ import { type Line, LinesBlock } from "../text/lines.ts";
 import { BAR_CELLS, ScrollBar, scrolled } from "./scroll.ts";
 
 export interface ScrollingTextProps extends ControlProps {
+  /** The lines to read, a row each. */
   readonly lines: readonly Line[];
   /** The rows it shows at once. */
   readonly shown: number;
+  /** What it says when there are no lines; "nothing to read" when absent. */
   readonly empty?: string;
 }
 

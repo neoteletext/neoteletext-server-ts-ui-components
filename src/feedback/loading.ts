@@ -15,6 +15,7 @@ export interface LoadingProps {
   readonly loading: boolean;
   /** What the spinner says; "Loading" when absent. */
   readonly label?: string;
+  /** The spinner's frames; orbit when absent. */
   readonly spinner?: SpinnerStyle;
   /** A skeleton of these props instead of the spinner. */
   readonly skeleton?: SkeletonProps;

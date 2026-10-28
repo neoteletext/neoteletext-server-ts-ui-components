@@ -26,9 +26,11 @@ import { Breadcrumbs } from "./breadcrumbs.ts";
 import { menuRow } from "./menu-row.ts";
 
 export interface MenuItem {
+  /** What it says, and its step in the path of labels onChoose is given. */
   readonly label: string;
   /** What it says on the right: a key, a page. */
   readonly shortcut?: string;
+  /** It cannot be chosen, and is drawn in the disabled look. */
   readonly disabled?: boolean;
   /** A rule, not a choice. */
   readonly rule?: boolean;
@@ -37,6 +39,7 @@ export interface MenuItem {
 }
 
 export interface MenuProps extends ControlProps {
+  /** The top menu's choices. */
   readonly items: readonly MenuItem[];
   /** The top menu's name, shown over its items with the way down to a menu opened. */
   readonly title?: string;
@@ -44,6 +47,7 @@ export interface MenuProps extends ControlProps {
   readonly numbered?: boolean;
   /** The choices shown at once. */
   readonly shown?: number;
+  /** What an empty menu says; "no choices" when absent. */
   readonly empty?: string;
   /** A choice made: the labels from the top menu down to it. */
   readonly onChoose: (path: readonly string[], session: number) => void;

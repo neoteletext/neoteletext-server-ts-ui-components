@@ -5,8 +5,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { Harness, text } from "neottx-server-ts-protocol/testing";
-import { AudioPlayer, Collapsible, DISABLED, type Element, h, NowPlaying, Pagination, Slider, TabView, Text, Tree } from "../src/index.ts";
-import { Colour, COLUMNS, Key } from "../src/kit.ts";
+import { AudioPlayer, CHIP_CELLS, Collapsible, DISABLED, type Element, h, NowPlaying, Pagination, Slider, TabView, Text, Tree } from "../src/index.ts";
+import { Attribute, COLUMNS, Key } from "../src/kit.ts";
 import { PAGE, BODY_ROW, frame, harness, generationOf, Player, leaves } from "./components-fixtures.ts";
 
 test("a stream pauses where it was heard to, sending nothing, and resumes from there as a new stream", () => {
@@ -45,10 +45,14 @@ test("a disabled control looks it: tabs, a heading, the page now and a slider's 
   ]);
   seen.join(1, PAGE);
   const rows = seen.seen(1, PAGE).rows;
-  // The chosen tab's chip on blue, the other's name, after its colour's cell in its slot, in DISABLED.
-  assert.deepEqual([rows[BODY_ROW]?.[0], rows[BODY_ROW]?.["One".length + 4 + 2]], [Colour.Blue, DISABLED]);
-  assert.deepEqual([rows[BODY_ROW + 1]?.[0], rows[BODY_ROW + 1]?.[2]], [Colour.Black, DISABLED], "no band, its title dim");
-  assert.equal(rows[BODY_ROW + 2]?.[2], Colour.Blue, "the page now on a dim chip, after the dim arrow's two cells");
+  // The chosen tab's chip with no band (Black Background where the band's colour was: black ink is Level 2.5 only), the other's name, after its colour's cell in its slot, in DISABLED.
+  assert.deepEqual([rows[BODY_ROW]?.[0], rows[BODY_ROW]?.["One".length + CHIP_CELLS + 2]], [Attribute.BlackBackground, DISABLED]);
+  assert.deepEqual(
+    [rows[BODY_ROW + 1]?.[0], rows[BODY_ROW + 1]?.[2]],
+    [Attribute.BlackBackground, DISABLED],
+    "no band (Black Background, not alpha black), its title dim",
+  );
+  assert.equal(rows[BODY_ROW + 2]?.[2], Attribute.BlackBackground, "the page now on a chip with no band, after the dim arrow's two cells");
   assert.equal(rows[BODY_ROW + 3]?.[COLUMNS - 6], DISABLED, "the value after the track");
 });
 

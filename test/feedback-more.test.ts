@@ -158,10 +158,11 @@ test("a task list marks each step in words in its kind's colour, spins the runni
     rows.map((row) => [row.slice(1, 3), row.slice(4).trimEnd()]),
     [
       ["OK", "Fetch"],
-      [String.fromCodePoint(MOSAIC_BASE | SIXEL.topLeft, textColour(Colour.White)), "Build"],
+      // The spinner's frame, and the next of its frames' cells, blank, cut at the marks' column.
+      [String.fromCodePoint(MOSAIC_BASE | SIXEL.topLeft, MOSAIC_BASE), "Build"],
       ["X ", "Test"],
       ["  ", "2 failing"],
-      ["..", "Ship"],
+      ["- ", "Ship"],
     ],
   );
   assert.deepEqual(

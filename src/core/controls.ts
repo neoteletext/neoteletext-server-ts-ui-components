@@ -5,14 +5,13 @@
 // which EN 300 706 Table 29 reserves and every decoder skips. The browser
 // shows them as it shows links and draws their hover and pressed looks
 // itself, so a page that declares them is drawn the same everywhere.
-// Pointer areas (INPUT.md section 7.4, the engine's decision E.128) are
-// declared alike by column mode 01010: inside one the browser sends every
-// move, button held or not, where elsewhere it sends a move only during a
-// drag; a width of 0 makes the whole page one.
+// Pointer areas, column mode 01010, are withdrawn (INPUT.md section 7.4,
+// 28 October 2026: every move over the page is sent, so an area asks for
+// nothing); the mode is reserved again, as Table 29 has it.
 //
-// A control or a pointer area is one triplet on each row it covers, after a
-// Set Active Position triplet for the row; its rows below the first are
-// joined to it. The whole page's triplet needs no row and comes first.
+// A control is one triplet on each row it covers, after a Set Active
+// Position triplet for the row; its rows below the first are joined to it.
+// enhancement.ts orders them with the page's display attributes.
 // In TTI a packet X/26 is a packed OL,26 line: its designation code, then
 // its thirteen triplets as 39 characters, six bits of a triplet's 18-bit
 // value each, least significant first, each with bit 6 set so the line is
@@ -36,29 +35,25 @@ export const DATA_MASK = (1 << DATA_BITS) - 1;
 export const MODE_SET_ACTIVE_POSITION = 0b00100;
 /** Table 29, a column mode EN 300 706 reserves: NeoTeletext's control (INPUT.md section 7.3). */
 export const MODE_CONTROL = 0b00101;
-/** Table 29, another reserved column mode: NeoTeletext's pointer area (INPUT.md section 7.4). */
-export const MODE_POINTER_AREA = 0b01010;
 /** Clause 12.3.1: row addresses are 40 to 63, 40 meaning row 24 and 41 to 63 rows 1 to 23. */
 export const ROW_ADDRESS_BASE = 40;
 /** Table 28: the Termination Marker, address 63 and mode 11111; its type, data 111, says the local enhancement data ends and no Local Object definitions follow. */
 export const TERMINATION_ADDRESS = 63;
 export const MODE_TERMINATION = 0b11111;
 const TERMINATION_DATA = 0b111;
-/** INPUT.md sections 7.3 and 7.4: D6 joins a run to the control (or pointer area) on the row above at the same column and width; D5 to D0 are its width. */
+/** INPUT.md section 7.3: D6 joins a run to the control on the row above at the same column and width; D5 to D0 are its width. */
 export const JOINED = 0x40;
 export const WIDTH_MASK = 0x3f;
 /** The rows a control may be on: not the header, not the Fastext row (the engine's FIRST_CONTROL_ROW and LAST_CONTROL_ROW). */
-const FIRST_CONTROL_ROW = 1;
+export const FIRST_CONTROL_ROW = 1;
 export const LAST_CONTROL_ROW = 23;
 /** The most controls a page has (the engine's MAX_CONTROLS, REQ-INT-118). */
 export const MAX_CONTROLS = 32;
-/** The most pointer areas a page has (the engine's MAX_POINTER_AREAS, decision E.128). */
-export const MAX_POINTER_AREAS = 8;
 /** Clause 12.3.1: a packet X/26 holds 13 triplets after its designation code, which runs 0 to 15. */
 export const TRIPLETS_PER_PACKET = 13;
 const DESIGNATION_CODES = 16;
 /** The local enhancement data's triplets: 16 packets of 13 (the engine's LOCAL_TRIPLETS). */
-const LOCAL_TRIPLETS = DESIGNATION_CODES * TRIPLETS_PER_PACKET;
+export const LOCAL_TRIPLETS = DESIGNATION_CODES * TRIPLETS_PER_PACKET;
 /** The packet number of local enhancement data, written as the OL line's row. */
 export const ENHANCEMENT_PACKET = 26;
 /** A packed character: bit 6 set, six bits of a triplet below it (the engine's TTI_PACKED_CHARACTER_BASE and TTI_TRIPLET_CHARACTER_BITS). */
@@ -72,7 +67,7 @@ if (CHARACTERS_PER_TRIPLET * PACKED_CHARACTER_BITS !== ADDRESS_BITS + MODE_BITS 
 }
 
 /** A triplet's 18-bit value (clause 12.3.1). */
-function triplet(address: number, mode: number, data: number): number {
+export function triplet(address: number, mode: number, data: number): number {
   return (address & ADDRESS_MASK) | ((mode & MODE_MASK) << MODE_SHIFT) | ((data & DATA_MASK) << DATA_SHIFT);
 }
 
@@ -86,25 +81,8 @@ export function controlTriplet(column: number, width: number, joined: boolean): 
   return triplet(column, MODE_CONTROL, width | (joined ? JOINED : 0));
 }
 
-/** A pointer area's run on the active row: from `column`, `width` cells, joined to the run above or not. */
-export function pointerAreaTriplet(column: number, width: number, joined: boolean): number {
-  return triplet(column, MODE_POINTER_AREA, width | (joined ? JOINED : 0));
-}
-
-/** INPUT.md section 7.4: a pointer-area triplet of width 0, not joined, makes the whole page one; its address is not read, so 0. */
-export const WHOLE_PAGE_POINTER_AREA = triplet(0, MODE_POINTER_AREA, 0);
-
 /** The Termination Marker that ends the local enhancement data. */
 export const TERMINATION = triplet(TERMINATION_ADDRESS, MODE_TERMINATION, TERMINATION_DATA);
-
-/** Where a page wants the pointer's moves without a button held (INPUT.md section 7.4). */
-export interface PointerAreas {
-  readonly areas: readonly Box[];
-  /** The whole page is one. */
-  readonly wholePage: boolean;
-}
-
-const NO_POINTER_AREAS: PointerAreas = { areas: [], wholePage: false };
 
 function overlaps(a: Box, b: Box): boolean {
   return a.row < b.row + b.height && b.row < a.row + a.height && a.column < b.column + b.width && b.column < a.column + a.width;
@@ -128,15 +106,6 @@ class Budget {
   #used = 1;
   readonly #rows = new Set<number>();
 
-  /** Takes the triplet a whole-page pointer area needs, if there is room. */
-  takeOne(): boolean {
-    if (this.#used + 1 > LOCAL_TRIPLETS) {
-      return false;
-    }
-    this.#used += 1;
-    return true;
-  }
-
   /** Takes the triplets `run` needs, if there is room. */
   take(run: Box): boolean {
     let newRows = 0;
@@ -154,24 +123,21 @@ class Budget {
   }
 }
 
-/** What a page keeps of the controls and pointer areas its components declare. */
+/** What a page keeps of the controls its components declare. */
 export interface Kept {
   readonly controls: readonly Box[];
   /** For each control kept, its place among those declared: what tells a hover's control's owner. */
   readonly declaredAt: readonly number[];
-  readonly pointer: PointerAreas;
 }
 
 /**
  * What a page keeps of what it declares, in the order declared, as the
- * engine reads it (REQ-INT-118): each control and area cut to rows 1 to 23
- * and the page's columns, and one with nothing left dropped; a control over
- * a control kept before it dropped, where areas may overlap anything; past
- * MAX_CONTROLS or MAX_POINTER_AREAS dropped; and what the local data has no
- * triplets left for dropped, the controls served first, as what a click
- * acts on.
+ * engine reads it (REQ-INT-118): each control cut to rows 1 to 23 and the
+ * page's columns, and one with nothing left dropped; a control over a
+ * control kept before it dropped; past MAX_CONTROLS dropped; and what the
+ * local data has no triplets left for dropped.
  */
-export function keptDeclarations(controls: readonly Box[], pointer: PointerAreas = NO_POINTER_AREAS): Kept {
+export function keptDeclarations(controls: readonly Box[]): Kept {
   const budget = new Budget();
   const held: Box[] = [];
   const declaredAt: number[] = [];
@@ -182,47 +148,12 @@ export function keptDeclarations(controls: readonly Box[], pointer: PointerAreas
       declaredAt.push(index);
     }
   });
-  const wholePage = pointer.wholePage && budget.takeOne();
-  const areas: Box[] = [];
-  for (const each of pointer.areas) {
-    const area = cut(each);
-    if (area.width > 0 && area.height > 0 && areas.length < MAX_POINTER_AREAS && budget.take(area)) {
-      areas.push(area);
-    }
-  }
-  return { controls: held, declaredAt, pointer: { areas, wholePage } };
+  return { controls: held, declaredAt };
 }
 
-/** The controls a page keeps of those declared (keptDeclarations, without pointer areas). */
+/** The controls a page keeps of those declared (keptDeclarations). */
 export function keptControls(declared: readonly Box[]): Box[] {
   return [...keptDeclarations(declared).controls];
-}
-
-/**
- * The local enhancement data that declares what a page keeps (from
- * keptDeclarations): the whole page's pointer area first, needing no row;
- * then row by row from the top, a Set Active Position triplet, then the
- * row's runs of controls and areas left to right (Annex A.4); then the
- * Termination Marker. Empty when there is nothing.
- */
-export function controlTriplets(controls: readonly Box[], pointer: PointerAreas = NO_POINTER_AREAS): number[] {
-  if (controls.length === 0 && pointer.areas.length === 0 && !pointer.wholePage) {
-    return [];
-  }
-  const triplets: number[] = pointer.wholePage ? [WHOLE_PAGE_POINTER_AREA] : [];
-  const runs = [...controls.map((box) => ({ box, encode: controlTriplet })), ...pointer.areas.map((box) => ({ box, encode: pointerAreaTriplet }))];
-  for (let row = FIRST_CONTROL_ROW; row <= LAST_CONTROL_ROW; row += 1) {
-    const onRow = runs.filter(({ box }) => row >= box.row && row < box.row + box.height).toSorted((a, b) => a.box.column - b.box.column);
-    if (onRow.length === 0) {
-      continue;
-    }
-    triplets.push(setActivePosition(row));
-    for (const { box, encode } of onRow) {
-      triplets.push(encode(box.column, box.width, row > box.row));
-    }
-  }
-  triplets.push(TERMINATION);
-  return triplets;
 }
 
 /** One packet of thirteen triplets as a packed OL line for packet `packet` with `designation`, without its newline. */
@@ -250,10 +181,4 @@ export function enhancementLines(triplets: readonly number[]): string[] {
     lines.push(packedLine(ENHANCEMENT_PACKET, start / TRIPLETS_PER_PACKET, packet));
   }
   return lines;
-}
-
-/** The OL,26 lines that declare what a page keeps of the controls and pointer areas declared, without newlines. */
-export function controlLines(controls: readonly Box[], pointer: PointerAreas = NO_POINTER_AREAS): string[] {
-  const held = keptDeclarations(controls, pointer);
-  return enhancementLines(controlTriplets(held.controls, held.pointer));
 }

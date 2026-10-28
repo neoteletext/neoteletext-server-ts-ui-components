@@ -22,7 +22,9 @@ export function sixelsOf(bitmap: Bitmap): Sixels {
 }
 
 export interface MosaicProps {
+  /** Its sixels, a row of text each, "#" set; a page's at most. */
   readonly bitmap: Bitmap;
+  /** Its colour; white when absent. */
   readonly foreground?: Colour;
 }
 

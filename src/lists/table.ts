@@ -8,11 +8,15 @@ import { fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 export interface TableProps {
+  /** Each row's label and its value. */
   readonly rows: readonly (readonly [label: string, value: string])[];
-  /** The labels' column; half the box when absent. */
+  /** The labels' column, kept within the box; half the box when absent or no number. */
   readonly labelCells?: number;
+  /** The labels' colour; white when absent. */
   readonly labelForeground?: Colour;
+  /** The values' colour; cyan when absent. */
   readonly valueForeground?: Colour;
+  /** What an empty table says; "nothing to show" when absent. */
   readonly empty?: string;
 }
 
@@ -26,7 +30,10 @@ export class Table extends Component<TableProps> {
       paintEmpty(canvas, this.props.empty ?? "nothing to show");
       return;
     }
-    const at = this.props.labelCells ?? Math.floor(canvas.width / 2);
+    const half = Math.floor(canvas.width / 2);
+    const asked = this.props.labelCells ?? half;
+    // A column from props is not taken on trust: past the box, a label would run off its edge uncut.
+    const at = Number.isNaN(asked) ? half : Math.max(0, Math.min(canvas.width, Math.trunc(asked)));
     this.props.rows.forEach(([label, value], row) => {
       canvas.coloured(row, 0, this.props.labelForeground ?? Colour.White, fit(label, at - 1));
       canvas.coloured(row, at, this.props.valueForeground ?? Colour.Cyan, fit(value, canvas.width - at - 1));

@@ -21,8 +21,11 @@ interface Point {
 export interface SnakeProps extends ControlProps {
   /** Milliseconds a frame. */
   readonly everyMs: number;
+  /** The field's rows; the score's row is under them. */
   readonly rows: number;
+  /** Played to the viewer whose snake it is as it eats. */
   readonly eat?: Sound;
+  /** Played to the viewer whose snake it is as it crashes. */
   readonly crash?: Sound;
 }
 
@@ -80,6 +83,14 @@ export class Snake extends Control<SnakeProps, SnakeState> {
     this.clearTimer(this.#timer);
   }
 
+  /** Plays `sound` to the viewer this copy is for, alone: each viewer has a game of their own, and another's is none of theirs. */
+  #play(sound: Sound | undefined): void {
+    const { session } = this.services;
+    if (sound !== undefined && session !== null) {
+      this.services.play(sound, session);
+    }
+  }
+
   #frame(): void {
     const state = this.state;
     if (state.over) {
@@ -94,16 +105,14 @@ export class Snake extends Control<SnakeProps, SnakeState> {
       next.x < 0 || next.x >= FIELD_ACROSS || next.y < 0 || next.y >= this.#down || state.body.some((point) => point.x === next.x && point.y === next.y);
     if (crashed) {
       this.setState({ over: true });
-      if (this.props.crash !== undefined) {
-        this.services.play(this.props.crash);
-      }
+      this.#play(this.props.crash);
       return;
     }
     const eaten = next.x === state.food.x && next.y === state.food.y;
     const body = [next, ...(eaten ? state.body : state.body.slice(0, -1))];
     const food = eaten ? { x: this.services.below(FIELD_ACROSS), y: this.services.below(this.#down) } : state.food;
-    if (eaten && this.props.eat !== undefined) {
-      this.services.play(this.props.eat);
+    if (eaten) {
+      this.#play(this.props.eat);
     }
     this.setState({ body, food, score: state.score + (eaten ? 1 : 0) });
   }

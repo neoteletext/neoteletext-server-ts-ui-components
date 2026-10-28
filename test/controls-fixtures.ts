@@ -5,7 +5,6 @@ import assert from "node:assert/strict";
 import { Harness } from "neottx-server-ts-protocol/testing";
 import {
   Button,
-  type Canvas,
   type Child,
   Component,
   ComponentChannel,
@@ -16,10 +15,9 @@ import {
   type PageSpec,
   type PointerEvent,
   readControls,
-  readDeclarations,
   type Size,
 } from "../src/index.ts";
-import { controlLines } from "../src/core/controls.ts";
+import { localEnhancement } from "../src/core/enhancement.ts";
 import { Colour } from "../src/kit.ts";
 
 export const PAGE = 0x150;
@@ -54,11 +52,6 @@ export function controlsOf(channel: Harness, page: number): ReturnType<typeof re
   return readControls(latestTti(channel, page))[0] ?? [];
 }
 
-/** The pointer areas of the first sub-page of the latest copy of `page`. */
-export function areasOf(channel: Harness, page: number): ReturnType<typeof readDeclarations>[number]["pointer"] {
-  return readDeclarations(latestTti(channel, page))[0]?.pointer ?? { areas: [], wholePage: false };
-}
-
 /** Boxes in reading order, top to bottom and left to right. */
 export function inOrder<T extends { row: number; column: number }>(boxes: readonly T[]): T[] {
   return boxes.toSorted((a, b) => a.row - b.row || a.column - b.column);
@@ -75,23 +68,15 @@ export function viewer(...body: Child[]): Harness {
   return seen;
 }
 
-export const lines = controlLines([
+export const lines = localEnhancement([
   { row: 4, column: 20, width: 10, height: 2 },
   { row: 4, column: 2, width: 6, height: 1 },
-]);
+]).lines;
 
-/** A component that declares a pointer area, or the whole page, and keeps what reaches it. */
-export class Watcher extends Component<{ readonly whole?: boolean; readonly seen: string[] }> {
+/** A component four rows tall that keeps what pointer events reach it, its children's too. */
+export class Watcher extends Component<{ readonly seen: string[] }> {
   override measure(space: Size): Size {
     return { width: space.width, height: Math.min(4, space.height) };
-  }
-
-  override paint(canvas: Canvas): void {
-    if (this.props.whole === true) {
-      canvas.wholePagePointerArea();
-    } else {
-      canvas.pointerArea(1, 2, 5, 2);
-    }
   }
 
   override onPointer(event: PointerEvent): boolean {

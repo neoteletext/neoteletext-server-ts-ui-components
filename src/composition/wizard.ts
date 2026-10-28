@@ -4,7 +4,9 @@
 // and green keys (F1 and F2 on a keyboard), so the page takes the coloured
 // keys, and the last step's Next is Finish. Back and Next are also actions
 // a click takes (input/action.ts), and a step done is a badge a click goes
-// back to; each is a control the browser lights.
+// back to; each is a control the browser lights. Disabled or finished, it
+// has no Back or Next: it takes no coloured key, the page keeps them, and
+// its hint offers none.
 
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent } from "../core/events.ts";
@@ -22,7 +24,9 @@ export interface WizardProps extends ControlProps {
   readonly steps: readonly string[];
   /** Whether the step may be left forward: a step with something missing says what. */
   readonly ready?: (step: number) => string | null;
+  /** Next on the last step, once it is ready: the wizard is done. */
   readonly onFinish?: (session: number) => void;
+  /** The step changed, by Back, Next or a click on a step done: the step now shown. */
   readonly onStep?: (step: number, session: number) => void;
 }
 
@@ -39,16 +43,23 @@ const NEXT = 1;
 export class Wizard extends Control<WizardProps, WizardState> {
   override state: WizardState = { step: 0, finished: false, complaint: null };
 
+  /** Back and Next can be pressed: it is neither disabled nor finished. */
+  get #moving(): boolean {
+    return !this.disabled && !this.state.finished;
+  }
+
   protected override keyNeeds(): PageNeeds {
-    return { colourKeys: true };
+    return { colourKeys: this.#moving };
   }
 
   override keyBindings(): readonly KeyHelpEntry[] {
-    return [
-      ["red", "Back"],
-      ["green", "Next"],
-      ["Tab", "to a step's fields"],
-    ];
+    return this.#moving
+      ? [
+          ["red", "Back"],
+          ["green", "Next"],
+          ["Tab", "to a step's fields"],
+        ]
+      : [];
   }
 
   override render(): Child {
@@ -113,7 +124,7 @@ export class Wizard extends Control<WizardProps, WizardState> {
   }
 
   override onKey(event: KeyEvent): boolean {
-    if (this.state.finished) {
+    if (!this.#moving) {
       return false;
     }
     const key = colourKeyOf(event);

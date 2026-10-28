@@ -16,10 +16,13 @@ import { Colour, mosaicColour } from "../kit.ts";
 export type PanelStyle = "line" | "band";
 
 export interface PanelProps {
+  /** Its title: in the top line, or on the band's first row. */
   readonly title?: string;
+  /** A line round the children or a background behind them; a line when absent. */
   readonly style?: PanelStyle;
   /** The line's colour, or the background's. */
   readonly foreground?: Colour;
+  /** The title's colour; when absent, yellow on a line and white on a band. */
   readonly titleForeground?: Colour;
 }
 
@@ -53,6 +56,11 @@ const LINE_TITLE_ROOM = 8;
 
 /** Its children in a frame of the panel's style, under its title. */
 export class Panel extends Component<PanelProps> {
+  /** A band panel's children are drawn on its band: a band of theirs ends back to it. */
+  override innerBackground(): Colour | null {
+    return this.#style === "band" ? (this.props.foreground ?? Colour.Blue) : null;
+  }
+
   get #style(): PanelStyle {
     return this.props.style ?? "line";
   }

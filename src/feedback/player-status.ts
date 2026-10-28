@@ -14,14 +14,17 @@ import type { Repeat } from "./play-order.ts";
 export interface PlayerStatusProps {
   /** How loud, 0 to FULL_GAIN, or null while nothing plays. */
   readonly gain: number | null;
+  /** It is muted: "Muted", in yellow, in place of how loud. */
   readonly muted: boolean;
   /** The modes of a player of tracks; absent for one that only shows what plays. */
   readonly repeat?: Repeat;
+  /** Whether it plays the tracks in a shuffled order; not shown when absent. */
   readonly shuffle?: boolean;
   /** How fast it plays: 1 is as recorded. */
   readonly speed?: number;
   /** The part looped, in milliseconds of the track: from, then to once set. */
   readonly loopFrom?: number | null;
+  /** Where the loop ends, in milliseconds of the track, or null until it is set. */
   readonly loopTo?: number | null;
   /** The minutes before it sleeps, or null. */
   readonly sleepMinutes?: number | null;

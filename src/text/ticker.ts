@@ -12,6 +12,7 @@ export interface TickerProps {
   readonly items: readonly string[];
   /** How long each shows, in milliseconds. */
   readonly everyMs: number;
+  /** The band's colour; blue when absent. */
   readonly background?: Colour;
 }
 

@@ -1,13 +1,14 @@
-// A data table's heading (data-table.ts): each column's title in yellow on
-// a blue band, the sorted column marked with its direction, and each title
-// a control while the table sorts.
+// A data table's heading (data-table.ts): each column's title on a band of
+// its own colour, inked to read on it, the sorted column marked with its
+// direction, and each title a control while the table sorts.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import type { PointerEvent } from "../core/events.ts";
+import { inkOn } from "../core/look.ts";
 import { fit } from "../core/text.ts";
-import { Colour } from "../kit.ts";
+import type { Colour } from "../kit.ts";
 import { starts, type TableColumn } from "./data-table.ts";
 
 /** What marks the sorted column: up for ascending; the English set has no down arrow (EN 300 706 Table 36), so a v for descending. */
@@ -25,6 +26,8 @@ function sortMark(sorted: boolean, descending: boolean): string {
 
 interface HeadingProps {
   readonly columns: readonly TableColumn[];
+  /** The band's colour. */
+  readonly background: Colour;
   /** A click on a column's title sorts by it: each title is a control. */
   readonly sortable: boolean;
   readonly sortBy: number | null;
@@ -38,11 +41,12 @@ export class Heading extends Component<HeadingProps> {
   }
 
   override paint(canvas: Canvas): void {
-    canvas.background(0, 0, Colour.Blue);
+    canvas.background(0, 0, this.props.background);
+    const ink = inkOn(this.props.background);
     const at = starts(this.props.columns);
     this.props.columns.forEach((column, index) => {
       const mark = sortMark(index === this.props.sortBy, this.props.descending);
-      canvas.coloured(0, at[index] ?? 0, Colour.Yellow, fit(`${column.title}${mark}`, column.width - 1));
+      canvas.coloured(0, at[index] ?? 0, ink, fit(`${column.title}${mark}`, column.width - 1));
       if (this.props.sortable) {
         // The column after its colour's cell.
         canvas.control(0, (at[index] ?? 0) + 1, column.width - 1, 1, String(index));

@@ -9,8 +9,11 @@ import { Colour } from "../kit.ts";
 import { LINK, NUMBER_CELLS, pageNumber } from "./news.ts";
 
 export interface PageLinkProps {
+  /** The page a click goes to, written first in yellow. */
   readonly page: number;
+  /** What is there, after the number. */
   readonly label: string;
+  /** The label's colour; white when absent. */
   readonly foreground?: Colour;
 }
 

@@ -3,8 +3,10 @@
 // begin with it first, then those that hold it as a run, then those that
 // hold its letters in order, as fuzzy finders rank them; case aside.
 // Backspace rubs a letter out, Escape clears what is typed. Choosing an
-// item says its place in the items given, not in the list narrowed, and
-// the choice follows its item as the list narrows.
+// item says its place in the items given, not in the list narrowed. What
+// is typed changing takes the choice to the top row, the best match, so
+// Enter after typing chooses what the typing found; the list is made anew
+// for it, its keys kept.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
@@ -19,6 +21,7 @@ import { ChoiceList } from "./choice-list.ts";
 const MOST_TYPED = 38;
 
 export interface FilterListProps<T> {
+  /** The items to narrow: an item chosen is said by its place here. */
   readonly items: readonly T[];
   /** An item's text, which what is typed is found in. */
   readonly text: (item: T) => string;
@@ -26,14 +29,18 @@ export interface FilterListProps<T> {
   readonly shown: number;
   /** What the typed line says while nothing is typed. */
   readonly prompt?: string;
+  /** What it says when nothing matches; "nothing matches" when absent. */
   readonly empty?: string;
   /** An item chosen: its place in `items`. */
   readonly onChoose: (index: number, session: number) => void;
+  /** Its list takes the keys when it arrives. */
   readonly autoFocus?: boolean;
 }
 
 interface FilterListState {
   readonly typed: string;
+  /** How many times what is typed has changed: the list's key, so each change makes it anew, its choice on the top row. */
+  readonly typings: number;
 }
 
 /** How well `text` matches `typed`: 0 begins with it, 1 holds it, 2 holds its letters in order, null not at all. */
@@ -58,7 +65,7 @@ export function matchRank(text: string, typed: string): number | null {
 }
 
 export class FilterList<T> extends Component<FilterListProps<T>, FilterListState> {
-  override state: FilterListState = { typed: "" };
+  override state: FilterListState = { typed: "", typings: 0 };
 
   /** The places of the items that match, best first, in the items' order within a rank. */
   #matches(): number[] {
@@ -70,19 +77,26 @@ export class FilterList<T> extends Component<FilterListProps<T>, FilterListState
       .map((each) => each.index);
   }
 
+  /** What is typed is now `typed`, kept to MOST_TYPED characters, not UTF-16 units, so none is cut in half. */
+  #type(typed: string): void {
+    const kept = Array.from(typed).slice(0, MOST_TYPED).join("");
+    if (kept !== this.state.typed) {
+      this.setState({ typed: kept, typings: this.state.typings + 1 });
+    }
+  }
+
   override onText(event: TextEvent): boolean {
-    const typed = `${this.state.typed}${event.text}`.slice(0, MOST_TYPED);
-    this.setState({ typed });
+    this.#type(`${this.state.typed}${event.text}`);
     return true;
   }
 
   override onKey(event: KeyEvent): boolean {
     if (isPress(event, Key.Backspace) && this.state.typed !== "") {
-      this.setState({ typed: Array.from(this.state.typed).slice(0, -1).join("") });
+      this.#type(Array.from(this.state.typed).slice(0, -1).join(""));
       return true;
     }
     if (isPress(event, Key.Escape) && this.state.typed !== "") {
-      this.setState({ typed: "" });
+      this.#type("");
       return true;
     }
     return false;
@@ -90,22 +104,23 @@ export class FilterList<T> extends Component<FilterListProps<T>, FilterListState
 
   override render(): Child {
     const matches = this.#matches();
-    const { typed } = this.state;
+    const { typed, typings } = this.state;
     const line = typed === "" ? (this.props.prompt ?? "Type to find") : `Find: ${typed}`;
     return h(
       Rows,
       {},
       h(Text, { text: fit(line, MOST_TYPED + 1), foreground: typed === "" ? Colour.Cyan : Colour.Yellow }),
       h(ChoiceList<number>, {
+        key: typings,
         items: matches,
         text: (index: number) => {
           const item = this.props.items[index];
           return item === undefined ? "" : this.props.text(item);
         },
-        itemKey: String,
         shown: this.props.shown,
         empty: this.props.empty ?? "nothing matches",
-        ...(this.props.autoFocus === undefined ? {} : { autoFocus: this.props.autoFocus }),
+        // What is typed reaches this list from its own list, which had the keys: the new one takes them.
+        autoFocus: typings > 0 || this.props.autoFocus === true,
         onChoose: (place: number, session: number) => {
           const index = matches[place];
           if (index !== undefined) {

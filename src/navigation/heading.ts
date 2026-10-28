@@ -22,8 +22,8 @@ interface HeadingProps {
 /** The region a heading's band is. */
 const BAND = "band";
 
-/** The cells before the title: the band's colour and New Background. */
-const TITLE_AT = 2;
+/** The cells before the title's colour: the band's colour and New Background. */
+export const TITLE_AT = 2;
 
 function lookOf(props: HeadingProps): { readonly background: Colour; readonly foreground: Colour } {
   if (props.disabled) {

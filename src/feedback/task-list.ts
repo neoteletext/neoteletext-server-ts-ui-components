@@ -16,29 +16,33 @@ import { Spinner, type SpinnerStyle } from "./spinner.ts";
 export type TaskStatus = "pending" | "running" | "done" | "failed";
 
 export interface Task {
+  /** What the step is, beside its mark. */
   readonly label: string;
+  /** Where it is: waiting, running, done or failed. */
   readonly status: TaskStatus;
   /** Why a failed step failed, on the row under it. */
   readonly reason?: string;
 }
 
 export interface TaskListProps {
+  /** The steps, in order; no more than a page's rows are drawn. */
   readonly tasks: readonly Task[];
   /** A running step's spinner; orbit when absent. */
   readonly spinner?: SpinnerStyle;
 }
 
-/** The mark a step that is not running shows, and its colour: done and failed as their kinds say it, waiting in white. */
+/** The mark a step that is not running shows, and its colour: done and failed as their kinds say it, waiting a dash in white, which is not the cut mark (core/text.ts) and so is not read as text cut short. */
 const MARKS: Readonly<Record<Exclude<TaskStatus, "running">, { readonly mark: string; readonly foreground: Colour }>> = {
-  pending: { mark: "..", foreground: Colour.White },
+  pending: { mark: "-", foreground: Colour.White },
   done: { mark: KINDS.success.mark, foreground: KINDS.success.background },
   failed: { mark: KINDS.error.mark, foreground: KINDS.error.background },
 };
 
 /**
  * The marks' column: the colour's cell and two for the mark, the widest of
- * them, "OK"; a spinner's colour, its cell and its words' colour fit it
- * too, so every label starts in the same column.
+ * them, "OK"; a spinner's colour and its frame's cell fit it too, its
+ * frames' other cells and its words, which it has none of here, cut at the
+ * column's edge, so every label starts in the same column.
  */
 const MARK_CELLS = 3;
 

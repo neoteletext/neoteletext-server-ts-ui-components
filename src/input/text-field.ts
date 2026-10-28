@@ -56,9 +56,13 @@ function isText(character: string): boolean {
 export interface TextFieldProps extends ValueProps<string> {
   /** The most characters it takes. */
   readonly longest: number;
+  /** Called with the text, trimmed, as Enter sends it: never when it is blank or fails validate. */
   readonly onSubmit?: (text: string, session: number) => void;
+  /** Its band's colour; blue when absent, black while disabled. */
   readonly background?: Colour;
+  /** What the empty field shows while it does not have the keys. */
   readonly placeholder?: string;
+  /** Each character shows as `*`, and the receiver echoes `*` too: a password. */
   readonly masked?: boolean;
   /** Enter leaves the text there rather than clearing it. */
   readonly keep?: boolean;

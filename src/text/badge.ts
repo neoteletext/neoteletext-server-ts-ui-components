@@ -1,9 +1,9 @@
 // Badges: short labels on a background of their own colour, in a line of
 // text ("LIVE", "3 NEW", "BETA"). Each is a chip (core/canvas.ts): its
-// background starts a cell before the text and ends after it. A badge that
-// does something when clicked ("PAUSED" to follow again, a wizard's step
-// to go back to it) is a control over its chip, and only a click there
-// acts.
+// background starts before the text and ends a cell after it. A badge
+// that does something when clicked ("PAUSED" to follow again, a wizard's
+// step to go back to it) is a control over its chip, and only a click
+// there acts.
 
 import { CHIP_CELLS, type Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
@@ -13,8 +13,11 @@ import { cells, fit } from "../core/text.ts";
 import { Attribute, Colour } from "../kit.ts";
 
 export interface BadgeSpec {
+  /** What it says, cut to the room left on the row. */
   readonly text: string;
+  /** Its colour; red when absent. */
   readonly background?: Colour;
+  /** Its text's colour; white when absent. */
   readonly foreground?: Colour;
   /** Flashing, as LIVE and NEWSFLASH are. */
   readonly flash?: boolean;
@@ -23,9 +26,11 @@ export interface BadgeSpec {
 }
 
 export interface BadgesProps {
+  /** The badges, left to right; those past the row's end are not drawn. */
   readonly badges: readonly BadgeSpec[];
   /** Text after the badges, in white. */
   readonly text?: string;
+  /** The text's colour; white when absent. */
   readonly textForeground?: Colour;
 }
 
@@ -44,7 +49,7 @@ export class Badges extends Component<BadgesProps> {
       }
       const shown = fit(badge.text, room);
       if (badge.flash === true) {
-        // Flash and Steady each take a cell: one before the chip, one where its Black Background was.
+        // Flash and Steady each take a cell: one before the chip, one after it.
         canvas.code(0, column, Attribute.Flash);
         const after = canvas.chip(0, column + 1, badge.background ?? Colour.Red, badge.foreground ?? Colour.White, shown);
         this.#pressable(canvas, badge, index, column + 1, after);

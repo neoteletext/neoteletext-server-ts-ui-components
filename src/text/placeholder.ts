@@ -8,6 +8,7 @@ import { cells, fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 export interface PlaceholderProps {
+  /** What it says, in white, centred in the box and cut to its width. */
   readonly text: string;
 }
 

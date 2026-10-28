@@ -9,14 +9,18 @@ import { FilterList } from "../lists/filter-list.ts";
 
 /** A page to find: its number and its title. */
 export interface FoundPage {
+  /** Its number, hexadecimal as teletext's are: 0x100 is page 100. */
   readonly page: number;
+  /** Its title, after its number. */
   readonly title: string;
 }
 
 export interface PageFinderProps {
+  /** The pages to find, each listed by its number and title. */
   readonly pages: readonly FoundPage[];
   /** The rows of pages shown. */
   readonly shown: number;
+  /** It takes the keys when it arrives. */
   readonly autoFocus?: boolean;
 }
 

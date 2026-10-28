@@ -48,7 +48,9 @@ export function framed(framing: Framing, title: string, key: string, ...body: Ch
 }
 
 export interface DocumentProps extends Framing {
+  /** The sub-pages' name, each with its place when there are several: "Title 2/3". */
   readonly title: string;
+  /** The lines, DOCUMENT_ROWS a sub-page. */
   readonly lines: readonly Line[];
   /** The most sub-pages it takes; as many as the lines need when absent. */
   readonly maxSubPages?: number;
@@ -64,13 +66,16 @@ export class Document extends Component<DocumentProps> {
 
 /** What a channel knows of an article. */
 export interface Article {
+  /** The page it is on, which its headline links to. */
   readonly page: number;
+  /** Its headline. */
   readonly title: string;
+  /** Who wrote it, in its byline. */
   readonly writer: string;
   /** Milliseconds since the Unix epoch. */
   readonly date: number;
-  readonly summary: string;
+  /** Its text, block by block, as its story's sub-pages show it. */
   readonly blocks: readonly Block[];
+  /** Its labels, under its byline. */
   readonly tags: readonly string[];
-  readonly link: string;
 }

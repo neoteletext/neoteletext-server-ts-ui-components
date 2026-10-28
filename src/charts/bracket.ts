@@ -5,8 +5,11 @@
 // it, twice the rows of the one before. As many rounds are shown as fit
 // across; when they do not all fit, Left and Right move the rounds shown
 // a round at a time, or a click on the heading's arrows, and when the
-// matches do not fit down, Up and Down move them. A winner is marked as
-// well as coloured, so it is not told by colour alone (core/look.ts).
+// matches do not fit down, Up and Down move them. A round's name longer
+// than its column, as "Quarter-finals" is in the thirteen cells three
+// rounds across a page have, takes a second row of the heading, broken at
+// a space or after a hyphen. A winner is marked as well as coloured, so it
+// is not told by colour alone (core/look.ts).
 
 import type { Canvas } from "../core/canvas.ts";
 import { type Size } from "../core/layout.ts";
@@ -19,21 +22,28 @@ import { cellCount } from "./numbers.ts";
 
 /** A match: its two entrants, their scores when it has them, and its winner, 0 for the first entrant and 1 for the second, once there is one. */
 export interface BracketMatch {
+  /** Its two entrants, the first on top; an empty name shows as "tbd". */
   readonly entrants: readonly [string, string];
+  /** Their scores, in the entrants' order; one that is no finite number is left blank. */
   readonly scores?: readonly [number, number];
+  /** Its winner, 0 for the first entrant and 1 for the second: marked "*" and in yellow. */
   readonly winner?: 0 | 1;
 }
 
 /** A round: its name, as its heading, and its matches from the top. */
 export interface BracketRound {
+  /** Its heading, over its column. */
   readonly name: string;
+  /** Its matches, from the top. */
   readonly matches: readonly BracketMatch[];
 }
 
 export interface BracketProps extends ControlProps {
+  /** The rounds, first to last, a column each. */
   readonly rounds: readonly BracketRound[];
   /** The cells each round's column takes. */
   readonly roundCells?: number;
+  /** What it says when there are no rounds; "no rounds" when absent. */
   readonly empty?: string;
 }
 
@@ -47,8 +57,9 @@ interface BracketState {
 const ROUND_CELLS = 13;
 /** The fewest cells a round can be drawn in: its colour, the mark, a letter of a name, a space and the score. */
 const LEAST_ROUND_CELLS = 6;
-/** The heading's row over the rounds. */
+/** The heading's rows over the rounds: one, or two for a name longer than its column. */
 const HEADING_ROWS = 1;
+const MOST_HEADING_ROWS = 2;
 /** The rows a match of the first round shown takes: its two entrants and a row between it and the next. */
 const MATCH_ROWS = 3;
 /** The cells an entrant's line takes before the name: its colour and its mark. */
@@ -68,6 +79,40 @@ const UNKNOWN = "tbd";
 /** The regions of the heading's arrows. */
 const EARLIER = "earlier";
 const LATER = "later";
+/** The heading's arrows, before the name and after it. */
+const EARLIER_ARROW = "← ";
+const LATER_ARROW = " →";
+/** Where a name may be broken: at spaces, which go, and after a hyphen, which stays. */
+const NAME_BREAKS = /(?<=-)|\s+/u;
+const HYPHEN = "-";
+
+/** `name` on at most the heading's rows of `width`, broken at a space or after a hyphen, a line still too long cut with the cut mark. */
+function nameLines(name: string, width: number): string[] {
+  if (cells(name) <= width) {
+    return [name];
+  }
+  const lines: string[] = [];
+  let line = "";
+  for (const piece of name.split(NAME_BREAKS).filter((each) => each !== "")) {
+    const joined = line === "" ? piece : `${line}${line.endsWith(HYPHEN) ? "" : " "}${piece}`;
+    if (line !== "" && cells(joined) > width && lines.length < MOST_HEADING_ROWS - 1) {
+      lines.push(line);
+      line = piece;
+    } else {
+      line = joined;
+    }
+  }
+  return [...lines, line].map((each) => fit(each, width));
+}
+
+/** A round's heading in `width` cells, its rows from the top: the first with its arrows, the name padded when one follows it so it is at the column's end. */
+function headingOf(name: string, width: number, earlier: boolean, later: boolean): string[] {
+  const lead = earlier ? EARLIER_ARROW : "";
+  const trail = later ? LATER_ARROW : "";
+  const nameCells = width - cells(lead) - cells(trail);
+  const [first = "", ...rest] = nameLines(name, nameCells);
+  return [`${lead}${later ? pad(first, nameCells) : first}${trail}`, ...rest.map((line) => `${" ".repeat(cells(lead))}${line}`)];
+}
 
 /** The first row of the match `index` of a round `rounds` after the first shown: the middle of the two it follows, in whole rows. */
 function matchRow(rounds: number, index: number): number {
@@ -110,13 +155,33 @@ export class Bracket extends Control<BracketProps, BracketState> {
     return Math.max(0, MATCH_ROWS * (this.props.rounds[first]?.matches.length ?? 0) - 1);
   }
 
-  /** The first row of matches shown in a box `height` tall, kept so the last matches fill it. */
-  #top(first: number, height: number): number {
-    return Math.max(0, Math.min(this.state.top, this.#rowsFrom(first) - (height - HEADING_ROWS)));
+  /** The headings of the rounds a box `width` wide shows, each its rows, with an arrow each way there are more rounds. */
+  #headings(width: number): string[][] {
+    const shown = this.#shown(width);
+    const first = this.#first(width);
+    const more = first + shown < this.props.rounds.length;
+    return this.props.rounds
+      .slice(first, first + shown)
+      .map((round, offset) => headingOf(round.name, this.#roundCells - 1, offset === 0 && first > 0, offset === shown - 1 && more));
+  }
+
+  /** The heading's rows in a box `width` wide: two when a round shown has a name too long for one. */
+  #headingRows(width: number): number {
+    return this.#headings(width).some((heading) => heading.length > HEADING_ROWS) ? MOST_HEADING_ROWS : HEADING_ROWS;
+  }
+
+  /** The rows of matches a box `width` by `height` shows, under the heading. */
+  #matchRows(width: number, height: number): number {
+    return height - this.#headingRows(width);
+  }
+
+  /** The first row of matches shown in a box, kept so the last matches fill it. */
+  #top(first: number, width: number, height: number): number {
+    return Math.max(0, Math.min(this.state.top, this.#rowsFrom(first) - this.#matchRows(width, height)));
   }
 
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(space.height, HEADING_ROWS + Math.max(1, this.#rowsFrom(0))) };
+    return { width: space.width, height: Math.min(space.height, this.#headingRows(space.width) + Math.max(1, this.#rowsFrom(0))) };
   }
 
   override paint(canvas: Canvas): void {
@@ -126,32 +191,29 @@ export class Bracket extends Control<BracketProps, BracketState> {
     }
     const shown = this.#shown(canvas.width);
     const first = this.#first(canvas.width);
-    const top = this.#top(first, canvas.height);
+    const top = this.#top(first, canvas.width, canvas.height);
+    const headings = this.#headings(canvas.width);
+    const headingRows = this.#headingRows(canvas.width);
     const more = first + shown < this.props.rounds.length;
     this.props.rounds.slice(first, first + shown).forEach((round, offset) => {
-      this.#paintRound(canvas, round, offset, top, {
-        earlier: offset === 0 && first > 0,
-        later: offset === shown - 1 && more,
+      const column = offset * this.#roundCells;
+      (headings[offset] ?? []).forEach((line, row) => {
+        canvas.coloured(row, column, this.disabled ? DISABLED : HEADING, line);
       });
+      if (!this.disabled && offset === 0 && first > 0) {
+        canvas.control(0, column + 1, 1, 1, EARLIER);
+      }
+      if (!this.disabled && offset === shown - 1 && more) {
+        canvas.control(0, column + this.#roundCells - 1, 1, 1, LATER);
+      }
+      this.#paintMatches(canvas, round, offset, top, headingRows);
     });
   }
 
-  #paintRound(canvas: Canvas, round: BracketRound, offset: number, top: number, arrows: { readonly earlier: boolean; readonly later: boolean }): void {
+  /** The matches of `round`, the round `offset` after the first shown, from the row `top` of them, under the heading's `headingRows`. */
+  #paintMatches(canvas: Canvas, round: BracketRound, offset: number, top: number, headingRows: number): void {
     const column = offset * this.#roundCells;
-    const headingCells = this.#roundCells - 1;
-    const lead = arrows.earlier ? "← " : "";
-    const trail = arrows.later ? " →" : "";
-    // The name padded when an arrow follows it, so the arrow is at the column's end.
-    const nameCells = headingCells - cells(lead) - cells(trail);
-    const name = arrows.later ? pad(round.name, nameCells) : fit(round.name, nameCells);
-    canvas.coloured(0, column, this.disabled ? DISABLED : HEADING, `${lead}${name}${trail}`);
-    if (!this.disabled && arrows.earlier) {
-      canvas.control(0, column + 1, 1, 1, EARLIER);
-    }
-    if (!this.disabled && arrows.later) {
-      canvas.control(0, column + headingCells, 1, 1, LATER);
-    }
-    const rows = canvas.height - HEADING_ROWS;
+    const rows = canvas.height - headingRows;
     const entrantCells = this.#roundCells - LEAD_CELLS - SCORE_GAP_CELLS - SCORE_CELLS;
     // Only the matches in view: a round of many is not drawn past the box's foot.
     for (let index = 0; index < round.matches.length; index += 1) {
@@ -168,7 +230,7 @@ export class Bracket extends Control<BracketProps, BracketState> {
         const won = match.winner === entrant;
         const named = match.entrants[entrant] === "" ? UNKNOWN : match.entrants[entrant];
         const line = `${won ? WINNER_MARK : " "}${pad(named, entrantCells)} ${scoreText(match.scores?.[entrant])}`;
-        canvas.coloured(HEADING_ROWS + at, column, won ? WINNER : LABEL, line);
+        canvas.coloured(headingRows + at, column, won ? WINNER : LABEL, line);
       }
     }
   }
@@ -181,7 +243,7 @@ export class Bracket extends Control<BracketProps, BracketState> {
     if (to === first) {
       return false;
     }
-    const top = this.#top(first, height);
+    const top = this.#top(first, width, height);
     this.setState({ first: to, top: Math.floor(top * 2 ** (first - to)) });
     return true;
   }
@@ -189,8 +251,8 @@ export class Bracket extends Control<BracketProps, BracketState> {
   #moveRows(step: number): boolean {
     const { width, height } = this.box;
     const first = this.#first(width);
-    const top = this.#top(first, height);
-    const to = Math.max(0, Math.min(this.#rowsFrom(first) - (height - HEADING_ROWS), top + step));
+    const top = this.#top(first, width, height);
+    const to = Math.max(0, Math.min(this.#rowsFrom(first) - this.#matchRows(width, height), top + step));
     if (to === top) {
       return false;
     }

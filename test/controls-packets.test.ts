@@ -1,26 +1,14 @@
-// The controls, pointer areas and rollover colours a page declares, as
+// The controls and rollover colours a page declares, as
 // X/26 and X/28 packets in its TTI (INPUT.md section 7.3).
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { type ColourTable, readControls, readDeclarations, ROLLOVER_COLOURS, rolloverLine } from "../src/index.ts";
-import {
-  controlLines,
-  controlTriplet,
-  controlTriplets,
-  enhancementLines,
-  keptControls,
-  keptDeclarations,
-  MAX_CONTROLS,
-  MAX_POINTER_AREAS,
-  pointerAreaTriplet,
-  setActivePosition,
-  TERMINATION,
-  WHOLE_PAGE_POINTER_AREA,
-} from "../src/core/controls.ts";
+import { type ColourTable, h, PaintCanvas, readControls, readDeclarations, ROLLOVER_COLOURS, rolloverLine } from "../src/index.ts";
+import { controlTriplet, enhancementLines, keptControls, keptDeclarations, MAX_CONTROLS, setActivePosition, TERMINATION } from "../src/core/controls.ts";
+import { enhancementTriplets, localEnhancement } from "../src/core/enhancement.ts";
 import { LEVEL_1_COLOURS } from "../src/core/rollover.ts";
-import { lines, lineTriplets, streamBits } from "./controls-fixtures.ts";
+import { latestTti, lines, lineTriplets, PAGE, streamBits, viewer } from "./controls-fixtures.ts";
 
 test("the triplets are INPUT.md section 7.3's: four buttons on row 20, nine cells each, and the Termination Marker", () => {
   assert.equal(setActivePosition(20), 0x0013c);
@@ -77,84 +65,46 @@ test("each row's runs follow its Set Active Position triplet, left to right; a t
       { row: 4, column: 20, width: 10, height: 2 },
     ],
   ]);
-  assert.deepEqual(controlLines([]), [], "no controls, no packet");
+  assert.deepEqual(localEnhancement([]).lines, [], "no controls, no packet");
 });
 
-test("a pointer area's triplet is the control's shape in column mode 01010, and one of width 0, not joined, is the whole page", () => {
-  const MODE = 0b01010;
-  assert.equal(pointerAreaTriplet(1, 38, false), 1 | (MODE << 6) | (38 << 11));
-  assert.equal(pointerAreaTriplet(1, 38, false), 0x13281);
-  assert.equal(pointerAreaTriplet(1, 38, true), 1 | (MODE << 6) | ((0x40 | 38) << 11), "D6 joins it to the area above");
-  assert.equal(pointerAreaTriplet(1, 38, true), 0x33281);
-  // Address 0 and data 0: the mode alone.
-  assert.equal(WHOLE_PAGE_POINTER_AREA, MODE << 6);
-  assert.equal(WHOLE_PAGE_POINTER_AREA, 0x00280);
-});
-
-test("the whole page's area comes first; each row's controls and areas follow its Set Active Position left to right, joined below; read back as the engine reads them", () => {
-  const controls = [{ row: 4, column: 20, width: 10, height: 1 }];
-  const pointer = {
-    areas: [
-      { row: 4, column: 2, width: 6, height: 2 },
-      { row: 4, column: 2, width: 6, height: 1 },
-    ],
-    wholePage: true,
-  };
-  assert.deepEqual(controlTriplets(controls, pointer), [
-    WHOLE_PAGE_POINTER_AREA,
+test("each row's controls follow its Set Active Position left to right, joined below; read back as the engine reads them", () => {
+  const controls = [
+    { row: 4, column: 20, width: 10, height: 1 },
+    { row: 4, column: 2, width: 6, height: 2 },
+  ];
+  assert.deepEqual(enhancementTriplets(controls), [
     setActivePosition(4),
-    0x03282,
-    0x03282,
-    0x05154,
+    controlTriplet(2, 6, false),
+    controlTriplet(20, 10, false),
     setActivePosition(5),
-    0x23282,
+    controlTriplet(2, 6, true),
     TERMINATION,
   ]);
-  assert.deepEqual(controlTriplet(20, 10, false), 0x05154);
-  assert.deepEqual(
-    readDeclarations(`PN,15000\n${controlLines(controls, pointer).join("\n")}\n`),
-    [{ controls, pointer }],
-    "areas may overlap each other and the controls",
-  );
-  assert.deepEqual(controlLines([], { areas: [], wholePage: false }), [], "nothing, no packet");
+  // Read back in screen order, as the engine reads them: the one at column 2 first.
+  assert.deepEqual(readDeclarations(`PN,15000\n${localEnhancement(controls).lines.join("\n")}\n`), [{ controls: controls.toReversed() }]);
+  assert.deepEqual(localEnhancement([]).lines, [], "nothing, no packet");
 });
 
-test("a page keeps eight pointer areas, overlapping as they may, cut to rows 1 to 23 and its columns; the controls take the local data first", () => {
-  const areas = Array.from({ length: 10 }, (_, index) => ({ row: 5, column: index, width: 4, height: 1 }));
-  assert.equal(keptDeclarations([], { areas, wholePage: false }).pointer.areas.length, MAX_POINTER_AREAS);
-  assert.deepEqual(
-    keptDeclarations([], {
-      areas: [
-        { row: 0, column: 0, width: 5, height: 2 },
-        { row: 6, column: 38, width: 5, height: 1 },
-        { row: 7, column: 0, width: 0, height: 1 },
-        { row: 24, column: 0, width: 5, height: 1 },
-      ],
-      wholePage: false,
-    }).pointer.areas,
-    [
-      { row: 1, column: 0, width: 5, height: 1 },
-      { row: 6, column: 38, width: 2, height: 1 },
-    ],
-  );
-  // 32 controls six rows tall take 192 triplets, their rows' Set Active Positions 6 and the Termination Marker 1: 199 of 208.
+test("a page's controls fit the local data: 32 controls six rows tall take 199 of its 208 triplets, in at most its 16 packets", () => {
+  // 192 runs, their rows' 6 Set Active Positions and the Termination Marker.
   const tall = Array.from({ length: MAX_CONTROLS }, (_, index) => ({ row: 1, column: index, width: 1, height: 6 }));
-  const held = keptDeclarations(tall, {
-    areas: [
-      { row: 1, column: 0, width: 40, height: 5 },
-      { row: 1, column: 0, width: 40, height: 3 },
-      { row: 1, column: 0, width: 40, height: 1 },
-    ],
-    wholePage: true,
-  });
+  const held = keptDeclarations(tall);
   assert.equal(held.controls.length, MAX_CONTROLS);
-  assert.equal(held.pointer.wholePage, true, "the whole page's triplet: 200");
+  assert.equal(enhancementTriplets(held.controls).length, 199);
+  assert.ok(enhancementLines(enhancementTriplets(held.controls)).length <= 16, "no more packets X/26 than a page has");
+});
+
+test("a page never writes column mode 01010, the pointer area INPUT.md section 7.4 withdrew: a paint canvas following the pointer declares nothing for it", () => {
+  const page = viewer(h(PaintCanvas, { columns: 10, rows: 4, brush: true }));
+  const triplets = latestTti(page, PAGE)
+    .split("\n")
+    .filter((line) => line.startsWith("OL,26,"))
+    .flatMap((line) => lineTriplets(line));
   assert.deepEqual(
-    held.pointer.areas.map((area) => area.height),
-    [5, 3],
-    "205, then 208; the third has no room",
+    triplets.filter((value) => ((value >> 6) & 0b11111) === 0b01010),
+    [],
   );
-  assert.equal(enhancementLines(controlTriplets(held.controls, held.pointer)).length, 16, "every packet X/26 a page has");
 });
 
 test("the rollover packet is X/28/0 format 1 (Table 4): a basic English page, CLUT 2 the Level 1 colours, CLUT 3 the rollover colours, re-mapping 6", () => {

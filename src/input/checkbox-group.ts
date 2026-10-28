@@ -13,6 +13,7 @@ import { drawBox } from "./checkbox.ts";
 import { keyStep } from "./key-step.ts";
 
 export interface CheckboxGroupProps extends ValueProps<readonly number[]> {
+  /** Each box's text, in order; the value holds the ticked ones' places. */
   readonly items: readonly string[];
   /** Items that cannot be changed. */
   readonly disabledItems?: readonly number[];

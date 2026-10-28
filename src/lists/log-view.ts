@@ -19,14 +19,18 @@ export type LogLevel = "debug" | "info" | "warning" | "error";
 export interface LogEntry {
   /** Milliseconds since the Unix epoch. */
   readonly at: number;
+  /** How much it matters: its tag and its colour; one the log does not know is drawn as info. */
   readonly level: LogLevel;
+  /** What happened, cut to its row. */
   readonly text: string;
 }
 
 export interface LogViewProps extends ControlProps {
+  /** The entries, oldest first: the newest is at the bottom while it follows. */
   readonly entries: readonly LogEntry[];
   /** The entries shown at once. */
   readonly shown: number;
+  /** What it says before any entry; "no entries yet" when absent. */
   readonly empty?: string;
 }
 

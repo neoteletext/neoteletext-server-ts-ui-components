@@ -8,7 +8,9 @@ export type Unsubscribe = () => void;
 
 /** Who an event is for: one page, one viewer, or both; everyone when empty. */
 export interface Audience {
+  /** Only listeners on this page; every page when absent. */
   readonly page?: number;
+  /** Only this viewer's listeners; every viewer's when absent. */
   readonly session?: number;
 }
 

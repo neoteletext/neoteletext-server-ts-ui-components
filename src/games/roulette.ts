@@ -21,8 +21,11 @@ const FAST_STEP_MS = 60;
 export const SPIN_STEPS_MS = [...Array.from({ length: FAST_STEPS }, () => FAST_STEP_MS), 80, 100, 130, 170, 220, 280, 350, 450] as const;
 
 export interface RouletteProps extends ControlProps {
+  /** What it spins between; the one it stops on is a link to its page. */
   readonly articles: readonly Article[];
+  /** Played to the viewer who spun it at each step of the spin. */
   readonly tick?: Sound;
+  /** Played to the viewer who spun it as it stops. */
   readonly done?: Sound;
 }
 

@@ -11,8 +11,11 @@ import { Colour, englishCodes, textColour } from "../kit.ts";
 
 /** One part of a whole: what it is, how much of the whole, and how it is told from the others. */
 export interface Share {
+  /** What it is, in the legend. */
   readonly label: string;
+  /** How much of the whole; one that is no finite number, or is below nought, counts for none. */
   readonly value: number;
+  /** Its colour; the next of SHARE_COLOURS in turn when absent. */
   readonly foreground?: Colour;
   /** The character that stands for it in the legend and on the chart; its letter, A for the first, when absent. */
   readonly mark?: string;

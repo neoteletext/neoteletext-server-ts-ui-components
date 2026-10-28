@@ -48,7 +48,7 @@ export class Mount implements ComponentHost {
   #dirty = true;
   #focus: Node | null = null;
   readonly #history = new FocusHistory();
-  #reach: Reach = { grid: emptyGrid(), pointerAreas: [], controls: [] };
+  #reach: Reach = { grid: emptyGrid(), controls: [] };
   readonly #pointer: Pointer;
   /** The page as last answered. */
   lastTti: string | null = null;

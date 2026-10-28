@@ -32,6 +32,7 @@ export interface SegmentFieldProps extends ValueProps<string> {
   readonly check?: (segment: number, digits: string) => string | null;
   /** A filled slot shows `*`, not its digit: a PIN. */
   readonly conceal?: boolean;
+  /** Its band's colour; blue when absent, black while disabled. */
   readonly background?: Colour;
   /** Enter with every slot filled and nothing wrong: the template filled in. */
   readonly onSubmit?: (filled: string, session: number) => void;

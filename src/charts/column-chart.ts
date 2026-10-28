@@ -1,6 +1,9 @@
 // Columns up from a floor, a third of a row at a time (three sixels down a
 // cell): each column in its own colour, since the colour's cell is the gap
-// before it; its label under it and its figure over it. A chart whose
+// before it; its label under it and its figure over it. Labels longer than
+// a column go on two rows by turns, each then as wide as two columns and
+// so in full where a column's own width would cut "Mar" and "May" both to
+// "Ma"; a label longer still is cut to that. A chart whose
 // columns can be chosen (onChoose) makes each column, with its label, a
 // control: a click chooses it, and while the pointer is on one the hint
 // row says what it is.
@@ -11,18 +14,21 @@ import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import type { HoverEvent, PointerEvent } from "../core/events.ts";
 import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
-import { fit, padStart } from "../core/text.ts";
+import { cells, fit, padStart } from "../core/text.ts";
 import { Colour, mosaicColour, SIXELS_DOWN } from "../kit.ts";
 import { barHint, type ChartRow } from "./bar-chart.ts";
 import { mostOf } from "./numbers.ts";
 
 export interface ColumnChartProps {
+  /** The columns, left to right, scaled to the largest value that is a finite number; as many as fit across. */
   readonly bars: readonly ChartRow[];
+  /** What it says when there are no columns; "no data" when absent. */
   readonly empty?: string;
   /** The rows the columns rise through. */
   readonly plotRows: number;
   /** The cells each column is wide, after its colour's cell. */
   readonly columnCells?: number;
+  /** A column's colour when it has none of its own; green when absent. */
   readonly foreground?: Colour;
   /** The figures over the columns. */
   readonly figures?: boolean;
@@ -41,6 +47,8 @@ const TOPS = [
 const COLUMN_CELLS = 2;
 /** The labels' row under the columns, and the figures' over them. */
 const LABEL_ROWS = 1;
+/** The labels' rows when one is longer than its column: every other label on the second. */
+const STAGGERED_LABEL_ROWS = 2;
 
 /** The column under the pointer, for the hint row. */
 interface ColumnState {
@@ -54,8 +62,18 @@ export class ColumnChart extends Component<ColumnChartProps, ColumnState> {
     return this.props.figures === true ? 1 : 0;
   }
 
+  /** The cells each column is wide, after its colour's. */
+  get #across(): number {
+    return this.props.columnCells ?? COLUMN_CELLS;
+  }
+
+  /** The labels' rows: one, or two by turns when a label is longer than its column. */
+  get #labelRows(): number {
+    return this.props.bars.some((column) => cells(column.label) > this.#across) ? STAGGERED_LABEL_ROWS : LABEL_ROWS;
+  }
+
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(space.height, this.props.plotRows + LABEL_ROWS + this.#figureRows) };
+    return { width: space.width, height: Math.min(space.height, this.props.plotRows + this.#labelRows + this.#figureRows) };
   }
 
   override paint(canvas: Canvas): void {
@@ -63,8 +81,11 @@ export class ColumnChart extends Component<ColumnChartProps, ColumnState> {
       paintEmpty(canvas, this.props.empty ?? "no data");
       return;
     }
-    const across = this.props.columnCells ?? COLUMN_CELLS;
+    const across = this.#across;
     const pitch = across + 1;
+    const labelRows = this.#labelRows;
+    // On two rows a label runs on under the next column, to the colour's cell of the one after.
+    const labelCells = labelRows === LABEL_ROWS ? across : labelRows * pitch - 1;
     const top = this.#figureRows;
     // The most of the figures that are numbers: one NaN would leave every other column empty.
     const most = Math.max(1, mostOf(this.props.bars.map((column) => column.value).filter((value) => Number.isFinite(value))));
@@ -84,13 +105,13 @@ export class ColumnChart extends Component<ColumnChartProps, ColumnState> {
         const code = TOPS[filled] ?? MOSAIC_BASE;
         canvas.codes(top + row, at, [mosaicColour(foreground), ...Array.from({ length: across }, () => code)]);
       }
-      canvas.coloured(top + this.props.plotRows, at, Colour.White, fit(column.label, across));
+      canvas.coloured(top + this.props.plotRows + (index % labelRows), at, Colour.White, fit(column.label, labelCells));
       if (this.props.figures === true) {
         canvas.coloured(0, at, Colour.Cyan, padStart(String(column.value), across).slice(-across));
       }
       if (this.props.onChoose !== undefined) {
-        // Its cells after its colour's, from the top of the plot down through its label.
-        canvas.control(top, at + 1, across, this.props.plotRows + LABEL_ROWS, String(index));
+        // Its cells after its colour's, from the top of the plot down through its labels' rows.
+        canvas.control(top, at + 1, across, this.props.plotRows + labelRows, String(index));
       }
     });
   }

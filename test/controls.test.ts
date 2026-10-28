@@ -1,4 +1,4 @@
-// Which of a page's components declare controls and pointer areas, and
+// Which of a page's components declare controls, and
 // where: only what a click reaches, on the first sub-page.
 
 import assert from "node:assert/strict";
@@ -27,7 +27,7 @@ import {
   Text,
 } from "../src/index.ts";
 import { Colour, COLUMNS, Key } from "../src/kit.ts";
-import { PAGE, PROMPTS, BODY_ROW, frame, latestTti, controlsOf, areasOf, inOrder, harness, viewer, Watcher } from "./controls-fixtures.ts";
+import { PAGE, PROMPTS, BODY_ROW, frame, latestTti, controlsOf, inOrder, harness, viewer, Watcher } from "./controls-fixtures.ts";
 
 test("a button's band is a control: from its New Background cell to the cell before its Black Background; a disabled one declares none", () => {
   const width = Button.widthOf("press");
@@ -92,23 +92,14 @@ test("a dialog over a page has the controls: the buttons under it cannot be clic
   assert.deepEqual([yes.width, no.width, no.row], ["Yes".length + 2, "No".length + 2, yes.row]);
 });
 
-test("a pointer area is in its component's own cells, joined for its height; a move with no button held in it reaches the component, and nowhere else does", () => {
+test("a move with no button held goes, as a click does, to the component drawn in its cell and up from it, and nowhere else (INPUT.md section 9.8)", () => {
   const seen: string[] = [];
-  const page = viewer(h(Watcher, { seen }));
-  assert.deepEqual(areasOf(page, PAGE), { areas: [{ row: BODY_ROW + 1, column: 2, width: 5, height: 2 }], wholePage: false });
-  assert.deepEqual(controlsOf(page, PAGE), []);
-  page.move(1, 0, 3, BODY_ROW + 1);
-  page.move(1, 0, 10, BODY_ROW + 1);
-  page.move(1, 0, 3, BODY_ROW + 3);
-  assert.deepEqual(seen, ["move 0 1,3"], "the area's cell; not the box's cells beside it or below it");
-});
-
-test("a whole-page pointer area is one triplet, and takes every move on the page wherever its component is drawn", () => {
-  const seen: string[] = [];
-  const page = viewer(h(Watcher, { whole: true, seen }), h(Text, { text: "below" }));
-  assert.deepEqual(areasOf(page, PAGE), { areas: [], wholePage: true });
-  page.move(1, 0, 30, 20);
-  assert.deepEqual(seen, [`move 0 ${20 - BODY_ROW},30`], "in its box's coordinates, outside it");
+  const page = viewer(h(Watcher, { seen }, h(Text, { text: "inside" })), h(Text, { text: "below" }));
+  assert.deepEqual(controlsOf(page, PAGE), [], "nothing declared for it");
+  page.move(1, 0, 3, BODY_ROW);
+  page.move(1, 0, 10, BODY_ROW + 2);
+  page.move(1, 0, 3, BODY_ROW + 4);
+  assert.deepEqual(seen, ["move 0 0,3", "move 0 2,10"], "over the text inside it, up to it; over its own cells; not over the text below it");
 });
 
 test("only the first sub-page declares controls: a click is found on its cells alone, so a hand on another would point at the first's component", () => {
@@ -239,8 +230,17 @@ test("a modal keeps every click from the page under it, beside the dialog too, d
   const [ok, ...more] = controlsOf(page, PAGE);
   assert.deepEqual(more, [], "the dialog's button alone");
   assert.ok(ok !== undefined && ok.row < under);
-  assert.deepEqual(areasOf(page, PAGE), { areas: [], wholePage: false }, "the pointer area under it is not declared");
+  page.move(1, 0, 3, BODY_ROW + 1);
+  assert.deepEqual(seen, [], "a move over the page under the dialog goes to the shield, not the page");
   page.clickLeft(1, 3, under);
   page.press(1, Key.Enter);
   assert.deepEqual([pressed, answers], [[], [0]]);
+});
+
+test("a move with no button held over a scroll bar is not the bar's: it goes on up to the bar's list's parents", () => {
+  const seen: string[] = [];
+  const items = Array.from({ length: 12 }, (_, index) => `item ${index + 1}`);
+  const page = viewer(h(Watcher, { seen }, h(ChoiceList, { items, shown: 4, onChoose: () => {} })));
+  page.move(1, 0, COLUMNS - 1, BODY_ROW + 1);
+  assert.deepEqual(seen, [`move 0 1,${COLUMNS - 1}`]);
 });

@@ -7,21 +7,22 @@
 // coming onto a row is told to the list's user (onHover); a row may say
 // what it is on the hint row meanwhile (itemHint). Told to pick by key,
 // the rows shown are numbered and a digit chooses one, or the first four
-// are lettered for the coloured keys (R G Y C) and a coloured key chooses
-// one: a remote reaches any row shown in one press.
+// are lettered for the coloured keys (R G Y C), each in its key's colour,
+// and a coloured key chooses one (key-picks.ts).
 
 import type { Size } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent, WheelEvent } from "../core/events.ts";
-import { choosing, COLOUR_KEY_NAMES, colourKeyOf, digitOf } from "../core/keys.ts";
+import { choosing } from "../core/keys.ts";
 import { followItem, keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
 import { Control, type ControlProps, type KeyHelpEntry, type PageNeeds } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
-import type { RowLook } from "./list-row.ts";
-import { ListRows, within } from "./list-rows.ts";
+import { digitMark, type KeyPick, keyLetters, pickBindings, pickedPlace } from "./key-picks.ts";
+import { ListRows, type RowLook, within } from "./list-rows.ts";
 import { BAR_CELLS, ScrollBar } from "./scroll.ts";
 
 export interface ChoiceListProps<T = string> extends ControlProps {
+  /** The items, in order: as many as fit `shown` at once, scrolled to keep the chosen one in view. */
   readonly items: readonly T[];
   /** What an item's row holds, drawn to the row's look: its text when absent. */
   readonly render?: (item: T, look: RowLook, index: number) => Child;
@@ -41,15 +42,13 @@ export interface ChoiceListProps<T = string> extends ControlProps {
   readonly itemHint?: (item: T, index: number) => string | null;
   /** The item chosen to begin with. */
   readonly initial?: number;
+  /** What an empty list says; "nothing to choose" when absent. */
   readonly empty?: string;
   /** What tells one item from another, so the chosen item stays chosen as items come and go: a live list. */
   readonly itemKey?: (item: T) => string;
-  /** The rows shown chosen by a digit, numbered 1 to 9, or by a coloured key, lettered; the page then takes those keys. Marks show on rows drawn as text. */
-  readonly pick?: "digits" | "colours";
+  /** The rows shown chosen by a digit, numbered 1 to 9, or by a coloured key, lettered in its colour; the page then takes those keys. Digits show on rows drawn as text; letters show on every row, before its band. */
+  readonly pick?: KeyPick;
 }
-
-/** The rows a digit picks among: one digit each, 1 to 9. */
-const DIGIT_PICKS = 9;
 
 interface ChoiceListState {
   readonly chosen: number;
@@ -75,34 +74,16 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
   }
 
   override keyBindings(): readonly KeyHelpEntry[] {
-    const pick: KeyHelpEntry[] = [];
-    if (this.props.pick === "digits") {
-      pick.push(["1-9", "chooses a row"]);
-    } else if (this.props.pick === "colours") {
-      pick.push(["A coloured key", "chooses"]);
-    }
-    return [["Up Down, wheel or click", "move"], ["Enter", "chooses"], ...pick];
+    return [["Up Down, wheel or click", "move"], ["Enter", "chooses"], ...pickBindings(this.props.pick)];
   }
 
   protected override keyNeeds(): PageNeeds {
     return { digits: this.props.pick === "digits", colourKeys: this.props.pick === "colours" };
   }
 
-  /** The mark before item `index`'s text when it may be picked by a key: its digit or its coloured key's letter; none past those. */
-  #pickMark(index: number): string {
-    const shown = index - this.state.top;
-    if (this.props.pick === "digits" && shown < DIGIT_PICKS) {
-      return `${shown + 1} `;
-    }
-    const colour = this.props.pick === "colours" ? COLOUR_KEY_NAMES[shown] : undefined;
-    return colour === undefined ? "" : `${colour.charAt(0).toUpperCase()} `;
-  }
-
-  /** The item shown `place` rows from the top that a key picks, or null. */
+  /** The item a key picks among those shown, or null. */
   #picked(event: KeyEvent): number | null {
-    const digit = this.props.pick === "digits" ? digitOf(event) : null;
-    const colour = this.props.pick === "colours" ? colourKeyOf(event) : null;
-    const place = digit !== null && digit >= 1 ? digit - 1 : colour;
+    const place = pickedPlace(this.props.pick, event);
     const index = place === null ? -1 : this.state.top + place;
     return index >= 0 && index < Math.min(this.props.items.length, this.state.top + this.#fit) ? index : null;
   }
@@ -149,9 +130,10 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
         itemRows: this.#itemRows,
         empty: this.props.empty ?? "nothing to choose",
         ...(this.props.render === undefined ? {} : { render: this.props.render }),
-        ...(this.props.pick === undefined && this.props.text === undefined
+        ...keyLetters(this.props.pick, this.state.top, () => this.disabled),
+        ...(this.props.pick !== "digits" && this.props.text === undefined
           ? {}
-          : { text: (item: T, index: number) => `${this.#pickMark(index)}${this.props.text?.(item, index) ?? String(item)}` }),
+          : { text: (item: T, index: number) => `${digitMark(this.props.pick, index - this.state.top)}${this.props.text?.(item, index) ?? String(item)}` }),
         disabled: () => this.disabled,
         onPick: (index: number, session: number) => {
           this.#choose(index, session);

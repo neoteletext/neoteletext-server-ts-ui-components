@@ -30,6 +30,7 @@ import {
   ProgressBar,
   ToastShelf,
   type ToastShelfProps,
+  UPPER_TWO,
 } from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 
@@ -64,9 +65,12 @@ function drawn(seen: Harness, rows: number): string[] {
   return Array.from({ length: rows }, (_, row) => text(seen.seen(1, PAGE).rows, BODY_ROW + row));
 }
 
-/** The full blocks in a row. */
+/** A bar's whole cells, its upper two rows of sixels. */
+const BAR_CELL = String.fromCodePoint(UPPER_TWO);
+
+/** The whole cells of bar in a row. */
 function blocks(row: string): number {
-  return row.split("\u007F").length - 1;
+  return row.split(BAR_CELL).length - 1;
 }
 
 /** Clicks the first cell of `words` where the viewer sees them. */
@@ -96,7 +100,7 @@ test("a line chart of more values than a call takes as arguments is drawn", () =
 
 test("a bar of NaN is no bar, and the page is published", () => {
   const rows = drawn(viewer(h(Bar, { value: Number.NaN, max: 10 })), 1);
-  assert.doesNotMatch(rows[0] ?? "", /\u007F/u, "no full block");
+  assert.equal(blocks(rows[0] ?? ""), 0, "no bar");
 });
 
 test("a bar chart with NaN and Infinity among its figures draws the others to the most of the numbers", () => {

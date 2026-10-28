@@ -12,10 +12,14 @@ import type { Colour } from "../kit.ts";
 import { ItemText } from "./item-text.ts";
 import { ListRow, type RowLook } from "./list-row.ts";
 
+export type { RowLook } from "./list-row.ts";
+
 export interface ListRowsProps<T> {
+  /** The list's items, all of them; those from `top` are shown. */
   readonly items: readonly T[];
   /** Cells before each row's band, and what they hold. */
   readonly indent?: (item: T, index: number) => number;
+  /** What the cells before an item's band hold: a tree's guide lines. */
   readonly before?: (item: T, index: number) => Child;
   /** The first item shown. */
   readonly top?: number;
@@ -23,6 +27,7 @@ export interface ListRowsProps<T> {
   readonly shown: number;
   /** The chosen item, or null for none. */
   readonly chosen: number | null;
+  /** The list has the keys: the chosen item is on the band. */
   readonly focused: boolean;
   /** Rows each item takes. */
   readonly itemRows?: number;
@@ -32,9 +37,11 @@ export interface ListRowsProps<T> {
   readonly render?: (item: T, look: RowLook, index: number) => Child;
   /** An item's text, for the default row: the item itself when it is text. */
   readonly text?: (item: T, index: number) => string;
+  /** Whether an item cannot be picked: drawn dimmed, and a click on it does nothing. */
   readonly disabled?: (item: T, index: number) => boolean;
   /** An item's foreground off the band. */
   readonly foreground?: (item: T, index: number) => Colour | undefined;
+  /** A click on an item's band: its place in `items`. */
   readonly onPick: (index: number, session: number) => void;
   /** The pointer came onto an item's row, or left it (null). Moving from one row to the next is a leave, then an enter. */
   readonly onHover?: (index: number | null, session: number) => void;

@@ -21,9 +21,11 @@ import type { Colour } from "../kit.ts";
 
 /** A row's state, for what it holds to draw itself to match. */
 export interface RowLook {
+  /** It is the list's chosen row: on the band while the list has the keys, marked otherwise. */
   readonly chosen: boolean;
   /** The list has the keys. */
   readonly focused: boolean;
+  /** It cannot be pressed: drawn dimmed, and never on the band. */
   readonly disabled: boolean;
   /** On a band: the chosen row of the list with the keys. */
   readonly band: boolean;
@@ -32,8 +34,11 @@ export interface RowLook {
 }
 
 export interface ListRowProps {
+  /** It is the list's chosen row: on the band while the list has the keys, marked otherwise. */
   readonly chosen: boolean;
+  /** The list has the keys. */
   readonly focused: boolean;
+  /** It cannot be pressed: drawn dimmed, never on the band, and a click does nothing. */
   readonly disabled?: boolean;
   /** Its foreground off the band, LABEL when absent. */
   readonly foreground?: Colour;
@@ -45,6 +50,7 @@ export interface ListRowProps {
   readonly before?: Child;
   /** What it holds, drawn to its look. */
   readonly content: (look: RowLook) => Child;
+  /** A click on its band; without it, the band is no control. */
   readonly onPress?: (session: number) => void;
   /** The pointer came onto its band, or left it (`entered` false). */
   readonly onHover?: (entered: boolean, session: number) => void;

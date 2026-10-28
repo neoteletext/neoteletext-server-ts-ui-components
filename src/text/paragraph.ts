@@ -7,7 +7,9 @@ import { headline, wrap } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 export interface ParagraphProps {
+  /** The text, wrapped to the box's width. */
   readonly text: string;
+  /** Its colour; white when absent. */
   readonly foreground?: Colour;
   /** At most this many lines; the last cut with an ellipsis. */
   readonly lines?: number;

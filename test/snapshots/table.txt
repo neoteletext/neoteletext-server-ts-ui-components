@@ -4,7 +4,7 @@
                                         
 bNDwTable                               
 bN                                      
-bNyTeam           yPts                  
+cNbTeam           bPts                  
   wRovers         w   12                
   wUnited         w    9                
   wCity           w   15                

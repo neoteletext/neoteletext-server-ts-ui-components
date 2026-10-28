@@ -2,7 +2,9 @@
 // Monday. Today is yellow, days with something on are green, the weekend
 // cyan; the day chosen flashes. Chosen with the arrows (a day, a week),
 // Page Up and Page Down (a month), Enter or a click; a click on an arrow of
-// the heading turns the month.
+// the heading turns the month. Given a new year or month, it shows that
+// month; a month past December or before January is one of the next year
+// or the last, as Date.UTC takes it.
 
 import type { Canvas } from "../core/canvas.ts";
 import type { Size } from "../core/layout.ts";
@@ -14,14 +16,18 @@ import { Attribute, Colour, Key, textColour } from "../kit.ts";
 import { DATE_FORMATS, formatDate } from "./date-text.ts";
 
 export interface CalendarDate {
+  /** The year, in full. */
   readonly year: number;
   /** 0 for January. */
   readonly month: number;
+  /** The day of the month, from 1. */
   readonly day: number;
 }
 
 export interface CalendarProps extends ControlProps {
+  /** The year shown, until the viewer turns the month; shown again when it changes. */
   readonly year: number;
+  /** The month shown, 0 for January, until the viewer turns it; 12 is the next year's January and -1 the last year's December. */
   readonly month: number;
   /** Today, UTC, in milliseconds since the Unix epoch. */
   readonly today?: number;
@@ -29,6 +35,7 @@ export interface CalendarProps extends ControlProps {
   readonly marked?: readonly CalendarDate[];
   /** A day can be chosen. */
   readonly selectable?: boolean;
+  /** A day chosen, with Enter or a click, while it is selectable. */
   readonly onChoose?: (date: CalendarDate, session: number) => void;
 }
 
@@ -64,6 +71,13 @@ function daysIn(year: number, month: number): number {
   return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 }
 
+/** `months` on from January of `year`, as a year and a month from 0 to 11. */
+function monthOf(year: number, months: number): { readonly year: number; readonly month: number } {
+  const total = year * MONTHS_IN_YEAR + months;
+  // % keeps the total's sign, so before year nought it would give a month below January.
+  return { year: Math.floor(total / MONTHS_IN_YEAR), month: ((total % MONTHS_IN_YEAR) + MONTHS_IN_YEAR) % MONTHS_IN_YEAR };
+}
+
 /** The place in the week of the month's first day, Monday 0. */
 function firstWeekday(year: number, month: number): number {
   return (new Date(Date.UTC(year, month, 1)).getUTCDay() + DAYS_IN_WEEK - 1) % DAYS_IN_WEEK;
@@ -81,7 +95,14 @@ function dayColour(highlighted: boolean, marked: boolean, weekday: number): Colo
 }
 
 export class Calendar extends Control<CalendarProps, CalendarState> {
-  override state: CalendarState = { year: this.props.year, month: this.props.month, day: 1 };
+  override state: CalendarState = { ...monthOf(this.props.year, this.props.month), day: 1 };
+
+  override componentDidUpdate(previous: Readonly<CalendarProps>): void {
+    if (previous.year !== this.props.year || previous.month !== this.props.month) {
+      const shown = monthOf(this.props.year, this.props.month);
+      this.setState({ ...shown, day: Math.min(this.state.day, daysIn(shown.year, shown.month)) });
+    }
+  }
 
   override focusable(): boolean {
     return this.props.selectable === true && !this.disabled;
@@ -153,9 +174,7 @@ export class Calendar extends Control<CalendarProps, CalendarState> {
 
   #turn(months: number): void {
     const { year, month, day } = this.state;
-    const total = year * MONTHS_IN_YEAR + month + months;
-    // % keeps the total's sign, so before year nought it would give a month below January.
-    const next = { year: Math.floor(total / MONTHS_IN_YEAR), month: ((total % MONTHS_IN_YEAR) + MONTHS_IN_YEAR) % MONTHS_IN_YEAR };
+    const next = monthOf(year, month + months);
     this.setState({ ...next, day: Math.min(day, daysIn(next.year, next.month)) });
   }
 

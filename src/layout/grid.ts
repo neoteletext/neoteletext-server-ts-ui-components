@@ -4,6 +4,7 @@ import { Component } from "../core/component.ts";
 import { type Box, type LayoutChild, type Size } from "../core/layout.ts";
 
 export interface GridProps {
+  /** The columns across, each the box's width over them in whole cells; one at least. */
   readonly columns: number;
 }
 

@@ -8,7 +8,9 @@ import { Colour } from "../kit.ts";
 export interface PositionProps {
   /** The first shown, from 0; it is written from 1. */
   readonly first: number;
+  /** How many are shown from the first. */
   readonly shown: number;
+  /** How many there are: nothing is drawn while all are shown. */
   readonly total: number;
   /** What is counted: "Lines" when absent. */
   readonly noun?: string;

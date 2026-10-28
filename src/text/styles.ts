@@ -8,7 +8,9 @@ import { cells, fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 export interface TextProps {
+  /** The line, cut with a mark at the box's edge. */
   readonly text: string;
+  /** Its colour; white when absent. */
   readonly foreground?: Colour;
   /** Centred in its box. */
   readonly centre?: boolean;
@@ -28,6 +30,8 @@ export class Text extends Component<TextProps> {
 }
 
 export interface StyledProps {
+  /** The line, cut to the box. */
   readonly text: string;
+  /** Its colour; when absent, the style's own: magenta concealed, red flashing, yellow in double height or width. */
   readonly foreground?: Colour;
 }

@@ -1,8 +1,8 @@
 // A table of rows and columns under a heading: each column starts with its
-// colour's cell, which is the gap between columns; the heading is on a band;
-// the chosen row is on the band while the table has the keys (core/
-// look.ts); rows may alternate their foreground; more rows than fit scroll
-// beside a scroll bar. A column is sorted by its digit (the page takes the
+// colour's cell, which is the gap between columns; the heading is on a band
+// of a colour apart from the frame's title band above it; the chosen row is
+// on the band while the table has the keys (core/look.ts); rows may
+// alternate their foreground; more rows than fit scroll beside a scroll bar. A column is sorted by its digit (the page takes the
 // digits) or a click on its heading, and again the other way. A row that
 // can be chosen is a control, and the pointer coming onto it is told to
 // the table's user (onHover).
@@ -19,27 +19,38 @@ import { Columns } from "../layout/columns.ts";
 import { Rows } from "../layout/layouts.ts";
 import { Body } from "./body.ts";
 import { Heading } from "./heading.ts";
+import { within } from "./list-rows.ts";
 import { BAR_CELLS, ScrollBar, scrolled } from "./scroll.ts";
 
 export interface TableColumn {
+  /** Its heading, on the heading's band, cut to its width. */
   readonly title: string;
   /** Its cells, its colour's cell included. */
   readonly width: number;
+  /** Where its cells' text sits; left when absent. */
   readonly align?: "left" | "right";
+  /** Its cells' colour where the row is not chosen or striped; white when absent. */
   readonly foreground?: Colour;
 }
 
 export interface DataTableProps extends ControlProps {
+  /** The columns, left to right: a row's cells are in their order. */
   readonly columns: readonly TableColumn[];
+  /** The rows, each its cells in the columns' order. */
   readonly rows: readonly (readonly string[])[];
   /** The body's rows shown at once. */
   readonly shown: number;
   /** A row can be chosen, and Enter, Space or a click chooses it. */
   readonly selectable?: boolean;
+  /** A column's digit, 1 to 9, or a click on its heading sorts by it, and again the other way; the page then takes the digits. */
   readonly sortable?: boolean;
   /** Rows alternate white and cyan. */
   readonly striped?: boolean;
+  /** The heading's band colour; cyan when absent, apart from the frame's blue title band directly above it. A page whose title band is cyan gives it another, so the heading does not run into the title. */
+  readonly headingBackground?: Colour;
+  /** What an empty table says; "no rows" when absent. */
   readonly empty?: string;
+  /** A row chosen by Enter, Space or a click, only while selectable. */
   readonly onChoose?: (row: readonly string[], session: number) => void;
   /** The pointer came onto a row that can be chosen, or left it (null). Moving from one row to the next is a leave, then an enter. */
   readonly onHover?: (row: readonly string[] | null, session: number) => void;
@@ -56,6 +67,9 @@ interface DataTableState {
 
 /** The cells before the first column: a band's colour and New Background, kept on every row so the columns line up. */
 const LEAD = 2;
+
+/** The heading's band when not told: cyan, not the blue a frame's title band is (frame/frame.ts) nor the yellow of a chosen row's (core/look.ts, CHOSEN). */
+const HEADING_BACKGROUND = Colour.Cyan;
 
 /** Each column's first cell: its colour's. */
 export function starts(columns: readonly TableColumn[]): number[] {
@@ -122,6 +136,16 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
     return sorted;
   }
 
+  /** The chosen row, kept to the rows there are now: its user may take some away, and without their keys the choice stays where it was. */
+  get #chosen(): number {
+    return within(this.state.chosen, this.props.rows.length);
+  }
+
+  /** The first row shown, kept so the rows shown are rows there are: fewer may leave it past them. */
+  get #top(): number {
+    return Math.min(this.state.top, Math.max(0, this.props.rows.length - this.props.shown));
+  }
+
   /** The rows changed under the chosen one: it stays chosen where it went, when its key says which it is. */
   override componentDidUpdate(previous: Readonly<DataTableProps>): void {
     if (previous.rows === this.props.rows || this.props.rowKey === undefined) {
@@ -156,6 +180,7 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
       {},
       h(Heading, {
         columns: this.props.columns,
+        background: this.props.headingBackground ?? HEADING_BACKGROUND,
         sortable: this.props.sortable === true && !this.disabled,
         sortBy: this.state.sortBy,
         descending: this.state.descending,
@@ -169,8 +194,8 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
         h(Body, {
           columns: this.props.columns,
           rows: this.#sorted(),
-          top: this.state.top,
-          chosen: this.props.selectable === true ? this.state.chosen : null,
+          top: this.#top,
+          chosen: this.props.selectable === true ? this.#chosen : null,
           focused: this.focused,
           striped: this.props.striped === true,
           selectable: this.props.selectable === true && !this.disabled,
@@ -183,7 +208,7 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
             : { onHover: (index: number | null, session: number) => this.props.onHover?.(index === null ? null : (this.#sorted()[index] ?? null), session) }),
         }),
         h(ScrollBar, {
-          top: this.state.top,
+          top: this.#top,
           total: this.props.rows.length,
           shown: this.props.shown,
           disabled: this.disabled,
@@ -206,7 +231,7 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
       return true;
     }
     if (choosing(event) && this.props.selectable === true) {
-      this.#choose(this.state.chosen, event.session);
+      this.#choose(this.#chosen, event.session);
       return true;
     }
     const step = listStep(event, this.props.shown);
@@ -214,12 +239,12 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
       return false;
     }
     if (this.props.selectable === true) {
-      const chosen = moveChoice(this.state.chosen, step, count);
-      this.setState({ chosen, top: keepInView(this.state.top, chosen, this.props.shown, count) });
+      const chosen = moveChoice(this.#chosen, step, count);
+      this.setState({ chosen, top: keepInView(this.#top, chosen, this.props.shown, count) });
       this.play("move", event.session);
     } else {
       const last = Math.max(0, count - this.props.shown);
-      this.setState({ top: scrolled(this.state.top, step, last) });
+      this.setState({ top: scrolled(this.#top, step, last) });
     }
     return true;
   }
@@ -229,7 +254,7 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
       return false;
     }
     const last = Math.max(0, this.props.rows.length - this.props.shown);
-    this.setState({ top: Math.max(0, Math.min(last, this.state.top + this.#wheel.lines(event.dy))) });
+    this.setState({ top: Math.max(0, Math.min(last, this.#top + this.#wheel.lines(event.dy))) });
     return true;
   }
 }

@@ -45,7 +45,9 @@ function tabForKey(event: KeyEvent, style: TabStyle, count: number, active: numb
 }
 
 export interface TabViewProps extends ValueProps<number> {
+  /** The tabs' names, left to right; the children are their views, in order. */
   readonly tabs: readonly string[];
+  /** Its look, and the keys that choose a tab; chips when absent. */
   readonly style?: TabStyle;
 }
 

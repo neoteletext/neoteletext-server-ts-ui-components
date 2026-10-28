@@ -27,7 +27,7 @@ import {
   type Size,
   StatusBar,
 } from "../src/index.ts";
-import { Attribute, Colour, mosaicColour, Screen, textColour } from "../src/kit.ts";
+import { Attribute, Colour, MOST_SUBPAGES, mosaicColour, Screen, textColour } from "../src/kit.ts";
 
 const PAGE = 0x150;
 const PROMPTS = [
@@ -111,7 +111,7 @@ test("chunks of no lines a screen still end", () => {
 test("a status bar's right-hand text is cut to the row, so the background and the flash keep their cells", () => {
   const screen = new Screen();
   const width = 30;
-  const canvas = new Canvas(screen, { row: 0, column: 0, width, height: 1 }, { cursor: null });
+  const canvas = new Canvas(screen, { row: 0, column: 0, width, height: 1 }, { cursor: null, displayAttributes: [] });
   new StatusBar({ segments: [{ text: "ON AIR" }], right: "x".repeat(50), alarm: true }).paint(canvas);
   assert.equal(canvas.at(0, 0), textColour(Colour.Blue));
   assert.equal(canvas.at(0, 1), Attribute.NewBackground);
@@ -131,9 +131,9 @@ test("a block of more lines than a call takes as arguments is laid out", () => {
   assert.equal(articleLines([{ kind: "paragraph", text: words }], "word".length).length, TOO_MANY_ARGUMENTS);
 });
 
-test("a day of more articles than a call takes as arguments is rendered", () => {
-  const article: Article = { page: 0x200, title: "A story", writer: "A writer", date: 0, summary: "", blocks: [], tags: [], link: "" };
+test("a day of more articles than a call takes as arguments is rendered, on every sub-page a page has", () => {
+  const article: Article = { page: 0x200, title: "A story", writer: "A writer", date: 0, blocks: [], tags: [] };
   const articles = Array.from({ length: TOO_MANY_ARGUMENTS }, (_, index) => ({ ...article, page: article.page + index }));
   const pages = new DayPages({ background: Colour.Blue, prompts: PROMPTS, days: [{ name: "Today", articles }] }).render();
-  assert.ok(Array.isArray(pages) && pages.length === 1);
+  assert.ok(Array.isArray(pages) && pages.length === MOST_SUBPAGES);
 });

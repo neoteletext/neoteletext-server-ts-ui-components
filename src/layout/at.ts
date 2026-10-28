@@ -4,11 +4,13 @@ import { Component } from "../core/component.ts";
 import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core/layout.ts";
 
 export interface AtProps {
-  /** Cells from the top-left of the parent's box. */
+  /** Rows down from the top of the parent's box, cut to it. */
   readonly row: number;
+  /** Cells in from the left of the parent's box, cut to it. */
   readonly column: number;
-  /** The place's size; when absent, the rest of the box below and to the right. */
+  /** The place's rows; when absent, the rest of the box below, and it is as tall as what is placed. */
   readonly rows?: number;
+  /** The place's cells across; when absent, the rest of the box to the right. */
   readonly columns?: number;
 }
 

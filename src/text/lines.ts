@@ -10,13 +10,17 @@ import { Colour } from "../kit.ts";
 
 /** One block of an article: a paragraph, a heading, a quotation or code, or an item of a list. */
 export interface Block {
+  /** What it is: a paragraph in white, a heading in yellow, a quotation in cyan, or an item of a list, marked "*". */
   readonly kind: "paragraph" | "heading" | "quote" | "item";
+  /** Its text, wrapped to the width. */
   readonly text: string;
 }
 
 /** A line of a document: its colour and text. */
 export interface Line {
+  /** Its colour. */
   readonly foreground: Colour;
+  /** Its text: one row of it. */
   readonly text: string;
 }
 
@@ -34,13 +38,18 @@ function blockColour(kind: Exclude<Block["kind"], "item">): Colour {
   return Colour.White;
 }
 
-/** An article's blocks as lines of `width`: headings yellow, quotations cyan, items marked, a blank line after each block. */
+/** Whether a blank line follows `block`: after every block but an item another item follows, so a list's items keep together and the list has one after it. */
+function blankAfter(block: Block, next: Block | undefined): boolean {
+  return !(block.kind === "item" && next?.kind === "item");
+}
+
+/** An article's blocks as lines of `width`: headings yellow, quotations cyan, items marked, a blank line after each block and after a list, none between its items. */
 export function articleLines(blocks: readonly Block[], width: number): Line[] {
   const lines: Line[] = [];
-  for (const block of blocks) {
+  for (const [index, block] of blocks.entries()) {
     if (block.kind === "item") {
-      for (const [index, line] of wrap(block.text, width - ITEM_MARK.length).entries()) {
-        lines.push({ foreground: Colour.White, text: `${index === 0 ? ITEM_MARK : ITEM_INDENT}${line}` });
+      for (const [at, line] of wrap(block.text, width - ITEM_MARK.length).entries()) {
+        lines.push({ foreground: Colour.White, text: `${at === 0 ? ITEM_MARK : ITEM_INDENT}${line}` });
       }
     } else {
       const foreground = blockColour(block.kind);
@@ -49,7 +58,9 @@ export function articleLines(blocks: readonly Block[], width: number): Line[] {
         lines.push({ foreground, text });
       }
     }
-    lines.push({ foreground: Colour.White, text: "" });
+    if (blankAfter(block, blocks[index + 1])) {
+      lines.push({ foreground: Colour.White, text: "" });
+    }
   }
   while (lines.length > 0 && lines.at(-1)?.text === "") {
     lines.pop();
@@ -58,6 +69,7 @@ export function articleLines(blocks: readonly Block[], width: number): Line[] {
 }
 
 export interface LinesProps {
+  /** The lines, a row each, cut to the width. */
   readonly lines: readonly Line[];
   /** What it says when there are no lines; nothing when absent. */
   readonly empty?: string;

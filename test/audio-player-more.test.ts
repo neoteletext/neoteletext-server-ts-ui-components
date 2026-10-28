@@ -7,6 +7,7 @@ import { test } from "node:test";
 
 import { type Harness, text } from "neottx-server-ts-protocol/testing";
 import { AudioPlayer, type AudioPlayerProps, type Element, h, tone, type Track } from "../src/index.ts";
+import { Colour, mosaicColour } from "../src/kit.ts";
 import { BODY_ROW, frame, harness, PAGE } from "./components-fixtures.ts";
 
 /** A rate low enough that a quarter of an hour of samples is small. */
@@ -108,7 +109,8 @@ test("a click on the bar seeks there", () => {
   const seen = player({ tracks: [track("talk", 20)] });
   seen.press(1, "p");
   const bar = row(seen, TIME);
-  const start = bar.indexOf("0:20") + "0:20".length + 2;
+  // The track starts after the bar's colour and the cell saying its graphics' kind, wherever the time's column ends.
+  const start = bar.indexOf(String.fromCodePoint(mosaicColour(Colour.Magenta))) + 2;
   const end = bar.lastIndexOf("%") - 4;
   seen.clickLeft(1, Math.round((start + end) / 2), TIME);
   assert.match(row(seen, TIME), /0:1[01]\/0:20/u, "the middle of the bar is the middle of the track");

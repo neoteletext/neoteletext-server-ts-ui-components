@@ -14,7 +14,9 @@ import { type ValueProps, ValueControl, type ValueState } from "./value-control.
 import { TextField } from "./text-field.ts";
 
 export interface AutocompleteProps extends ValueProps<string> {
+  /** What it suggests from, matched to what is typed whatever its case. */
   readonly items: readonly string[];
+  /** What the empty field shows while it does not have the keys. */
   readonly placeholder?: string;
   /** The most suggestions shown. */
   readonly shown: number;

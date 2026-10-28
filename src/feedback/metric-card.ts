@@ -15,7 +15,9 @@ import { Text } from "../text/styles.ts";
 import { Notice } from "./notice.ts";
 
 export interface MetricCardProps {
+  /** What it measures, after its kind's mark. */
   readonly label: string;
+  /** The figure, in its kind's colour; "--" when it is no number. */
   readonly value: number;
   /** What it was before, for its change; no change is shown without it. */
   readonly previous?: number;

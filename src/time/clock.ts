@@ -14,6 +14,7 @@ export const MINUTE_S = 60;
 export const HOUR_S = 3_600;
 
 export interface ClockProps {
+  /** The digits' colour; yellow when absent. */
   readonly foreground?: Colour;
   /** Seconds shown. */
   readonly seconds?: boolean;

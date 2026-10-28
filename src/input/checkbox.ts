@@ -1,15 +1,15 @@
 // A check box. Teletext has no box character, so a box is a chip (core/
-// canvas.ts): a white square of background holding "x" when ticked, "-"
-// when mixed, nothing when not, so the state shows without colour. It is
+// canvas.ts): a white band holding "x" when ticked, "-" when mixed,
+// nothing when not, in its middle, so the state shows without colour. It is
 // pressed with Enter, Space or a click; a box and its text are one
 // control, and a click ticks only there. A group of boxes
 // (checkbox-group.ts) draws each with drawBox.
 
-import { CHIP_CELLS, type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
+import { centredOnChip, CHIP_CELLS, type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
 import type { Size } from "../core/layout.ts";
 import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
-import { CHOSEN, DISABLED, DISABLED_CHIP, LABEL } from "../core/look.ts";
+import { CHOSEN, DISABLED, DISABLED_CHIP, inkOn, LABEL } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 import { type ValueProps, ValueControl, type KeyHelpEntry } from "./value-control.ts";
@@ -44,7 +44,13 @@ export function drawBox(
   width: number,
   id: string,
 ): void {
-  const after = canvas.chip(row, column, look.disabled ? DISABLED_CHIP.background : Colour.White, Colour.Black, markOf(ticked));
+  const after = canvas.chip(
+    row,
+    column,
+    look.disabled ? DISABLED_CHIP.background : Colour.White,
+    look.disabled ? DISABLED_CHIP.foreground : inkOn(Colour.White),
+    centredOnChip(markOf(ticked)),
+  );
   const room = width - (after - column) - 1;
   let end: number;
   if (look.chosen && !look.disabled) {
@@ -61,6 +67,7 @@ export function drawBox(
 }
 
 export interface CheckboxProps extends ValueProps<Ticked> {
+  /** The text beside the box, cut to its row. */
   readonly label: string;
 }
 

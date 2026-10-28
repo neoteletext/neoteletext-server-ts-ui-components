@@ -1,5 +1,5 @@
-// A page's controls and pointer areas read back from its TTI, as the
-// engine reads them (its controls.rs), for tests: what controls.ts writes.
+// A page's controls read back from its TTI, as the engine reads them (its
+// controls.rs), for tests: what controls.ts writes.
 
 import type { Box } from "./layout.ts";
 import {
@@ -12,7 +12,6 @@ import {
   LAST_CONTROL_ROW,
   MODE_CONTROL,
   MODE_MASK,
-  MODE_POINTER_AREA,
   MODE_SET_ACTIVE_POSITION,
   MODE_SHIFT,
   MODE_TERMINATION,
@@ -27,7 +26,6 @@ import {
 /** What a sub-page declares, as a receiver reads it back. */
 export interface Declarations {
   readonly controls: Box[];
-  readonly pointer: { readonly areas: Box[]; readonly wholePage: boolean };
 }
 
 /** A run on `row` from `address` into `list`: a new one, or the one above it made taller when joined and there is one to join; one of no width is dropped, as the engine drops it. */
@@ -71,9 +69,7 @@ function packetsOf(tti: string): Map<number, number[]>[] {
 
 /** What one sub-page's packets declare: their triplets in designation order, to the first Termination Marker. */
 function declarationsOf(packets: ReadonlyMap<number, readonly number[]>): Declarations {
-  const found = { controls: [] as Box[], pointer: { areas: [] as Box[], wholePage: false } };
   const controls: { row: number; column: number; width: number; height: number }[] = [];
-  const areas: { row: number; column: number; width: number; height: number }[] = [];
   let row = 0;
   const triplets = [...packets.entries()].toSorted(([a], [b]) => a - b).flatMap(([, values]) => values);
   for (const value of triplets) {
@@ -87,25 +83,16 @@ function declarationsOf(packets: ReadonlyMap<number, readonly number[]>): Declar
       row = address === ROW_ADDRESS_BASE ? LAST_CONTROL_ROW + 1 : address - ROW_ADDRESS_BASE;
     } else if (address < ROW_ADDRESS_BASE && mode === MODE_CONTROL) {
       readRun(controls, row, address, data);
-    } else if (address < ROW_ADDRESS_BASE && mode === MODE_POINTER_AREA) {
-      if (data === 0) {
-        found.pointer.wholePage = true;
-      } else {
-        readRun(areas, row, address, data);
-      }
     }
   }
-  found.controls.push(...controls);
-  found.pointer.areas.push(...areas);
-  return found;
+  return { controls };
 }
 
 /**
- * The controls and pointer areas each sub-page of `tti` declares, read back
- * as the engine reads them (its controls.rs): its OL,26 lines in
- * designation order to the first Termination Marker, the row from each Set
- * Active Position, a joined run making the one above it taller, a pointer
- * area of width 0 not joined the whole page. For tests.
+ * The controls each sub-page of `tti` declares, read back as the engine
+ * reads them (its controls.rs): its OL,26 lines in designation order to
+ * the first Termination Marker, the row from each Set Active Position, a
+ * joined run making the one above it taller. For tests.
  */
 export function readDeclarations(tti: string): Declarations[] {
   return packetsOf(tti).map((packets) => declarationsOf(packets));

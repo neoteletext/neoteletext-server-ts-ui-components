@@ -8,8 +8,9 @@
 // (EN 300 706 clause 12.2). A name goes to the right of its mark, else to
 // its left, else is left off, so that no two marks' cells overlap and none
 // covers an attribute of the map's other than a colour, which it could not
-// set again; a place with no such room, or below the box, is crowded out. A place outside the bounds is
-// not drawn, and the row under the map says how many were left out.
+// set again; a place with no such room, or below the box, is crowded out.
+// A place outside the bounds is not drawn, and the row under the map says
+// how many were left out, and how many are marked without their names.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
@@ -22,8 +23,11 @@ import { type Bitmap, sixelsOf } from "./mosaic.ts";
 
 /** A place on the map. */
 export interface MapPlace {
+  /** What it is called, beside its mark: cut to nameCells, or left off where there is no room. */
   readonly name: string;
+  /** Degrees north; south is below nought. */
   readonly latitude: number;
+  /** Degrees east; west is below nought. */
   readonly longitude: number;
   /** Its mark's and its name's colour. */
   readonly foreground?: Colour;
@@ -31,9 +35,13 @@ export interface MapPlace {
 
 /** The latitudes of the map's top and bottom edges and the longitudes of its left and right, in degrees. */
 export interface MapBounds {
+  /** The latitude of its top edge, in degrees; more than south. */
   readonly north: number;
+  /** The latitude of its bottom edge, in degrees. */
   readonly south: number;
+  /** The longitude of its left edge, in degrees. */
   readonly west: number;
+  /** The longitude of its right edge, in degrees; more than west. */
   readonly east: number;
 }
 
@@ -45,8 +53,11 @@ export interface MapBounds {
 export type MapBackground = { readonly bitmap: Bitmap; readonly foreground?: Colour } | { readonly tti: string; readonly firstRow?: number };
 
 export interface MapMarkersProps {
+  /** What the places are marked on: a bitmap in a colour, or a picture's TTI rows. */
   readonly map: MapBackground;
+  /** The degrees the map spans; a place outside them is left out, and bounds that make no map leave every place out. */
   readonly bounds: MapBounds;
+  /** The places to mark; those crowded out or outside the bounds, and those marked without their names, are counted on the row under the map. */
   readonly places: readonly MapPlace[];
   /** The most cells a place's name takes. */
   readonly nameCells?: number;
@@ -169,6 +180,8 @@ interface Placed {
   readonly markers: readonly Marker[];
   readonly offMap: number;
   readonly crowded: number;
+  /** The places marked with no room for their names. */
+  readonly unnamed: number;
 }
 
 /** A map with places marked and named on it, and a row saying how many it shows and how many it left out. */
@@ -177,10 +190,14 @@ export class MapMarkers extends Component<MapMarkersProps> {
     return { width: space.width, height: Math.min(space.height, drawnMap(this.props.map, space.width).height + STATUS_ROWS) };
   }
 
-  /** The ways to draw `place` at its cell: its name to the right, to the left, or no name, each from its colour's cell to the cell setting the map's colour again. */
+  get #nameCells(): number {
+    return this.props.nameCells ?? NAME_CELLS;
+  }
+
+  /** The ways to draw `place` at its cell, each from its colour's cell to the cell setting the map's colour again: its name to the right, to the left, or, last, with no name. */
   #ways(place: MapPlace, row: number, column: number, map: DrawnMap): Marker[] {
     const mapCodes = map.rows[row] ?? [];
-    const name = englishCodes(fit(place.name, this.props.nameCells ?? NAME_CELLS));
+    const name = englishCodes(fit(place.name, this.#nameCells));
     const mark = englishCodes(MARK);
     const colour = textColour(place.foreground ?? MARK_COLOUR);
     const after = (last: number): number => colourAfter(mapCodes, last);
@@ -199,6 +216,7 @@ export class MapMarkers extends Component<MapMarkersProps> {
     const markers: Marker[] = [];
     let offMap = 0;
     let crowded = 0;
+    let unnamed = 0;
     const fits = (way: Marker): boolean =>
       way.from >= 0 &&
       // Its last cell, setting the map's colour again, may fall past the box: there is no map there to set.
@@ -211,14 +229,19 @@ export class MapMarkers extends Component<MapMarkersProps> {
         offMap += 1;
         continue;
       }
-      const way = cell.row < rows ? this.#ways(place, cell.row, cell.column, map).find((each) => fits(each)) : undefined;
+      const ways = cell.row < rows ? this.#ways(place, cell.row, cell.column, map) : [];
+      const way = ways.find((each) => fits(each));
       if (way === undefined) {
         crowded += 1;
-      } else {
-        markers.push(way);
+        continue;
+      }
+      markers.push(way);
+      // The last way has no name: a name given and not shown is said, as a place crowded out is.
+      if (way === ways.at(-1) && fit(place.name, this.#nameCells) !== "") {
+        unnamed += 1;
       }
     }
-    return { markers, offMap, crowded };
+    return { markers, offMap, crowded, unnamed };
   }
 
   override paint(canvas: Canvas): void {
@@ -227,11 +250,14 @@ export class MapMarkers extends Component<MapMarkersProps> {
     map.rows.slice(0, rows).forEach((codes, row) => {
       canvas.codes(row, 0, codes);
     });
-    const { markers, offMap, crowded } = this.#placed(map, canvas.width, rows);
+    const { markers, offMap, crowded, unnamed } = this.#placed(map, canvas.width, rows);
     for (const marker of markers) {
       canvas.codes(marker.row, marker.from, marker.codes);
     }
     const said = [`${markers.length} ${markers.length === 1 ? "place" : "places"}`];
+    if (unnamed > 0) {
+      said.push(`${unnamed} unnamed`);
+    }
     if (offMap > 0) {
       said.push(`${offMap} off the map`);
     }

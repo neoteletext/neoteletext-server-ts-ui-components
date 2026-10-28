@@ -11,7 +11,9 @@ import { type Kind, KINDS } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
 
 export interface NoticeProps {
+  /** What happened: its mark and its colour (core/look.ts). */
   readonly kind: Kind;
+  /** What it says, after the mark, cut to its row. */
   readonly text: string;
 }
 

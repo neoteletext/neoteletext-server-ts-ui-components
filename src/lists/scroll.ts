@@ -42,8 +42,11 @@ export function scrolled(top: number, step: number, last: number): number {
 }
 
 export interface ScrollBarProps {
+  /** The first item shown, from 0. */
   readonly top: number;
+  /** The items there are: nothing is drawn while all of them show. */
   readonly total: number;
+  /** The items shown at once: a press above or below the block scrolls one fewer. */
   readonly shown: number;
   /** Where the viewer moved it: the first item to show. */
   readonly onScroll: (top: number) => void;
@@ -55,8 +58,8 @@ export interface ScrollBarProps {
  * A scroll bar down its box: grip the block and drag it, or press above or
  * below it to turn a screen. Nothing while everything shows. A press
  * anywhere on it acts, so the whole bar is one control, which the browser
- * shows pressed while the block is dragged; a drag is sent with its button
- * held, so it needs no pointer area.
+ * shows pressed while the block is dragged; a move with no button held is
+ * not its, and goes on to what is under it.
  */
 export class ScrollBar extends Component<ScrollBarProps> {
   #grip: number | null = null;
@@ -103,6 +106,10 @@ export class ScrollBar extends Component<ScrollBarProps> {
     if (event.action === "move" && (event.buttons & LEFT_HELD) !== 0 && this.#grip !== null) {
       this.props.onScroll(topAt(cell - this.#grip, total, track, shown));
       return true;
+    }
+    // Every move over the page comes, a button held or not (INPUT.md section 9.8): one passing over the bar is not the bar's, and leaves its grip be.
+    if (event.action === "move" && (event.buttons & LEFT_HELD) === 0) {
+      return false;
     }
     this.#grip = null;
     return true;

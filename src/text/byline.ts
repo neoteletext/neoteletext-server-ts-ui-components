@@ -8,9 +8,11 @@ import { Colour } from "../kit.ts";
 import { DATE_FORMATS, formatDate } from "../time/date-text.ts";
 
 export interface BylineProps {
+  /** Who wrote it, after "by". */
   readonly writer: string;
   /** Milliseconds since the Unix epoch. */
   readonly date: number;
+  /** Its labels, joined by commas on a second row in green; no second row when absent. */
   readonly labels?: readonly string[];
 }
 

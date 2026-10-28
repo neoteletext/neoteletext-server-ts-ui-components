@@ -13,7 +13,9 @@ import { type ValueProps, ValueControl, type ValueState, type KeyHelpEntry } fro
 import { ListRows, within } from "./list-rows.ts";
 
 export interface ToggleListProps extends ValueProps<readonly number[]> {
+  /** The items, all shown, each starred while it is on. */
   readonly items: readonly string[];
+  /** What an empty list says; "nothing to star" when absent. */
   readonly empty?: string;
   /** The pointer came onto an item's row, or left it (null): for showing what it is before it is chosen. Moving from one row to the next is a leave, then an enter. */
   readonly onHover?: (index: number | null, session: number) => void;

@@ -18,7 +18,9 @@ import { ListRows, within } from "../lists/list-rows.ts";
 import { type ValueProps, ValueControl, type ValueState, type KeyHelpEntry } from "./value-control.ts";
 
 export interface SelectProps extends ValueProps<number> {
+  /** What it is, in a column of its own before the field. */
   readonly label: string;
+  /** What it chooses from; the value is the chosen one's place. */
   readonly items: readonly string[];
   /** The most items the open list shows. */
   readonly shown?: number;
@@ -103,7 +105,7 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
     }
   }
 
-  /** Open, the list's rows under the field, from the label's column; the item it has now in cyan. */
+  /** Open, the list's rows under the field: each band from the field's band's column, past the label and the left arrow, so the items' text lines up with the value's; the item it has now in cyan. */
   override render(): Child {
     if (!this.state.open) {
       return null;
@@ -114,7 +116,7 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
       shown: this.#shown,
       chosen: this.state.chosen,
       focused: this.focused,
-      indent: () => this.labelCells,
+      indent: () => this.labelCells + ARROW_CELLS,
       foreground: (_item: string, index: number) => (index === this.value ? Colour.Cyan : Colour.White),
       disabled: () => this.disabled,
       onPick: (index: number, session: number) => {

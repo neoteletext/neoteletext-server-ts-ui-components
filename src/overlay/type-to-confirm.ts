@@ -23,7 +23,9 @@ export interface TypeToConfirmProps extends ControlProps {
   readonly destroys: string;
   /** The dialog's title; "Destroy" and the name when absent. */
   readonly title?: string;
+  /** Called as Confirm, or Enter on the line, is taken: only once what is typed is the name or the code. */
   readonly onConfirm: (session: number) => void;
+  /** Called as Cancel or Escape answers it, and nothing is destroyed. */
   readonly onCancel?: (session: number) => void;
 }
 

@@ -29,9 +29,13 @@ export type Prompts = readonly Prompt[];
 export interface FrameProps {
   /** The title band's text: the sub-page's name. */
   readonly title: string;
+  /** The title band's colour. */
   readonly background: Colour;
+  /** The title's colour; white when absent. */
   readonly foreground?: Colour;
+  /** The Fastext prompts on row 24, and the links they give the sub-page; none when absent. */
   readonly prompts?: Prompts;
+  /** What the keys do, on row 23; when absent, what the component with the keys says. */
   readonly hint?: string;
   /** The Index key's page. */
   readonly index?: number;

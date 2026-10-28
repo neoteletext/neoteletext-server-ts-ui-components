@@ -7,6 +7,7 @@ import { fit } from "../core/text.ts";
 import { Attribute, Colour } from "../kit.ts";
 
 export interface NewsflashProps {
+  /** The news, in yellow after NEWSFLASH, cut to the row. */
   readonly text: string;
 }
 

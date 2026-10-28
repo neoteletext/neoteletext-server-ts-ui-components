@@ -66,16 +66,8 @@ export class Pointer {
       held.component.onPointer?.(event(held));
       return true;
     }
-    const reach = this.#host.reach();
-    // A move with no button held is sent only from a pointer area: it goes to each component whose area it is in, and no further.
-    if (action === "move" && buttons === 0) {
-      let taken = false;
-      for (const owner of new Set(reach.pointerAreas.filter(({ area }) => area === null || inside(area, row, column)).map(({ node }) => node))) {
-        taken = owner.component.onPointer?.(event(owner)) === true || taken;
-      }
-      return taken;
-    }
-    const target = reach.grid[row]?.[column] ?? null;
+    // Every move over the page comes (INPUT.md section 9.8), a button held or not: it goes, as a press does, to the component drawn where it is, then up.
+    const target = this.#host.reach().grid[row]?.[column] ?? null;
     if (action === "press") {
       for (let node = target; node !== null; node = node.parent) {
         if (node.component.focusable()) {

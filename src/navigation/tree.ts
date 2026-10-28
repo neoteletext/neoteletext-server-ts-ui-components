@@ -1,6 +1,8 @@
 // A tree: items that open to show the items under them. "+" marks one that
-// is shut, "-" one that is open; with guides, mosaic lines join each item
-// to its parent, as a tree view's do. Up and Down move (core/list-cursor.ts),
+// is shut, "-" one that is open, and one with no items under it, none or
+// an empty list, is a leaf. With guides, thin lines join each item to its
+// parent's mark and the top items to each other, as a tree view's do. Up
+// and Down move (core/list-cursor.ts),
 // Right opens, Left shuts or goes to the parent, Enter or Space opens or
 // shuts one with children and chooses one without, a click does as Enter
 // does, and the pointer coming onto an item is told to the tree's user
@@ -12,22 +14,24 @@ import { type Child, h } from "../core/element.ts";
 import { isPress, type KeyEvent, type WheelEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
 import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-cursor.ts";
-import { LEFT_HALF, MOSAIC_BASE, SIXEL } from "../core/mosaics.ts";
 import { Colour, COLUMNS, Key } from "../kit.ts";
 import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { ListRows, within } from "../lists/list-rows.ts";
 import { BAR_CELLS, ScrollBar } from "../lists/scroll.ts";
-import { TreeGuides } from "./tree-guides.ts";
+import { type GuidePlace, guidesIndent, TreeGuides } from "./tree-guides.ts";
 
 export interface TreeNode {
+  /** What it says. */
   readonly label: string;
+  /** The items under it, shown while it is open; none for one that is chosen rather than opened. */
   readonly children?: readonly TreeNode[];
   /** A page it goes to when chosen. */
   readonly page?: number;
 }
 
 export interface TreeProps extends ControlProps {
+  /** The top items, each with the items under it. */
   readonly nodes: readonly TreeNode[];
   /** Mosaic lines join the items. */
   readonly guides?: boolean;
@@ -35,7 +39,9 @@ export interface TreeProps extends ControlProps {
   readonly shown: number;
   /** Items opened to begin with, by label. */
   readonly open?: readonly string[];
+  /** What an empty tree says; "nothing here" when absent. */
   readonly empty?: string;
+  /** An item without children chosen, by Enter, Space or a click; one with a page then goes there. */
   readonly onChoose?: (node: TreeNode, session: number) => void;
   /** The pointer came onto an item, or left it (null): for showing what it is before it is chosen. Moving from one item to the next is a leave, then an enter. */
   readonly onHover?: (node: TreeNode | null, session: number) => void;
@@ -48,22 +54,12 @@ interface TreeState {
   readonly top: number;
 }
 
-/** One visible row: the node, where it is, its depth, and for each level above it whether a line goes on down. */
-interface Visible {
+/** One visible row: the node, where it is, and its place among the rest for its guides. */
+interface Visible extends GuidePlace {
   readonly node: TreeNode;
   readonly id: string;
-  readonly depth: number;
-  readonly last: boolean;
-  readonly through: readonly boolean[];
   readonly parent: number | null;
 }
-
-/** The guides' cells (EN 300 706 Table 47): a line down, a branch to an item, the last branch. */
-const DOWN = LEFT_HALF;
-
-const BRANCH = LEFT_HALF | SIXEL.middleRight;
-
-const LAST_BRANCH = MOSAIC_BASE | SIXEL.topLeft | SIXEL.middleLeft | SIXEL.middleRight;
 
 /** Indentation without guides, a level. */
 const INDENT = 2;
@@ -119,7 +115,7 @@ function visibleRows(nodes: readonly TreeNode[], open: ReadonlySet<string>): Vis
       const id = `${prefix}${index}`;
       const last = index === level.length - 1;
       const place = out.length;
-      out.push({ node, id, depth, last, through, parent });
+      out.push({ node, id, depth, first: index === 0, last, through, parent });
       if (node.children !== undefined && open.has(id) && depth + 1 < MOST_DEPTH) {
         visit(node.children, depth + 1, [...through, !last], `${id}/`, place);
       }
@@ -129,22 +125,19 @@ function visibleRows(nodes: readonly TreeNode[], open: ReadonlySet<string>): Vis
   return out;
 }
 
-/** An item's guide lines: one cell a level above it, a line down where that level goes on, then its branch. */
-function guideCodes(item: Visible): number[] {
-  return [...item.through.slice(1).map((down) => (down ? DOWN : MOSAIC_BASE)), item.last ? LAST_BRANCH : BRANCH];
+/** Whether `node` has items under it: one with none, or an empty list, is a leaf, chosen rather than opened. */
+function hasChildren(node: TreeNode): boolean {
+  return node.children !== undefined && node.children.length > 0;
 }
 
-/** The cells before an item's band: its guides and their colour's cell, or two cells a level without guides. */
+/** The cells before an item's band: its guides, or two cells a level without guides. */
 function indentOf(item: Visible, guides: boolean): number {
-  if (!guides) {
-    return item.depth * INDENT;
-  }
-  return item.depth > 0 ? guideCodes(item).length + 1 : 0;
+  return guides ? guidesIndent(item) : item.depth * INDENT;
 }
 
-/** What marks an item: "+" shut, "-" open, a space for one with nothing under it. */
+/** What marks an item: "+" shut, "-" open, a space for a leaf. */
 function markOf(item: Visible, open: ReadonlySet<string>): string {
-  if (item.node.children === undefined) {
+  if (!hasChildren(item.node)) {
     return " ";
   }
   return open.has(item.id) ? "-" : "+";
@@ -192,9 +185,9 @@ export class Tree extends Control<TreeProps, TreeState> {
         focused: this.focused,
         empty: this.props.empty ?? "nothing here",
         indent: (item: Visible) => indentOf(item, guides),
-        before: (item: Visible) => (guides && item.depth > 0 ? h(TreeGuides, { codes: guideCodes(item) }) : undefined),
+        before: (item: Visible) => (guides ? h(TreeGuides, { place: item }) : undefined),
         text: (item: Visible) => `${markOf(item, this.state.open)} ${item.node.label}`,
-        foreground: (item: Visible) => (item.node.children === undefined ? Colour.White : Colour.Cyan),
+        foreground: (item: Visible) => (hasChildren(item.node) ? Colour.Cyan : Colour.White),
         disabled: () => this.disabled,
         onPick: (index: number, session: number) => {
           this.#activate(index, session);
@@ -231,7 +224,7 @@ export class Tree extends Control<TreeProps, TreeState> {
       return;
     }
     this.setState({ chosen: index, top: keepInView(this.state.top, index, this.props.shown, this.#rows().length) });
-    if (item.node.children !== undefined) {
+    if (hasChildren(item.node)) {
       this.#toggle(item, !this.state.open.has(item.id));
       return;
     }
@@ -253,12 +246,12 @@ export class Tree extends Control<TreeProps, TreeState> {
       this.#activate(current, event.session);
       return true;
     }
-    if (isPress(event, Key.Right) && item.node.children !== undefined) {
+    if (isPress(event, Key.Right) && hasChildren(item.node)) {
       this.#toggle(item, true);
       return true;
     }
     if (isPress(event, Key.Left)) {
-      if (item.node.children !== undefined && this.state.open.has(item.id)) {
+      if (hasChildren(item.node) && this.state.open.has(item.id)) {
         this.#toggle(item, false);
       } else if (item.parent !== null) {
         this.setState({ chosen: item.parent, top: keepInView(this.state.top, item.parent, this.props.shown, rows.length) });

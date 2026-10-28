@@ -19,17 +19,24 @@ export type { PageNeeds } from "../core/needs.ts";
 
 /** Sounds a control plays to the viewer: as the choice moves, as one is made, as a value changes, as one is refused. */
 export interface ControlSounds {
+  /** As the choice or the cursor moves. */
   readonly move?: Sound;
+  /** As something is chosen or pressed. */
   readonly choose?: Sound;
+  /** As its value changes to one that passes validate. */
   readonly change?: Sound;
+  /** As it refuses something: a value that fails validate, a key it cannot take. */
   readonly error?: Sound;
 }
 
 export interface ControlProps {
+  /** What it is, in a column of its own to its left; no column when absent. */
   readonly label?: string;
   /** The label's column; LABEL_CELLS when absent. */
   readonly labelCells?: number;
+  /** It cannot be used: drawn in the disabled look, and it never takes the keys. */
   readonly disabled?: boolean;
+  /** What it plays to the viewer; silence when absent. */
   readonly sounds?: ControlSounds;
   /** One copy for every viewer: what one does, all see. */
   readonly shared?: boolean;

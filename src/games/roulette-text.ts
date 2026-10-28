@@ -29,6 +29,6 @@ export function rouletteText({ article, spinning, disabled, onSpin }: RouletteTe
     h(Gap, {}),
     spinning || article === undefined
       ? h(Paragraph, { text: spinning ? "Spinning..." : "", foreground: Colour.Green })
-      : h(Action, { text: "Enter reads it, or spin again with Space", foreground: Colour.Green, disabled, hint: "A click spins again", onPress: onSpin }),
+      : h(Action, { text: "Enter reads it; Space to spin again", foreground: Colour.Green, disabled, hint: "A click spins again", onPress: onSpin }),
   );
 }

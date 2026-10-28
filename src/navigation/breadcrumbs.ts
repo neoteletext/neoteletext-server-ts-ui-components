@@ -13,13 +13,18 @@ import { Colour, englishCodes, textColour } from "../kit.ts";
 
 /** One step: its label, and the page it is on or what a click on it does. */
 export interface Crumb {
+  /** What the step is, cut to the room left on the row. */
   readonly label: string;
+  /** The page a click on it goes to, when it has no onPress. */
   readonly page?: number;
+  /** What a click on it does, in place of going to its page. */
   readonly onPress?: (session: number) => void;
 }
 
 export interface BreadcrumbsProps {
+  /** The steps, from the top down to where the viewer is: the last in white, the rest in cyan. */
   readonly trail: readonly Crumb[];
+  /** What joins the steps: a right arrow or a slash; the arrow when absent. */
   readonly separator?: "arrow" | "slash";
 }
 

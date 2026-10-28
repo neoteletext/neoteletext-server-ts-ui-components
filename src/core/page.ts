@@ -21,7 +21,9 @@ export interface SubPageLinks {
 
 /** A sub-page's own props: its links. A component subclass gives its frame. */
 export interface SubPageProps {
+  /** The four Fastext links, red, green, yellow and cyan, each a page or null; none when absent. */
   readonly fastext?: FastextLinks;
+  /** The page the Index key goes to; none when absent. */
   readonly index?: number;
 }
 

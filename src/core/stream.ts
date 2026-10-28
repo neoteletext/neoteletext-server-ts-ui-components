@@ -28,11 +28,15 @@ export interface StreamSource {
 
 /** A viewer's stream as a page shows it. */
 export interface Listening {
+  /** What it is called, as the viewer sees it. */
   readonly name: string;
   /** Milliseconds heard, and in all (null while not known). */
   readonly heardMs: number;
+  /** Its length in milliseconds, or null while it is not known. */
   readonly lengthMs: number | null;
+  /** What it is doing: waiting to start, playing, paused, played to its end, or unable to play. */
   readonly state: "waiting" | "playing" | "paused" | "ended" | "failed";
+  /** Why it cannot play, or null; its state is failed while it is not null. */
   readonly failure: string | null;
   /** How loud it plays, 0 to FULL_GAIN. */
   readonly gain: number;

@@ -11,20 +11,23 @@ import { type Canvas, NEW_BACKGROUND_CELL } from "../core/canvas.ts";
 import type { Size } from "../core/layout.ts";
 import type { KeyEvent, PointerEvent } from "../core/events.ts";
 import { choosing } from "../core/keys.ts";
-import { CHOSEN, DISABLED_BAND } from "../core/look.ts";
+import { CHOSEN, DISABLED_BAND, inkOn } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
 import { Attribute, Colour } from "../kit.ts";
 import { Control, type ControlProps, type KeyHelpEntry } from "./control.ts";
 
 export interface ButtonProps extends ControlProps {
+  /** What it says on its band, cut to the band. */
   readonly label: string;
+  /** Called as it is pressed: Enter, Space or a click on its band, and never while disabled. */
   readonly onPress: (session: number) => void;
-  /** Its band's colour while it does not have the keys. */
+  /** Its band's colour while it does not have the keys, its label inked to read on it; cyan when absent. */
   readonly background?: Colour;
   /** Its whole width in cells, the label centred in it; fitted to the label and its padding when absent. */
   readonly width?: number;
-  /** Spaces before and after the label inside the band: one each when absent. */
+  /** Spaces before the label inside the band, when it fits its label: one when absent. */
   readonly paddingLeft?: number;
+  /** Spaces after the label inside the band, when it fits its label: one when absent. */
   readonly paddingRight?: number;
 }
 
@@ -62,7 +65,8 @@ export class Button extends Control<ButtonProps> {
     if (this.disabled) {
       return DISABLED_BAND;
     }
-    return this.focused ? CHOSEN : { background: this.props.background ?? Colour.Cyan, foreground: Colour.Blue };
+    const background = this.props.background ?? Colour.Cyan;
+    return this.focused ? CHOSEN : { background, foreground: inkOn(background) };
   }
 
   override paint(canvas: Canvas): void {
