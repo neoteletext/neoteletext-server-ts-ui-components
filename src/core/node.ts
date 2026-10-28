@@ -59,3 +59,13 @@ export function bubble(from: Node | null, handle: (component: AnyComponent, node
   }
   return false;
 }
+
+/** The nearest component from `from` up that `test` holds of, or null. */
+export function nearest(from: Node | null, test: (component: AnyComponent) => boolean): AnyComponent | null {
+  for (let node = from; node !== null; node = node.parent) {
+    if (test(node.component)) {
+      return node.component;
+    }
+  }
+  return null;
+}

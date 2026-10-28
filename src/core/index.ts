@@ -8,7 +8,7 @@ export type { DisplayAttributes } from "./enhancement.ts";
 export type { ComponentEvent, ComponentEventInit, Origin } from "./component-events.ts";
 export { Component } from "./component.ts";
 export { stack, stackSize } from "./layout.ts";
-export type { ComponentHost, FocusableAt, TimerOptions } from "./component.ts";
+export type { ComponentHost, FocusableAt, TimerOptions } from "./component-host.ts";
 export type { Box, LayoutChild, Size } from "./layout.ts";
 export { readControls, readDeclarations } from "./read-controls.ts";
 export type { Declarations } from "./read-controls.ts";

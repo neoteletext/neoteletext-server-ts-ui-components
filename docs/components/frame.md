@@ -98,7 +98,7 @@ import { TitleBand } from "neoteletext-server-ts-ui-components";
 
 ## HintLine
 
-HintLine: row 23 of the frame, what the keys or the control under the pointer do: as many of its parts as fit whole, so no key is shown with its action cut short; one part too long for the row is cut.
+HintLine: row 23 of the frame, what the keys or the control under the pointer do. A line of keys shows as many of its entries as fit whole, so no key is shown with its action cut short; a control's words of its own, and an entry too long for the row, are cut.
 
 ```ts
 import { HintLine } from "neoteletext-server-ts-ui-components";

@@ -3,6 +3,17 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 3.1.0 (28 October 2026)
+
+### Fixed
+
+- The hint row cut what a hovered row is, or what a click does, at its
+  first comma, so "By Tom Hallett, 100 words: …" showed as "By Tom
+  Hallett". Only what the keys do keeps whole entries; such words are cut
+  where the row ends, with `..`. A component of the program's own whose
+  `hint()` says what it is answers true from `hintDescribes()`; a hint row
+  of the program's own reads `hintIsKeys`.
+
 ## 3.0.0 (28 October 2026)
 
 ### To take it

@@ -8,7 +8,7 @@
 // oxlint-disable import/max-dependencies -- the mount is where a page's tree, drawing, keys, pointer and timers meet
 import { Key } from "../kit.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
-import type { ComponentHost, FocusableAt } from "./component.ts";
+import type { ComponentHost, FocusableAt } from "./component-host.ts";
 import type { Box } from "./layout.ts";
 import { draw, type DrawHost, type Reach, shownSubPages } from "./draw.ts";
 import type { Element } from "./element.ts";
@@ -16,7 +16,7 @@ import { isPress, type KeyEvent, type TextEvent, typedText } from "./events.ts";
 import { captured, FocusHistory, focusMove } from "./focus.ts";
 import { emptyGrid } from "./grid.ts";
 import type { KeyHelpEntry } from "./key-bindings.ts";
-import { type AnyComponent, bubble, EMPTY, firstFocusable, focusables, type Node } from "./node.ts";
+import { type AnyComponent, bubble, EMPTY, firstFocusable, focusables, nearest, type Node } from "./node.ts";
 import type { ColourTable } from "./rollover.ts";
 import { Pointer } from "./pointer.ts";
 import type { Services } from "./services.ts";
@@ -141,15 +141,18 @@ export class Mount implements ComponentHost {
   }
 
   hoveredHint(): string | null {
-    // On a viewer's own copy the control under their pointer says what it is, nearest first; the copy every viewer shares follows no one's pointer.
+    return this.#hinted()?.hint() ?? null;
+  }
+
+  hintIsKeys(): boolean {
+    const source = this.#hinted() ?? this.#focus?.component ?? null;
+    return source !== null && !source.hintDescribes();
+  }
+
+  /** The component under the viewer's pointer that says what it does, nearest first; on the copy every viewer shares, which follows no one's pointer, none. */
+  #hinted(): AnyComponent | null {
     const { session } = this.services;
-    for (let node = session === null ? null : this.#pointer.hoveredBy(session); node !== null; node = node.parent) {
-      const hint = node.component.hint();
-      if (hint !== null) {
-        return hint;
-      }
-    }
-    return null;
+    return session === null ? null : nearest(this.#pointer.hoveredBy(session), (each) => each.hint() !== null);
   }
 
   // Rendering.

@@ -112,6 +112,10 @@ export class ToastShelf extends Component<ToastShelfProps, ToastShelfState> {
     return "A click puts the message away";
   }
 
+  override hintDescribes(): boolean {
+    return true;
+  }
+
   /** Puts toast `id` away, undoing what it told of when it can be undone. */
   #dismiss(id: number, session: number): void {
     this.state.shown.find((each) => each.id === id)?.toast.undo?.(session);

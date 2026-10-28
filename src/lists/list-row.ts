@@ -134,6 +134,10 @@ export class ListRow extends Component<ListRowProps> {
     return this.props.hint ?? null;
   }
 
+  override hintDescribes(): boolean {
+    return true;
+  }
+
   override onHover(event: HoverEvent): boolean {
     if (this.props.onHover === undefined || event.region !== BAND) {
       return false;

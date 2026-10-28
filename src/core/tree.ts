@@ -4,7 +4,8 @@
 // made, or unmounted. The lifecycle's commit phase runs after the page is
 // drawn, so a component that mounts sees its box.
 
-import type { Component, ComponentHost } from "./component.ts";
+import type { Component } from "./component.ts";
+import type { ComponentHost } from "./component-host.ts";
 import { instantiate } from "./instantiate.ts";
 import { type Element, flatten, h, isElement } from "./element.ts";
 import { type AnyComponent, Node } from "./node.ts";

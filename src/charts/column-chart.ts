@@ -120,6 +120,10 @@ export class ColumnChart extends Component<ColumnChartProps, ColumnState> {
     return barHint(this.props.bars, this.state.hovered);
   }
 
+  override hintDescribes(): boolean {
+    return true;
+  }
+
   override onClick(event: PointerEvent): boolean {
     if (this.props.onChoose === undefined || event.region === undefined) {
       return false;

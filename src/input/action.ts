@@ -53,6 +53,10 @@ export class Action extends Component<ActionProps> {
     return this.props.hint ?? null;
   }
 
+  override hintDescribes(): boolean {
+    return true;
+  }
+
   override onClick(event: PointerEvent): boolean {
     if (this.props.disabled === true || event.region !== TEXT) {
       return false;

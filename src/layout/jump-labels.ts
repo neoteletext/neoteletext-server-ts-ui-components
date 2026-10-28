@@ -7,7 +7,8 @@
 // the page takes the digits from page selection. Only the first nine
 // controls are labelled: one digit each.
 
-import { Component, type FocusableAt } from "../core/component.ts";
+import { Component } from "../core/component.ts";
+import type { FocusableAt } from "../core/component-host.ts";
 import { type Child, h } from "../core/element.ts";
 import type { KeyEvent } from "../core/events.ts";
 import { digitOf } from "../core/keys.ts";

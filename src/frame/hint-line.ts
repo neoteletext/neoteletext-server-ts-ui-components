@@ -1,6 +1,7 @@
 // HintLine: row 23 of the frame, what the keys or the control under the
-// pointer do: as many of its parts as fit whole, so no key is shown with
-// its action cut short; one part too long for the row is cut.
+// pointer do. A line of keys shows as many of its entries as fit whole, so
+// no key is shown with its action cut short; a control's words of its own,
+// and an entry too long for the row, are cut.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
@@ -23,10 +24,13 @@ export class HintLine extends Component<LineProps> {
   }
 
   override paint(canvas: Canvas): void {
-    const text = this.hoveredHint ?? this.props.text ?? this.focusedHint;
+    const hovered = this.hoveredHint;
+    const text = hovered ?? this.props.text ?? this.focusedHint;
     if (text !== null) {
       const cells = canvas.width - 1;
-      canvas.coloured(0, 0, this.props.foreground ?? Colour.Green, wholeParts(text, cells) ?? fit(text, cells));
+      // The frame's own hint says what the keys do here.
+      const keys = hovered === null && this.props.text !== undefined ? true : this.hintIsKeys;
+      canvas.coloured(0, 0, this.props.foreground ?? Colour.Green, (keys ? wholeParts(text, cells) : null) ?? fit(text, cells));
     }
   }
 }

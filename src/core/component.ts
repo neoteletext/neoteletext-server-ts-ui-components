@@ -19,6 +19,7 @@
 
 import type { Colour } from "../kit.ts";
 import type { Canvas } from "./canvas.ts";
+import type { ComponentHost, FocusableAt, TimerOptions } from "./component-host.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { Child, WithChildren } from "./element.ts";
 import type { HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
@@ -26,42 +27,6 @@ import { bindingsText, type KeyHelpEntry } from "./key-bindings.ts";
 import type { PageNeeds } from "./needs.ts";
 import type { Services } from "./services.ts";
 import { stack, stackSize, type Size, type Box, type LayoutChild } from "./layout.ts";
-
-/** What a mounted component reaches of its mount. */
-export interface ComponentHost {
-  readonly services: Services;
-  invalidate(component: Component): void;
-  focus(component: Component): void;
-  isFocused(component: Component): boolean;
-  /** Whether the pointer is on a control the component declared, for any viewer of this copy. */
-  isHovered(component: Component): boolean;
-  setTimer(component: Component, run: () => void, delay: number, every: boolean, whileViewed: boolean): number;
-  clearTimer(id: number): void;
-  /** The box the component was last laid out in. */
-  boxOf(component: Component): Box;
-  /** Sends `event` up the tree from the component. */
-  emit(component: Component, event: ComponentEventInit): void;
-  /** What the component under the viewer's pointer, or else the focused one, says its keys do, or null. */
-  focusedHint(): string | null;
-  /** What the control under the viewer's pointer says it does, or null when it is on none or none says. */
-  hoveredHint(): string | null;
-  /** What the focused component's keys do, entry by entry: for help on the control with the keys. */
-  focusedBindings(): readonly KeyHelpEntry[];
-  /** The components under `component` that take the keys, in the order they are drawn, with their boxes. */
-  focusablesUnder(component: Component): readonly FocusableAt[];
-}
-
-/** A component that takes the keys, and where it was laid out. */
-export interface FocusableAt {
-  readonly component: Component;
-  readonly box: Box;
-}
-
-/** How a timer runs. */
-export interface TimerOptions {
-  /** It runs only while someone has the page open: a clock or an animation on the copy every viewer shares, which costs nothing while nobody watches. Missed ticks run once when someone comes. */
-  readonly whileViewed?: boolean;
-}
 
 /**
  * A class component. `P` is its props, `S` its state. Subclasses override
@@ -163,6 +128,11 @@ export abstract class Component<P extends object = object, S extends object = ob
     return this.#host?.hoveredHint() ?? null;
   }
 
+  /** Whether the hovered control's hint, or else the focused one's, says what its keys do (hintDescribes): for the hint row, which keeps such a line's entries whole. */
+  protected get hintIsKeys(): boolean {
+    return this.#host?.hintIsKeys() ?? false;
+  }
+
   /** What the focused component's keys do, entry by entry: for KeyHelp's help on the control with the keys. */
   protected get focusedBindings(): readonly KeyHelpEntry[] {
     return this.#host?.focusedBindings() ?? [];
@@ -226,6 +196,11 @@ export abstract class Component<P extends object = object, S extends object = ob
   /** What its keys do, for the frame's hint row while it has the keys or the pointer is on one of its controls; null for nothing. Its key bindings in a line by default. */
   hint(): string | null {
     return bindingsText(this.keyBindings());
+  }
+
+  /** Whether its hint says what it is or what a click does, words cut where the hint row ends, and not what its keys do, a line whose entries the row keeps whole; false, the default, for keys. */
+  hintDescribes(): boolean {
+    return false;
   }
 
   // The lifecycle, as React's.
