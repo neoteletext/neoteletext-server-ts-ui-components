@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { text } from "neottx-server-ts-protocol/testing";
+import { text } from "neoteletext-server-ts-protocol/testing";
 import { Action, type Article, BarChart, ChoiceList, ColumnChart, h, Poll, Quiz, Roulette, Snake, SPIN_STEPS_MS, Tally, Wizard } from "../src/index.ts";
 import { PAGE, BODY_ROW, HINT_ROW, viewer, controls, row, controlBy, wait, click } from "./mouse-fixtures.ts";
 

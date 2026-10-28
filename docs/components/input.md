@@ -24,7 +24,7 @@ The controls a viewer sets with a remote or a keyboard: fields to type in, by a 
 What every control has in common: a label in a column of its own, a state that cannot be used (disabled), one look while it has the keys (core/look.ts), optional sounds, a hint of its keys for the frame's row 23, and what it needs of its page: a copy for each viewer unless it is shared, so one viewer's ticks are never everyone's. It sends activate and cancel up the tree (core/component-events.ts); a control with a value is a ValueControl (value-control.ts).
 
 ```ts
-import { Control } from "neottx-server-ts-ui-components";
+import { Control } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -47,7 +47,7 @@ It takes no props of its own.
 A control with a value (control.ts): the value kept by its parent (`value`) or by the control itself (`initial`), checked as it changes, and each change sent up the tree (core/component-events.ts) as change or invalid as well as to onChange.
 
 ```ts
-import { ValueControl } from "neottx-server-ts-ui-components";
+import { ValueControl } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -67,7 +67,7 @@ h(TextField, { label: "Email", longest: 24, initial: "anna@example", validate: (
 A form's field: its label on the left and its control on the right. A group of fields goes in a Panel (layout/panel.ts) with the group's name; Tab goes from control to control in the order they are drawn (core/mount.ts).
 
 ```ts
-import { Field } from "neottx-server-ts-ui-components";
+import { Field } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -94,7 +94,7 @@ import { Field } from "neottx-server-ts-ui-components";
 A line to type on, which the receiver echoes into (INPUT.md section 7.1): the cursor stands after what is typed, and only while the field has the keys, since a page has one cursor. It may have a label, a placeholder while it is empty, its characters masked (the receiver echoes `*`), a check whose complaint shows under it, and it may be disabled. Enter sends submit up the tree; Escape clears, or sends cancel when it is clear. Its band is a control, so the browser shows it can be clicked, and a click there gives it the keys.
 
 ```ts
-import { TextField } from "neottx-server-ts-ui-components";
+import { TextField } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Type, then Enter` sends; `Escape` clears.
@@ -144,7 +144,7 @@ page.typeKeys(1, "secret");
 Digits to a template, for a PIN, a date, a time or a code: each `9` of the template is a slot for a digit and every other character stands as it is ("99/99/9999", "99:99", "9999"). Digits, from the remote's keys or typed, fill the slots from the cursor on and pass over what stands between them; Backspace clears the slot before the cursor and goes back to it; Left and Right move from slot to slot, and a digit there replaces the one it has. An empty slot shows a fill character, so the field's width shows before anything is typed, and the cursor's slot a block, a mark under it too. Each segment, the slots between two separators, may be checked as it is filled (a month 1 to 12); a complaint shows under the field in red, as a text field's does. Enter sends activate with the template filled in, and only when every slot is filled and nothing is wrong; otherwise it is refused. Concealed, a filled slot shows `*`, so a PIN is never in the page sent to the receiver. Escape clears, or sends cancel when it is clear.
 
 ```ts
-import { SegmentField } from "neottx-server-ts-ui-components";
+import { SegmentField } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Digits` fill; `Left Right` move; `Enter` sends.
@@ -210,7 +210,7 @@ page.typeKeys(1, "47");
 Text typed with the remote's digit keys, as on a phone's keypad: each key has its letters (2 abc to 9 wxyz, 1 punctuation, 0 a space), and pressing it again soon after goes on to its next letter, round to the first. Another key, Enter or a pause takes the letter; a key with one character types it at once. The yellow key, or `#` as a phone's keypad has it, changes between small letters and capitals. Typing from a keyboard or a phone goes in as it is. The server draws the text, the letter being chosen, a block for the cursor and, under them, the case and the chosen key's letters, since the receiver's echo would show the digits pressed rather than the letters they mean (text-field.ts). Backspace takes back the letter being chosen, or else the last; Enter sends submit up the tree; Escape clears, or sends cancel when it is clear.
 
 ```ts
-import { MultiTapField } from "neottx-server-ts-ui-components";
+import { MultiTapField } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Digit keys` type letters; `yellow` ABC.
@@ -262,7 +262,7 @@ page.typeKeys(1, "7");
 A text field that suggests: the items that match what is typed show under it, the first chosen; Up and Down choose another, Tab completes the field to it, Enter takes it. With every item shown while nothing is typed, it is a combo box. Its value is the item taken; its field keeps the keys, and what it does not take comes here.
 
 ```ts
-import { Autocomplete } from "neottx-server-ts-ui-components";
+import { Autocomplete } from "neoteletext-server-ts-ui-components";
 ```
 
 **It takes of its page:** a copy of the page for each viewer.
@@ -309,7 +309,7 @@ h(Autocomplete, { label: "City", items: ["Belfast", "Birmingham", "Brighton", "B
 A button: its label on a band, pressed with Enter, Space or a click. It sends activate up the tree (core/component-events.ts) and calls onPress. It fits its label with a cell of padding each side unless told its width or its padding, so buttons stacked together can be one width. Its band is a control (core/controls.ts), which the browser lights as the pointer passes, and only a click on it presses: a stack gives the button the whole row, and the cells after the band are not the button's to show. A disabled button declares none.
 
 ```ts
-import { Button } from "neottx-server-ts-ui-components";
+import { Button } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Enter or a click` presses; `Tab` moves on.
@@ -346,7 +346,7 @@ And the props of [`ControlProps`](common.md#controlprops).
 An action: a line of text a click acts on, as PageLink is one that goes to a page. Its text is a control (core/controls.ts), which the browser shows as pressable and lights in the page's rollover colours as the pointer passes, and only a click on the text acts. It does not take the keys: what it does is also a key of the component it belongs to (a quiz's coloured keys, a wizard's red and green), so it adds the pointer without changing where the keys go. Disabled, it is dim and declares nothing.
 
 ```ts
-import { Action } from "neottx-server-ts-ui-components";
+import { Action } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -376,7 +376,7 @@ import { Action } from "neottx-server-ts-ui-components";
 A check box. Teletext has no box character, so a box is a chip (core/ canvas.ts): a white band holding "x" when ticked, "-" when mixed, nothing when not, in its middle, so the state shows without colour. It is pressed with Enter, Space or a click; a box and its text are one control, and a click ticks only there. A group of boxes (checkbox-group.ts) draws each with drawBox.
 
 ```ts
-import { Checkbox } from "neottx-server-ts-ui-components";
+import { Checkbox } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Enter, Space or a click` ticks.
@@ -414,7 +414,7 @@ page.press(1, Key.Enter);
 A group of check boxes (checkbox.ts), any of them ticked: a multiple choice. Up and Down choose a box, or the arrows across two columns, and Enter, Space or a click ticks it. Its value is the ticked boxes' places, in order.
 
 ```ts
-import { CheckboxGroup } from "neottx-server-ts-ui-components";
+import { CheckboxGroup } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Arrows` choose; `Enter or Space` ticks.
@@ -444,7 +444,7 @@ h(CheckboxGroup, { items: ["News", "Sport", "Weather", "Travel", "Finance", "TV"
 A radio group: one of several, "(*)" for the one chosen and "( )" for the rest, so it shows without colour; down a column or across a row, after its label, the options that do not fit on the row going on under the first, so every option shows. Up and Down (Left and Right across) move the choice itself, as radio buttons do; a click on an option chooses it. Each option's mark and text is a control.
 
 ```ts
-import { RadioGroup } from "neottx-server-ts-ui-components";
+import { RadioGroup } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up Down` choose.
@@ -487,7 +487,7 @@ h(RadioGroup, { label: "Size", items: ["Small", "Medium", "Large"], across: true
 A switch: a setting on or off, its label, then a chip saying ON on green or OFF on red, so the word says it as well as the colour. Enter, Space or a click on the chip, its control, turns it over.
 
 ```ts
-import { Switch } from "neottx-server-ts-ui-components";
+import { Switch } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Enter, Space or a click` turns it over.
@@ -515,7 +515,7 @@ And the props of [`ValueProps`](common.md#valueprops).
 A slider: a value in a range, set by a knob on a track of mosaic sixels, two to a cell, so the knob moves half a cell at a time. Left and Right step, Page Up and Page Down step ten times, Home and End go to the ends, and the pointer sets it where the track is pressed or dragged. The track is its control, since a press anywhere on it moves the knob there, and the browser holds its pressed look while the knob is dragged; a move with no button held is not its. The wheel over it steps it, up for more. Filled, the track is thicker up to the knob. The value is in a column of its own after the track, as wide whatever its unit, so sliders stacked together line up; the label alone marks the keys, and the track keeps its colour.
 
 ```ts
-import { Slider } from "neottx-server-ts-ui-components";
+import { Slider } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Left Right or the wheel` step; `PgUp PgDn` more; `the knob` drags.
@@ -568,7 +568,7 @@ page.press(1, Key.Right);
 A number to set: its label, a "-" chip, the number, a "+" chip. Up and Down (or Left and Right), the wheel (up for more) or a click on a chip, each a control, step it; digits typed replace it (the page takes the digits), Backspace takes one back; a number out of range says so in red, on the row under it as a text field's check does, until it is put right, and is sent as invalid rather than as a change.
 
 ```ts
-import { NumberInput } from "neottx-server-ts-ui-components";
+import { NumberInput } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up Down or the wheel` step; `digits` type; `Backspace` rubs out.
@@ -619,7 +619,7 @@ page.typeKeys(1, "12");
 A select: one of a list, shown in a field between arrows. Shut, Left and Right turn through the items, as a receiver's menus do; Enter opens the list under the field, where Up and Down choose, Enter takes and Escape shuts. A click on an arrow turns, on the field opens or shuts, on an item takes; each is a control, and open, the arrow on the right is not drawn and is none. Teletext cannot draw over what is below, so the open list pushes it down.
 
 ```ts
-import { Select } from "neottx-server-ts-ui-components";
+import { Select } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Left Right` turn; `Enter` opens.

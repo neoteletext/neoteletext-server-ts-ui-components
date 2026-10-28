@@ -15,7 +15,7 @@ A sound made in the program: tones, noise and sequences of them, at
 command after (`src/core/sound.ts`).
 
 ```ts
-import { sequence, sound, tone } from "neottx-server-ts-ui-components";
+import { sequence, sound, tone } from "neoteletext-server-ts-ui-components";
 
 const chime = sound("chime", sequence(tone(660, 120), tone(880, 200)));
 

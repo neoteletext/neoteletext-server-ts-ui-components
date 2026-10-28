@@ -7,6 +7,11 @@ and what such a program has to change to take it.
 
 ### To take it
 
+- **The packages are renamed.** This one is
+  `neoteletext-server-ts-ui-components`, built on
+  `neoteletext-server-ts-protocol` 0.3.0, the protocol under its new name.
+  A program installs both releases from its `vendor/` and imports from
+  the new names.
 - **A control says its keys as a list.** `Control`'s `keysHint()` is gone:
   a control of the program's own overrides `keyBindings()` instead,
   answering entries of a key and what it does, as

@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 
-import { Harness, text } from "neottx-server-ts-protocol/testing";
+import { Harness, text } from "neoteletext-server-ts-protocol/testing";
 import {
   type Article,
   articleLines,

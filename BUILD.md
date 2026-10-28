@@ -1,4 +1,4 @@
-# Building neottx-server-ts-ui-components
+# Building neoteletext-server-ts-ui-components
 
 The source is TypeScript that Node runs as it is, by stripping its types
 (Node 22.18 and later), so the tests run the source. A release is built:
@@ -10,7 +10,7 @@ consumer takes the JavaScript and declarations in `dist/`.
 - **Node 22.18 or later.** `scripts/check.sh` refuses an older one.
 - **TypeScript 7.0.2**, the latest release, and the quality tools (oxlint
   with oxlint-tsgolint, Prettier, Knip), all pinned in `package-lock.json`.
-- **The protocol**, neottx-server-ts-protocol, as its release in
+- **The protocol**, neoteletext-server-ts-protocol, as its release in
   `vendor/`: a peer dependency, which a consumer installs beside this
   library, and a development dependency here, for the tests.
 

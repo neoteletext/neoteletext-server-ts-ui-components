@@ -1,7 +1,7 @@
 # Testing
 
 A channel of components is tested as the server runs it, with no server:
-the protocol's `Harness` (`neottx-server-ts-protocol/testing`) plays the
+the protocol's `Harness` (`neoteletext-server-ts-protocol/testing`) plays the
 server's part, and a test plays the viewers'.
 
 ## A page under test
@@ -9,9 +9,9 @@ server's part, and a test plays the viewers'.
 ```ts
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { Harness, shows } from "neottx-server-ts-protocol/testing";
-import { ComponentChannel, Frame, h, Text } from "neottx-server-ts-ui-components";
-import { Colour, Key } from "neottx-server-ts-protocol";
+import { Harness, shows } from "neoteletext-server-ts-protocol/testing";
+import { ComponentChannel, Frame, h, Text } from "neoteletext-server-ts-ui-components";
+import { Colour, Key } from "neoteletext-server-ts-protocol";
 
 test("the page greets", () => {
   const channel = new Harness([

@@ -5,7 +5,7 @@
 // for it is its own source (docs.ts), so the code shown is the code that
 // drew the picture.
 
-import type { Harness } from "neottx-server-ts-protocol/testing";
+import type { Harness } from "neoteletext-server-ts-protocol/testing";
 import type { Child, PageSpec } from "../../src/index.ts";
 
 /** Why an example may break a check: said, so it is a decision and not an oversight. */

@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness, text } from "neottx-server-ts-protocol/testing";
+import { Harness, text } from "neoteletext-server-ts-protocol/testing";
 import { AudioPlayer, CHIP_CELLS, Collapsible, DISABLED, type Element, h, NowPlaying, Pagination, Slider, TabView, Text, Tree } from "../src/index.ts";
 import { Attribute, COLUMNS, Key } from "../src/kit.ts";
 import { PAGE, BODY_ROW, frame, harness, generationOf, Player, leaves } from "./components-fixtures.ts";

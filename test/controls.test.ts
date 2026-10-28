@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness } from "neottx-server-ts-protocol/testing";
+import { Harness } from "neoteletext-server-ts-protocol/testing";
 import {
   At,
   BAR_CELLS,

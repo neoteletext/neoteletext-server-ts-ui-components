@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 
-import { Harness } from "neottx-server-ts-protocol/testing";
+import { Harness } from "neoteletext-server-ts-protocol/testing";
 import {
   Button,
   type Child,

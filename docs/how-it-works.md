@@ -12,7 +12,7 @@ repositories beside this one.
 | **The browser** | The viewer's receiver: a native desktop program, with no web engine and no scripts, in separate processes: a fetcher and a decoder for each channel, a trusted core, the window, and a sound helper. | `neoteletext-browser`, docs/architecture.md §1, §6.1 |
 | **The engine** | The teletext receiver library the browser decodes and draws with: Levels 1 to 3.5, TTI and T42, the input protocol, audio. Its `neottx` program renders pages to pictures. | `neoteletext-engine`, README.md, ARCHITECTURE.md §1 |
 | **The server** | Runs channels: a state machine for each, hosted on tokio and hyper. It starts each channel's program and talks to it in lines of JSON on the program's standard input and output. | `teletext-server`, docs/architecture.md §3, docs/applications.md |
-| **The protocol kit** | What a channel program in TypeScript is written on: `runChannel`, the `Application` it runs, the `Context` it publishes through, page selection (`Navigation`), and the test `Harness`. | `neottx-server-ts-protocol` |
+| **The protocol kit** | What a channel program in TypeScript is written on: `runChannel`, the `Application` it runs, the `Context` it publishes through, page selection (`Navigation`), and the test `Harness`. | `neoteletext-server-ts-protocol` |
 | **This library** | `ComponentChannel`, one `Application` whose pages are trees of components. | `src/core/runtime.ts` |
 | **The shared rules** | The input protocol, and the standard's limits. | `neoteletext-common`, INPUT.md, STANDARD-LIMITS.md |
 
@@ -74,7 +74,7 @@ repositories beside this one.
    docs/applications.md §2).
 3. **Page selection comes first**, in the protocol kit: three digits go to
    a page and the coloured keys follow the Fastext links, unless the page
-   owns them (`neottx-server-ts-protocol`, src/channel/channel.ts). This
+   owns them (`neoteletext-server-ts-protocol`, src/channel/channel.ts). This
    library finds whether a page owns them by rendering its root once
    (`src/core/needs.ts`).
 4. **The library routes it** to the viewer's mount, or the shared one, and

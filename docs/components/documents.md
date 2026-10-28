@@ -12,7 +12,7 @@ Pages of several sub-pages, each named in its title band: a document's lines ove
 Document: a document's lines over named sub-pages ("Help 2/4"), and what the other pages of several sub-pages (story-pages.ts, day-pages.ts) share. Each renders several Frames; the mount publishes them as one page.
 
 ```ts
-import { Document } from "neottx-server-ts-ui-components";
+import { Document } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -63,7 +63,7 @@ h(Document, {
 DayPages: headlines over sub-pages, a day's on as many as they need, as a document's lines are (document.ts), each named by its day and, when it takes several, its place among them: "Today 2/3". A sub-page holds the headlines its body has the rows for, whole, as each measures itself.
 
 ```ts
-import { DayPages } from "neottx-server-ts-ui-components";
+import { DayPages } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -126,7 +126,7 @@ return h(DayPages, {
 StoryPages: an article's home, over sub-pages of its own: its text, its picture, its links with a QR code, and where else it appears.
 
 ```ts
-import { StoryPages } from "neottx-server-ts-ui-components";
+import { StoryPages } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -198,7 +198,7 @@ h(StoryPages, {
 QrPanel: a QR code a phone can follow, and beside it what it leads to. Without a code, a placeholder stands in its place, on the row its text starts on, and the text says nothing of scanning.
 
 ```ts
-import { QrPanel } from "neottx-server-ts-ui-components";
+import { QrPanel } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props

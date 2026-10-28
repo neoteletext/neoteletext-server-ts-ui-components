@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness, text } from "neottx-server-ts-protocol/testing";
+import { Harness, text } from "neoteletext-server-ts-protocol/testing";
 import { BODY_ROW, Button, type Child, ComponentChannel, type Element, Frame, h, Poll, Tally, TextField } from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 

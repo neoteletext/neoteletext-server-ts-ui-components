@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { text } from "neottx-server-ts-protocol/testing";
+import { text } from "neoteletext-server-ts-protocol/testing";
 import { Button, Centred, ChoiceList, Columns, DATE_FORMATS, DateText, type Element, formatDate, h, Text } from "../src/index.ts";
 import { PAGE, BODY_ROW, frame, harness, middle, Chooser } from "./components-fixtures.ts";
 

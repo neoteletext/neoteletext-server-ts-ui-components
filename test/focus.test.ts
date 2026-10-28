@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { text } from "neottx-server-ts-protocol/testing";
+import { text } from "neoteletext-server-ts-protocol/testing";
 import { Button, type Child, Columns, Component, Dialog, h, JumpLabels, type KeyEvent, KeyHelp, Modal, Switch, TextField, ToastShelf } from "../src/index.ts";
 import { Key } from "../src/kit.ts";
 import { BODY_ROW, PAGE, viewer } from "./controls-fixtures.ts";

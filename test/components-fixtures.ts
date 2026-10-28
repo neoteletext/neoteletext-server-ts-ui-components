@@ -1,6 +1,6 @@
 // What the components tests share: their pages, helpers and test components.
 
-import { Harness } from "neottx-server-ts-protocol/testing";
+import { Harness } from "neoteletext-server-ts-protocol/testing";
 import { Button, type Child, ChoiceList, Component, ComponentChannel, Frame, h, type KeyEvent, type PageSpec, Text } from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 

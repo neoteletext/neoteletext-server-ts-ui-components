@@ -19,7 +19,7 @@ Figures drawn in mosaics: bars and columns scaled to the largest, lines and poin
 Bars across: one to the half cell, and a chart of labelled bars scaled to the largest, drawn as a bar on its own is (bar.ts), the bottom sixel row of each left clear so one bar stands apart from the next. A chart whose bars can be chosen (onChoose) makes each bar, its label to its end, a control: a click chooses it, and while the pointer is on one the hint row says what it is.
 
 ```ts
-import { BarChart } from "neottx-server-ts-ui-components";
+import { BarChart } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -87,7 +87,7 @@ page.hover(1, "enter", 1, 4);
 One bar across its box, a value of a most, to the half cell: a bar on its own, as a poll's count is, without a chart's labels and figures. A bar takes its cells' upper two rows of sixels, the bottom row left clear, so bars in rows one under another, a chart's or a poll's, stand apart rather than reading as one block. A bar chart (bar-chart.ts) draws its bars by the same rule.
 
 ```ts
-import { Bar } from "neottx-server-ts-ui-components";
+import { Bar } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -116,7 +116,7 @@ import { Bar } from "neottx-server-ts-ui-components";
 Columns up from a floor, a third of a row at a time (three sixels down a cell): each column in its own colour, since the colour's cell is the gap before it; its label under it and its figure over it. Labels longer than a column go on two rows by turns, each then as wide as two columns and so in full where a column's own width would cut "Mar" and "May" both to "Ma"; a label longer still is cut to that. A chart whose columns can be chosen (onChoose) makes each column, with its label, a control: a click chooses it, and while the pointer is on one the hint row says what it is.
 
 ```ts
-import { ColumnChart } from "neottx-server-ts-ui-components";
+import { ColumnChart } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -177,7 +177,7 @@ h(ColumnChart, {
 Charts on axes, drawn in mosaic sixels: a line chart of a series, its points joined or the area under it filled, and the plot and axes it shares with the scatter plot (scatter-plot.ts). Every plot row is one colour, as a row of mosaics is after its colour's cell; the axes are text before and under the plot.
 
 ```ts
-import { LineChart } from "neottx-server-ts-ui-components";
+import { LineChart } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -223,7 +223,7 @@ h(LineChart, {
 A scatter plot: points on the line chart's axes (line-chart.ts), each a block of sixels, scaled from the least to the most each way. A point either of whose figures is NaN or Infinity has no place on the axes, and is left out, as the line chart leaves such a value out.
 
 ```ts
-import { ScatterPlot } from "neottx-server-ts-ui-components";
+import { ScatterPlot } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -255,7 +255,7 @@ h(ScatterPlot, {
 A sparkline: a series in one or more rows of mosaic sixels, a value to each column of sixels (two to a cell), scaled from its least to its most; its label before it and its last value after. A value that is NaN or Infinity has no level, and is left out, as the line chart leaves it.
 
 ```ts
-import { Sparkline } from "neottx-server-ts-ui-components";
+import { Sparkline } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -295,7 +295,7 @@ import { Sparkline } from "neottx-server-ts-ui-components";
 A heat map: rows of values, each a block whose colour, or whose density of sixels, says how high it is. A block changes colour in a cell of its own; with Hold Mosaics that cell shows the last block again (EN 300 706 clause 12.2), so each value is two cells wide with no gap. A density map needs no colour changes, so each value is one cell, and it reads without colour.
 
 ```ts
-import { Heatmap } from "neottx-server-ts-ui-components";
+import { Heatmap } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -357,7 +357,7 @@ h(Heatmap, {
 One bar split into the parts of a whole, as an election's shares of the vote are: each part a run of whole cells in its colour, shared by the largest remainder (shares.ts). A colour change takes a cell (EN 300 706 clause 12.2); with Hold Mosaics that cell shows the last block again in the colour before, so the runs meet with no gap and each part is exactly its cells, one to the right of its colour's. Under the bar each part's mark sits under its middle, so a part is told by its mark and not by its colour alone (core/look.ts); under that, the legend names every part with its share, those too small for a cell of the bar too.
 
 ```ts
-import { BreakdownBar } from "neottx-server-ts-ui-components";
+import { BreakdownBar } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -402,7 +402,7 @@ h(BreakdownBar, {
 A pie, or a donut, of the parts of a whole (shares.ts), drawn in mosaic sixels: slices clockwise from twelve o'clock, round on the screen, where a sixel is a little taller than it is wide (core/mosaics.ts). A row of mosaics has one foreground colour at a time, so each cell keeps every sixel of the pie in it and takes the colour of the slice most of them are in. A change of colour takes a cell (EN 300 706 clause 12.2): it goes in the cell before the one that needs it, and with Hold Mosaics, set at the head of each row, that cell shows the block before it again in the colour before, so slices meet with no notch between them, and the first and last, which meet at twelve o'clock, with no seam. Each slice's mark is drawn outside the rim at its middle, and the legend beside the pie names every slice with its share, those too thin to win a cell too, so a slice is never told by its colour alone (core/look.ts).
 
 ```ts
-import { PieChart } from "neottx-server-ts-ui-components";
+import { PieChart } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -460,7 +460,7 @@ h(PieChart, {
 A single-elimination bracket: a column for each round, each match its two entrants on two rows with their scores, and each match of a later round level with the middle of the two it follows. The first round shown takes three rows a match, its two entrants and a row between; each round after it, twice the rows of the one before. As many rounds are shown as fit across; when they do not all fit, Left and Right move the rounds shown a round at a time, or a click on the heading's arrows, and when the matches do not fit down, Up and Down move them. A round's name longer than its column, as "Quarter-finals" is in the thirteen cells three rounds across a page have, takes a second row of the heading, broken at a space or after a hyphen. A winner is marked as well as coloured, so it is not told by colour alone (core/look.ts).
 
 ```ts
-import { Bracket } from "neottx-server-ts-ui-components";
+import { Bracket } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Left Right` rounds; `Up Down` matches.
@@ -560,7 +560,7 @@ page.press(1, Key.Right);
 A spectrum, as an audio player shows one: a column for each band of frequency, lowest on the left, as tall as its level, nought to one, to the sixel (three to a row). A band's column is a sixel narrower than its cells, so the columns stand apart. Each row of mosaics is one colour after its colour's cell (EN 300 706 clause 12.2), so the rows are coloured as a meter is, by how loud they stand for: green, yellow near the top, red at it; or all one colour, when one is given. The levels are the program's, as bandLevels (band-levels.ts) makes them.
 
 ```ts
-import { Spectrum } from "neottx-server-ts-ui-components";
+import { Spectrum } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props

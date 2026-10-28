@@ -14,7 +14,7 @@ Dates and times as the pages write them, always in UTC, and the components that 
 Dates and times as the pages write them: one formatter that every component and channel uses, and a component that shows one date. Times are UTC: one channel serves viewers everywhere, and the archives it shows keep their dates in UTC.
 
 ```ts
-import { DateText } from "neottx-server-ts-ui-components";
+import { DateText } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -58,7 +58,7 @@ h(
 Large digits drawn in mosaic graphics, five sixels by seven, for counters: as many whole characters as fit the width, counted as characters, not as UTF-16's units, and no more of a long text read than a row can show. The seven rows sit below a clear one, in the nine of their three cells, so they stand apart from a band or a line directly above them. Large text (text/big-text.ts) fits and draws its letters by the same rules.
 
 ```ts
-import { BigDigits } from "neottx-server-ts-ui-components";
+import { BigDigits } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -81,7 +81,7 @@ import { BigDigits } from "neottx-server-ts-ui-components";
 A clock: the time, UTC, in large digits, keeping time with a timer of its own that runs only while someone watches.
 
 ```ts
-import { Clock } from "neottx-server-ts-ui-components";
+import { Clock } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -124,7 +124,7 @@ page.advance(Date.UTC(2026, 9, 27, 14, 5, 9));
 A countdown: the days, hours, minutes and seconds left to a time, in large digits, ticking each second while someone watches; nought once the time has come.
 
 ```ts
-import { Countdown } from "neottx-server-ts-ui-components";
+import { Countdown } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -156,7 +156,7 @@ page.advance(Date.UTC(2026, 11, 22, 9, 15, 30));
 A stopwatch: the time since it was started, counting up, in large digits or as a line of text, its laps beneath, the latest first. It is a control: Enter or Space starts and stops it, its lap key records a lap while it runs, Escape or Backspace sets it back to nought. Its time is read off the channel's clock, not counted in ticks, so a tick missed while nobody watched loses nothing; its timer runs only while it runs and someone watches, to show the time go on.
 
 ```ts
-import { Stopwatch } from "neottx-server-ts-ui-components";
+import { Stopwatch } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Enter` starts or stops; `L` laps; `Esc` resets.
@@ -206,7 +206,7 @@ page.advance(31_000);
 A month: its name, the days of the week, and its days in weeks from Monday. Today is yellow, days with something on are green, the weekend cyan; the day chosen flashes. Chosen with the arrows (a day, a week), Page Up and Page Down (a month), Enter or a click; a click on an arrow of the heading turns the month. Given a new year or month, it shows that month; a month past December or before January is one of the next year or the last, as Date.UTC takes it.
 
 ```ts
-import { Calendar } from "neottx-server-ts-ui-components";
+import { Calendar } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Arrows` a day or week; `PgUp PgDn` a month; `Enter` chooses.

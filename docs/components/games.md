@@ -10,7 +10,7 @@ Games for a page, each viewer playing their own: a roulette wheel that spins dow
 A roulette wheel that spins down to a random article, a sound at each step. Enter or a click on the wheel's prompt spins it; when it stops, the article's headline is a link a click follows, as Enter does.
 
 ```ts
-import { Roulette } from "neottx-server-ts-ui-components";
+import { Roulette } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Enter or a click` spins; `Enter again` reads it.
@@ -110,7 +110,7 @@ page.runUntil(10_000);
 Snake: a game a frame a tick for each viewer on the page. The arrows turn it, or a click on the field turns it toward the click; once it has crashed, Enter or a click plays again, and the line that says so is a control. The field is not one: under the pointer the browser would light the whole field.
 
 ```ts
-import { Snake } from "neottx-server-ts-ui-components";
+import { Snake } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `The arrows or a click` turn; `Enter` plays again.

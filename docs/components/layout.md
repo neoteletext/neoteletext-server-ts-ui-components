@@ -19,7 +19,7 @@ Where components go on the page: stacked in rows, side by side in columns, in a 
 Rows: the default stack (core/component.ts), named; the other layouts have a file each in this folder.
 
 ```ts
-import { Rows } from "neottx-server-ts-ui-components";
+import { Rows } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -46,7 +46,7 @@ h(
 Columns: children side by side, of given widths or a share of what is left.
 
 ```ts
-import { Columns } from "neottx-server-ts-ui-components";
+import { Columns } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -92,7 +92,7 @@ h(
 Centred: a stack whose children are each in the middle of the width.
 
 ```ts
-import { Centred } from "neottx-server-ts-ui-components";
+import { Centred } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -119,7 +119,7 @@ h(
 Gap: empty rows between components.
 
 ```ts
-import { Gap } from "neottx-server-ts-ui-components";
+import { Gap } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -147,7 +147,7 @@ import { Gap } from "neottx-server-ts-ui-components";
 A grid: children left to right, then down, a cell each.
 
 ```ts
-import { Grid } from "neottx-server-ts-ui-components";
+import { Grid } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -178,7 +178,7 @@ h(
 At: a place given by row and column inside the parent's box, cut to it.
 
 ```ts
-import { At } from "neottx-server-ts-ui-components";
+import { At } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -203,7 +203,7 @@ h(At, { row: 6, column: 10 }, h(Text, { text: "Back after the break", foreground
 Layers: children drawn over one another in the same box.
 
 ```ts
-import { Layers } from "neottx-server-ts-ui-components";
+import { Layers } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -233,7 +233,7 @@ h(
 A panel: its children inside a frame, with a title. Teletext has no box drawing characters, so the frame is drawn either as a line of mosaic sixels round the children or as a background of its own colour behind them. Either way each row inside spends cells on attributes (Table 26): a mosaic colour and the edge on the left, a mosaic colour and the edge on the right, or a background's colour and New Background.
 
 ```ts
-import { Panel } from "neottx-server-ts-ui-components";
+import { Panel } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -272,7 +272,7 @@ h(
 Joined panels: panes side by side in one line frame (panel.ts), each border between two drawn once and shared, as a terminal's box drawing joins adjacent boxes. The frame's top runs along the bottom of its first row and a divider down the left half of its cell, so where they meet the sixels already join: no junction character is needed. A divider spends two cells on each row, its mosaic colour and its line; each pane's title sits in the top line over it. Pane widths are as Columns' (columns.ts): given, or a share of what is left.
 
 ```ts
-import { JoinedPanels } from "neottx-server-ts-ui-components";
+import { JoinedPanels } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -316,7 +316,7 @@ h(
 A rule across its box, to divide a page: a line of mosaic sixels, thin, bold, double, dotted or dashed, with a title in it if it has one. Every style is contiguous mosaics, so each line starts in the cell after its colour's: Separated Graphics would cost a cell of its own (EN 300 706 Table 26), and its gapped sixels turn a dot's row into fine dashes.
 
 ```ts
-import { Rule } from "neottx-server-ts-ui-components";
+import { Rule } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -363,7 +363,7 @@ import { Rule } from "neottx-server-ts-ui-components";
 Jump labels: a key (0 by default) puts a digit on each control under it, on a chip at its first cell, and the digit gives that control the keys; Escape, or any other key, takes the labels away. A remote reaches any control in two presses, however far it is by Tab or the arrows. It takes the keys before the control that has them (onKeyCapture), so a field that takes digits does not keep them while the labels are up, and the page takes the digits from page selection. Only the first nine controls are labelled: one digit each.
 
 ```ts
-import { JumpLabels } from "neottx-server-ts-ui-components";
+import { JumpLabels } from "neoteletext-server-ts-ui-components";
 ```
 
 **It takes of its page:** the digits.

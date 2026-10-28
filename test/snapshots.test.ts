@@ -4,7 +4,7 @@
 import { test } from "node:test";
 
 import { AudioPlayer, Button, DataTable, Dialog, type Element, h, JoinedPanels, Modal, Text, type Track } from "../src/index.ts";
-import type { Harness } from "neottx-server-ts-protocol/testing";
+import type { Harness } from "neoteletext-server-ts-protocol/testing";
 import { harness, frame, PAGE } from "./components-fixtures.ts";
 import { matchesSnapshot } from "./snapshot.ts";
 

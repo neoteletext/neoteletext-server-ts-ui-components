@@ -11,7 +11,7 @@ What stands over a page: a dialog that keeps the keys until it is answered, a mo
 Dialogs: a question over the page, which keeps the keys until it is answered. Teletext draws a row from its first cell, so a dialog covers the whole of each row it is on: spaces in its margins and, between them, a background of its own with its title on a band of its kind's colour, its message, its children (a field, a spinner) and its buttons. Left, Right and Tab choose a button, Enter answers with it, Escape answers with none; a click on a button answers with it. A modal (modal.ts) lays one over a page.
 
 ```ts
-import { Dialog } from "neottx-server-ts-ui-components";
+import { Dialog } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Tab` chooses; `Enter` answers; `Esc` cancels.
@@ -81,7 +81,7 @@ h(Dialog, { title: "Send it?", message: "Fill in the form first.", buttons: ["Se
 A modal: a page with a dialog (dialog.ts) over it, and between them a shield (shield.ts), so while the dialog is up no click or turn of the wheel reaches the page under it, and a scrim (scrim.ts), so the page shows dimmed behind it: the top of the look's elevations (core/look.ts).
 
 ```ts
-import { Modal } from "neottx-server-ts-ui-components";
+import { Modal } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -111,7 +111,7 @@ h(
 A dialog (dialog.ts) before something is destroyed: it says what will be, and Confirm acts only once the viewer has typed its name or, for a viewer with only a remote, the code of digits it shows, a new one each time it opens, so neither a slip nor a habit destroys anything. Cancel is the button chosen to begin with, so Enter with nothing typed cancels; Escape cancels too. Confirm refused says why under the line typed on (confirm-entry.ts). The dialog's own answers are its to send: what comes up the tree is an activate with the name when it is confirmed, a cancel when it is not.
 
 ```ts
-import { TypeToConfirm } from "neottx-server-ts-ui-components";
+import { TypeToConfirm } from "neoteletext-server-ts-ui-components";
 ```
 
 **It takes of its page:** a copy of the page for each viewer.

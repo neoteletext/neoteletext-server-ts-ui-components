@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { text } from "neottx-server-ts-protocol/testing";
+import { text } from "neoteletext-server-ts-protocol/testing";
 import { ChoiceList, type Element, FilterList, h, matchRank, PageFinder } from "../src/index.ts";
 import { Key } from "../src/kit.ts";
 import { BODY_ROW, frame, harness, PAGE } from "./components-fixtures.ts";

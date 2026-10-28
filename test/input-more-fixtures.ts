@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 
-import { type Harness, rowOf, text } from "neottx-server-ts-protocol/testing";
+import { type Harness, rowOf, text } from "neoteletext-server-ts-protocol/testing";
 import { Component, type ComponentEvent } from "../src/index.ts";
 import { CURSOR_BLOCK } from "../src/input/drawn-line.ts";
 import { SPACE_CODE } from "../src/kit.ts";

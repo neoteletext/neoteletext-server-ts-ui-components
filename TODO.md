@@ -1,4 +1,4 @@
-# neottx-server-ts-ui-components: to do
+# neoteletext-server-ts-ui-components: to do
 
 What waits on another repository, or on the owner. Nothing here is
 changed from this one: the server, the protocol, the engine and the
@@ -23,7 +23,7 @@ change of its own for the codec. What has to change, in order:
    page-wide sound once for each class present. Today it encodes every
    stored sound as IMA ADPCM in 256-byte blocks and every live block in
    512-byte blocks.
-2. **The protocol** (`neottx-server-ts-protocol`): Opus takes 8, 12, 16,
+2. **The protocol** (`neoteletext-server-ts-protocol`): Opus takes 8, 12, 16,
    24 and 48 kHz (RFC 6716 §2), so `SAMPLE_RATES`' 11025, 22050, 32000
    and 44100 go or are resampled by the server; and a live sound's
    blocks are 1,017 samples, the IMA ADPCM block's, where Opus frames

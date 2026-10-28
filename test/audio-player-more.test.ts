@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { type Harness, text } from "neottx-server-ts-protocol/testing";
+import { type Harness, text } from "neoteletext-server-ts-protocol/testing";
 import { AudioPlayer, type AudioPlayerProps, type Element, h, tone, type Track } from "../src/index.ts";
 import { Colour, mosaicColour } from "../src/kit.ts";
 import { BODY_ROW, frame, harness, PAGE } from "./components-fixtures.ts";

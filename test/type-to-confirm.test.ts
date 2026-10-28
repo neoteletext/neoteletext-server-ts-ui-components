@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { Harness } from "neottx-server-ts-protocol/testing";
+import type { Harness } from "neoteletext-server-ts-protocol/testing";
 import { h, Modal, TypeToConfirm } from "../src/index.ts";
 import { Key } from "../src/kit.ts";
 import { viewer } from "./controls-fixtures.ts";

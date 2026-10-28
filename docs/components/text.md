@@ -25,7 +25,7 @@ Words on the page: a line in a colour, wrapped paragraphs and runs of mixed styl
 Text: one line of text in a colour, and the props of the styled lines (double height and width, flashing, concealed) that have a file each.
 
 ```ts
-import { Text } from "neottx-server-ts-ui-components";
+import { Text } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -61,7 +61,7 @@ h(Text, { text: "Back after the break", foreground: Colour.Green, centre: true }
 Paragraph: text wrapped to its box, a line a row.
 
 ```ts
-import { Paragraph } from "neottx-server-ts-ui-components";
+import { Paragraph } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -99,7 +99,7 @@ h(Paragraph, {
 Text in runs of their own styles, wrapped. A teletext row changes style only with spacing attributes, each taking a cell (EN 300 706 clause 12.2), so a change of style between words takes the space between them, and a change that needs more than one attribute (a background needs its colour, New Background and the ink) takes more cells, counted when the line is broken.
 
 ```ts
-import { RichText } from "neottx-server-ts-ui-components";
+import { RichText } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -138,7 +138,7 @@ h(RichText, {
 Band: a row of text on a background of its own colour.
 
 ```ts
-import { Band } from "neottx-server-ts-ui-components";
+import { Band } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -169,7 +169,7 @@ import { Band } from "neottx-server-ts-ui-components";
 Badges: short labels on a background of their own colour, in a line of text ("LIVE", "3 NEW", "BETA"). Each is a chip (core/canvas.ts): its background starts before the text and ends a cell after it. A badge that does something when clicked ("PAUSED" to follow again, a wizard's step to go back to it) is a control over its chip, and only a click there acts.
 
 ```ts
-import { Badges } from "neottx-server-ts-ui-components";
+import { Badges } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -214,7 +214,7 @@ import { Badges } from "neottx-server-ts-ui-components";
 Large text drawn in mosaic graphics, as large digits are (time/big-digits.ts), in their size and by their rules for fitting and drawing: letters A to Z, the digits and the common punctuation, five sixels by seven with a sixel between, below a clear row. Small letters are drawn as capitals; a character it has no letter for is a blank as wide as a letter, so what follows it stays in its place. Only the letters that fit the width are drawn, whole: a letter cut through would read as another.
 
 ```ts
-import { BigText } from "neottx-server-ts-ui-components";
+import { BigText } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -237,7 +237,7 @@ import { BigText } from "neottx-server-ts-ui-components";
 Headlines: a post's title after the page it is on, and how page numbers are written. What goes to a page is a control, from its number to the end of what it says, and only a click there goes.
 
 ```ts
-import { Headline } from "neottx-server-ts-ui-components";
+import { Headline } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -267,7 +267,7 @@ import { Headline } from "neottx-server-ts-ui-components";
 Byline: who wrote an article and when, and its labels.
 
 ```ts
-import { Byline } from "neottx-server-ts-ui-components";
+import { Byline } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -294,7 +294,7 @@ import { Byline } from "neottx-server-ts-ui-components";
 Lines of a document: an article's blocks laid out as coloured lines, and lines drawn as they are, a row each.
 
 ```ts
-import { LinesBlock } from "neottx-server-ts-ui-components";
+import { LinesBlock } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -343,7 +343,7 @@ h(LinesBlock, { lines: [], empty: "No messages yet" })
 PageLink: a page number and what is there, which a click follows.
 
 ```ts
-import { PageLink } from "neottx-server-ts-ui-components";
+import { PageLink } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -371,7 +371,7 @@ import { PageLink } from "neottx-server-ts-ui-components";
 Newsflash: NEWSFLASH, flashing, before a line of news.
 
 ```ts
-import { Newsflash } from "neottx-server-ts-ui-components";
+import { Newsflash } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -393,7 +393,7 @@ h(Newsflash, { text: "Rail strike called off" })
 Ticker: a band whose text changes to the next item every few seconds.
 
 ```ts
-import { Ticker } from "neottx-server-ts-ui-components";
+import { Ticker } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -426,7 +426,7 @@ page.advance(4000);
 DoubleHeight: a line of text two rows high.
 
 ```ts
-import { DoubleHeight } from "neottx-server-ts-ui-components";
+import { DoubleHeight } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -449,7 +449,7 @@ h(DoubleHeight, { text: "ROVERS ARE CHAMPIONS" })
 DoubleWidth: a line of text whose letters are two cells wide at Level 2.5, and spaced out at Level 1.
 
 ```ts
-import { DoubleWidth } from "neottx-server-ts-ui-components";
+import { DoubleWidth } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -472,7 +472,7 @@ h(DoubleWidth, { text: "GOAL!", foreground: Colour.Green })
 Flashing: a line of text that flashes.
 
 ```ts
-import { Flashing } from "neottx-server-ts-ui-components";
+import { Flashing } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -495,7 +495,7 @@ h(Flashing, { text: "Flood warning in force" })
 Concealed: text hidden until the viewer presses Reveal.
 
 ```ts
-import { Concealed } from "neottx-server-ts-ui-components";
+import { Concealed } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -522,7 +522,7 @@ import { Concealed } from "neottx-server-ts-ui-components";
 Placeholder: a line in the middle of its box while something is still coming, or in place of what is missing.
 
 ```ts
-import { Placeholder } from "neottx-server-ts-ui-components";
+import { Placeholder } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props

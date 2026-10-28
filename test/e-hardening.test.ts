@@ -8,7 +8,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Harness, rowOf, text } from "neottx-server-ts-protocol/testing";
+import { Harness, rowOf, text } from "neoteletext-server-ts-protocol/testing";
 import {
   Action,
   type Child,

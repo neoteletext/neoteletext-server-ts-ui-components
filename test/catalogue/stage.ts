@@ -7,8 +7,8 @@
 
 import assert from "node:assert/strict";
 
-import type { Harness } from "neottx-server-ts-protocol/testing";
-import type { Rows } from "neottx-server-ts-protocol";
+import type { Harness } from "neoteletext-server-ts-protocol/testing";
+import type { Rows } from "neoteletext-server-ts-protocol";
 import { type Element, h, Rows as RowsLayout } from "../../src/index.ts";
 import { frame, harness, PAGE } from "../components-fixtures.ts";
 import { latestTti } from "../controls-fixtures.ts";

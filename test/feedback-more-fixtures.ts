@@ -4,7 +4,7 @@
 
 import assert from "node:assert/strict";
 
-import { type Harness, text } from "neottx-server-ts-protocol/testing";
+import { type Harness, text } from "neoteletext-server-ts-protocol/testing";
 import { type BigDigits, type BigText, type Child, Columns, Component, type Element, h, type KeyEvent, Loading, type TextEvent, Text } from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 import { BODY_ROW, frame, harness, PAGE } from "./components-fixtures.ts";

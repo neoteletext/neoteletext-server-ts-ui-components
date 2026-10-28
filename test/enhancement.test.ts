@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { text } from "neottx-server-ts-protocol/testing";
+import { text } from "neoteletext-server-ts-protocol/testing";
 import { type Canvas, type Child, Component, DoubleWidth, type Element, h, type Size } from "../src/index.ts";
 import { controlTriplet, keptDeclarations, LAST_CONTROL_ROW, setActivePosition, TERMINATION } from "../src/core/controls.ts";
 import { DisplayAttribute, displayAttributesTriplet, enhancementTriplets, keptDisplayAttributes } from "../src/core/enhancement.ts";

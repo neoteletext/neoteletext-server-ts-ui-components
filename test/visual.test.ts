@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { text } from "neottx-server-ts-protocol/testing";
+import { text } from "neoteletext-server-ts-protocol/testing";
 import { ROWS } from "../src/kit.ts";
 import { gateFindings } from "./catalogue/checks.ts";
 import { exampleName } from "./catalogue/example.ts";

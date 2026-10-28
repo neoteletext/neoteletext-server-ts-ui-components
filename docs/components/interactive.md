@@ -11,7 +11,7 @@ What viewers take part in: a poll whose votes every viewer sees as they come, ke
 A live poll: every viewer's copy hears each vote through the bus. Up and Down choose and Enter votes, or a click on an option votes for it: each option is an action (input/action.ts), a control the browser lights.
 
 ```ts
-import { Poll } from "neottx-server-ts-ui-components";
+import { Poll } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up Down` choose; `Enter or a click` votes.
@@ -63,7 +63,7 @@ page.press(1, Key.Enter);
 A quiz answered with the four coloured keys, or a click on an answer (each an action, input/action.ts, a control the browser lights), its answer concealed until Reveal.
 
 ```ts
-import { Quiz } from "neottx-server-ts-ui-components";
+import { Quiz } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `A coloured key or a click` answers; `Reveal` shows.
@@ -132,7 +132,7 @@ page.press(1, Key.Red);
 A list of sounds: choosing one plays it to the viewer.
 
 ```ts
-import { SoundList } from "neottx-server-ts-ui-components";
+import { SoundList } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props

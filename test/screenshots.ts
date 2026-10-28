@@ -12,7 +12,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { text } from "neottx-server-ts-protocol/testing";
+import { text } from "neoteletext-server-ts-protocol/testing";
 import { ROWS } from "../src/kit.ts";
 import { gapFindings } from "./catalogue/checks.ts";
 import { exampleName } from "./catalogue/example.ts";

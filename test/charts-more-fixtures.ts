@@ -2,7 +2,7 @@
 // page of one component, and its rows as codes, as readable text and as a
 // receiver shows them.
 
-import type { Harness } from "neottx-server-ts-protocol/testing";
+import type { Harness } from "neoteletext-server-ts-protocol/testing";
 import { type Child, type Element, MOSAIC_BASE } from "../src/index.ts";
 import { Colour, mosaicColour, SPACE, textColour } from "../src/kit.ts";
 import { frame, harness, PAGE } from "./components-fixtures.ts";

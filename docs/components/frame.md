@@ -15,7 +15,7 @@ Every page's frame, as Ceefax laid it out: a title band in double height, the bo
 Every page's frame, as Ceefax laid it out: the server's header on row 0, a title band in double height on rows 1 and 2 that names the sub-page (the browser lists sub-pages by it), the body on rows 3 to 22, a hint of the keys on row 23, and the Fastext prompts on row 24 with their links.
 
 ```ts
-import { Frame } from "neottx-server-ts-ui-components";
+import { Frame } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -70,7 +70,7 @@ h(
 TitleBand: rows 1 and 2 of the frame, the sub-page's name in double height on a band of its colour.
 
 ```ts
-import { TitleBand } from "neottx-server-ts-ui-components";
+import { TitleBand } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -101,7 +101,7 @@ import { TitleBand } from "neottx-server-ts-ui-components";
 HintLine: row 23 of the frame, what the keys or the control under the pointer do: as many of its parts as fit whole, so no key is shown with its action cut short; one part too long for the row is cut.
 
 ```ts
-import { HintLine } from "neottx-server-ts-ui-components";
+import { HintLine } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -127,7 +127,7 @@ import { HintLine } from "neottx-server-ts-ui-components";
 What the keys do: each key in yellow and its action in white, in one column or two. Given no keys, it lists those of the control that has them (core/key-bindings.ts), so its help follows the focus.
 
 ```ts
-import { KeyHelp } from "neottx-server-ts-ui-components";
+import { KeyHelp } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -182,7 +182,7 @@ h(KeyHelp, {
 PositionLine: where a long list or text is, as "Lines 1-18 of 66".
 
 ```ts
-import { PositionLine } from "neottx-server-ts-ui-components";
+import { PositionLine } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -210,7 +210,7 @@ import { PositionLine } from "neottx-server-ts-ui-components";
 A status bar: a row on a background of its own, its segments each in their colour (a colour's cell is the gap between them), and text on the right, such as the time. An alarm flashes.
 
 ```ts
-import { StatusBar } from "neottx-server-ts-ui-components";
+import { StatusBar } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -260,7 +260,7 @@ import { StatusBar } from "neottx-server-ts-ui-components";
 FastextBar: row 24 of the frame, the four Fastext prompts in their colours, and the pages they link to.
 
 ```ts
-import { FastextBar } from "neottx-server-ts-ui-components";
+import { FastextBar } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props

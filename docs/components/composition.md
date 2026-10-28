@@ -9,7 +9,7 @@ Components made of others: a wizard that takes the viewer through a form a step 
 A wizard: steps taken in order. The steps' names run along the top, the current one on a band and those done ticked; a progress bar shows how far along; the current step's content is under it; Back and Next are the red and green keys (F1 and F2 on a keyboard), so the page takes the coloured keys, and the last step's Next is Finish. Back and Next are also actions a click takes (input/action.ts), and a step done is a badge a click goes back to; each is a control the browser lights. Disabled or finished, it has no Back or Next: it takes no coloured key, the page keeps them, and its hint offers none.
 
 ```ts
-import { Wizard } from "neottx-server-ts-ui-components";
+import { Wizard } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `red` Back; `green` Next; `Tab` to a step's fields.

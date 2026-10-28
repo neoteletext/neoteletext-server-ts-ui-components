@@ -20,7 +20,7 @@ Lists to choose from, by the arrows, a digit, a coloured key or what is typed; t
 A list to choose from: the chosen item on the band while the list has the keys (core/look.ts), moved with the keys (core/list-cursor.ts), the wheel, the scroll bar or a click, and chosen with Enter, Space or a click, which sends activate up the tree. Its items are anything: each row is a ListRow (list-row.ts), holding the item's text or what `render` makes of it, a control the browser lights as the pointer passes, and the pointer coming onto a row is told to the list's user (onHover); a row may say what it is on the hint row meanwhile (itemHint). Told to pick by key, the rows shown are numbered and a digit chooses one, or the first four are lettered for the coloured keys (R G Y C), each in its key's colour, and a coloured key chooses one (key-picks.ts).
 
 ```ts
-import { ChoiceList } from "neottx-server-ts-ui-components";
+import { ChoiceList } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up Down, wheel or click` move; `Enter` chooses.
@@ -102,7 +102,7 @@ page.press(1, Key.Down);
 A list that narrows as the viewer types (choice-list.ts under a line of what is typed): the items whose text holds what is typed, those that begin with it first, then those that hold it as a run, then those that hold its letters in order, as fuzzy finders rank them; case aside. Backspace rubs a letter out, Escape clears what is typed. Choosing an item says its place in the items given, not in the list narrowed. What is typed changing takes the choice to the top row, the best match, so Enter after typing chooses what the typing found; the list is made anew for it, its keys kept.
 
 ```ts
-import { FilterList } from "neottx-server-ts-ui-components";
+import { FilterList } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -156,7 +156,7 @@ page.typeKeys(1, "br");
 A table of rows and columns under a heading: each column starts with its colour's cell, which is the gap between columns; the heading is on a band of a colour apart from the frame's title band above it; the chosen row is on the band while the table has the keys (core/look.ts); rows may alternate their foreground; more rows than fit scroll beside a scroll bar. A column is sorted by its digit (the page takes the digits) or a click on its heading, and again the other way. A row that can be chosen is a control, and the pointer coming onto it is told to the table's user (onHover).
 
 ```ts
-import { DataTable } from "neottx-server-ts-ui-components";
+import { DataTable } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up Down` scroll.
@@ -248,7 +248,7 @@ page.press(1, Key.Down);
 The text a list's row holds by default (list-rows.ts): wrapped over the row's rows at word boundaries, the last cut with an ellipsis. Its leading spaces are kept, on every line: they stand for a mark the row does not have, a tree's leaf's or a toggle list's unstarred item's, so its text lines up with its siblings' after theirs.
 
 ```ts
-import { ItemText } from "neottx-server-ts-ui-components";
+import { ItemText } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -276,7 +276,7 @@ h(ItemText, {
 A list's row as a component: the band, the mark and the colours every list's row has in each state (core/look.ts), and whatever the row holds, laid out from ITEM_TEXT: a line of text by default, or any components a list's user gives it. A row that can be pressed declares its band's cells as a control (core/controls.ts), which the browser lights as the pointer passes, and only a click there presses it: not one on its indent, a tree's guides or a control's label column. The pointer coming onto the band and leaving it (HOVER) is told to the list, for showing what the row is before it is chosen, and a row may say what it is on the hint row while the pointer is on it. ListRows is a list's rows, as many as are shown from its top, each one a ListRow, so every list chooses, highlights, takes clicks and hears the pointer alike.
 
 ```ts
-import { ListRow } from "neottx-server-ts-ui-components";
+import { ListRow } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -326,7 +326,7 @@ import { ListRow } from "neottx-server-ts-ui-components";
 A list's rows: as many of its items as are shown from its top, each a ListRow (list-row.ts) holding the item's text or what the list's user makes of it, so every list chooses, highlights, takes clicks and hears the pointer alike.
 
 ```ts
-import { ListRows } from "neottx-server-ts-ui-components";
+import { ListRows } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -380,7 +380,7 @@ h(ListRows, {
 A log: entries as they come, the newest at the bottom, each with its time and its level's tag in the level's colour. It follows the newest until the viewer scrolls back, and says so; End, or a click on the PAUSED badge, follows again.
 
 ```ts
-import { LogView } from "neottx-server-ts-ui-components";
+import { LogView } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up PgUp` scroll back; `End or a click on PAUSED` follows.
@@ -452,7 +452,7 @@ page.press(1, Key.Up);
 Rows of page numbers, as an index page lists them: the number in yellow, what is there, a figure on the right; a click on a row goes to its page, and each row from its number is a control.
 
 ```ts
-import { NumberedRows } from "neottx-server-ts-ui-components";
+import { NumberedRows } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -491,7 +491,7 @@ h(NumberedRows, {
 A scroll bar of whole cells that tells its parent where to go, as React's controlled components do: the lists, the menu, the tree and ScrollingText (scrolling-text.ts) scroll beside one.
 
 ```ts
-import { ScrollBar } from "neottx-server-ts-ui-components";
+import { ScrollBar } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -522,7 +522,7 @@ h(
 Lines that scroll in their box beside a scroll bar (scroll.ts), moved with the keys (core/list-cursor.ts), the wheel and the bar.
 
 ```ts
-import { ScrollingText } from "neottx-server-ts-ui-components";
+import { ScrollingText } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `PgDn PgUp arrows Home End` scroll; `wheel or the bar` too.
@@ -575,7 +575,7 @@ page.press(1, Key.PageDown);
 A table of labels and their values, in two columns.
 
 ```ts
-import { Table } from "neottx-server-ts-ui-components";
+import { Table } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -609,7 +609,7 @@ h(Table, {
 A list whose items are switched on and off, each marked with a star: Up and Down choose (core/list-cursor.ts), Enter, Space or a click switches one. Its value is the items on. Its rows are ListRows (list-row.ts), controls the browser lights as the pointer passes; the pointer coming onto one is told to the list's user (onHover).
 
 ```ts
-import { ToggleList } from "neottx-server-ts-ui-components";
+import { ToggleList } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up Down` choose; `Enter or a click` stars.

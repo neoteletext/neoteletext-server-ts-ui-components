@@ -15,7 +15,7 @@ Pictures in mosaic sixels: icons, bitmaps of your own, pictures and QR codes mad
 Icons in mosaic sixels, three cells across and two rows down (six by six sixels), as a teletext weather map's suns and clouds were: the weather, marks for notices, and a few everyday things. Each is drawn in its own colour, or the one given; its colour's cell is the gap before it.
 
 ```ts
-import { Icon } from "neottx-server-ts-ui-components";
+import { Icon } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -71,7 +71,7 @@ h(
 Bitmaps of sixels, written as rows of text, drawn in mosaic graphics.
 
 ```ts
-import { Mosaic } from "neottx-server-ts-ui-components";
+import { Mosaic } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -111,7 +111,7 @@ h(Mosaic, {
 A picture or a QR code made by the engine's tools, as TTI rows placed in a box.
 
 ```ts
-import { Picture } from "neottx-server-ts-ui-components";
+import { Picture } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -150,7 +150,7 @@ h(Picture, {
 Places marked on a map: the map a bitmap of sixels drawn in one colour (mosaic.ts) or a picture's TTI rows (picture.ts), the caller's, and each place a mark with its name beside it, put by its latitude and longitude within the map's bounds, the map taken as a plain grid of degrees (equirectangular). A mark and its name are text over the map: the text's colour takes the cell before them, and the cell after them sets the map's own colour again, so a mark covers its name's cells and two more (EN 300 706 clause 12.2). A name goes to the right of its mark, else to its left, else is left off, so that no two marks' cells overlap and none covers an attribute of the map's other than a colour, which it could not set again; a place with no such room, or below the box, is crowded out. A place outside the bounds is not drawn, and the row under the map says how many were left out, and how many are marked without their names.
 
 ```ts
-import { MapMarkers } from "neottx-server-ts-ui-components";
+import { MapMarkers } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -234,7 +234,7 @@ h(MapMarkers, {
 A canvas a viewer draws on with the pointer held down. Its surface is not a control: the browser's hover look would recolour all of it, and its pressed look turn all of it round, for as long as a stroke lasts. A stroke is a drag; and every move over the page comes, a button held or not (INPUT.md section 9.8), so `brush` can show where the brush will fall before a press. The surface follows the canvas's columns and rows as they change, keeping what is painted where the two overlap.
 
 ```ts
-import { PaintCanvas } from "neottx-server-ts-ui-components";
+import { PaintCanvas } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Drag` draws; `1-7` colour; `Backspace` clears.
@@ -277,7 +277,7 @@ page.move(1, 0, 29, 9);
 A roulette wheel: a ring of coloured blocks, one lit. The ring is round on the cell's shape (core/mosaics.ts), as a pie is, and the same each side of its middle both ways. The lit segment is white and hollow, a ring of sixels where the others are solid, so it is told by its shape as well as its colour (core/look.ts).
 
 ```ts
-import { Wheel } from "neottx-server-ts-ui-components";
+import { Wheel } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -308,7 +308,7 @@ h(Wheel, { lit: 0, segments: 6 })
 A sprite that moves: a ball bouncing round its box, a frame a tick.
 
 ```ts
-import { Bouncer } from "neottx-server-ts-ui-components";
+import { Bouncer } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props

@@ -106,7 +106,7 @@ function componentSection(component: string, examples: readonly Example[], part:
   const props = propsName(source, component);
   const first = examples[0];
   const learned = first === undefined ? null : asked(first);
-  const lines = [`## ${component}`, "", openingComment(source), "", "```ts", `import { ${component} } from "neottx-server-ts-ui-components";`, "```", ""];
+  const lines = [`## ${component}`, "", openingComment(source), "", "```ts", `import { ${component} } from "neoteletext-server-ts-ui-components";`, "```", ""];
   if (learned !== null && learned.keys.length > 0) {
     lines.push(`**Keys:** ${learned.keys.join("; ")}.`, "");
   }

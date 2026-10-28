@@ -25,7 +25,7 @@ What tells the viewer how things stand: how far along or how full, what is still
 How far along something is, or how full: a progress bar of mosaic blocks to the half cell, solid or in separated graphics (EN 300 706 clause 12.2), whose colour may follow thresholds as a gauge's does; either kind spends the cell after its colour's on saying which, so solid bars and separated ones start in one column. The share it shows, and the label's and the share's cells, are the line gauge's too (line-gauge.ts). Given onSeek, its track is a control: a click on it says how far along the click was, as a player's seek bar does.
 
 ```ts
-import { ProgressBar } from "neottx-server-ts-ui-components";
+import { ProgressBar } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -59,7 +59,7 @@ import { ProgressBar } from "neottx-server-ts-ui-components";
 A line gauge: a thin line whose filled part is in one colour and the rest in another. The line changes colour in a cell of its own; with Hold Mosaics that cell shows the last mosaic again (EN 300 706 clause 12.2, Table 26), so the line has no gap.
 
 ```ts
-import { LineGauge } from "neottx-server-ts-ui-components";
+import { LineGauge } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -89,7 +89,7 @@ import { LineGauge } from "neottx-server-ts-ui-components";
 A progress list: several things going on at once, a progress bar each (progress.ts) with its label and its share, then how fast it goes and how long it has left, estimated from how far it has come since it started. Each says "--" while that is not known: before it started, before any time has passed, while it has not moved. It looks at the clock again each second while someone watches, so the estimates go on as time does.
 
 ```ts
-import { ProgressList } from "neottx-server-ts-ui-components";
+import { ProgressList } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -134,7 +134,7 @@ page.runUntil(30_000);
 A task list: the steps of something being done, each waiting, running, done or failed. Each says which by a mark in the English set's own characters, in its kind's colour (core/look.ts), so it shows without colour too; a running step's mark is a spinner (spinner.ts), which moves while someone watches. A failed step can say why on the row under it.
 
 ```ts
-import { TaskList } from "neottx-server-ts-ui-components";
+import { TaskList } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -172,7 +172,7 @@ h(TaskList, {
 Something is happening: a spinner and what it is doing, moved by a timer of its own. Teletext has no spinner glyphs, so the frames are mosaics: a sixel going round a cell, a block going to and fro, a cell filling and emptying; or dots after the words. Done, it says so and stops. Its words start in one column whatever its style, and once it is done, so a spinner that changes style or finishes does not move them.
 
 ```ts
-import { Spinner } from "neottx-server-ts-ui-components";
+import { Spinner } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -204,7 +204,7 @@ import { Spinner } from "neottx-server-ts-ui-components";
 A skeleton: where text is still coming, rows of blocks in the shape of its lines, in separated graphics (EN 300 706 clause 12.2) so they read as a placeholder and not as a bar. Told to shimmer, a brighter band moves across them on a timer of its own while someone watches. The band changes colour in a cell of its own; with Hold Mosaics that cell shows the last block again (Table 26), so the line has no gap, as a line gauge's has none (line-gauge.ts).
 
 ```ts
-import { Skeleton } from "neottx-server-ts-ui-components";
+import { Skeleton } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -240,7 +240,7 @@ page.runUntil(1_000);
 Loading: what is still coming, shown in its place by a spinner (spinner.ts) or, told so, a skeleton of its lines (skeleton.ts). While it loads its children are not mounted, so nothing of them runs, and the keys meant for them are held (held-keys.ts); once it has loaded they are mounted and drawn in its place.
 
 ```ts
-import { Loading } from "neottx-server-ts-ui-components";
+import { Loading } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -268,7 +268,7 @@ import { Loading } from "neottx-server-ts-ui-components";
 A metric card: one figure of a dashboard. Its label after its kind's mark on a chip of the kind's colour, as a notice has (notice.ts), so its health shows without colour too; the figure, in large text or a line; how far it moved since before, its way said by a mark, "+" up, "-" down and "=" not at all, before the amount; and, given its history, a sparkline of it beneath.
 
 ```ts
-import { MetricCard } from "neottx-server-ts-ui-components";
+import { MetricCard } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -311,7 +311,7 @@ import { MetricCard } from "neottx-server-ts-ui-components";
 Notices: a line that says what happened, its kind's mark on a chip of its kind's colour (core/look.ts) so it shows without colour too. A notice stays; a toast is one that goes after a few seconds, sent on the bus (core/library-events.ts) to every shelf (toast-shelf.ts) its audience reaches, so a toast for one viewer shows only on their own copy of a page.
 
 ```ts
-import { Notice } from "neottx-server-ts-ui-components";
+import { Notice } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -339,7 +339,7 @@ import { Notice } from "neottx-server-ts-ui-components";
 Where toasts show (notice.ts): the newest at the foot, as many as it may show, each going after its time or at a click on it. A toast that can be undone says so, and its undo runs, once, at a click on it or at the undo key, which the shelf hears wherever the keys are (onPageKey). A toast it can no longer show goes at once, and its timer with it, so a burst of toasts leaves no more state or timers than the shelf has rows.
 
 ```ts
-import { ToastShelf } from "neottx-server-ts-ui-components";
+import { ToastShelf } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -378,7 +378,7 @@ page.press(1, Key.Enter);
 A player for the viewer's stream (core/stream.ts), drawn by player-view.ts, its doings player-actions.ts's. Given tracks, it plays them: a queue of them to choose from and edit, Previous and Next, repeat and shuffle, the next track when one ends, a speed, an A–B loop and a sleep timer, and, when told to, each track from where the viewer left it; without, it works the stream something else started. The keys that reach it seek and set the volume, a keyboard's letters do the rest (player-keys.ts), and the digits, when it takes them, jump to a tenth of the way; a click on the bar seeks there. It looks again twice a second while someone watches. With no tracks and nothing playing it draws nothing, or keeps its rows empty when told to (now-playing.ts). Its state is one viewer's, so each has a copy of its page.
 
 ```ts
-import { AudioPlayer } from "neottx-server-ts-ui-components";
+import { AudioPlayer } from "neoteletext-server-ts-ui-components";
 ```
 
 **It takes of its page:** a copy of the page for each viewer.
@@ -462,7 +462,7 @@ page.runUntil(5_000);
 What the viewer is listening to (core/stream.ts): its name, how far it has played of how long, and whether it is waiting, playing, paused or cannot play, looked at again twice a second while someone watches. When nothing plays it draws nothing, as the owner asked, or keeps its rows empty when told to so what is under it does not move; the copy every viewer shares has nobody to look for, and so draws nothing too.
 
 ```ts
-import { NowPlaying } from "neottx-server-ts-ui-components";
+import { NowPlaying } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -504,7 +504,7 @@ page.runUntil(84_000);
 A stream as the viewer sees it: what it is and whether it plays, then a bar of how far it has played of how long; with nothing playing, it says so and keeps the bar's row, so what is under it does not move, as it does for a stream that cannot play, which has played nothing to show. It looks at nothing itself; the player that holds it (now-playing.ts, audio-player.ts) says what plays.
 
 ```ts
-import { ListeningView } from "neottx-server-ts-ui-components";
+import { ListeningView } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -542,7 +542,7 @@ import { ListeningView } from "neottx-server-ts-ui-components";
 A player's queue (audio-player.ts) as a list to choose from: the tracks in the order queued, the one it plays marked with a star, so it shows without colour; choosing one plays it, and where the choice is, the player is told, for the keys that edit the queue there. The choice follows its track as the queue is edited. It says the list's own keys on the hint row, unless the player that takes more of them says its own.
 
 ```ts
-import { PlayQueue } from "neottx-server-ts-ui-components";
+import { PlayQueue } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -597,7 +597,7 @@ h(PlayQueue, {
 A player's modes (audio-player.ts) on two rows, each in words, so its state shows without colour: how loud, or muted, and, for a player of tracks, what repeats and whether it shuffles; then its speed, the part it loops and when it sleeps, each only while it is set.
 
 ```ts
-import { PlayerStatus } from "neottx-server-ts-ui-components";
+import { PlayerStatus } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -626,7 +626,7 @@ h(PlayerStatus, { gain: 80, muted: false, repeat: "all", shuffle: true, speed: 1
 A player's transport (audio-player.ts): previous, play or pause, stop and next, as buttons of one width in a row; what cannot be done now is disabled, not hidden. Its buttons say their own keys on the hint row, unless the player that takes more of the keys says what they do there.
 
 ```ts
-import { Transport } from "neottx-server-ts-ui-components";
+import { Transport } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -665,7 +665,7 @@ h(Transport, {
 A player as it is drawn (audio-player.ts holds its state): what plays and how far, on a bar a click seeks along, a spectrum of what is heard when it has one, the transport, the modes, and, given tracks, the queue of them. The transport and the queue say the player's keys on the hint row, which the player takes while either has them (player-keys.ts).
 
 ```ts
-import { PlayerView } from "neottx-server-ts-ui-components";
+import { PlayerView } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props

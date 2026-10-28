@@ -1,4 +1,4 @@
-# Deploying neottx-server-ts-ui-components
+# Deploying neoteletext-server-ts-ui-components
 
 A library is deployed by releasing it. Nothing of this repository runs on
 a host by itself: a release reaches the deploy host inside the programs
@@ -12,7 +12,7 @@ Raise `version` in `package.json` (semantic versioning: a change to what
     scripts/release.sh
 
 On a clean tree it runs the checks and the build, packs
-`tmp/release/neottx-server-ts-ui-components-<version>.tgz` and tags the
+`tmp/release/neoteletext-server-ts-ui-components-<version>.tgz` and tags the
 commit `v<version>`. A version already tagged is refused.
 
 The release is built against the protocol release in `vendor/`, which
@@ -25,16 +25,16 @@ neoteletext-server-channels (kitchensink) and
 neoteletext-server-channel-hackaday commit the release under their own
 `vendor/`, beside the protocol release it was built against:
 
-    cp tmp/release/neottx-server-ts-ui-components-<version>.tgz <consumer>/vendor/
-    git -C <consumer> rm vendor/neottx-server-ts-ui-components-<old version>.tgz
-    cd <consumer> && npm install --save-exact ./vendor/neottx-server-ts-ui-components-<version>.tgz
+    cp tmp/release/neoteletext-server-ts-ui-components-<version>.tgz <consumer>/vendor/
+    git -C <consumer> rm vendor/neoteletext-server-ts-ui-components-<old version>.tgz
+    cd <consumer> && npm install --save-exact ./vendor/neoteletext-server-ts-ui-components-<version>.tgz
 
 `package.json` then names `file:vendor/<the file>`, and the lockfile pins
 its checksum. The consumer's gates run, and it commits. A new major
 version may change what a consumer's code calls: the consumer is moved to
 it in the same commit.
 
-The package exports `neottx-server-ts-ui-components`; nothing else.
+The package exports `neoteletext-server-ts-ui-components`; nothing else.
 
 ## To the host
 

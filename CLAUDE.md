@@ -1,8 +1,8 @@
-# neottx-server-ts-ui-components
+# neoteletext-server-ts-ui-components
 
 The NeoTeletext component library: class components for teletext
 channels in TypeScript, over the server's channel protocol
-(neottx-server-ts-protocol). These rules add to `~/.claude/CLAUDE.md`.
+(neoteletext-server-ts-protocol). These rules add to `~/.claude/CLAUDE.md`.
 
 ## Working on the code
 
@@ -22,7 +22,7 @@ channels in TypeScript, over the server's channel protocol
   whole interface; a change to it is a change of version, and its
   consumers take a release, never its source.
 - **The protocol is a release too.** It comes from
-  `vendor/neottx-server-ts-protocol-<version>.tgz`, and the peer
+  `vendor/neoteletext-server-ts-protocol-<version>.tgz`, and the peer
   dependency names the version the library is built against.
 - **Components are classes. Hooks and function components are never to
   be implemented in this architecture**, on the owner's instruction of

@@ -16,7 +16,7 @@ The ways about a channel: tabs, menus and trees to choose where to go, sections 
 Breadcrumbs: the way down to where the viewer is, each step with a page or an action a control they can click back to: a page goes there, an action does what it says, such as a menu going back to that level. The English set has the right arrow (EN 300 706 Table 36), so the steps are joined by it, or by a slash.
 
 ```ts
-import { Breadcrumbs } from "neottx-server-ts-ui-components";
+import { Breadcrumbs } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -60,7 +60,7 @@ h(Breadcrumbs, {
 Collapsible sections: each a heading on a band, its content under it while it is open, indented so its text starts under the heading's. Up and Down choose a heading, Enter, Space or a click opens or shuts it; as an accordion, opening one shuts the others. Each heading's band is a control. Its value is the sections open.
 
 ```ts
-import { Collapsible } from "neottx-server-ts-ui-components";
+import { Collapsible } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up Down` choose a heading; `Enter` opens or shuts.
@@ -117,7 +117,7 @@ page.press(1, Key.Enter);
 A menu: choices with their shortcuts, rules between groups, choices that cannot be made yet, and choices that open a menu of their own. Up and Down move past rules and what cannot be chosen (core/list-cursor.ts), Enter, Space or Right chooses or opens, Left or Escape goes back, a click chooses, and a click on a menu's name in the way down goes back to it; numbered, the digits choose as an index page's do, so the page takes them. The pointer coming onto a choice is told to the menu's user (onHover). More choices than fit scroll beside a scroll bar, and with the wheel.
 
 ```ts
-import { Menu } from "neottx-server-ts-ui-components";
+import { Menu } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up Down` move; `Enter or its number` chooses; `Left` goes back.
@@ -225,7 +225,7 @@ for (let step = 0; step < 4; step += 1) {
 A page finder: the channel's pages by name, narrowed as the viewer types a word of one (lists/filter-list.ts), and Enter goes there. A remote's digits still go to page selection, as on any page; letters, from a keyboard or a phone, find a page by what it is called.
 
 ```ts
-import { PageFinder } from "neottx-server-ts-ui-components";
+import { PageFinder } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -290,7 +290,7 @@ page.typeKeys(1, "wea");
 Pagination: which of a run of pages is shown, and the way to the others. Three looks: the numbers round the current one ("← 1 .. 4 5 6 .. 20 →", the current on a band), a count ("← Page 5 of 20 →"), and a row of mosaic dots, the current one large. Left and Right, Home and End, or a click move it; each number, arrow or dot that goes somewhere is a control.
 
 ```ts
-import { Pagination } from "neottx-server-ts-ui-components";
+import { Pagination } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Left Right, Home End or a click` turn the page.
@@ -330,7 +330,7 @@ h(Pagination, { count: 20, initial: 4 })
 Tabs: named views, one shown at a time. The strip names them in a row; the view shows the chosen one's content under it. Four looks: chips on backgrounds of their own, Fastext's four colours (the coloured keys choose, so the page takes them), numbers (the digits choose, so the page takes them), and an underline under the chosen name. Every tab takes the same cells whether it is chosen or not, as a chip does (core/canvas.ts), so choosing one never moves the others, and each is a control there.
 
 ```ts
-import { TabStrip } from "neottx-server-ts-ui-components";
+import { TabStrip } from "neoteletext-server-ts-ui-components";
 ```
 
 ### Props
@@ -362,7 +362,7 @@ import { TabStrip } from "neottx-server-ts-ui-components";
 Tabs and the chosen one's content (tabs.ts): its children are the views, one for each tab. Left and Right, a click, or the style's keys choose.
 
 ```ts
-import { TabView } from "neottx-server-ts-ui-components";
+import { TabView } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Left Right or a click` choose a tab.
@@ -443,7 +443,7 @@ page.typeKeys(1, "3");
 A tree: items that open to show the items under them. "+" marks one that is shut, "-" one that is open, and one with no items under it, none or an empty list, is a leaf. With guides, thin lines join each item to its parent's mark and the top items to each other, as a tree view's do. Up and Down move (core/list-cursor.ts), Right opens, Left shuts or goes to the parent, Enter or Space opens or shuts one with children and chooses one without, a click does as Enter does, and the pointer coming onto an item is told to the tree's user (onHover). More than fit scroll beside a scroll bar, and with the wheel.
 
 ```ts
-import { Tree } from "neottx-server-ts-ui-components";
+import { Tree } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `Up Down` move; `Right` opens; `Left` shuts; `Enter` chooses.

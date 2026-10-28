@@ -1,4 +1,4 @@
-# neottx-server-ts-ui-components
+# neoteletext-server-ts-ui-components
 
 Components for teletext pages, as React's are for the web, for a channel
 of the NeoTeletext server written in TypeScript. A page is a tree of
@@ -6,22 +6,22 @@ components: each renders elements, or draws itself, and the library
 lays the tree out on the screen, publishes it as TTI, routes the keys
 and the pointer to the components where they land, and publishes a
 viewer's own copy of a page only while it differs from everyone's. It
-runs on the server's channel protocol, `neottx-server-ts-protocol`.
+runs on the server's channel protocol, `neoteletext-server-ts-protocol`.
 
 ## Install
 
 The library is released as a built tarball, not to a registry. Commit
 its release and the protocol's under your `vendor/` and depend on both:
 
-    npm install ./vendor/neottx-server-ts-protocol-0.2.0.tgz ./vendor/neottx-server-ts-ui-components-3.0.0.tgz
+    npm install ./vendor/neoteletext-server-ts-protocol-0.3.0.tgz ./vendor/neoteletext-server-ts-ui-components-3.0.0.tgz
 
 It needs Node 22.18 or later.
 
 ## A page
 
 ```ts
-import { Colour, Key, runChannel } from "neottx-server-ts-protocol";
-import { type Child, Component, ComponentChannel, Frame, h, isPress, type KeyEvent, Text } from "neottx-server-ts-ui-components";
+import { Colour, Key, runChannel } from "neoteletext-server-ts-protocol";
+import { type Child, Component, ComponentChannel, Frame, h, isPress, type KeyEvent, Text } from "neoteletext-server-ts-ui-components";
 
 /** A component that keeps nothing: what it renders from its props. */
 class Greeting extends Component<{ readonly name: string }> {
@@ -109,7 +109,7 @@ package's root.
 
 ## Tests
 
-`neottx-server-ts-protocol/testing`'s `Harness` drives a channel of
+`neoteletext-server-ts-protocol/testing`'s `Harness` drives a channel of
 components as the server does:
 
 ```ts

@@ -1,7 +1,7 @@
 {
-  "name": "neottx-server-ts-ui-components",
+  "name": "neoteletext-server-ts-ui-components",
   "version": "3.0.0",
-  "description": "The NeoTeletext component library: class components for teletext channels in TypeScript, over the server's channel protocol (neottx-server-ts-protocol)",
+  "description": "The NeoTeletext component library: class components for teletext channels in TypeScript, over the server's channel protocol (neoteletext-server-ts-protocol)",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -18,12 +18,12 @@
     "dist"
   ],
   "peerDependencies": {
-    "neottx-server-ts-protocol": "0.2.0"
+    "neoteletext-server-ts-protocol": "0.3.0"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
     "knip": "6.43.0",
-    "neottx-server-ts-protocol": "file:vendor/neottx-server-ts-protocol-0.2.0.tgz",
+    "neoteletext-server-ts-protocol": "file:vendor/neoteletext-server-ts-protocol-0.3.0.tgz",
     "oxlint": "1.90.0",
     "oxlint-tsgolint": "7.0.2005",
     "prettier": "3.9.10",
