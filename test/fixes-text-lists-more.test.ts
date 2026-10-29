@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, SERVER_LIMITS, text } from "neoteletext-server-ts-protocol/testing";
 import {
   type Article,
   Button,
@@ -26,7 +26,7 @@ import {
 } from "../src/index.ts";
 import { CUT_MARK } from "../src/core/text.ts";
 import { HINT_ROW } from "../src/frame/frame.ts";
-import { Colour, Key, MOST_SUBPAGES } from "../src/kit.ts";
+import { Colour, Key, type Limits } from "../src/kit.ts";
 import { BODY_ROW, PAGE, PROMPTS, viewer } from "./controls-fixtures.ts";
 
 /** Every row of the viewer's page, as text, once the channel reported no failure. */
@@ -154,8 +154,8 @@ function article(page: number): Article {
 }
 
 /** The sub-pages of a whole page of `root`, as viewer 1 sees them. */
-function subPages(root: () => Element): ReturnType<Harness["sharedPages"]> {
-  const page = new Harness([new ComponentChannel([{ page: PAGE, title: "Test", perViewer: true, root }], { opus: fakeOpus() })]);
+function subPages(root: () => Element, limits: Limits = SERVER_LIMITS): ReturnType<Harness["sharedPages"]> {
+  const page = new Harness([new ComponentChannel([{ page: PAGE, title: "Test", perViewer: true, root }], { opus: fakeOpus() })], { limits });
   page.join(1, PAGE);
   assert.deepEqual(page.errors, [], "the channel reported no failure");
   return page.ownPages(1, PAGE) ?? page.sharedPages(PAGE);
@@ -178,9 +178,12 @@ test("a day of more headlines than a sub-page holds goes on over further sub-pag
   );
 });
 
-test("a day of more headlines than every sub-page holds stops at the most sub-pages a page has", () => {
-  const articles = Array.from({ length: 20 * (MOST_SUBPAGES + 1) }, (_, index) => article(0x200 + index));
-  assert.equal(subPages(() => h(DayPages, { background: Colour.Blue, prompts: PROMPTS, days: [{ name: "Today", articles }] })).length, MOST_SUBPAGES);
+test("a day of more headlines than every sub-page holds stops at the most sub-pages the server's start allows a page", () => {
+  for (const most of [3, 100]) {
+    const limits = { ...SERVER_LIMITS, standard: { ...SERVER_LIMITS.standard, numberedSubpages: most } };
+    const articles = Array.from({ length: 20 * (most + 1) }, (_, index) => article(0x200 + index));
+    assert.equal(subPages(() => h(DayPages, { background: Colour.Blue, prompts: PROMPTS, days: [{ name: "Today", articles }] }), limits).length, most);
+  }
 });
 
 test("a QR panel without a code says nothing of scanning, and its placeholder is in line with its text", () => {

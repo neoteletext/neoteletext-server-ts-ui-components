@@ -70,7 +70,7 @@ import { DayPages } from "neoteletext-server-ts-ui-components";
 
 | Prop | Type | What it is |
 | --- | --- | --- |
-| `days` (needed) | `readonly Day[]` | The days, each on as many sub-pages as its headlines need, named by the day. A page has MOST_SUBPAGES sub-pages at most: the headlines and days past them are left out, and are not walked. |
+| `days` (needed) | `readonly Day[]` | The days, each on as many sub-pages as its headlines need, named by the day. A page has as many sub-pages as the server's `start` allows a whole page (`limits().standard.numberedSubpages`): the headlines and days past them are left out, and are not walked. |
 
 And the props of [`Framing`](common.md#framing).
 

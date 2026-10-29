@@ -15,7 +15,7 @@
 // released, so a viewer who only reads costs the server nothing.
 
 // oxlint-disable import/max-dependencies -- the runtime is where the protocol's calls meet the mounts, streams, sounds and publication
-import { type Application, type Context, ffmpegOpus, type Input, LONGEST_TITLE, type OpusEncoder, type PageEntry, type ServerStats } from "../kit.ts";
+import { type Application, type Context, ffmpegOpus, type Input, type OpusEncoder, type PageEntry, type ServerStats } from "../kit.ts";
 import { EventBus } from "./bus.ts";
 import type { LibraryEvents } from "./library-events.ts";
 import type { PageParams } from "./services.ts";
@@ -240,8 +240,9 @@ export class ComponentChannel implements Application {
       listening: (to) => this.#streams.listening(to, this.#context?.now() ?? 0),
       streamPlace: (to, name) => this.#streams.place(to, name),
       title: (text) => {
-        context().title(page, fit(text, LONGEST_TITLE));
+        context().title(page, fit(text, context().limits().budgets.titleCharacters));
       },
+      limits: () => context().limits(),
       below: (bound) => context().below(bound),
       log: (text) => {
         context().log(text);

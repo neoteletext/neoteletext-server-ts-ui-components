@@ -3,6 +3,7 @@
 // and the event bus. Calls made outside a server call (none should be) are
 // held until the next one.
 
+import type { Limits } from "../kit.ts";
 import type { Bus } from "./bus.ts";
 import type { LibraryEvents } from "./library-events.ts";
 import type { Sound } from "./sound.ts";
@@ -41,6 +42,8 @@ export interface Services {
   listening(session: number): Listening | null;
   /** Where the viewer's stream of `name` last stopped short of its end, in milliseconds, or null: for taking it up again. */
   streamPlace(session: number, name: string): number | null;
+  /** The standard's maxima and the server's budgets, as the server's `start` gave them: a page holds up to `standard.numberedSubpages` sub-pages. */
+  limits(): Limits;
   /** A pseudo-random number below `bound`: for games, never for secrets. */
   below(bound: number): number;
   /** Reports a line in the server's log. */

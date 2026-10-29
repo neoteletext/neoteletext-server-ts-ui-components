@@ -58,7 +58,7 @@ export class Mount implements ComponentHost {
     this.#rootElement = root;
     this.#host = host;
     this.services = host.services;
-    this.#draw = { page, rollover: host.rollover, report: host.report };
+    this.#draw = { page, rollover: host.rollover, report: host.report, mostSubPages: (): number => host.services.limits().standard.numberedSubpages };
     this.#tree = new Tree({
       components: this,
       unmounted: (node): void => {

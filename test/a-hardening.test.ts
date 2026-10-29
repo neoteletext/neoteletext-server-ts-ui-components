@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 
-import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, SERVER_LIMITS, text } from "neoteletext-server-ts-protocol/testing";
 import {
   type Article,
   articleLines,
@@ -27,7 +27,7 @@ import {
   type Size,
   StatusBar,
 } from "../src/index.ts";
-import { Attribute, Colour, MOST_SUBPAGES, mosaicColour, Screen, textColour } from "../src/kit.ts";
+import { Attribute, Colour, mosaicColour, Screen, textColour } from "../src/kit.ts";
 
 const PAGE = 0x150;
 const PROMPTS = [
@@ -137,6 +137,17 @@ test("a block of more lines than a call takes as arguments is laid out", () => {
 test("a day of more articles than a call takes as arguments is rendered, on every sub-page a page has", () => {
   const article: Article = { page: 0x200, title: "A story", writer: "A writer", date: 0, blocks: [], tags: [] };
   const articles = Array.from({ length: TOO_MANY_ARGUMENTS }, (_, index) => ({ ...article, page: article.page + index }));
-  const pages = new DayPages({ background: Colour.Blue, prompts: PROMPTS, days: [{ name: "Today", articles }] }).render();
-  assert.ok(Array.isArray(pages) && pages.length === MOST_SUBPAGES);
+  const most = 64;
+  const limits = { ...SERVER_LIMITS, standard: { ...SERVER_LIMITS.standard, numberedSubpages: most } };
+  const channel = new Harness(
+    [
+      new ComponentChannel(
+        [{ page: 0x200, title: "Today", root: (): Element => h(DayPages, { background: Colour.Blue, prompts: PROMPTS, days: [{ name: "Today", articles }] }) }],
+        { opus: fakeOpus() },
+      ),
+    ],
+    { limits },
+  );
+  assert.deepEqual(channel.errors, []);
+  assert.equal(channel.sharedPages(0x200).length, most, "every sub-page start allows");
 });

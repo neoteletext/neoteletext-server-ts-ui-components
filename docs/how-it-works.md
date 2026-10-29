@@ -133,7 +133,7 @@ repositories beside this one.
 
 | Limit | Where |
 | --- | --- |
-| 800 pages, 64 sub-pages a page, titles of 120 characters | the server, and the protocol kit's src/wire/limits.ts |
+| The standard's 2,022 pages a channel and 8,069 sub-pages a whole page (8,190 put by sub-code), titles of 120 characters: what the server's `start` says, read with `services.limits()`; the library writes none of them | teletext-server's docs/applications.md §2 |
 | A line of at most 16 MiB; pages declared within 30 seconds of starting | docs/applications.md §1 |
 | 32 controls a page, on rows 1 to 23 | INPUT.md §7.3 |
 | The browser sends at most 120 input units a second | INPUT.md §5.1 |

@@ -2,9 +2,8 @@
 // the components on it need of their page (needs.ts) where the spec does
 // not say: found once, by a probe of its root.
 
-import { LONGEST_TITLE, type PageEntry } from "../kit.ts";
+import type { PageEntry } from "../kit.ts";
 import type { ColourTable } from "./rollover.ts";
-import { fit } from "./text.ts";
 import type { Element } from "./element.ts";
 import { type PageNeeds, probeNeeds } from "./needs.ts";
 import type { PageParams } from "./services.ts";
@@ -54,11 +53,16 @@ export class SpecNeeds {
     return spec.perViewer ?? this.#of(spec).ownCopy;
   }
 
-  /** `spec` as the kit lists it in the channel's contents, its title cut to the kit's bound. */
+  /**
+   * `spec` as the kit lists it in the channel's contents. Its title is
+   * declared as written: the declaration comes before the server's
+   * `start` says how long a title may be, and the server refuses one too
+   * long with the reason in its log.
+   */
   entryOf(spec: PageSpec): PageEntry {
     const entry: { page: number; title: string; section?: string; ownsDigits?: boolean; ownsColourKeys?: boolean } = {
       page: spec.page,
-      title: fit(spec.title, LONGEST_TITLE),
+      title: spec.title,
     };
     if (spec.section !== undefined) {
       entry.section = spec.section;

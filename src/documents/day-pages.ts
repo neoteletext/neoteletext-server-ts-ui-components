@@ -6,7 +6,7 @@
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
 import { BODY_ROWS } from "../frame/frame.ts";
-import { COLUMNS, MOST_SUBPAGES } from "../kit.ts";
+import { COLUMNS } from "../kit.ts";
 import { Headline, type HeadlineProps } from "../text/news.ts";
 import { framed, partName, type Article, type Framing } from "./document.ts";
 
@@ -20,7 +20,8 @@ export interface Day {
 export interface DayPagesProps extends Framing {
   /**
    * The days, each on as many sub-pages as its headlines need, named by
-   * the day. A page has MOST_SUBPAGES sub-pages at most: the headlines and
+   * the day. A page has as many sub-pages as the server's `start` allows
+   * a whole page (`limits().standard.numberedSubpages`): the headlines and
    * days past them are left out, and are not walked.
    */
   readonly days: readonly Day[];
@@ -60,11 +61,12 @@ function subPagesOf(articles: readonly Article[], most: number): Article[][] {
 export class DayPages extends Component<DayPagesProps> {
   override render(): Child {
     const out: Child[] = [];
+    const most = this.services.limits().standard.numberedSubpages;
     for (const [day, { name, articles }] of this.props.days.entries()) {
-      if (out.length >= MOST_SUBPAGES) {
+      if (out.length >= most) {
         break;
       }
-      const parts = subPagesOf(articles, MOST_SUBPAGES - out.length);
+      const parts = subPagesOf(articles, most - out.length);
       for (const [index, part] of parts.entries()) {
         out.push(
           framed(

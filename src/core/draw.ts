@@ -9,7 +9,7 @@
 // another sub-page's component. Display attributes are how a sub-page
 // looks, so each sub-page carries those it paints.
 
-import { Colour, COLUMNS, MOST_SUBPAGES, ROWS, Screen, tti as subpagesTti } from "../kit.ts";
+import { Colour, COLUMNS, ROWS, Screen, tti as subpagesTti } from "../kit.ts";
 import { Canvas, nothingDeclared, type PageRequests, type Region } from "./canvas.ts";
 import type { Box, LayoutChild, Size } from "./layout.ts";
 import { type LocalEnhancement, localEnhancement } from "./enhancement.ts";
@@ -26,6 +26,8 @@ export interface DrawHost {
   /** The page's controls' rollover colours (rollover.ts), or null for the receiver's own hover look. */
   readonly rollover: ColourTable | null;
   readonly report: (text: string) => void;
+  /** The most sub-pages a whole page may have, as the server's `start` said. */
+  readonly mostSubPages: () => number;
 }
 
 /** What the first sub-page's cells reach, for the pointer. */
@@ -58,10 +60,11 @@ export function shownSubPages(root: Node | null, host: DrawHost): FoundSubPage[]
   if (root !== null) {
     visit(root);
   }
-  if (found.length > MOST_SUBPAGES) {
-    host.report(`page ${host.page.toString(16)}: ${found.length} sub-pages, the most is ${MOST_SUBPAGES}; the rest are left out`);
+  const most = host.mostSubPages();
+  if (found.length > most) {
+    host.report(`page ${host.page.toString(16)}: ${found.length} sub-pages, the most is ${most}; the rest are left out`);
   }
-  return found.slice(0, MOST_SUBPAGES);
+  return found.slice(0, most);
 }
 
 /** `node` as its parent's layout sees it: measured, then placed, which lays out what is under it. */
@@ -127,7 +130,7 @@ function keptControls(declared: readonly DeclaredControl[], { kept }: LocalEnhan
 }
 
 /** A sub-page drawn from its components: its TTI, and on the first sub-page what its cells reach. */
-function drawScreen(node: Node, links: SubPageLinks, subpage: number, first: boolean, host: DrawHost): { readonly text: string; readonly reach: Reach } {
+function drawScreen(node: Node, links: SubPageLinks, first: boolean, host: DrawHost): { readonly text: string; readonly reach: Reach } {
   const screen = new Screen();
   const requests: PageRequests = { cursor: null, displayAttributes: [] };
   const grid = emptyGrid();
@@ -151,23 +154,22 @@ function drawScreen(node: Node, links: SubPageLinks, subpage: number, first: boo
   const rollover = controls.length > 0 && host.rollover !== null ? [rolloverLine(host.rollover)] : [];
   const lines = [...rollover, ...enhancement.lines];
   return {
-    text: subpagesTti(host.page, [{ screen, subpage }]) + lines.map((line) => `${line}\n`).join(""),
+    text: subpagesTti(host.page, [{ screen }]) + lines.map((line) => `${line}\n`).join(""),
     reach: { grid, controls },
   };
 }
 
-/** The sub-pages as one TTI text, numbered 1 to n, or 0 when there is one, and what the first one's cells reach. */
+/** The sub-pages as one TTI text, in their order, which the server numbers (its docs/applications.md section 3.2), and what the first one's cells reach. */
 export function draw(shown: readonly FoundSubPage[], host: DrawHost): { readonly tti: string; readonly reach: Reach } {
-  const numbered = (index: number): number => (shown.length === 1 ? 0 : index + 1);
   let reach = NO_REACH;
   const parts = shown.map(({ node, subPage }, index) => {
     const links = subPage.links();
     if (subPage instanceof RawSubPage) {
       const { tti: text, title, background, foreground } = subPage.props;
       const band = title === undefined ? null : { title, background: background ?? Colour.Blue, foreground: foreground ?? Colour.White };
-      return rawTti(text, host.page, numbered(index), links.fastext, band);
+      return rawTti(text, host.page, links.fastext, band);
     }
-    const drawn = drawScreen(node, links, numbered(index), index === 0, host);
+    const drawn = drawScreen(node, links, index === 0, host);
     if (index === 0) {
       reach = drawn.reach;
     }
