@@ -3,6 +3,19 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 7.0.2 (31 October 2026)
+
+### To take it
+
+- **Built on `neoteletext-server-ts-protocol` 1.0.2**, which numbers a
+  page's sub-pages by the code of practice (the engine's REQ-317 version
+  2): one sub-page 0000; 2 to 79 sub-pages 0001 to 0079; more than 79
+  only sub-codes above 0079, the decimal ones first from 0100, then those
+  with a hexadecimal digit, at most 8,069. A page of 80 or more sub-pages
+  is numbered from 0100, not 0001. A program installs kit 1.0.2 beside
+  this release and changes nothing of its own. The 7.0.0 entry's
+  `decimal_subpages` numbering no longer holds.
+
 ## 7.0.0 (30 October 2026)
 
 ### To take it
