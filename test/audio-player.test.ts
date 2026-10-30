@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { soundsOf } from "./sound-messages.ts";
 
 import { type Harness, text } from "neoteletext-server-ts-protocol/testing";
 import { AudioPlayer, type AudioPlayerProps, type Element, h, type Track } from "../src/index.ts";
@@ -41,7 +42,7 @@ const row = (seen: Harness, at: number, session = 1): string => text(seen.seen(s
 
 /** The gains the receiver was told for the viewer's streams, in order: on each play, and each change. */
 function gains(seen: Harness): number[] {
-  return seen.sounds(1).flatMap((message) => {
+  return soundsOf(seen, 1).flatMap((message) => {
     const member = message["play"] ?? message["gain"];
     return typeof member === "object" && member !== null && "gain" in member && typeof member.gain === "number" ? [member.gain] : [];
   });

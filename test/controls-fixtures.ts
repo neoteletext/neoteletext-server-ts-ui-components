@@ -18,6 +18,7 @@ import {
   type Size,
 } from "../src/index.ts";
 import { localEnhancement } from "../src/core/enhancement.ts";
+import { keptTti } from "./kept-tti.ts";
 import { Colour } from "../src/kit.ts";
 
 export const PAGE = 0x150;
@@ -36,15 +37,11 @@ export function frame(title: string, ...body: Child[]): ReturnType<typeof h> {
   return h(Frame, { title, background: Colour.Blue, prompts: PROMPTS }, ...body);
 }
 
-/** The TTI of the copy of `page` viewer 1 sees: its own while it has one, else the channel's (a viewer's copy that comes to match the channel's is released, not published again). */
+/** The TTI of the copy of `page` viewer 1 sees: its own while it has one, else the channel's (kept-tti.ts). */
 export function latestTti(channel: Harness, page: number): string {
-  const ofPage = channel.sent.filter((message) => Number.parseInt(String(message["page"]), 16) === page);
-  const own = ofPage.findLast(
-    (message) => (message["type"] === "publish" || message["type"] === "release") && message[message["type"] === "publish" ? "owner" : "session"] === 1,
-  );
-  const seen = own?.["type"] === "publish" ? own : ofPage.findLast((message) => message["type"] === "publish" && message["owner"] === "channel");
+  const seen = keptTti(channel, page);
   assert.ok(seen !== undefined, `page ${page.toString(16)} was published`);
-  return String(seen["tti"]);
+  return seen;
 }
 
 /** The controls of the first sub-page of the latest copy of `page`. */

@@ -3,6 +3,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { soundsOf } from "./sound-messages.ts";
 
 import { Harness, text } from "neoteletext-server-ts-protocol/testing";
 import { AudioPlayer, CHIP_CELLS, Collapsible, DISABLED, type Element, h, NowPlaying, Pagination, Slider, TabView, Text, Tree } from "../src/index.ts";
@@ -16,12 +17,12 @@ test("a stream pauses where it was heard to, sending nothing, and resumes from t
   seen.runUntil(1_000);
   seen.press(1, "p");
   assert.match(text(seen.own(1, PAGE), BODY_ROW), /paused 1000/u);
-  assert.ok("stop" in (seen.sounds(1).at(-1) ?? {}), "the receiver stops it");
-  const sent = seen.sounds(1).length;
+  assert.ok("stop" in (soundsOf(seen, 1).at(-1) ?? {}), "the receiver stops it");
+  const sent = soundsOf(seen, 1).length;
   seen.runUntil(3_000);
-  assert.equal(seen.sounds(1).length, sent, "nothing is sent while paused");
+  assert.equal(soundsOf(seen, 1).length, sent, "nothing is sent while paused");
   seen.press(1, "r");
-  const generations = seen.sounds(1).flatMap((message) => generationOf(message["opus_live"]) ?? []);
+  const generations = soundsOf(seen, 1).flatMap((message) => generationOf(message["opus_live"]) ?? []);
   assert.deepEqual(generations, [1, 2], "resumed as a new stream");
   seen.runUntil(3_500);
   seen.press(1, "x");

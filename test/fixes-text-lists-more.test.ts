@@ -180,7 +180,7 @@ test("a day of more headlines than a sub-page holds goes on over further sub-pag
 
 test("a day of more headlines than every sub-page holds stops at the most sub-pages the server's start allows a page", () => {
   for (const most of [3, 100]) {
-    const limits = { ...SERVER_LIMITS, standard: { ...SERVER_LIMITS.standard, numberedSubpages: most } };
+    const limits = { ...SERVER_LIMITS, standard: { ...SERVER_LIMITS.standard, subpages: most } };
     const articles = Array.from({ length: 20 * (most + 1) }, (_, index) => article(0x200 + index));
     assert.equal(subPages(() => h(DayPages, { background: Colour.Blue, prompts: PROMPTS, days: [{ name: "Today", articles }] }), limits).length, most);
   }

@@ -3,6 +3,20 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 7.0.0 (30 October 2026)
+
+### To take it
+
+- **Built on `neoteletext-server-ts-protocol` 1.0.0, protocol version 2**
+  (DEC-1482): the server asks the program for each tab's sub-page
+  (`connected`, `selected`) and the kit answers from the pages the
+  library publishes, one sub-page at a time; nothing is published for
+  everyone in the server any more. A program installs kit 1.0.0 beside
+  this release and needs no change of its own to its components.
+- **`limits().standard.numberedSubpages` is gone:** a page holds up to
+  `limits().standard.subpages` sub-pages (8,190), the first
+  `decimal_subpages` of them numbered with sub-codes a viewer can key.
+
 ## 5.0.0 (28 October 2026)
 
 ### To take it

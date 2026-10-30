@@ -41,24 +41,30 @@ repositories beside this one.
    (`src/core/draw.ts`, `controls.ts`, `rollover.ts`).
 4. **It is published.** The shared copy is published only when its TTI
    changed; a viewer's own copy only while it differs from the shared one
-   (`src/core/publish.ts`). The protocol kit writes it as a `publish`
-   line, its owner the channel or a session.
-5. **The server takes it.** It checks the line whole and reads the TTI
-   with the engine's reader. It writes nothing in row 0: columns 8 to 39
-   are the page's own, blank unless the page writes there, and columns 0
-   to 7 the receiver's, where the browser shows the page's number
-   (EN 300 706 clause 9.3.1.4; `teletext-server`, docs/requirements.md
-   §11). A shared page is encoded once for every viewer.
-6. **It is sent.** As 42-byte teletext packets, in binary WebSocket
-   messages, beside the channel's `channel.json`, `contents.txt` and page
-   files (`teletext-server`, crates/teletext-native/src/http.rs).
+   (`src/core/publish.ts`). The protocol kit (version 1.0.0, protocol 2,
+   DEC-1482) reads the TTI into typed sub-pages, numbers a whole page's
+   sub-pages by place, and keeps them: nothing goes to the server yet.
+5. **It is sent, one sub-page at a time.** The server asks the program:
+   `connected` once for each browser tab, answered by the kit with one
+   `reply` holding the channel's index and the one sub-page the tab
+   selected; `selected` for each selection, answered with exactly one
+   sub-page: the one selected, or for 3F7F (the page) its first in
+   ascending sub-code order. A page of several sub-pages also sends its
+   sub-page list (`subpages`). A copy published again sends the changed
+   sub-page to the tabs whose selection shows it, named; nothing rotates
+   (DEC-1500, DEC-1526).
+6. **The server relays it.** It checks every message against its schema,
+   encodes the sub-page with the engine's encoder and sends it as 42-byte
+   teletext packets in binary WebSocket messages, the index and the
+   sub-page list as records (`teletext-server`, docs/applications.md).
+   It writes nothing in row 0: columns 8 to 39 are the page's own, and
+   columns 0 to 7 the receiver's (EN 300 706 clause 9.3.1.4).
 7. **The browser draws it.** Its decoder renders the page, 480 by 500, in
    the Bedstead font; the window scales it for the screen
-   (`neoteletext-browser`, docs/architecture.md §10). A page of several
-   sub-pages opens at its first; each is a page of its own, which the
-   viewer steps to and the browser never cycles (decision 111). A
-   channel is not told which sub-page a viewer has up, so only the
-   first declares controls.
+   (`neoteletext-browser`, docs/architecture.md §10). Each sub-page is
+   selected and shown on its own; the browser never cycles them. Every
+   sub-page declares its controls with the first's rollover colours only
+   on the first.
 
 ## A key: from the viewer to a component, and back
 

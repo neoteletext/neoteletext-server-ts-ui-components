@@ -6,6 +6,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { soundsOf } from "./sound-messages.ts";
 
 import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
 import {
@@ -232,13 +233,13 @@ test("a stream is sent as a live Opus sound, its packets ahead of real time a ti
   harness.join(9, PAGE);
   harness.press(9, Key.Enter);
   const kinds = (): string[] =>
-    harness.sounds(9).map((message) => Object.keys(message).find((key) => ["opus_live", "play", "opus_packets", "stop"].includes(key)) ?? "");
+    soundsOf(harness, 9).map((message) => Object.keys(message).find((key) => ["opus_live", "play", "opus_packets", "stop"].includes(key)) ?? "");
   assert.deepEqual(kinds().slice(0, 3), ["opus_live", "play", "opus_packets"], "the live object, its play bound to the page, the first packets");
   assert.ok(!kinds().includes(""), "Opus alone: nothing in another format");
   // The key's press and its release each start the stream: the latest generation is the one heard.
-  const latest = (): number => Math.max(...harness.sounds(9).flatMap((message) => generationOf(message["opus_live"]) ?? []));
+  const latest = (): number => Math.max(...soundsOf(harness, 9).flatMap((message) => generationOf(message["opus_live"]) ?? []));
   const packets = (): { readonly first: number; readonly count: number }[] =>
-    harness.sounds(9).flatMap((message) => {
+    soundsOf(harness, 9).flatMap((message) => {
       const sent = message["opus_packets"];
       return typeof sent === "object" &&
         sent !== null &&

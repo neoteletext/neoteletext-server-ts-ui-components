@@ -5,6 +5,7 @@
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { soundsOf } from "./sound-messages.ts";
 
 import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
 import { Component, ComponentChannel, type Element, h, type KeyEvent, sound, Text, tone } from "../src/index.ts";
@@ -58,7 +59,7 @@ function channel(root: () => Element, opus: OpusEncoder): Harness {
 }
 
 function members(harness: Harness, session: number): string[] {
-  return harness.sounds(session).map((message) => Object.keys(message).find((key) => key !== "type" && key !== "to") ?? "");
+  return soundsOf(harness, session).map((message) => Object.keys(message).find((key) => key !== "type") ?? "");
 }
 
 test("a stored sound is encoded once, sent once to each viewer as Opus, and played after by its handle", () => {

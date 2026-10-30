@@ -102,10 +102,7 @@ test("a viewer's own copy is sent only once it differs from the shared one, and 
   assert.match(text(harness.own(7, PAGE), 3), /count 1/u);
   assert.match(text(harness.shared(PAGE), 3), /count 0/u, "the shared copy is unchanged");
   harness.open(7, OTHER);
-  assert.ok(
-    harness.sent.some((message) => message["type"] === "release" && message["session"] === 7),
-    "leaving releases its own copy",
-  );
+  assert.equal(harness.ownPages(7, PAGE), undefined, "leaving releases its own copy");
   // Each copy's counter is given the keys at its first draw and renders again for it (the mount forces it: what a component renders may say whether it has the keys), so each mount has one update with nothing changed.
   assert.deepEqual(events, ["mount count", "update count 0->0", "mount count", "update count 0->0", "update count 0->1", "unmount count"]);
 });

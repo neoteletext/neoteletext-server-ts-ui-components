@@ -138,7 +138,7 @@ test("a day of more articles than a call takes as arguments is rendered, on ever
   const article: Article = { page: 0x200, title: "A story", writer: "A writer", date: 0, blocks: [], tags: [] };
   const articles = Array.from({ length: TOO_MANY_ARGUMENTS }, (_, index) => ({ ...article, page: article.page + index }));
   const most = 64;
-  const limits = { ...SERVER_LIMITS, standard: { ...SERVER_LIMITS.standard, numberedSubpages: most } };
+  const limits = { ...SERVER_LIMITS, standard: { ...SERVER_LIMITS.standard, subpages: most } };
   const channel = new Harness(
     [
       new ComponentChannel(

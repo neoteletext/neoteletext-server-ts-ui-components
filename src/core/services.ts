@@ -42,7 +42,7 @@ export interface Services {
   listening(session: number): Listening | null;
   /** Where the viewer's stream of `name` last stopped short of its end, in milliseconds, or null: for taking it up again. */
   streamPlace(session: number, name: string): number | null;
-  /** The standard's maxima and the server's budgets, as the server's `start` gave them: a page holds up to `standard.numberedSubpages` sub-pages. */
+  /** The standard's maxima and the server's budgets, as the server's `start` gave them: a page holds up to `standard.subpages` sub-pages. */
   limits(): Limits;
   /** A pseudo-random number below `bound`: for games, never for secrets. */
   below(bound: number): number;

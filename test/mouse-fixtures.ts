@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 
 import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { keptTti } from "./kept-tti.ts";
 import { Action, type Box, type Child, Component, ComponentChannel, type Element, Frame, h, type PageSpec, readControls } from "../src/index.ts";
 import { Colour } from "../src/kit.ts";
 
@@ -38,13 +39,9 @@ export function viewer(...body: Child[]): Harness {
 
 /** The controls of the copy of the page the viewer sees, in reading order: its own while it has one, else the channel's, as Harness.seen reads the rows. */
 export function controls(page: Harness): Box[] {
-  const ofPage = page.sent.filter((message) => Number.parseInt(String(message["page"]), 16) === PAGE);
-  const own = ofPage.findLast(
-    (message) => (message["type"] === "publish" || message["type"] === "release") && message[message["type"] === "publish" ? "owner" : "session"] === 1,
-  );
-  const seen = own?.["type"] === "publish" ? own : ofPage.findLast((message) => message["type"] === "publish" && message["owner"] === "channel");
+  const seen = keptTti(page, PAGE);
   assert.ok(seen !== undefined, "the page was published");
-  return (readControls(String(seen["tti"]))[0] ?? []).toSorted((a, b) => a.row - b.row || a.column - b.column);
+  return (readControls(seen)[0] ?? []).toSorted((a, b) => a.row - b.row || a.column - b.column);
 }
 
 /** The row `row` of the viewer's page as text. */
