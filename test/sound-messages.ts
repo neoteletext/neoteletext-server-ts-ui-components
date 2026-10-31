@@ -1,6 +1,6 @@
 // The sound lines a viewer was sent, each read as its kind and the kind's
 // own fields ({ opus_live: { handle, generation, … } }), as the tests read
-// them: protocol 2 writes a sound's kind as a field beside the others.
+// them: protocol 3 writes a sound's kind as a field beside the others.
 
 import type { Harness, Sent } from "neoteletext-server-ts-protocol/testing";
 

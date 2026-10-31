@@ -32,7 +32,7 @@ What a test can do and see:
 | `clickLeft(session, column, row)`, `wheel`, `hover` | The pointer. |
 | `advance(ms)`, `runUntil(ms)` | The clock, waking the channel when it asked to be. |
 | `seen(session, page).rows`, `text(rows, row)`, `shows(rows, words)` | What the viewer sees. |
-| `gotos(session)`, `at(session)` | Where the viewer was sent, and is. |
+| `redirects(session)`, `addressRedirects(session)`, `at(session)` | The pages and the addresses the viewer was sent to, and where they are. |
 | `sounds(session)` | The sound lines sent to the viewer. |
 | `errors` | What the channel reported failing. |
 

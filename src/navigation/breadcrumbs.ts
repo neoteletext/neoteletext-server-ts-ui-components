@@ -70,7 +70,7 @@ export class Breadcrumbs extends Component<BreadcrumbsProps> {
     if (crumb?.page === undefined) {
       return false;
     }
-    this.services.goto(event.session, crumb.page);
+    this.services.redirect(event.session, crumb.page);
     return true;
   }
 }

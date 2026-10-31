@@ -24,7 +24,7 @@ export interface PageSpec {
   readonly keepWhileAway?: boolean;
   /** Its controls' colours under the pointer (rollover.ts): the library's ROLLOVER_COLOURS when absent, null for the receiver's own hover look. */
   readonly rollover?: ColourTable | null;
-  /** The page's root element; on a page that keeps a copy for each viewer, made with what the viewer was sent there with (Services.goto), if anything. */
+  /** The page's root element; on a page that keeps a copy for each viewer, made with what the viewer was sent there with (Services.redirect), if anything. */
   root(params?: PageParams): Element;
 }
 

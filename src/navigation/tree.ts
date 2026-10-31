@@ -231,7 +231,7 @@ export class Tree extends Control<TreeProps, TreeState> {
     this.activate(item.node.label, session);
     this.props.onChoose?.(item.node, session);
     if (item.node.page !== undefined) {
-      this.services.goto(session, item.node.page);
+      this.services.redirect(session, item.node.page);
     }
   }
 

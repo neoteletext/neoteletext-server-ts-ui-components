@@ -41,7 +41,7 @@ repositories beside this one.
    (`src/core/draw.ts`, `controls.ts`, `rollover.ts`).
 4. **It is published.** The shared copy is published only when its TTI
    changed; a viewer's own copy only while it differs from the shared one
-   (`src/core/publish.ts`). The protocol kit (version 1.0.0, protocol 2,
+   (`src/core/publish.ts`). The protocol kit (version 2.0.0, protocol 3,
    DEC-1482) reads the TTI into typed sub-pages, numbers a whole page's
    sub-pages by place, and keeps them: nothing goes to the server yet.
 5. **It is sent, one sub-page at a time.** The server asks the program:
@@ -93,7 +93,8 @@ repositories beside this one.
    is drawn again, and what changed is published. After each input the
    server tells the browser how much input it has acted on (INPUT.md
    §7.1); the browser draws nothing of what is typed, the page does. A
-   component sending the viewer elsewhere (`goto`) does it the same way.
+   component sending the viewer elsewhere (`redirect`, to a page or to
+   another channel's address) does it the same way.
 6. **The browser draws a control's look under the pointer itself**, and
    sends nothing for it (INPUT.md §9.7).
 

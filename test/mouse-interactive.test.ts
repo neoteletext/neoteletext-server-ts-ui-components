@@ -80,7 +80,7 @@ test("a roulette spins on a click on its prompt; while it spins its headline is 
   );
   const headline = controlBy(page, "A robot arm");
   click(page, headline);
-  assert.deepEqual(page.gotos(1), [0x201]);
+  assert.deepEqual(page.redirects(1), [0x201]);
   click(page, controlBy(page, "spin again"));
   wait(page, SPIN_STEPS_MS[0]);
   assert.match(

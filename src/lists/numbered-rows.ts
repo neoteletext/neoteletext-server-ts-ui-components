@@ -62,7 +62,7 @@ export class NumberedRows extends Component<NumberedRowsProps> {
     if (entry === undefined) {
       return false;
     }
-    this.services.goto(event.session, entry.page);
+    this.services.redirect(event.session, entry.page);
     return true;
   }
 }

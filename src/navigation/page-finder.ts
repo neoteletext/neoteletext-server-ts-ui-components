@@ -40,7 +40,7 @@ export class PageFinder extends Component<PageFinderProps> {
       onChoose: (index: number, session: number) => {
         const found = pages[index];
         if (found !== undefined) {
-          this.services.goto(session, found.page);
+          this.services.redirect(session, found.page);
         }
       },
     });

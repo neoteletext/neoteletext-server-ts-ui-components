@@ -67,7 +67,7 @@ export class Headline extends Component<HeadlineProps> {
     if (this.props.page === undefined || this.props.linked === false || event.region !== LINK) {
       return false;
     }
-    this.services.goto(event.session, this.props.page);
+    this.services.redirect(event.session, this.props.page);
     return true;
   }
 }

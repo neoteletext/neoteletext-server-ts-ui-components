@@ -97,7 +97,7 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
     }
     const article = this.state.article === null ? undefined : this.props.articles[this.state.article];
     if (isPress(event, Key.Enter) && article !== undefined) {
-      this.services.goto(event.session, article.page);
+      this.services.redirect(event.session, article.page);
       return true;
     }
     if (isPress(event, Key.Enter) || isPress(event, " ")) {

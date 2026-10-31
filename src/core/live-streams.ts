@@ -9,7 +9,11 @@
 
 import { type Context, FULL_GAIN, type OpusEncoder } from "../kit.ts";
 import { LiveStream } from "./live-stream.ts";
+import type { Services } from "./services.ts";
 import { FIRST_PACKETS_MS, type Listening, SECOND_MS, STREAM_CHANNEL, STREAM_HANDLE, type StreamSource, TICK_MS, WRAP } from "./stream.ts";
+
+/** What a page's components reach the viewer's stream by. */
+type StreamServices = Pick<Services, "stream" | "stopStream" | "pauseStream" | "resumeStream" | "seekStream" | "streamGain" | "listening" | "streamPlace">;
 
 /** The places kept for each viewer: a long listening session's worth of tracks. */
 const MOST_PLACES = 64;
@@ -26,6 +30,32 @@ export class LiveStreams {
 
   constructor(encoder: OpusEncoder) {
     this.#encoder = encoder;
+  }
+
+  /** The services of the page `page`, with `context` for the server call in hand and `now` for the time without one. */
+  services(context: () => Context, page: number, now: () => number): StreamServices {
+    return {
+      stream: (source, to, fromMs = 0) => {
+        this.start(context(), to, page, source, LiveStreams.sampleAt(source, fromMs));
+      },
+      stopStream: (to) => {
+        this.stop(context(), to);
+      },
+      pauseStream: (to) => {
+        this.pause(context(), to);
+      },
+      resumeStream: (to) => {
+        this.resume(context(), to);
+      },
+      seekStream: (to, ms) => {
+        this.seek(context(), to, ms);
+      },
+      streamGain: (to, gain) => {
+        this.setGain(context(), to, gain);
+      },
+      listening: (to) => this.listening(to, now()),
+      streamPlace: (to, name) => this.place(to, name),
+    };
   }
 
   start(context: Context, session: number, page: number, source: StreamSource, from = 0): void {

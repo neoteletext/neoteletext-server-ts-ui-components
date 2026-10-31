@@ -1,5 +1,5 @@
 // What a mounted component reaches of the channel, through its mount: the
-// viewer it is drawn for, the clock, the protocol's goto and title, sounds
+// viewer it is drawn for, the clock, the protocol's redirect and title, sounds
 // and the event bus. Calls made outside a server call (none should be) are
 // held until the next one.
 
@@ -22,7 +22,9 @@ export interface Services {
   /** The real time, in milliseconds since the Unix epoch, UTC. */
   epochMs(): number;
   /** Sends a viewer to a page (docs/applications.md section 3.3), opened with `params` when given: a page whose root takes them shows that one of many. */
-  goto(session: number, page: number, params?: PageParams): void;
+  redirect(session: number, page: number, params?: PageParams): void;
+  /** Sends a viewer to another channel's address: their receiver shows a notice, and then opens it by its own rules. */
+  redirect(session: number, address: string): void;
   /** Gives this page a new title in the channel's contents (section 3.5). */
   title(text: string): void;
   /** Plays a sound to one viewer, or to everyone with this page open. */

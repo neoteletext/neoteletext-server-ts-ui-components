@@ -1,5 +1,5 @@
 // The TTI of the copy of a page a viewer sees, made from the typed
-// sub-pages the kit keeps and sends (protocol 2 sends no TTI), so the
+// sub-pages the kit keeps and sends (protocol 3 sends no TTI), so the
 // tests that read a page's rows, cursor and OL,26 controls read them as
 // before: each sub-page's PN, OL, FL and CU lines, and its packets X/26 as
 // OL,26 lines of a designation code and 39 characters of six bits each.

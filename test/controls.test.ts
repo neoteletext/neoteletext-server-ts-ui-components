@@ -155,12 +155,12 @@ test("a click acts only on a control's cells: past a button's band, on a switch'
   page.clickLeft(1, 5, BODY_ROW + 1);
   page.clickLeft(1, 30, BODY_ROW + 2);
   page.clickLeft(1, 20, BODY_ROW + 4);
-  assert.deepEqual([pressed, ticks, page.gotos(1)], [[], [], []]);
+  assert.deepEqual([pressed, ticks, page.redirects(1)], [[], [], []]);
   page.clickLeft(1, 5, BODY_ROW);
   page.clickLeft(1, 27, BODY_ROW + 1);
   page.clickLeft(1, 3, BODY_ROW + 2);
   page.clickLeft(1, 3, BODY_ROW + 4);
-  assert.deepEqual([pressed, ticks, page.gotos(1)], [["press", "switch true"], [[0]], [0x151]]);
+  assert.deepEqual([pressed, ticks, page.redirects(1)], [["press", "switch true"], [[0]], [0x151]]);
 });
 
 test("a dialog's button answers only on its band, not on the dialog's background after it", () => {

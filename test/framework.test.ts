@@ -113,7 +113,7 @@ test("keys go to the focused component; pointer clicks to the component drawn in
   ]);
   harness.join(3, PAGE);
   harness.clickLeft(3, 10, 3);
-  assert.deepEqual(harness.gotos(3), [OTHER]);
+  assert.deepEqual(harness.redirects(3), [OTHER]);
 });
 
 test("scrolling text moves with the keys and its scroll bar can be dragged", () => {

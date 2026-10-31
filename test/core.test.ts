@@ -34,6 +34,8 @@ import { generationOf } from "./components-fixtures.ts";
 
 const PAGE = 0x150;
 const OTHER = 0x151;
+/** Another channel's address. */
+const ELSEWHERE = "https://elsewhere.example/channel/";
 const PROMPTS = [
   ["Index", 0x100],
   ["", null],
@@ -186,6 +188,18 @@ class Shows extends Component<{ readonly what: string }> {
   }
 }
 
+/** Sends the viewer who presses Enter to another channel. */
+class SendsAway extends Component {
+  override focusable(): boolean {
+    return true;
+  }
+
+  override onKey(event: { readonly session: number }): boolean {
+    this.services.redirect(event.session, ELSEWHERE);
+    return true;
+  }
+}
+
 /** Sends the viewer who presses Enter to the other page, with what it is to show. */
 class Sends extends Component {
   override focusable(): boolean {
@@ -193,7 +207,7 @@ class Sends extends Component {
   }
 
   override onKey(event: { readonly session: number }): boolean {
-    this.services.goto(event.session, OTHER, { what: "article 42" });
+    this.services.redirect(event.session, OTHER, { what: "article 42" });
     return true;
   }
 }
@@ -207,6 +221,14 @@ test("a viewer sent to a page with what it is to show sees it there: the page's 
   harness.press(8, Key.Enter);
   harness.open(8, OTHER);
   assert.match(text(harness.seen(8, OTHER).rows, 3), /showing article 42/u);
+});
+
+test("REQ-1688: a component may send a viewer to another channel", () => {
+  const { harness } = channel([{ page: PAGE, title: "From", root: (): Element => frame("From", h(SendsAway, {})) }]);
+  harness.join(8, PAGE);
+  harness.press(8, Key.Enter);
+  assert.deepEqual([...new Set(harness.addressRedirects(8))], [ELSEWHERE], "onKey hears the press and the release");
+  assert.deepEqual(harness.redirects(8), []);
 });
 
 /** Starts a three-second stream for the viewer who presses Enter. */

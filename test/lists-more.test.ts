@@ -89,5 +89,5 @@ test("a page finder goes to the page found by its name", () => {
   seen.join(1, PAGE);
   seen.typeKeys(1, "wea");
   seen.press(1, Key.Enter);
-  assert.deepEqual(seen.gotos(1), [0x401]);
+  assert.deepEqual(seen.redirects(1), [0x401]);
 });

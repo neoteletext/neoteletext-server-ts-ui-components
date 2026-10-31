@@ -35,7 +35,7 @@ export class PageLink extends Component<PageLinkProps> {
     if (event.region !== LINK) {
       return false;
     }
-    this.services.goto(event.session, this.props.page);
+    this.services.redirect(event.session, this.props.page);
     return true;
   }
 }

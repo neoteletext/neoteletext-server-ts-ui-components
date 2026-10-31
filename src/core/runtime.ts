@@ -216,29 +216,14 @@ export class ComponentChannel implements Application {
       bus: this.bus.at({ page, session }),
       now: () => context().now(),
       epochMs: () => context().epochMs(),
-      goto: (to, target, params) => {
-        this.#goto(context(), to, target, params);
+      redirect: (to: number, target: number | string, params?: PageParams): void => {
+        if (typeof target === "string") {
+          context().redirect(to, target);
+        } else {
+          this.#redirect(context(), to, target, params);
+        }
       },
-      stream: (source, to, fromMs = 0) => {
-        this.#streams.start(context(), to, page, source, LiveStreams.sampleAt(source, fromMs));
-      },
-      stopStream: (to) => {
-        this.#streams.stop(context(), to);
-      },
-      pauseStream: (to) => {
-        this.#streams.pause(context(), to);
-      },
-      resumeStream: (to) => {
-        this.#streams.resume(context(), to);
-      },
-      seekStream: (to, ms) => {
-        this.#streams.seek(context(), to, ms);
-      },
-      streamGain: (to, gain) => {
-        this.#streams.setGain(context(), to, gain);
-      },
-      listening: (to) => this.#streams.listening(to, this.#context?.now() ?? 0),
-      streamPlace: (to, name) => this.#streams.place(to, name),
+      ...this.#streams.services(context, page, () => this.#context?.now() ?? 0),
       title: (text) => {
         context().title(page, fit(text, context().limits().budgets.titleCharacters));
       },
@@ -254,7 +239,7 @@ export class ComponentChannel implements Application {
   }
 
   /** Sends a viewer to a page, with what it is to show: a page they already have open shows it at once. */
-  #goto(context: Context, session: number, page: number, params: PageParams | undefined): void {
+  #redirect(context: Context, session: number, page: number, params: PageParams | undefined): void {
     if (params !== undefined) {
       const pages = this.#params.get(session) ?? new Map<number, PageParams>();
       pages.set(page, params);
@@ -265,7 +250,7 @@ export class ComponentChannel implements Application {
         mount.setRoot(spec.root(params));
       }
     }
-    context.goto(session, page);
+    context.redirect(session, page);
   }
 
   /** Runs `work` in a server call, then publishes what changed and asks for the next wake. */
