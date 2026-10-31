@@ -47,3 +47,15 @@ export function publishChanges(
     }
   }
 }
+
+/** When the channel next needs waking: the earliest of its mounts' timers and `tick`, or null. */
+export function earliestWake(mounts: Iterable<Mount>, tick: number | null): number | null {
+  let earliest = tick;
+  for (const mount of mounts) {
+    const at = mount.nextWake();
+    if (at !== null) {
+      earliest = earliest === null ? at : Math.min(earliest, at);
+    }
+  }
+  return earliest;
+}

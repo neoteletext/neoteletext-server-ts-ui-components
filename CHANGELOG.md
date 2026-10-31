@@ -3,6 +3,19 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 9.0.0 (1 November 2026)
+
+### To take it
+
+- **Built on `neoteletext-server-ts-protocol` 3.0.1, protocol version 4.** A
+  program installs kit 3.0.1 beside this release and changes nothing of its
+  own.
+- **`services.query(session)`** gives the query of the address a viewer
+  opened, and **`services.parameters(session)`** the page parameters of what
+  they selected on this page, both null when there are none, both untrusted
+  text from the viewer, undecoded. The bus's `parameters` event says when a
+  page's change, with null once another selection has left them behind.
+
 ## 7.0.3 (31 October 2026)
 
 ### To take it

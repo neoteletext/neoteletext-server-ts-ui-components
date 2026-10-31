@@ -17,13 +17,14 @@
 // oxlint-disable import/max-dependencies -- the runtime is where the protocol's calls meet the mounts, streams, sounds and publication
 import { type Application, type Context, ffmpegOpus, type Input, type OpusEncoder, type PageEntry, type ServerStats } from "../kit.ts";
 import { EventBus } from "./bus.ts";
+import { ViewerAddresses } from "./viewer-addresses.ts";
 import type { LibraryEvents } from "./library-events.ts";
 import type { PageParams } from "./services.ts";
 import { dispatchInput } from "./dispatch-input.ts";
 import { LiveStreams } from "./live-streams.ts";
 import { Mount } from "./mount.ts";
 import { type PageSpec, SpecNeeds } from "./page-spec.ts";
-import { publishChanges } from "./publish.ts";
+import { earliestWake, publishChanges } from "./publish.ts";
 import { SoundObjects } from "./sound-objects.ts";
 import { ROLLOVER_COLOURS } from "./rollover.ts";
 import type { Services } from "./services.ts";
@@ -51,6 +52,7 @@ export class ComponentChannel implements Application {
   /** What each viewer was last sent to each page with. */
   readonly #params = new Map<number, Map<number, PageParams>>();
   readonly #streams: LiveStreams;
+  readonly #addresses = new ViewerAddresses();
 
   constructor(specs: readonly PageSpec[], options: ComponentChannelOptions = {}) {
     this.#specs = new Map(specs.map((spec) => [spec.page, spec]));
@@ -83,6 +85,19 @@ export class ComponentChannel implements Application {
       for (const spec of this.#specs.values()) {
         this.#shared.set(spec.page, this.#mount(spec, null));
       }
+    });
+  }
+
+  query(session: number, query: string, context: Context): void {
+    this.#run(context, () => {
+      this.#addresses.setQuery(session, query);
+    });
+  }
+
+  parameters(session: number, page: number, parameters: string | null, context: Context): void {
+    this.#run(context, () => {
+      this.#addresses.setParameters(session, page, parameters);
+      this.bus.emit("parameters", { session, parameters }, { page, session });
     });
   }
 
@@ -153,6 +168,7 @@ export class ComponentChannel implements Application {
       this.#sounds.forget(session);
       this.#streams.forget(session);
       this.#params.delete(session);
+      this.#addresses.forget(session);
       for (const watching of this.#watching.values()) {
         watching.delete(session);
       }
@@ -216,6 +232,8 @@ export class ComponentChannel implements Application {
       bus: this.bus.at({ page, session }),
       now: () => context().now(),
       epochMs: () => context().epochMs(),
+      query: (viewer) => this.#addresses.query(viewer),
+      parameters: (viewer) => this.#addresses.parameters(viewer, page),
       redirect: (to: number, target: number | string, params?: PageParams): void => {
         if (typeof target === "string") {
           context().redirect(to, target);
@@ -259,17 +277,7 @@ export class ComponentChannel implements Application {
     try {
       work();
       publishChanges(context, this.#shared, this.#viewers, this.#own);
-      let earliest: number | null = null;
-      for (const mount of this.#mounts()) {
-        const at = mount.nextWake();
-        if (at !== null) {
-          earliest = earliest === null ? at : Math.min(earliest, at);
-        }
-      }
-      const tick = this.#streams.nextTick(context.now());
-      if (tick !== null) {
-        earliest = earliest === null ? tick : Math.min(earliest, tick);
-      }
+      const earliest = earliestWake(this.#mounts(), this.#streams.nextTick(context.now()));
       if (earliest !== null) {
         context.wakeAt(earliest);
       }
