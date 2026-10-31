@@ -56,8 +56,17 @@ export class Pointer {
     }
   }
 
-  pointer(session: number, action: "press" | "release" | "move", row: number, column: number, button: number, buttons: number): boolean {
-    const event = (node: Node): PointerEvent => ({ session, action, row, column, button, buttons, ...placed(node, row, column) });
+  pointer(session: number, action: "press" | "release" | "move", row: number, column: number, button: number, buttons: number, lost?: true): boolean {
+    const event = (node: Node): PointerEvent => ({
+      session,
+      action,
+      row,
+      column,
+      button,
+      buttons,
+      ...(lost === undefined ? {} : { lost }),
+      ...placed(node, row, column),
+    });
     const held = this.#captured.get(session);
     if (held !== undefined && action !== "press") {
       if (action === "release") {

@@ -267,8 +267,8 @@ export class Mount implements ComponentHost {
 
   // The pointer.
 
-  pointer(session: number, action: "press" | "release" | "move", row: number, column: number, button: number, buttons: number): boolean {
-    return this.#pointer.pointer(session, action, row, column, button, buttons);
+  pointer(session: number, action: "press" | "release" | "move", row: number, column: number, button: number, buttons: number, lost?: true): boolean {
+    return this.#pointer.pointer(session, action, row, column, button, buttons, lost);
   }
 
   wheel(session: number, row: number, column: number, dx: number, dy: number): boolean {

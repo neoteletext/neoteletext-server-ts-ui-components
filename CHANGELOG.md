@@ -3,6 +3,23 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 7.0.3 (31 October 2026)
+
+### To take it
+
+- **Built on `neoteletext-server-ts-protocol` 1.0.3**, for the server of
+  neoteletext-common's DEC-1538: input comes for the sub-page the viewer
+  was looking at, and a program installs kit 1.0.3 beside this release
+  and changes nothing of its own.
+
+### What is new
+
+- **`lost` on a key's release and a pointer's release:** the page lost the
+  input, the key or button did not come up, because the viewer moved
+  away, the keys left the page or the connection went (the engine's
+  REQ-207). A component holding something, such as a slider in the middle
+  of a drag, can tell that from the viewer letting go. It is no click.
+
 ## 7.0.2 (31 October 2026)
 
 ### To take it

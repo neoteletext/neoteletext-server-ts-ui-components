@@ -9,7 +9,13 @@ import type { Mount } from "./mount.ts";
 export function dispatchInput(mount: Mount, session: number, input: Input): boolean {
   switch (input.kind) {
     case "key": {
-      return mount.key({ session, key: input.key, action: input.action, ...(input.text === undefined ? {} : { text: input.text }) });
+      return mount.key({
+        session,
+        key: input.key,
+        action: input.action,
+        ...(input.text === undefined ? {} : { text: input.text }),
+        ...(input.lost === undefined ? {} : { lost: input.lost }),
+      });
     }
     case "text": {
       return mount.text({ session, text: input.text });
@@ -20,7 +26,7 @@ export function dispatchInput(mount: Mount, session: number, input: Input): bool
     case "mouse": {
       return input.action === "move"
         ? mount.pointer(session, "move", input.row, input.column, 0, input.buttons)
-        : mount.pointer(session, input.action, input.row, input.column, input.button, input.action === "press" ? 1 << input.button : 0);
+        : mount.pointer(session, input.action, input.row, input.column, input.button, input.action === "press" ? 1 << input.button : 0, input.lost);
     }
     case "wheel": {
       return mount.wheel(session, input.row, input.column, input.dx, input.dy);

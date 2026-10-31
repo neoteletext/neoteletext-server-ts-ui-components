@@ -12,6 +12,8 @@ export interface KeyEvent {
   readonly action: "press" | "repeat" | "release";
   /** The text the press produced, if any (INPUT.md section 5.5). */
   readonly text?: string;
+  /** A release the page lost: the key did not come up, the viewer left (REQ-207). */
+  readonly lost?: true;
 }
 
 /** Text typed or pasted. */
@@ -37,6 +39,8 @@ export interface PointerEvent extends Cell {
   /** The button pressed or released, 0 left; on a move, the buttons held, a bit each. */
   readonly button: number;
   readonly buttons: number;
+  /** A release the page lost: no click, the viewer left in the middle of a drag (REQ-207). */
+  readonly lost?: true;
 }
 
 /** The wheel turned over a cell, in 1/120ths of a line, down positive. */
