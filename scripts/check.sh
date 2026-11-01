@@ -22,6 +22,11 @@ readonly NODE_LEAST="22.18.0"
 # The lockfile's SHA-256 when node_modules was installed from it, so a
 # changed lockfile installs again.
 readonly INSTALLED_FROM="node_modules/.installed-from.sha256"
+# REQ-1723: every component is a class. What a hook call or a function
+# component looks like in the source; a plain function that builds an element
+# from a class, such as `() => h(Page, {})`, and an ordinary helper, whose
+# name starts in small letters, are neither (REQ-1723 item 6).
+readonly HOOKS_AND_FUNCTION_COMPONENTS='\buse[A-Z][A-Za-z0-9]*\(|\bFunctionComponent\b|\bFC<|\bfunction +[A-Z][A-Za-z0-9]*\(|\b(const|let) +[A-Z][A-Za-z0-9]* *= *(async *)?(\([^)]*\)|[a-z][A-Za-z0-9]*) *=>'
 # Every file is the program or its checks.
 readonly CHECKED_PATHS=(.)
 
@@ -70,6 +75,9 @@ process.exit(newer === -1 || found[newer] > least[newer] ? 0 : 1);
 
     step "unused files, exports and dependencies (Knip, knip.jsonc)"
     npx --no -- knip --no-progress
+
+    step "no hook and no function component in src (REQ-1723)"
+    ! grep -rnE "$HOOKS_AND_FUNCTION_COMPONENTS" src || fail "a hook or a function component: every component is a class extending Component (REQ-1723)"
 
     step "tests"
     node --test "test/**/*.test.ts"
