@@ -3,6 +3,22 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 12.0.0 (1 November 2026)
+
+### To take it
+
+- **Built on `neoteletext-server-ts-protocol` 6.0.0, still protocol version 6,**
+  whose message set gained `describe` and `description`. A program installs kit
+  6.0.0 beside this release and changes nothing of its own.
+
+### What changed
+
+- **A page may say what it shows on the web.** A `PageSpec`'s `describe()` gives
+  `{ public: true, title, text }` for a page anyone may read at its address, as
+  a picture of the channel's copy with its text hidden for search engines.
+  Without it a page is not public, and it is called with nothing, so that it can
+  hold no viewer's data.
+
 ## 11.0.0 (1 November 2026)
 
 ### To take it

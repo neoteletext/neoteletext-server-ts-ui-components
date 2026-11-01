@@ -2,7 +2,7 @@
 // the components on it need of their page (needs.ts) where the spec does
 // not say: found once, by a probe of its root.
 
-import type { PageEntry } from "../kit.ts";
+import type { PageDescription, PageEntry } from "../kit.ts";
 import type { ColourTable } from "./rollover.ts";
 import type { Element } from "./element.ts";
 import { type PageNeeds, probeNeeds } from "./needs.ts";
@@ -24,8 +24,19 @@ export interface PageSpec {
   readonly keepWhileAway?: boolean;
   /** Its controls' colours under the pointer (rollover.ts): the library's ROLLOVER_COLOURS when absent, null for the receiver's own hover look. */
   readonly rollover?: ColourTable | null;
+  /**
+   * What the page shows on the web; when absent, or when it gives nothing, the page is not public, which is every page's default (REQ-1728).
+   * It takes nothing: no session and no parameters, because the answer goes to everyone, so it cannot hold one viewer's data. The picture is of the channel's copy.
+   * All it gives, and all the page shows, is readable by anyone.
+   */
+  readonly describe?: () => PageDescription | null;
   /** The page's root element; on a page that keeps a copy for each viewer, made with what the viewer was sent there with (Services.redirect) or asked for in the address's query, if anything: a query's values are untrusted text. */
   root(params?: PageParams): Element;
+}
+
+/** What `spec` says of its page for the web: called with nothing, so that it can hold no viewer's data (REQ-1728). */
+export function describedBy(spec: PageSpec | undefined): PageDescription | null {
+  return spec?.describe?.() ?? null;
 }
 
 /** What each page's components need, found once (needs.ts), and what that makes of its spec. */

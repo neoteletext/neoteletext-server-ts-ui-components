@@ -133,6 +133,10 @@ repositories beside this one.
   of its own does), and unmounted as they leave, unless it is
   `keepWhileAway`. It is published only while it differs from the shared
   copy (`src/core/runtime.ts`).
+- **The web** is told of a page only by its spec's `describe()`, which takes no
+  session and no parameters, and gives a title and text anyone may read, with a
+  picture of the shared copy. A page without it shows nothing of itself
+  (`neoteletext-common`'s REQ-1728).
 - **When the program restarts**, the server drops the viewers' copies and
   tells it again who is where (`teletext-server`, docs/applications.md §1).
 

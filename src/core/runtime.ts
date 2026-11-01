@@ -24,7 +24,7 @@ import { ViewerParams } from "./viewer-params.ts";
 import { dispatchInput } from "./dispatch-input.ts";
 import { LiveStreams } from "./live-streams.ts";
 import { Mount } from "./mount.ts";
-import { type PageSpec, SpecNeeds } from "./page-spec.ts";
+import { describedBy, type PageSpec, SpecNeeds } from "./page-spec.ts";
 import { earliestWake, publishChanges } from "./publish.ts";
 import { SoundObjects } from "./sound-objects.ts";
 import { ROLLOVER_COLOURS } from "./rollover.ts";
@@ -190,6 +190,10 @@ export class ComponentChannel implements Application {
     this.#run(context, () => {
       this.bus.emit("stats", stats);
     });
+  }
+
+  describe(page: number): ReturnType<typeof describedBy> {
+    return describedBy(this.#specs.get(page));
   }
 
   // The mounts.
