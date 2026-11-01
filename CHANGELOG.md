@@ -3,6 +3,22 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 13.0.0 (2 November 2026)
+
+### To take it
+
+- **Built on `neoteletext-server-ts-protocol` 7.0.0, still protocol version 6.** A
+  program installs kit 7.0.0 beside this release. A program that places a cursor
+  itself keeps it on rows 1 to 23: `Screen.cursor` now throws on row 0 or 24,
+  which the server refused already, so a field with its cursor on either row
+  fails at the draw rather than at the server.
+
+### What changed
+
+- **`context.deny(session, status)`** ends a viewer's selection without a page,
+  from the kit, for an application beside the library's.
+- **What `joined` sends reaches the viewer who joined,** from the kit.
+
 ## 12.0.0 (1 November 2026)
 
 ### To take it
