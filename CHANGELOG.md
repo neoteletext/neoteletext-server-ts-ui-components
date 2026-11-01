@@ -3,6 +3,22 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 10.0.0 (1 November 2026)
+
+### To take it
+
+- **Built on `neoteletext-server-ts-protocol` 4.0.0, protocol version 5.** A
+  program installs kit 4.0.0 beside this release. A program with its own
+  `Application` beside the library's moves its `query` and `parameters`
+  hooks to the kit's one `request` hook.
+- **`services.query(session)` is gone.** A viewer's query no longer arrives on
+  the connection: it always comes with a selection, so there is one kind of
+  parameter, and **`services.parameters(session)`** gives it for this page, as
+  before, the query of the address selected. A component that read the query
+  of the address opened reads the parameters of the page it is on.
+- **`params` are not touched:** a page's `root(params)` still has what
+  `services.redirect(session, page, params)` gave it.
+
 ## 9.0.0 (1 November 2026)
 
 ### To take it

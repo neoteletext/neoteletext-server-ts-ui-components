@@ -41,7 +41,7 @@ repositories beside this one.
    (`src/core/draw.ts`, `controls.ts`, `rollover.ts`).
 4. **It is published.** The shared copy is published only when its TTI
    changed; a viewer's own copy only while it differs from the shared one
-   (`src/core/publish.ts`). The protocol kit (version 2.0.0, protocol 3,
+   (`src/core/publish.ts`). The protocol kit (version 4.0.0, protocol 5,
    DEC-1482) reads the TTI into typed sub-pages, numbers a whole page's
    sub-pages by place, and keeps them: nothing goes to the server yet.
 5. **It is sent, one sub-page at a time.** The server asks the program:

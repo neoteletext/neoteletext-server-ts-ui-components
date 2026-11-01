@@ -21,7 +21,7 @@ export interface LibraryEvents {
   readonly poll: { readonly name: string; readonly votes: readonly number[] };
   /** A toast to show on every page with a toast shelf. */
   readonly toast: ToastEvent;
-  /** The page parameters of a viewer's selection of this page changed, null once another selection has left them behind: untrusted text, undecoded. */
+  /** The parameters of a viewer's selection of this page changed, null once another selection has left them behind: untrusted text, undecoded. */
   readonly parameters: { readonly session: number; readonly parameters: string | null };
   /** A viewer went: what a component keeps for them, beyond its own copy, can go. */
   readonly ended: { readonly session: number };

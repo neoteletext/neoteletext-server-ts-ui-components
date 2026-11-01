@@ -21,9 +21,7 @@ export interface Services {
   now(): number;
   /** The real time, in milliseconds since the Unix epoch, UTC. */
   epochMs(): number;
-  /** The query of the address the viewer opened, or null: untrusted text from the viewer, undecoded (REQ-1674). */
-  query(session: number): string | null;
-  /** The page parameters of the viewer's selection of this page, or null: untrusted text from the viewer, undecoded (REQ-1693 item 6). The bus's `parameters` says when they change. */
+  /** The parameters of the viewer's selection of this page, the query of its address, or null: untrusted text from the viewer, undecoded (DEC-1730). The bus's `parameters` says when they change. */
   parameters(session: number): string | null;
   /** Sends a viewer to a page (docs/applications.md section 3.3), opened with `params` when given: a page whose root takes them shows that one of many. */
   redirect(session: number, page: number, params?: PageParams): void;

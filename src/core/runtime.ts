@@ -15,7 +15,7 @@
 // released, so a viewer who only reads costs the server nothing.
 
 // oxlint-disable import/max-dependencies -- the runtime is where the protocol's calls meet the mounts, streams, sounds and publication
-import { type Application, type Context, ffmpegOpus, type Input, type OpusEncoder, type PageEntry, type ServerStats } from "../kit.ts";
+import { type Application, type Context, ffmpegOpus, type Input, type OpusEncoder, type PageEntry, type PageRequest, type ServerStats } from "../kit.ts";
 import { EventBus } from "./bus.ts";
 import { ViewerAddresses } from "./viewer-addresses.ts";
 import type { LibraryEvents } from "./library-events.ts";
@@ -88,13 +88,8 @@ export class ComponentChannel implements Application {
     });
   }
 
-  query(session: number, query: string, context: Context): void {
-    this.#run(context, () => {
-      this.#addresses.setQuery(session, query);
-    });
-  }
-
-  parameters(session: number, page: number, parameters: string | null, context: Context): void {
+  request(session: number, page: number, request: PageRequest | null, context: Context): void {
+    const parameters = request?.queryText ?? null;
     this.#run(context, () => {
       this.#addresses.setParameters(session, page, parameters);
       this.bus.emit("parameters", { session, parameters }, { page, session });
@@ -232,7 +227,6 @@ export class ComponentChannel implements Application {
       bus: this.bus.at({ page, session }),
       now: () => context().now(),
       epochMs: () => context().epochMs(),
-      query: (viewer) => this.#addresses.query(viewer),
       parameters: (viewer) => this.#addresses.parameters(viewer, page),
       redirect: (to: number, target: number | string, params?: PageParams): void => {
         if (typeof target === "string") {
