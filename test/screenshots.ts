@@ -1,6 +1,6 @@
 // The catalogue's pictures: each example (catalogue/) staged as the gate
 // stages it, its page's TTI drawn by the engine's renderer (`neottx
-// render`, in the Bedstead font a receiver draws), and written to
+// render`, in the font a receiver draws), and written to
 // docs/images/PART/NAME.png. It also lists, for review, where each page's
 // attributes may show as gaps (catalogue/checks.ts). It is not part of the
 // gate: the renderer is the engine's program, built in its own

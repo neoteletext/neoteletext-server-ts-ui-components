@@ -60,7 +60,7 @@ repositories beside this one.
    It writes nothing in row 0: columns 8 to 39 are the page's own, and
    columns 0 to 7 the receiver's (EN 300 706 clause 9.3.1.4).
 7. **The browser draws it.** Its decoder renders the page, 480 by 500, in
-   the Bedstead font; the window scales it for the screen
+   Noto Teletext, the engine's one font; the window scales it for the screen
    (`neoteletext-browser`, docs/architecture.md §10). Each sub-page is
    selected and shown on its own; the browser never cycles them. Every
    sub-page declares its controls with the first's rollover colours only
