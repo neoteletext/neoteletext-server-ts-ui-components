@@ -3,6 +3,23 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 11.0.0 (1 November 2026)
+
+### To take it
+
+- **Built on `neoteletext-server-ts-protocol` 5.0.0, protocol version 6.** A
+  program installs kit 5.0.0 beside this release. The kit copies a selection's
+  number, so nothing changes in a program for that.
+
+### What changed
+
+- **A viewer's query reaches `root(params)`.** On a page that keeps a copy for
+  each viewer, the query of the address selected is what the page is made
+  with, as `services.redirect(session, page, params)`'s params are, so
+  `?article=5` shows that article. Its values are strings, and untrusted: a
+  root reads them as it would any text from a viewer. A selection with no
+  query leaves behind what a query gave, and never what a redirect gave.
+
 ## 10.0.0 (1 November 2026)
 
 ### To take it

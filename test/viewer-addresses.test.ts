@@ -57,7 +57,7 @@ test("a program that starts again gives a component the parameters of the connec
   }
   const harness = channel([{ page: PAGE, title: "Reader", perViewer: true, root: (): Element => frame("Reader", h(Reader, {})) }]);
   read.length = 0;
-  harness.channel.connected(1, 1, { page: PAGE, sub: ANY_SUB }, [], "150", "a=1");
+  harness.channel.connected(1, 1, 1, { page: PAGE, sub: ANY_SUB }, [], "150", "a=1");
   assert.deepEqual(read, ["a=1"]);
 });
 
@@ -74,7 +74,7 @@ test("a component has one kind of parameter: services ask for no query of the vi
   assert.equal("query" in services, false);
 });
 
-test("a page opened with params by a redirect keeps them, apart from the viewer's address", () => {
+test("a viewer's own query, coming after a redirect's params, is what the page shows", () => {
   const roots: unknown[] = [];
   class Sender extends Component {
     override componentDidMount(): void {
@@ -97,8 +97,10 @@ test("a page opened with params by a redirect keeps them, apart from the viewer'
     },
   ]);
   harness.join(1, OTHER);
-  harness.open(1, PAGE, ANY_SUB, "article=9");
+  harness.open(1, PAGE);
   assert.equal(roots.at(-1), 7);
+  harness.open(1, PAGE, ANY_SUB, "article=9");
+  assert.equal(roots.at(-1), "9");
 });
 
 test("the parameters of a page a viewer has left are gone when they come back without them", () => {
@@ -121,4 +123,60 @@ test("the parameters of a page a viewer has left are gone when they come back wi
   harness.open(1, OTHER);
   harness.open(1, PAGE);
   assert.deepEqual(read, ["a=1", null]);
+});
+
+test("TODO-1731 item 6: a viewer's query reaches the root of a page that keeps a copy for each viewer, and goes with its selection", () => {
+  const made: unknown[] = [];
+  const harness = channel([
+    {
+      page: PAGE,
+      title: "Reader",
+      perViewer: true,
+      keepWhileAway: true,
+      root: (params): Element => {
+        made.push(params?.["article"] ?? null);
+        return frame("Reader");
+      },
+    },
+    { page: OTHER, title: "Other", root: (): Element => frame("Other") },
+  ]);
+  harness.join(1, OTHER);
+  made.length = 0;
+  harness.open(1, PAGE, ANY_SUB, "article=5");
+  assert.deepEqual(made.at(-1), "5", "made with the query, before the page opens");
+  harness.open(1, PAGE, ANY_SUB, "article=6");
+  assert.deepEqual(made.at(-1), "6", "the same page with another query shows it at once");
+  made.length = 0;
+  harness.open(1, PAGE, ANY_SUB, "article=6");
+  assert.equal(made.length, 0, "the same query again is not made again");
+  harness.open(1, PAGE);
+  assert.deepEqual(made.at(-1), null, "no query leaves behind what a query gave");
+});
+
+test("TODO-1731 item 6: a selection with no query keeps what a redirect's params gave", () => {
+  const made: unknown[] = [];
+  class Sender extends Component {
+    override componentDidMount(): void {
+      const { session } = this.services;
+      if (session !== null) {
+        this.services.redirect(session, PAGE, { article: 7 });
+      }
+    }
+  }
+  const harness = channel([
+    {
+      page: PAGE,
+      title: "Reader",
+      perViewer: true,
+      root: (params): Element => {
+        made.push(params?.["article"] ?? null);
+        return frame("Reader");
+      },
+    },
+    { page: OTHER, title: "Other", perViewer: true, root: (): Element => frame("Other", h(Sender, {})) },
+  ]);
+  harness.join(1, OTHER);
+  made.length = 0;
+  harness.open(1, PAGE);
+  assert.deepEqual(made.at(-1), 7);
 });

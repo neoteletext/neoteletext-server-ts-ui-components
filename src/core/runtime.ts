@@ -20,6 +20,7 @@ import { EventBus } from "./bus.ts";
 import { ViewerAddresses } from "./viewer-addresses.ts";
 import type { LibraryEvents } from "./library-events.ts";
 import type { PageParams } from "./services.ts";
+import { ViewerParams } from "./viewer-params.ts";
 import { dispatchInput } from "./dispatch-input.ts";
 import { LiveStreams } from "./live-streams.ts";
 import { Mount } from "./mount.ts";
@@ -49,8 +50,7 @@ export class ComponentChannel implements Application {
   /** Who has each page open. */
   readonly #watching = new Map<number, Set<number>>();
   readonly #needs = new SpecNeeds();
-  /** What each viewer was last sent to each page with. */
-  readonly #params = new Map<number, Map<number, PageParams>>();
+  readonly #params = new ViewerParams();
   readonly #streams: LiveStreams;
   readonly #addresses = new ViewerAddresses();
 
@@ -89,11 +89,26 @@ export class ComponentChannel implements Application {
   }
 
   request(session: number, page: number, request: PageRequest | null, context: Context): void {
-    const parameters = request?.queryText ?? null;
+    const parameters = request === null || request.queryText === "" ? null : request.queryText;
     this.#run(context, () => {
+      if (this.#addresses.parameters(session, page) === parameters) {
+        return;
+      }
       this.#addresses.setParameters(session, page, parameters);
       this.bus.emit("parameters", { session, parameters }, { page, session });
+      if (request !== null && this.#params.queried(session, page, parameters === null ? null : request.query)) {
+        this.#show(session, page);
+      }
     });
+  }
+
+  /** The viewer's page is made again with what it is now made with: one they have mounted shows it at once. */
+  #show(session: number, page: number): void {
+    const spec = this.#specs.get(page);
+    const mount = this.#viewers.get(session)?.get(page);
+    if (spec !== undefined && mount !== undefined) {
+      mount.setRoot(spec.root(this.#params.of(session, page)));
+    }
   }
 
   opened(session: number, page: number, context: Context): void {
@@ -162,7 +177,7 @@ export class ComponentChannel implements Application {
       this.#own.delete(session);
       this.#sounds.forget(session);
       this.#streams.forget(session);
-      this.#params.delete(session);
+      this.#params.forget(session);
       this.#addresses.forget(session);
       for (const watching of this.#watching.values()) {
         watching.delete(session);
@@ -193,7 +208,7 @@ export class ComponentChannel implements Application {
     if (found !== undefined) {
       return found;
     }
-    const mount = this.#mount(spec, session, this.#params.get(session)?.get(spec.page));
+    const mount = this.#mount(spec, session, this.#params.of(session, spec.page));
     pages.set(spec.page, mount);
     return mount;
   }
@@ -253,14 +268,8 @@ export class ComponentChannel implements Application {
   /** Sends a viewer to a page, with what it is to show: a page they already have open shows it at once. */
   #redirect(context: Context, session: number, page: number, params: PageParams | undefined): void {
     if (params !== undefined) {
-      const pages = this.#params.get(session) ?? new Map<number, PageParams>();
-      pages.set(page, params);
-      this.#params.set(session, pages);
-      const spec = this.#specs.get(page);
-      const mount = this.#viewers.get(session)?.get(page);
-      if (spec !== undefined && mount !== undefined) {
-        mount.setRoot(spec.root(params));
-      }
+      this.#params.redirected(session, page, params);
+      this.#show(session, page);
     }
     context.redirect(session, page);
   }
