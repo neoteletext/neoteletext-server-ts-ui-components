@@ -42,7 +42,7 @@ sha256_of() {
 
 stage() {
     step "Node $NODE_LEAST or later"
-    command -v node >/dev/null || fail "node is not installed; the checks need Node $NODE_LEAST or later"
+    need_tool node "the checks need Node $NODE_LEAST or later; install it with nvm"
     local version
     version="$(node --version)"
     node -e '
@@ -96,7 +96,7 @@ linux_steps() {
     local here
     here="$(basename "$PWD")"
     step "Linux on $linux_host: the stage"
-    ssh -o BatchMode=yes -o ConnectTimeout=10 "$linux_host" true || fail "$linux_host is unreachable; the full gate needs it"
+    need_host
     # By content, with the host's own times (gates.md).
     rsync -a --no-times --checksum --delete --exclude tmp --exclude .git --exclude node_modules --exclude dist ./ "$linux_host:$here-check/"
     ssh "$linux_host" "set -e; cd $here-check && scripts/check.sh stage"
