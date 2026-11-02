@@ -4,7 +4,7 @@
 // first sub-page and shows each as a page of its own, never cycling them
 // (the browser's decision 111). Clicks are found on the first
 // sub-page's cells only, since a channel is not told which sub-page a
-// viewer has up (INPUT.md section 5.4, PAGE), so only the first sub-page
+// viewer has up (DOC-1753), so only the first sub-page
 // declares controls: elsewhere the hand would point at
 // another sub-page's component. Display attributes are how a sub-page
 // looks, so each sub-page carries those it paints.

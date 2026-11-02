@@ -16,7 +16,7 @@ const CHARACTER_BITS = 6;
 /** Each packed line's packet number: X/26, X/27, X/28 and M/29. */
 const ENHANCEMENT = 26;
 const PACKETS: Readonly<Record<string, number>> = { x27: 27, x28: 28, m29: 29 };
-/** The cursor record's block flag (INPUT.md section 7.1). */
+/** The cursor record's block flag (DOC-1954). */
 const BLOCK = 4;
 
 /** A packed line of packet `packet`. */

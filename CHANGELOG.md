@@ -226,8 +226,8 @@ and what such a program has to change to take it.
   disabled chip has no band, as a disabled button does, and a black
   background is set with Black Background. A program that drew black ink
   of its own sees the gate refuse it in its catalogue.
-- **Pointer areas are gone.** INPUT.md withdrew them on 28 October 2026
-  (section 7.4): every move over the page now comes, a button held or not,
+- **Pointer areas are gone.** The input protocol withdrew them on 28 October
+  2026 (DEC-657): every move over the page now comes, a button held or not,
   so a page declares nothing for the pointer's moves. `Canvas`'s
   `pointerArea` and `wholePagePointerArea` are removed, with the pointer
   part of `readDeclarations`; column mode 01010 is never written. A move

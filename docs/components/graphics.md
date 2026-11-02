@@ -231,7 +231,7 @@ h(MapMarkers, {
 
 ## PaintCanvas
 
-A canvas a viewer draws on with the pointer held down. Its surface is not a control: the browser's hover look would recolour all of it, and its pressed look turn all of it round, for as long as a stroke lasts. A stroke is a drag; and every move over the page comes, a button held or not (INPUT.md section 9.8), so `brush` can show where the brush will fall before a press. The surface follows the canvas's columns and rows as they change, keeping what is painted where the two overlap.
+A canvas a viewer draws on with the pointer held down. Its surface is not a control: the browser's hover look would recolour all of it, and its pressed look turn all of it round, for as long as a stroke lasts. A stroke is a drag; and every move over the page comes, a button held or not (DOC-1945), so `brush` can show where the brush will fall before a press. The surface follows the canvas's columns and rows as they change, keeping what is painted where the two overlap.
 
 ```ts
 import { PaintCanvas } from "neoteletext-server-ts-ui-components";

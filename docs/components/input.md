@@ -91,7 +91,7 @@ import { Field } from "neoteletext-server-ts-ui-components";
 
 ## TextField
 
-A line to type on, which shows what is typed (the receiver draws none of it, the engine's E.134): the cursor stands after it, and only while the field has the keys, since a page has one cursor (INPUT.md section 7.1). It may have a label, a placeholder while it is empty, its characters masked (each shows as `*`), a check whose complaint shows under it, and it may be disabled. Enter sends submit up the tree; Escape clears, or sends cancel when it is clear. Its band is a control, so the browser shows it can be clicked, and a click there gives it the keys.
+A line to type on, which shows what is typed (the receiver draws none of it, the engine's E.134): the cursor stands after it, and only while the field has the keys, since a page has one cursor (DOC-1954). It may have a label, a placeholder while it is empty, its characters masked (each shows as `*`), a check whose complaint shows under it, and it may be disabled. Enter sends submit up the tree; Escape clears, or sends cancel when it is clear. Its band is a control, so the browser shows it can be clicked, and a click there gives it the keys.
 
 ```ts
 import { TextField } from "neoteletext-server-ts-ui-components";

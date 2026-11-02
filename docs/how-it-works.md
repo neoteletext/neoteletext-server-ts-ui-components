@@ -14,7 +14,7 @@ repositories beside this one.
 | **The server** | Runs channels: a state machine for each, hosted on tokio and hyper. It starts each channel's program and talks to it in lines of JSON on the program's standard input and output. | `teletext-server`, docs/architecture.md §3, docs/applications.md |
 | **The protocol kit** | What a channel program in TypeScript is written on: `runChannel`, the `Application` it runs, the `Context` it publishes through, page selection (`Navigation`), and the test `Harness`. | `neoteletext-server-ts-protocol` |
 | **This library** | `ComponentChannel`, one `Application` whose pages are trees of components. | `src/core/runtime.ts` |
-| **The shared rules** | The input protocol, and the standard's limits. | `neoteletext-common`, INPUT.md, STANDARD-LIMITS.md |
+| **The shared rules** | The input protocol, and the standard's limits. | `neoteletext-common`, `PROTOCOL.html`, STANDARD-LIMITS.md |
 
 ```
  viewer ── browser ══ WebSocket ══ server ── stdin/stdout JSON ── channel program
@@ -72,9 +72,9 @@ repositories beside this one.
    key's press, repeat and release goes, digits and coloured keys
    included; clicks, every move over the page (at most 60 a second, only
    as the dot under the pointer changes), the wheel, and the pointer coming
-   onto or off a control (`neoteletext-common`, INPUT.md §6.3, §9.8,
-   §5.4). Pointer areas, which once limited the moves sent, are withdrawn
-   (§7.4, 28 October 2026).
+   onto or off a control (`neoteletext-common/PROTOCOL.html`, DOC-1938,
+   DOC-1945, DOC-1940). Pointer areas, which once limited the moves sent,
+   are withdrawn (DEC-657, 28 October 2026).
 2. **The server forwards it** to the program as an `input` line naming
    the session and the page; a viewer's PAGE message, sent as keys start
    to go to a page, becomes `open` and `leave` (`teletext-server`,
@@ -91,12 +91,12 @@ repositories beside this one.
    (`src/core/pointer.ts`).
 5. **The answer is a new page.** The component's state changes, the page
    is drawn again, and what changed is published. After each input the
-   server tells the browser how much input it has acted on (INPUT.md
-   §7.1); the browser draws nothing of what is typed, the page does. A
+   server tells the browser how much input it has acted on (DOC-1943);
+   the browser draws nothing of what is typed, the page does. A
    component sending the viewer elsewhere (`redirect`, to a page or to
    another channel's address) does it the same way.
 6. **The browser draws a control's look under the pointer itself**, and
-   sends nothing for it (INPUT.md §9.7).
+   sends nothing for it (DOC-1947).
 
 ## Sound
 
@@ -146,12 +146,12 @@ repositories beside this one.
 | --- | --- |
 | The standard's 2,022 pages a channel and 8,069 sub-pages a whole page (8,190 put by sub-code), titles of 120 characters: what the server's `start` says, read with `services.limits()`; the library writes none of them | teletext-server's docs/applications.md §2 |
 | A line of at most 16 MiB; pages declared within 30 seconds of starting | docs/applications.md §1 |
-| 32 controls a page, on rows 1 to 23 | INPUT.md §7.3 |
-| The browser sends at most 120 input units a second | INPUT.md §5.1 |
+| 32 controls a page, on rows 1 to 23 | DOC-1844 |
+| The browser sends at most 120 input units a second | DOC-1943 |
 | 256 messages queued for a connection; past that, the newest are dropped | crates/teletext-native/src/hub.rs |
 | A stored sound of at most two minutes | docs/applications.md §3.4 |
 
 The server records no addresses and no typed text (docs/applications.md
 §7). A channel learns the pointer only over its own open page, while keys
 go to it: its clicks, drags and moves at most 60 a second, and nothing of
-the pointer anywhere else (INPUT.md §11.3).
+the pointer anywhere else (DOC-2033).

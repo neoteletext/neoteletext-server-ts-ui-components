@@ -141,7 +141,7 @@ test("a hover goes to the component whose control begins at its cell, and up; th
   assert.match(text(page.seen(1, PAGE).rows, 23), /one is pressed/u, "the first button has the keys");
   page.hover(1, "enter", two.column, two.row);
   assert.match(text(page.seen(1, PAGE).rows, 23), /two is pressed/u, "the hovered button says what it does");
-  // Moving from one control to the next is a leave, then an enter (INPUT.md section 5.4).
+  // Moving from one control to the next is a leave, then an enter (DOC-1940).
   page.hover(1, "leave", two.column, two.row);
   page.hover(1, "enter", one.column, one.row);
   page.hover(1, "leave", one.column, one.row);

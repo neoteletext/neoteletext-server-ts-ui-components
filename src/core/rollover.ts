@@ -1,7 +1,7 @@
 // Rollover colours: what a control looks like under the pointer. The
 // browser draws a control's hover look itself by moving each of its
 // cells' colours to the same entry of the adjacent colour table, CLUT 0
-// to CLUT 1 and CLUT 2 to CLUT 3 (INPUT.md section 9.7; the engine's
+// to CLUT 1 and CLUT 2 to CLUT 3 (DOC-1947; the engine's
 // controls.rs, ADJACENT_CLUT_FLIP). CLUT 1 is fixed at Level 2.5: the
 // half-intensity colours, and transparent for black, so white text on
 // black only dims to grey and a black background does not change.

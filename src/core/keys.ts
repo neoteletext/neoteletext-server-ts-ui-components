@@ -1,6 +1,6 @@
 // Keys the components share: the coloured keys, which a keyboard without
-// them sends as F1 to F4, as the kit's navigation takes them (INPUT.md
-// section 5.6); and what chooses an item or presses a control.
+// them sends as F1 to F4, as the kit's navigation takes them (DOC-1936);
+// and what chooses an item or presses a control.
 
 import { Key } from "../kit.ts";
 import { isPress, type KeyEvent } from "./events.ts";

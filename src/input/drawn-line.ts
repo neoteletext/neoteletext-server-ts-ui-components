@@ -62,7 +62,7 @@ export function paintDrawnLine(canvas: Canvas, row: number, column: number, ink:
 
 /**
  * The first `most` characters of `text` that are text, whole code points:
- * a control character is never text (INPUT.md section 5.3), typed or
+ * a control character is never text (DOC-1930), typed or
  * pasted. It reads no further than it keeps, so a paste as long as the
  * server's line costs no more than the field holds.
  */

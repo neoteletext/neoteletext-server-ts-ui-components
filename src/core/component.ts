@@ -13,7 +13,7 @@
 // Input is the server's, in cells: a key, typed text or a paste go to the
 // focused component, a pointer press, a drag's move or a release and the
 // wheel to the component drawn in that cell, and a move with no button held
-// too, since every move over the page comes (INPUT.md section 9.8); a hover to the
+// too, since every move over the page comes (DOC-1945); a hover to the
 // component that declared the control; each bubbles to the parents until a
 // handler answers true.
 
@@ -224,7 +224,7 @@ export abstract class Component<P extends object = object, S extends object = ob
   onPaste?(event: TextEvent): boolean | void;
   /** A left press on a cell: the common case of onPointer. */
   onClick?(event: PointerEvent): boolean | void;
-  /** A press, move or release; a press answered true holds the pointer here until it is released. Every move over the page comes, a button held or not (INPUT.md section 9.8): a component that wants none answers false to one with no button held. */
+  /** A press, move or release; a press answered true holds the pointer here until it is released. Every move over the page comes, a button held or not (DOC-1945): a component that wants none answers false to one with no button held. */
   onPointer?(event: PointerEvent): boolean | void;
   onWheel?(event: WheelEvent): boolean | void;
   /** The pointer came onto a control it declared, or left it (`entered` false); answered true, it goes no further up. A leave always goes where its enter went. */

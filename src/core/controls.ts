@@ -1,11 +1,11 @@
-// Controls (INPUT.md sections 7.3 and 9.7, REQ-INT-117 to REQ-INT-119; the
+// Controls (DOC-1844 and DOC-1947, REQ-INT-117 to REQ-INT-119; the
 // engine's decision E.127): the cells a page answers itself, its buttons
 // and the rows of its lists, declared in the page's own local enhancement
 // data, packets X/26, by NeoTeletext's control triplet, column mode 00101,
 // which EN 300 706 Table 29 reserves and every decoder skips. The browser
 // shows them as it shows links and draws their hover and pressed looks
 // itself, so a page that declares them is drawn the same everywhere.
-// Pointer areas, column mode 01010, are withdrawn (INPUT.md section 7.4,
+// Pointer areas, column mode 01010, are withdrawn (DEC-657,
 // 28 October 2026: every move over the page is sent, so an area asks for
 // nothing); the mode is reserved again, as Table 29 has it.
 //
@@ -33,7 +33,7 @@ export const MODE_MASK = (1 << MODE_BITS) - 1;
 export const DATA_MASK = (1 << DATA_BITS) - 1;
 /** Table 28, the row address group: Set Active Position. */
 export const MODE_SET_ACTIVE_POSITION = 0b00100;
-/** Table 29, a column mode EN 300 706 reserves: NeoTeletext's control (INPUT.md section 7.3). */
+/** Table 29, a column mode EN 300 706 reserves: NeoTeletext's control (DOC-1844). */
 export const MODE_CONTROL = 0b00101;
 /** Clause 12.3.1: row addresses are 40 to 63, 40 meaning row 24 and 41 to 63 rows 1 to 23. */
 export const ROW_ADDRESS_BASE = 40;
@@ -41,7 +41,7 @@ export const ROW_ADDRESS_BASE = 40;
 export const TERMINATION_ADDRESS = 63;
 export const MODE_TERMINATION = 0b11111;
 const TERMINATION_DATA = 0b111;
-/** INPUT.md section 7.3: D6 joins a run to the control on the row above at the same column and width; D5 to D0 are its width. */
+/** DOC-1844: D6 joins a run to the control on the row above at the same column and width; D5 to D0 are its width. */
 export const JOINED = 0x40;
 export const WIDTH_MASK = 0x3f;
 /** The rows a control may be on: not the header, not the Fastext row (the engine's FIRST_CONTROL_ROW and LAST_CONTROL_ROW). */

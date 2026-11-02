@@ -157,7 +157,7 @@ test("a field keeps the digits: a page with one owns them", () => {
   assert.equal(components.pages()[0]?.ownsDigits, true);
 });
 
-test("a field takes typing from each key's press with its text, and raw text from a phone (INPUT.md section 6.3)", () => {
+test("a field takes typing from each key's press with its text, and raw text from a phone (DOC-1930 and DOC-1935)", () => {
   const { harness } = channel([{ page: PAGE, title: "Test", root: (): Element => frame("Field", h(TextField, { longest: 10 })) }]);
   harness.join(1, PAGE);
   harness.typeKeys(1, "ab");

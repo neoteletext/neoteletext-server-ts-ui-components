@@ -9,7 +9,7 @@
 // Background, or a text from its first character. Given an id, a control
 // is also a region of those cells, so the component acts on a click on
 // exactly what the browser shows as pressable and nowhere else. Every move
-// over the page comes, a button held or not (INPUT.md section 9.8), so
+// over the page comes, a button held or not (DOC-1945), so
 // nothing is declared for the pointer's moves. A component asks for Level 2.5 display
 // attributes, which take no cell, at a cell of its own (enhancement.ts),
 // over a level 1 row that reads without them.

@@ -75,7 +75,7 @@ export class Pointer {
       held.component.onPointer?.(event(held));
       return true;
     }
-    // Every move over the page comes (INPUT.md section 9.8), a button held or not: it goes, as a press does, to the component drawn where it is, then up.
+    // Every move over the page comes (DOC-1945), a button held or not: it goes, as a press does, to the component drawn where it is, then up.
     const target = this.#host.reach().grid[row]?.[column] ?? null;
     if (action === "press") {
       for (let node = target; node !== null; node = node.parent) {
@@ -106,7 +106,7 @@ export class Pointer {
 
   /**
    * The pointer entered or left the control whose first cell is `row`,
-   * `column` (INPUT.md section 5.4, HOVER): it goes to the component that
+   * `column` (DOC-1940): it goes to the component that
    * declared the control, then up. A leave goes where the enter went,
    * whatever the page has become since; an enter while another control is
    * still entered leaves that one first. An enter where no control of the

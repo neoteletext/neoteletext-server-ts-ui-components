@@ -1,6 +1,6 @@
 // A line to type on, which shows what is typed (the receiver draws none of
 // it, the engine's E.134): the cursor stands after it, and only while the
-// field has the keys, since a page has one cursor (INPUT.md section 7.1).
+// field has the keys, since a page has one cursor (DOC-1954).
 // It may have a label, a placeholder while it is empty, its characters
 // masked (each shows as `*`), a
 // check whose complaint shows under it, and it may be disabled. Enter sends
@@ -49,7 +49,7 @@ function firstCharacters(text: string, most: number, keep: (character: string) =
   return kept;
 }
 
-/** A control character is never text (INPUT.md section 5.3): typed or pasted, a field does not keep it. */
+/** A control character is never text (DOC-1930): typed or pasted, a field does not keep it. */
 function isText(character: string): boolean {
   return !CONTROL_CHARACTER.test(character);
 }

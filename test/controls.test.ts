@@ -40,7 +40,7 @@ test("a button's band is a control: from its New Background cell to the cell bef
   ]);
   seen.join(1, PAGE);
   assert.deepEqual(controlsOf(seen, PAGE), [{ row: BODY_ROW, column: 1, width: width - 2, height: 1 }]);
-  assert.doesNotMatch(latestTti(seen, PAGE), /^IM,/mu, "the page asks for no input: every event is sent (INPUT.md section 6.3)");
+  assert.doesNotMatch(latestTti(seen, PAGE), /^IM,/mu, "the page asks for no input: every event is sent (DOC-1922)");
 });
 
 test("a list's rows are controls, a taller item's rows joined, and its page stays one copy every viewer shares", () => {
@@ -95,7 +95,7 @@ test("a dialog over a page has the controls: the buttons under it cannot be clic
   assert.deepEqual([yes.width, no.width, no.row], ["Yes".length + 2, "No".length + 2, yes.row]);
 });
 
-test("a move with no button held goes, as a click does, to the component drawn in its cell and up from it, and nowhere else (INPUT.md section 9.8)", () => {
+test("a move with no button held goes, as a click does, to the component drawn in its cell and up from it, and nowhere else (DOC-1945)", () => {
   const seen: string[] = [];
   const page = viewer(h(Watcher, { seen }, h(Text, { text: "inside" })), h(Text, { text: "below" }));
   assert.deepEqual(controlsOf(page, PAGE), [], "nothing declared for it");

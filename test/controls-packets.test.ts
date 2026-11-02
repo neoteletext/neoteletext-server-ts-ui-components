@@ -1,5 +1,5 @@
 // The controls and rollover colours a page declares, as
-// X/26 and X/28 packets in its TTI (INPUT.md section 7.3).
+// X/26 and X/28 packets in its TTI (DOC-1844).
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -10,7 +10,7 @@ import { enhancementTriplets, localEnhancement } from "../src/core/enhancement.t
 import { LEVEL_1_COLOURS } from "../src/core/rollover.ts";
 import { latestTti, lines, lineTriplets, PAGE, streamBits, viewer } from "./controls-fixtures.ts";
 
-test("the triplets are INPUT.md section 7.3's: four buttons on row 20, nine cells each, and the Termination Marker", () => {
+test("the triplets are DOC-1844's: four buttons on row 20, nine cells each, and the Termination Marker", () => {
   assert.equal(setActivePosition(20), 0x0013c);
   assert.equal(controlTriplet(1, 9, false), 0x04941);
   assert.equal(controlTriplet(11, 9, false), 0x0494b);
@@ -95,7 +95,7 @@ test("a page's controls fit the local data: 32 controls six rows tall take 199 o
   assert.ok(enhancementLines(enhancementTriplets(held.controls)).length <= 16, "no more packets X/26 than a page has");
 });
 
-test("a page never writes column mode 01010, the pointer area INPUT.md section 7.4 withdrew: a paint canvas following the pointer declares nothing for it", () => {
+test("a page never writes column mode 01010, the pointer area DEC-657 withdrew: a paint canvas following the pointer declares nothing for it", () => {
   const page = viewer(h(PaintCanvas, { columns: 10, rows: 4, brush: true }));
   const triplets = latestTti(page, PAGE)
     .split("\n")

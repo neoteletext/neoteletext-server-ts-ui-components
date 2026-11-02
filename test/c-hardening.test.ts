@@ -29,7 +29,7 @@ function viewer(...body: Child[]): Harness {
   return seen;
 }
 
-test("a text field keeps no control character typed or pasted (INPUT.md section 5.3)", () => {
+test("a text field keeps no control character typed or pasted (DOC-1930)", () => {
   const typed: string[] = [];
   const page = viewer(
     h(TextField, {

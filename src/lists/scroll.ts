@@ -107,7 +107,7 @@ export class ScrollBar extends Component<ScrollBarProps> {
       this.props.onScroll(topAt(cell - this.#grip, total, track, shown));
       return true;
     }
-    // Every move over the page comes, a button held or not (INPUT.md section 9.8): one passing over the bar is not the bar's, and leaves its grip be.
+    // Every move over the page comes, a button held or not (DOC-1945): one passing over the bar is not the bar's, and leaves its grip be.
     if (event.action === "move" && (event.buttons & LEFT_HELD) === 0) {
       return false;
     }

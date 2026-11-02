@@ -10,7 +10,7 @@ export interface KeyEvent {
   readonly session: number;
   readonly key: string;
   readonly action: "press" | "repeat" | "release";
-  /** The text the press produced, if any (INPUT.md section 5.5). */
+  /** The text the press produced, if any (DOC-1935). */
   readonly text?: string;
   /** A release the page lost: the key did not come up, the viewer left (REQ-207). */
   readonly lost?: true;
@@ -52,7 +52,7 @@ export interface WheelEvent extends Cell {
 
 /**
  * The pointer came onto one of the page's controls, or went off it
- * (INPUT.md section 5.4, HOVER): the cell is the control's first, its
+ * (DOC-1940): the cell is the control's first, its
  * top-left, as the component declared it (canvas.ts, control). The browser
  * draws the control's look under the pointer itself; this is for what else
  * a hover changes, such as what the hint row says.
@@ -63,7 +63,7 @@ export interface HoverEvent extends Cell {
   readonly entered: boolean;
 }
 
-/** A wheel's notch, in its units (INPUT.md section 5.4). */
+/** A wheel's notch, in its units (DOC-1938). */
 export const NOTCH = 120;
 
 /** The text a key's press or repeat typed, if it typed any (the kit's {@link keyText}). */

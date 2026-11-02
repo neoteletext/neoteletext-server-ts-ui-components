@@ -21,7 +21,7 @@ export const BODY_ROW = 3;
 
 export const HINT_ROW = 23;
 
-/** One notch of the wheel, down (INPUT.md section 5.4). */
+/** One notch of the wheel, down (DOC-1938). */
 export const NOTCH = 120;
 
 function harness(specs: readonly PageSpec[]): Harness {

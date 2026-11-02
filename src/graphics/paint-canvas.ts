@@ -2,7 +2,7 @@
 // not a control: the browser's hover look would recolour all of it, and
 // its pressed look turn all of it round, for as long as a stroke lasts. A
 // stroke is a drag; and every move over the page comes, a button held or
-// not (INPUT.md section 9.8), so `brush` can show where the brush will
+// not (DOC-1945), so `brush` can show where the brush will
 // fall before a press. The surface follows the
 // canvas's columns and rows as they change, keeping what is painted where
 // the two overlap.
@@ -52,7 +52,7 @@ function surfaceOf({ columns, rows }: Pick<PaintProps, "columns" | "rows">): Six
   return new Sixels((columns - SURFACE_AT) * SIXELS_ACROSS, rows * SIXELS_DOWN);
 }
 
-/** A canvas of sixels drawn on with the pointer held down: every drag arrives (INPUT.md section 6.3). */
+/** A canvas of sixels drawn on with the pointer held down: every drag arrives (DOC-1945). */
 export class PaintCanvas extends Control<PaintProps, PaintState> {
   override state: PaintState = { foreground: this.props.foreground ?? Colour.Yellow, version: 0, brushAt: null };
   #sixels = surfaceOf(this.props);

@@ -225,7 +225,7 @@ export class Mount implements ComponentHost {
     if (captured(this.#focus, event) || focus?.component.onKey?.(event) === true) {
       return true;
     }
-    // Typing comes as each key's press and repeat with its text (INPUT.md section 6.3): the component with the keys has it as text before any above it has it as a key, so a field types the letter a page's shortcut would take.
+    // Typing comes as each key's press and repeat with its text (DOC-1935): the component with the keys has it as text before any above it has it as a key, so a field types the letter a page's shortcut would take.
     const typed = typedText(event);
     const text = typed === undefined ? null : { session: event.session, text: typed };
     if (text !== null && focus?.component.onText?.(text) === true) {
