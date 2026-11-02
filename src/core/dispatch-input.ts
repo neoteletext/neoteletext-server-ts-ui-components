@@ -23,6 +23,10 @@ export function dispatchInput(mount: Mount, session: number, input: Input): bool
     case "paste": {
       return mount.paste({ session, text: input.text });
     }
+    // No component shows an input method's text as it stands: what it commits comes as `text`.
+    case "compose": {
+      return false;
+    }
     case "mouse": {
       return input.action === "move"
         ? mount.pointer(session, "move", input.row, input.column, 0, input.buttons)

@@ -3,6 +3,23 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 15.0.0 (2 November 2026)
+
+### To take it
+
+- **Built on `neoteletext-server-ts-protocol` 8.0.0, protocol version 7.** A program
+  installs kit 8.0.0 beside this release, and changes nothing of its own unless it
+  switches over every kind of `Input`, which has a new one, `compose`.
+
+### What changed
+
+- **A `start` ends every viewer.** A program on a socket that hears `start` again
+  gets the application's `ended` for each session it knew, before `start`, from
+  kit 8.0.0: a session that returns joins afresh, and what a viewer held goes.
+- **`compose` is taken by nothing.** No component shows an input method's text as
+  it stands; what it commits still comes as `text`. The new `mods`, `px` and `py`
+  of an `Input` do not reach a component yet.
+
 ## 14.0.0 (2 November 2026)
 
 ### To take it

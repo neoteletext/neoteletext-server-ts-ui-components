@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, SERVER_LIMITS, text } from "neoteletext-server-ts-protocol/testing";
 import {
   type Canvas,
   type Child,
@@ -105,6 +105,25 @@ test("a viewer's own copy is sent only once it differs from the shared one, and 
   assert.equal(harness.ownPages(7, PAGE), undefined, "leaving releases its own copy");
   // Each copy's counter is given the keys at its first draw and renders again for it (the mount forces it: what a component renders may say whether it has the keys), so each mount has one update with nothing changed.
   assert.deepEqual(events, ["mount count", "update count 0->0", "mount count", "update count 0->0", "update count 0->1", "unmount count"]);
+});
+
+test("start ends every viewer: the kit's ended comes first, each mount goes once, and a viewer that returns starts afresh", () => {
+  const harness = channel([{ page: PAGE, title: "Test", perViewer: true, root: (): Element => frame("Counter", h(Counter, { label: "count" })) }]);
+  harness.join(7, PAGE);
+  harness.press(7, Key.Enter);
+  assert.match(text(harness.own(7, PAGE), 3), /count 1/u);
+  events.length = 0;
+  harness.channel.start(0, SERVER_LIMITS);
+  assert.equal(harness.ownPages(7, PAGE), undefined, "nothing of the viewer's own is kept");
+  assert.deepEqual(
+    events.filter((event) => event === "unmount count"),
+    ["unmount count", "unmount count"],
+    "the viewer's mount, then the channel's, each once",
+  );
+  harness.join(7, PAGE);
+  assert.equal(harness.ownPages(7, PAGE), undefined, "a viewer that returns has the count from nothing");
+  harness.press(7, Key.Enter);
+  assert.match(text(harness.own(7, PAGE), 3), /count 1/u);
 });
 
 test("keys go to the focused component; pointer clicks to the component drawn in the cell", () => {
