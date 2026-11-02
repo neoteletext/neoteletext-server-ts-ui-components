@@ -4,6 +4,7 @@
 
 import type { Box } from "./layout.ts";
 import type { Reach } from "./draw.ts";
+import type { Pointed } from "../kit.ts";
 import type { HoverEvent, PointerEvent, WheelEvent } from "./events.ts";
 import { inside } from "./grid.ts";
 import { type AnyComponent, bubble, type Node } from "./node.ts";
@@ -20,6 +21,25 @@ export interface PointerHost {
 function placed(node: Node, row: number, column: number): { local: { row: number; column: number }; region?: string } {
   const region = node.regions.find((each) => inside(each, row, column));
   return { local: { row: row - node.box.row, column: column - node.box.column }, ...(region === undefined ? {} : { region: region.id }) };
+}
+
+/** A press, move or release on a cell, as the mount is given it: the button pressed or released, 0 left, the buttons held a bit each, and what comes with the pointer. */
+export interface PointerAt extends Pointed {
+  readonly action: "press" | "release" | "move";
+  readonly row: number;
+  readonly column: number;
+  readonly button: number;
+  readonly buttons: number;
+  /** A release the page lost (REQ-207). */
+  readonly lost?: true;
+}
+
+/** The wheel turned over a cell, in 1/120ths of a line, as the mount is given it, with what comes with the pointer. */
+export interface WheelAt extends Pointed {
+  readonly row: number;
+  readonly column: number;
+  readonly dx: number;
+  readonly dy: number;
 }
 
 export class Pointer {
@@ -56,17 +76,9 @@ export class Pointer {
     }
   }
 
-  pointer(session: number, action: "press" | "release" | "move", row: number, column: number, button: number, buttons: number, lost?: true): boolean {
-    const event = (node: Node): PointerEvent => ({
-      session,
-      action,
-      row,
-      column,
-      button,
-      buttons,
-      ...(lost === undefined ? {} : { lost }),
-      ...placed(node, row, column),
-    });
+  pointer(session: number, at: PointerAt): boolean {
+    const { action, row, column, button } = at;
+    const event = (node: Node): PointerEvent => ({ session, ...at, ...placed(node, row, column) });
     const held = this.#captured.get(session);
     if (held !== undefined && action !== "press") {
       if (action === "release") {
@@ -96,10 +108,11 @@ export class Pointer {
     });
   }
 
-  wheel(session: number, row: number, column: number, dx: number, dy: number): boolean {
+  wheel(session: number, at: WheelAt): boolean {
+    const { row, column } = at;
     const target = this.#host.reach().grid[row]?.[column] ?? null;
     return bubble(target, (component, node) => {
-      const event: WheelEvent = { session, row, column, dx, dy, ...placed(node, row, column) };
+      const event: WheelEvent = { session, ...at, ...placed(node, row, column) };
       return component.onWheel?.(event);
     });
   }

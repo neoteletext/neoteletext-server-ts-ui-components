@@ -12,7 +12,7 @@ import type { ComponentHost, FocusableAt } from "./component-host.ts";
 import type { Box } from "./layout.ts";
 import { draw, type DrawHost, type Reach, shownSubPages } from "./draw.ts";
 import type { Element } from "./element.ts";
-import { isPress, type KeyEvent, type TextEvent, typedText } from "./events.ts";
+import { type ComposeEvent, isPress, type KeyEvent, type TextEvent, typedText } from "./events.ts";
 import { captured, FocusHistory, focusMove } from "./focus.ts";
 import { emptyGrid } from "./grid.ts";
 import type { KeyHelpEntry } from "./key-bindings.ts";
@@ -49,7 +49,8 @@ export class Mount implements ComponentHost {
   #focus: Node | null = null;
   readonly #history = new FocusHistory();
   #reach: Reach = { grid: emptyGrid(), controls: [] };
-  readonly #pointer: Pointer;
+  /** Presses, moves and the wheel go straight to it; a hover goes through {@link hover}, which draws the hint row again. */
+  readonly pointer: Pointer;
   /** The page as last answered. */
   lastTti: string | null = null;
 
@@ -66,7 +67,7 @@ export class Mount implements ComponentHost {
       },
     });
     this.#timers = new Timers({ nextTimerId: host.nextTimerId, now: (): number => this.services.now(), viewed: host.viewed });
-    this.#pointer = new Pointer({
+    this.pointer = new Pointer({
       reach: (): Reach => this.#reach,
       focusOn: (node): void => {
         this.#focusOn(node);
@@ -106,7 +107,7 @@ export class Mount implements ComponentHost {
   }
 
   isHovered(component: AnyComponent): boolean {
-    return this.#pointer.isHovered(component);
+    return this.pointer.isHovered(component);
   }
 
   setTimer(component: AnyComponent, run: () => void, delay: number, every: boolean, whileViewed: boolean): number {
@@ -152,7 +153,7 @@ export class Mount implements ComponentHost {
   /** The component under the viewer's pointer that says what it does, nearest first; on the copy every viewer shares, which follows no one's pointer, none. */
   #hinted(): AnyComponent | null {
     const { session } = this.services;
-    return session === null ? null : nearest(this.#pointer.hoveredBy(session), (each) => each.hint() !== null);
+    return session === null ? null : nearest(this.pointer.hoveredBy(session), (each) => each.hint() !== null);
   }
 
   // Rendering.
@@ -188,7 +189,7 @@ export class Mount implements ComponentHost {
   /** What the mount keeps of an unmounting component goes: its timers, the pointer it held or was under, and the keys. */
   #forget(node: Node): void {
     this.#timers.clearOwner(node.component);
-    this.#pointer.forget(node);
+    this.pointer.forget(node);
     this.#history.forget(node);
     if (this.#focus === node) {
       this.#focus = null;
@@ -254,6 +255,11 @@ export class Mount implements ComponentHost {
     return bubble(this.#focus ?? this.#tree.root, (component) => component.onPaste?.(event) ?? component.onText?.(event));
   }
 
+  /** An input method's text as it stands goes where typing goes. */
+  compose(event: ComposeEvent): boolean {
+    return bubble(this.#focus ?? this.#tree.root, (component) => component.onCompose?.(event));
+  }
+
   /** The keys came to the page, or left it: every component hears it. */
   focusChanged(arrived: boolean): void {
     for (const component of this.#tree.components()) {
@@ -267,19 +273,11 @@ export class Mount implements ComponentHost {
 
   // The pointer.
 
-  pointer(session: number, action: "press" | "release" | "move", row: number, column: number, button: number, buttons: number, lost?: true): boolean {
-    return this.#pointer.pointer(session, action, row, column, button, buttons, lost);
-  }
-
-  wheel(session: number, row: number, column: number, dx: number, dy: number): boolean {
-    return this.#pointer.wheel(session, row, column, dx, dy);
-  }
-
   /** The pointer entered or left a control (pointer.ts); the hint row is drawn again when what it says changes. */
   hover(session: number, entered: boolean, row: number, column: number): boolean {
     const hintBefore = this.focusedHint();
     const hoveredBefore = this.hoveredHint();
-    const taken = this.#pointer.hover(session, entered, row, column);
+    const taken = this.pointer.hover(session, entered, row, column);
     // A hint row of a page's own words shows the hovered control's alone, so either changing is a change.
     if (this.focusedHint() !== hintBefore || this.hoveredHint() !== hoveredBefore) {
       this.#dirty = true;

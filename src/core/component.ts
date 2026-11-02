@@ -22,7 +22,7 @@ import type { Canvas } from "./canvas.ts";
 import type { ComponentHost, FocusableAt, TimerOptions } from "./component-host.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { Child, WithChildren } from "./element.ts";
-import type { HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
+import type { ComposeEvent, HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
 import { bindingsText, type KeyHelpEntry } from "./key-bindings.ts";
 import type { PageNeeds } from "./needs.ts";
 import type { Services } from "./services.ts";
@@ -222,6 +222,8 @@ export abstract class Component<P extends object = object, S extends object = ob
   onPageKey?(event: KeyEvent): boolean | void;
   onText?(event: TextEvent): boolean | void;
   onPaste?(event: TextEvent): boolean | void;
+  /** An input method's text as it stands, while the viewer composes; it goes to the component with the keys, then up. No component of the library shows it: what it commits comes as text. */
+  onCompose?(event: ComposeEvent): boolean | void;
   /** A left press on a cell: the common case of onPointer. */
   onClick?(event: PointerEvent): boolean | void;
   /** A press, move or release; a press answered true holds the pointer here until it is released. Every move over the page comes, a button held or not (DOC-1945): a component that wants none answers false to one with no button held. */

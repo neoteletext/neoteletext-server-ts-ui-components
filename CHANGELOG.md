@@ -3,6 +3,24 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 15.1.0 (2 November 2026)
+
+### To take it
+
+- Nothing to change: every new field is optional and absent when the receiver sends nothing.
+
+### What changed
+
+- **A component hears what protocol 7 brings a program.** A `KeyEvent` has `mods`, the
+  modifier keys held as the kit's `Mods` bits, so a component can tell Control-C from
+  `c`; a `PointerEvent` and a `WheelEvent` have `mods`, and `px` and `py`, the dot of
+  the page image under the pointer, 12 to a cell across and 20 down, when the receiver
+  knows it. Each is absent when the input had none.
+- **`compose` reaches a component,** as a `ComposeEvent` (`cursor`, `text`) to the new
+  `onCompose`, from the component with the keys and then up. No component of the library
+  shows it yet: a field takes what the input method commits, as `text`, and a key with
+  Control, Alt or Super held, which brings no text, still types nothing.
+
 ## 15.0.0 (2 November 2026)
 
 ### To take it

@@ -76,8 +76,16 @@ A key no component takes is dropped: page selection and Fastext had
 their turn first. A click no component takes follows the page link under
 it, if there is one.
 
+A key comes with the modifier keys held (`mods`, the kit's `Mods` bits),
+so Control-C is the key `c` with `Mods.Control` and no text: a field types
+nothing for it. An input method's text as it stands, while the viewer
+composes, goes where typing goes (`onCompose`); what it commits comes as
+text, and no component of the library shows the composition.
+
 A click goes to the component drawn in the cell clicked, then up its
-parents (`onClick`, `onPointer`); the wheel the same (`onWheel`). The
+parents (`onClick`, `onPointer`); the wheel the same (`onWheel`). Both come
+with `mods`, and with `px` and `py`, the dot of the page image under the
+pointer, when the receiver knows it. The
 pointer coming onto a control a component declared tells it (`onHover`).
 
 ## Saying what the keys do
