@@ -23,6 +23,14 @@ The props interfaces that components' props extend: what every control, every co
 | `prompts` (needed) | `Prompts` |  |
 | `index` | `number` |  |
 
+## SubPageProps
+
+| Prop | Type | What it is |
+| --- | --- | --- |
+| `fastext` | `FastextLinks` | The four Fastext links, red, green, yellow and cyan, each a page or null; none when absent. |
+| `index` | `number` | The page the Index key goes to; none when absent. |
+| `screenColour` | `number` | The colour of the screen around the page, a Colour Map entry from 0 to 31 (EN 300 706 Tables 28 and 30), sent as a Full Screen Colour triplet and seen at Level 2.5; the decoder's default when absent. |
+
 ## ValueProps
 
 | Prop | Type | What it is |
