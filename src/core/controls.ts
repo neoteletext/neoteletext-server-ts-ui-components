@@ -102,9 +102,13 @@ function cut(each: Box): Box {
 
 /** The local data's triplets runs take: one for each row of each run, and a Set Active Position for each row no run before had. */
 class Budget {
-  // The Termination Marker is always sent.
-  #used = 1;
+  #used: number;
   readonly #rows = new Set<number>();
+
+  /** `reserved`: the triplets already spoken for, beside the Termination Marker, which is always sent. */
+  constructor(reserved: number) {
+    this.#used = 1 + reserved;
+  }
 
   /** Takes the triplets `run` needs, if there is room. */
   take(run: Box): boolean {
@@ -135,10 +139,10 @@ export interface Kept {
  * engine reads it (REQ-INT-118): each control cut to rows 1 to 23 and the
  * page's columns, and one with nothing left dropped; a control over a
  * control kept before it dropped; past MAX_CONTROLS dropped; and what the
- * local data has no triplets left for dropped.
+ * local data has no triplets left, after the `reserved` others, for dropped.
  */
-export function keptDeclarations(controls: readonly Box[]): Kept {
-  const budget = new Budget();
+export function keptDeclarations(controls: readonly Box[], reserved = 0): Kept {
+  const budget = new Budget(reserved);
   const held: Box[] = [];
   const declaredAt: number[] = [];
   controls.forEach((each, index) => {

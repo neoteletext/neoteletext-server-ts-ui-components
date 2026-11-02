@@ -23,13 +23,6 @@ The props interfaces that components' props extend: what every control, every co
 | `prompts` (needed) | `Prompts` |  |
 | `index` | `number` |  |
 
-## SubPageProps
-
-| Prop | Type | What it is |
-| --- | --- | --- |
-| `fastext` | `FastextLinks` | The four Fastext links, red, green, yellow and cyan, each a page or null; none when absent. |
-| `index` | `number` | The page the Index key goes to; none when absent. |
-
 ## ValueProps
 
 | Prop | Type | What it is |

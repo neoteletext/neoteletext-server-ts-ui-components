@@ -3,6 +3,23 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 14.0.0 (2 November 2026)
+
+### To take it
+
+- **Still built on `neoteletext-server-ts-protocol` 7.0.0, protocol version 6.** A
+  program changes nothing of its own. A `RawSubPage` does not take the new prop:
+  its screen colour is in its TTI.
+
+### What changed
+
+- **`screenColour` on `Frame` and `SubPage`** sets the colour of the screen around
+  the page: a Colour Map entry from 0 to 31, sent as a Full Screen Colour triplet
+  (EN 300 706 Table 28), the first of the sub-page's X/26 as Annex A.5 asks. Each
+  sub-page has its own, and it is seen at Level 2.5. It takes one of the local
+  data's 208 triplets, so a page whose controls would fill them keeps one fewer
+  run. A value outside 0 to 31 throws a `RangeError` at the draw.
+
 ## 13.0.0 (2 November 2026)
 
 ### To take it

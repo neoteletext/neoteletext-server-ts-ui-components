@@ -8,9 +8,16 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { text } from "neoteletext-server-ts-protocol/testing";
-import { type Canvas, type Child, Component, DoubleWidth, type Element, h, type Size } from "../src/index.ts";
+import { type Canvas, type Child, Component, DoubleWidth, type Element, Frame, h, readControls, type Size } from "../src/index.ts";
 import { controlTriplet, keptDeclarations, LAST_CONTROL_ROW, setActivePosition, TERMINATION } from "../src/core/controls.ts";
-import { DisplayAttribute, displayAttributesTriplet, enhancementTriplets, keptDisplayAttributes } from "../src/core/enhancement.ts";
+import {
+  DisplayAttribute,
+  displayAttributesTriplet,
+  enhancementTriplets,
+  fullScreenColourTriplet,
+  keptDisplayAttributes,
+  localEnhancement,
+} from "../src/core/enhancement.ts";
 import { Colour, COLUMNS, englishCodes, SPACE_CODE, textColour } from "../src/kit.ts";
 import { BODY_ROW, frame, harness, latestTti, lineTriplets, PAGE, viewer } from "./controls-fixtures.ts";
 
@@ -85,6 +92,52 @@ function published(root: () => Element): string {
   assert.deepEqual(page.errors, [], "the channel reported no failure");
   return latestTti(page, PAGE);
 }
+
+test("a Full Screen Colour triplet is row mode 00000 at address 41 with the Colour Map entry as data (Table 28, Annex A.5 NOTE 1)", () => {
+  assert.equal(fullScreenColourTriplet(0), 41);
+  // Address 41, mode 0, data 13 in bits 11 to 17: S1 and S0 stay 0.
+  assert.equal(fullScreenColourTriplet(13), 41 | (13 << 11));
+  assert.equal(fullScreenColourTriplet(31), 41 | (31 << 11));
+  for (const colour of [-1, 32, 1.5, Number.NaN]) {
+    assert.throws(() => fullScreenColourTriplet(colour), RangeError, String(colour));
+  }
+});
+
+test("a page's screen colour is its X/26's first triplet, before its controls, and alone it is that and the Termination Marker", () => {
+  const withControl = enhancementTriplets([{ row: 5, column: 0, width: 4, height: 1 }], [], 3);
+  assert.equal(withControl[0], fullScreenColourTriplet(3));
+  assert.equal(withControl[1], setActivePosition(5));
+  assert.equal(withControl.at(-1), TERMINATION);
+  assert.deepEqual(enhancementTriplets([], [], 0), [fullScreenColourTriplet(0), TERMINATION], "black is a colour, not nothing");
+  assert.deepEqual(enhancementTriplets([], []), []);
+});
+
+test("a Frame's screenColour reaches its sub-page's TTI, each sub-page its own, and leaves its controls readable", () => {
+  class Twos extends Component {
+    override render(): Child {
+      return [
+        h(Frame, { key: "one", title: "One", background: Colour.Blue, screenColour: 12 }, h(Marks, { controls: [[5, 2, 6]], attributes: [] })),
+        h(Frame, { key: "two", title: "Two", background: Colour.Blue, screenColour: 2 }),
+        h(Frame, { key: "three", title: "Three", background: Colour.Blue }),
+      ];
+    }
+  }
+  const tti = published(() => h(Twos, {}));
+  const [one, two, three] = localData(tti);
+  assert.equal(one?.[0], fullScreenColourTriplet(12));
+  assert.deepEqual(two, [fullScreenColourTriplet(2), TERMINATION]);
+  assert.deepEqual(three ?? [], []);
+  assert.deepEqual(readControls(tti)[0], [{ row: 5, column: 2, width: 6, height: 1 }]);
+});
+
+test("a screen colour on a page whose controls would fill the local data gives up a control rather than overflow", () => {
+  // Eight controls down rows 1 to 23: 23 Set Active Positions, 8 by 23 runs and the Termination Marker are the 208 triplets exactly.
+  const controls = Array.from({ length: 8 }, (_, at) => ({ row: 1, column: at * 3, width: 2, height: LAST_CONTROL_ROW }));
+  assert.equal(localEnhancement(controls).kept.controls.length, 8);
+  const withColour = localEnhancement(controls, [], 7);
+  assert.equal(withColour.kept.controls.length, 7);
+  assert.ok(enhancementTriplets(withColour.kept.controls, [], 7).length <= LOCAL_TRIPLETS);
+});
 
 test("a display attributes triplet is column mode 01100 with its flags as data, Double Width D6 (Table 29)", () => {
   assert.equal(DisplayAttribute.DoubleWidth, DOUBLE_WIDTH_BIT);

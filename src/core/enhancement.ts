@@ -13,7 +13,8 @@
 // row by row from the top, a Set Active Position triplet (Table 28) and the
 // row's triplets in increasing column order, a control before an attribute
 // at the same column; then the Termination
-// Marker (Annex A.3). Unlike controls, which a click is found on and so
+// Marker (Annex A.3). A screen colour goes first of all (Annex A.5, NOTE 1).
+// Unlike controls, which a click is found on and so
 // only the first sub-page declares (draw.ts), display attributes are how a
 // sub-page looks, so every sub-page carries those it paints.
 
@@ -42,6 +43,15 @@ export const DisplayAttribute = {
   DoubleWidth: 1 << 6,
 } as const;
 
+/** Table 28: row mode 00000, Full Screen Colour. */
+const MODE_FULL_SCREEN_COLOUR = 0b00000;
+/** Annex A.5, NOTE 1: the address it recommends for Level 1.5 decoders; Table 28: the address does not move the Active Position. */
+const FULL_SCREEN_COLOUR_ADDRESS = 41;
+/** Table 28: the five bits C1 C0 E2 E1 E0 that select a Colour Map entry (Table 30). */
+const LAST_COLOUR_MAP_ENTRY = 31;
+/** The one triplet a screen colour takes. */
+const SCREEN_COLOUR_TRIPLETS = 1;
+
 /** A component's request for display attributes `flags` (DisplayAttribute) from a cell of the page. */
 export interface DisplayAttributes {
   readonly row: number;
@@ -52,6 +62,14 @@ export interface DisplayAttributes {
 /** The triplet that sets display attributes `flags` from `column` of the active row (Table 29). */
 export function displayAttributesTriplet(column: number, flags: number): number {
   return triplet(column, MODE_DISPLAY_ATTRIBUTES, flags);
+}
+
+/** The Full Screen Colour triplet of Colour Map entry `colour`, 0 to 31, with S1 and S0 at 0 (Table 28). */
+export function fullScreenColourTriplet(colour: number): number {
+  if (!Number.isInteger(colour) || colour < 0 || colour > LAST_COLOUR_MAP_ENTRY) {
+    throw new RangeError(`screenColour: a Colour Map entry is a whole number from 0 to ${LAST_COLOUR_MAP_ENTRY}, not ${colour}`);
+  }
+  return triplet(FULL_SCREEN_COLOUR_ADDRESS, MODE_FULL_SCREEN_COLOUR, colour);
 }
 
 /** The Termination Marker's one triplet, sent whenever anything is. */
@@ -73,19 +91,20 @@ function placedRuns(boxes: readonly Box[], encode: (column: number, width: numbe
 
 /**
  * The local enhancement data of what a sub-page keeps (keptControls,
- * keptDisplayAttributes), in screen address order: each row from the top,
- * its Set Active Position and its triplets by column; then the Termination
- * Marker. Empty when there is nothing.
+ * keptDisplayAttributes): its Full Screen Colour, when `screenColour` gives
+ * one, as the first triplet (Annex A.5, NOTE 1); then, in screen address
+ * order, each row from the top, its Set Active Position and its triplets by
+ * column; then the Termination Marker. Empty when there is nothing.
  */
-export function enhancementTriplets(controls: readonly Box[], attributes: readonly DisplayAttributes[] = []): number[] {
+export function enhancementTriplets(controls: readonly Box[], attributes: readonly DisplayAttributes[] = [], screenColour: number | null = null): number[] {
   const placed = [
     ...placedRuns(controls, controlTriplet),
     ...attributes.map(({ row, column, flags }) => ({ row, column, value: displayAttributesTriplet(column, flags) })),
   ];
-  if (placed.length === 0) {
+  if (placed.length === 0 && screenColour === null) {
     return [];
   }
-  const triplets: number[] = [];
+  const triplets = screenColour === null ? [] : [fullScreenColourTriplet(screenColour)];
   for (const row of new Set(placed.map((each) => each.row).toSorted((a, b) => a - b))) {
     triplets.push(setActivePosition(row));
     // toSorted is stable: at one column, a control, then an attribute, as asked.
@@ -103,17 +122,17 @@ export function enhancementTriplets(controls: readonly Box[], attributes: readon
  * and columns 8 on, Table 28 mode 00111; row 24 is the Fastext row), in
  * what the local data's 16 packets of 13 triplets have left after the
  * controls `kept`, which take theirs first as what a
- * click acts on. A row's are kept all or none, from the top: each acts to
+ * click acts on, and the `reserved` others. A row's are kept all or none, from the top: each acts to
  * the row's end, so one kept without the triplet after it that ends it
  * would carry over the rest of the row. What does not fit is dropped.
  */
-export function keptDisplayAttributes(kept: Pick<Kept, "controls">, declared: readonly DisplayAttributes[]): DisplayAttributes[] {
+export function keptDisplayAttributes(kept: Pick<Kept, "controls">, declared: readonly DisplayAttributes[], reserved = 0): DisplayAttributes[] {
   const onPage = declared.filter(
     ({ row, column }) =>
       Number.isInteger(row) && Number.isInteger(column) && row >= FIRST_CONTROL_ROW && row <= LAST_CONTROL_ROW && column >= 0 && column < COLUMNS,
   );
   const rowsAddressed = new Set(kept.controls.flatMap((box) => Array.from({ length: box.height }, (_, below) => box.row + below)));
-  let used = Math.max(enhancementTriplets(kept.controls).length, TERMINATION_TRIPLETS);
+  let used = Math.max(enhancementTriplets(kept.controls).length, TERMINATION_TRIPLETS) + reserved;
   const held: DisplayAttributes[] = [];
   for (const row of new Set(onPage.map((each) => each.row).toSorted((a, b) => a - b))) {
     const onRow = onPage.filter((each) => each.row === row);
@@ -132,8 +151,13 @@ export interface LocalEnhancement {
   readonly lines: string[];
 }
 
-/** A sub-page's local enhancement data of the controls declared and the display attributes asked for, of each what fits. */
-export function localEnhancement(controls: readonly Box[], attributes: readonly DisplayAttributes[] = []): LocalEnhancement {
-  const kept = keptDeclarations(controls);
-  return { kept, lines: enhancementLines(enhancementTriplets(kept.controls, keptDisplayAttributes(kept, attributes))) };
+/** A sub-page's local enhancement data: its screen colour, when it gives one, then of the controls declared and the display attributes asked for, of each what fits. */
+export function localEnhancement(
+  controls: readonly Box[],
+  attributes: readonly DisplayAttributes[] = [],
+  screenColour: number | null = null,
+): LocalEnhancement {
+  const reserved = screenColour === null ? 0 : SCREEN_COLOUR_TRIPLETS;
+  const kept = keptDeclarations(controls, reserved);
+  return { kept, lines: enhancementLines(enhancementTriplets(kept.controls, keptDisplayAttributes(kept, attributes, reserved), screenColour)) };
 }

@@ -28,6 +28,7 @@ import { Frame } from "neoteletext-server-ts-ui-components";
 | `prompts` | `Prompts` | The Fastext prompts on row 24, and the links they give the sub-page; none when absent. |
 | `hint` | `string` | What the keys do, on row 23; when absent, what the component with the keys says. |
 | `index` | `number` | The Index key's page. |
+| `screenColour` | `number` | The colour of the screen around the page, a Colour Map entry from 0 to 31 (EN 300 706 Tables 28 and 30), seen at Level 2.5; the decoder's default when absent. |
 | `bare` | `boolean` | No title band: the body starts on row 1, for a page with its own heading (the front page's emblem). |
 
 ### A page with its prompts

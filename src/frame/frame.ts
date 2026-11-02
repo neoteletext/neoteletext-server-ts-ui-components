@@ -39,6 +39,8 @@ export interface FrameProps {
   readonly hint?: string;
   /** The Index key's page. */
   readonly index?: number;
+  /** The colour of the screen around the page, a Colour Map entry from 0 to 31 (EN 300 706 Tables 28 and 30), seen at Level 2.5; the decoder's default when absent. */
+  readonly screenColour?: number;
   /** No title band: the body starts on row 1, for a page with its own heading (the front page's emblem). */
   readonly bare?: boolean;
 }

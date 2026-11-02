@@ -130,7 +130,13 @@ function keptControls(declared: readonly DeclaredControl[], { kept }: LocalEnhan
 }
 
 /** A sub-page drawn from its components: its TTI, and on the first sub-page what its cells reach. */
-function drawScreen(node: Node, links: SubPageLinks, first: boolean, host: DrawHost): { readonly text: string; readonly reach: Reach } {
+function drawScreen(
+  node: Node,
+  links: SubPageLinks,
+  screenColour: number | null,
+  first: boolean,
+  host: DrawHost,
+): { readonly text: string; readonly reach: Reach } {
   const screen = new Screen();
   const requests: PageRequests = { cursor: null, displayAttributes: [] };
   const grid = emptyGrid();
@@ -148,6 +154,7 @@ function drawScreen(node: Node, links: SubPageLinks, first: boolean, host: DrawH
   const enhancement = localEnhancement(
     declared.map(({ control }) => control),
     requests.displayAttributes,
+    screenColour,
   );
   const controls = keptControls(declared, enhancement);
   // The rollover colours go with the sub-page whose controls show them.
@@ -169,7 +176,7 @@ export function draw(shown: readonly FoundSubPage[], host: DrawHost): { readonly
       const band = title === undefined ? null : { title, background: background ?? Colour.Blue, foreground: foreground ?? Colour.White };
       return rawTti(text, host.page, links.fastext, band);
     }
-    const drawn = drawScreen(node, links, index === 0, host);
+    const drawn = drawScreen(node, links, subPage.props.screenColour ?? null, index === 0, host);
     if (index === 0) {
       reach = drawn.reach;
     }
