@@ -3,6 +3,19 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 16.0.1 (3 November 2026)
+
+### To take it
+
+- Take the protocol kit 9.1.0 beside it.
+
+### What changed
+
+- **A page in English past the protocol's 64 runs of text is sent**: the kit
+  9.1.0 leaves its plain English runs to the codes under them, which are
+  what the server's encoder writes. The UI components demo's catalogue page
+  came to 86 runs.
+
 ## 16.0.0 (3 November 2026)
 
 ### To take it
