@@ -3,6 +3,14 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 17.0.1 (3 November 2026)
+
+### What changed
+
+- **Thai and Lao marks on a band show**: a line's mark rows take its
+  letters' ink, so on a band (the title band, a Band, a ticker, a chosen
+  list row) the marks are no longer drawn in the band's own colour.
+
 ## 17.0.0 (3 November 2026)
 
 ### To take it

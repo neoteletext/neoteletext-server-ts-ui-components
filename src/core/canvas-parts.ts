@@ -66,6 +66,33 @@ export function backgroundCodes(background: Colour): [number, number] {
   return background === Colour.Black ? [Attribute.BlackBackground, Attribute.BlackBackground] : [textColour(background), Attribute.NewBackground];
 }
 
+/** The highest alphanumeric colour attribute (EN 300 706 Table 26: 0x00 to 0x07). */
+const LAST_TEXT_COLOUR = 0x07;
+
+/**
+ * Gives a run's mark rows its letters' ink: the server writes the marks
+ * into the rows above and below in whatever colour is in force there, and
+ * on a band (New Background) that is the band's own colour, so the marks
+ * vanish into it. The colour the letters' row last sets before `from`, in
+ * the box, is written in the same cell of each mark row where that cell is
+ * a space, which the marks then take (clause 12.2, Table 26).
+ */
+function inkMarkRows(screen: Screen, box: Box, page: number, from: number, markRows: number): void {
+  let at = from - 1;
+  while (at >= box.column && screen.at(page, at) > LAST_TEXT_COLOUR) {
+    at -= 1;
+  }
+  if (at < box.column) {
+    return;
+  }
+  const ink = screen.at(page, at);
+  for (const row of [page - markRows, page + markRows]) {
+    if (screen.at(row, at) === SPACE) {
+      screen.code(row, at, ink);
+    }
+  }
+}
+
 /**
  * Writes `cells` on `row` of `box` from `column`, cut at the box's edge:
  * each code as it is, and each stretch of strings as runs of text in
@@ -98,6 +125,9 @@ export function writeLine(screen: Screen, box: Box, row: number, column: number,
         );
       } else {
         screen.text(page, from, run.cells.join(""), run.language);
+        if (run.language === language.tag && language.markRows > 0) {
+          inkMarkRows(screen, box, page, from, language.markRows);
+        }
       }
     }
     text = [];

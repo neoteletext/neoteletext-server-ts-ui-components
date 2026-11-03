@@ -7,7 +7,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ChoiceList, ComponentChannel, type Element, h, LinesBlock, Paragraph, ScrollView, TabStrip, Ticker } from "../src/index.ts";
+import { Band, ChoiceList, ComponentChannel, type Element, h, LinesBlock, Paragraph, ScrollView, TabStrip, Ticker } from "../src/index.ts";
 import { Colour, Key } from "../src/kit.ts";
 import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
 import type { LanguageTag, SubPageContent } from "../src/kit.ts";
@@ -189,4 +189,15 @@ test("DEC-2238: punctuation between Arabic-script or kana words is the script's 
     textRuns(textCells("ヒト, ヒト"), languageOf("ja-Kana", SERVER_LANGUAGES)).map((run) => [run.cells.join(""), run.language]),
     [["ヒト、 ヒト", "ja-Kana"]],
   );
+});
+
+test("TODO-2229 item 9: a Thai line on a band gives its mark rows its ink, so its marks are not drawn in the band's colour", () => {
+  const { page, runs } = thai(h(Band, { text: "ที่นี่", background: Colour.Blue, foreground: Colour.White }));
+  const [row] = runs.filter(([, text]) => text === "ที่นี่").map(([at]) => at);
+  assert.ok(row !== undefined);
+  const rows = page.seen(1, PAGE).rows;
+  const ink = (rows[row] ?? []).lastIndexOf(Colour.White, 6);
+  assert.ok(ink >= 0, "the letters' ink");
+  assert.equal(rows[row - 1]?.[ink], Colour.White, "the row of the marks above");
+  assert.equal(rows[row + 1]?.[ink], Colour.White, "the row of the marks below");
 });
