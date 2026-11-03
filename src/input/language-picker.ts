@@ -29,7 +29,8 @@ export interface LanguagePickerProps extends ControlProps {
 export class LanguagePicker extends Component<LanguagePickerProps> {
   /** The languages offered, as the server lists them. */
   get #offered(): Language[] {
-    const listed = this.services.languages();
+    // Unmounted (the probe of the page's needs), the server's languages are not known yet.
+    const listed = this.mounted ? this.services.languages() : [];
     const wanted = this.props.languages;
     return wanted === undefined ? [...listed] : wanted.flatMap((tag) => listed.filter((language) => language.tag === tag));
   }
@@ -42,7 +43,7 @@ export class LanguagePicker extends Component<LanguagePickerProps> {
 
   override render(): Child {
     const offered = this.#offered;
-    const { session } = this.services;
+    const session = this.mounted ? this.services.session : null;
     const current = session === null ? -1 : offered.findIndex((language) => language.tag === this.services.language(session));
     const { shown, names: _names, languages: _languages, onChoose, ...control } = this.props;
     return h(ChoiceList<Language>, {

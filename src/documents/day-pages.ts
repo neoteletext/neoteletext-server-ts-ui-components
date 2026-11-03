@@ -61,7 +61,8 @@ function subPagesOf(articles: readonly Article[], most: number): Article[][] {
 export class DayPages extends Component<DayPagesProps> {
   override render(): Child {
     const out: Child[] = [];
-    const most = mostNumbered(this.services.limits());
+    // Unmounted (the probe of the page's needs), the server's limits are not known: every day is walked.
+    const most = this.mounted ? mostNumbered(this.services.limits()) : Number.POSITIVE_INFINITY;
     for (const [day, { name, articles }] of this.props.days.entries()) {
       if (out.length >= most) {
         break;

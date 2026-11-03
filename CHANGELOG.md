@@ -3,6 +3,14 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 19.0.1 (3 November 2026)
+
+### What changed
+
+- **`LanguagePicker` and `DayPages` render before they are mounted**, as the
+  probe of a page's needs does, instead of reaching the channel: 19.0.0's log
+  named them on every channel that used them.
+
 ## 19.0.0 (3 November 2026)
 
 ### To take it
