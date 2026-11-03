@@ -10,7 +10,7 @@
 // another sub-page's component. Display attributes are how a sub-page
 // looks, so each sub-page carries those it paints.
 
-import { Colour, COLUMNS, type Limits, ROWS, Screen, type SubpageBody } from "../kit.ts";
+import { Colour, COLUMNS, type Limits, mostNumbered, ROWS, Screen, type SubpageBody } from "../kit.ts";
 import { Canvas, nothingDeclared, ownCodesOf, type PageRequests, type Region, type TextLanguage } from "./canvas.ts";
 import type { Box, LayoutChild, Size } from "./layout.ts";
 import { type LocalEnhancement, localEnhancement } from "./enhancement.ts";
@@ -39,7 +39,7 @@ export function drawHost(
   host: { readonly rollover: ColourTable | null; readonly report: (text: string) => void; readonly services: { limits(): Limits } },
   languageOf: (node: Node) => TextLanguage,
 ): DrawHost {
-  return { page, rollover: host.rollover, report: host.report, mostSubPages: (): number => host.services.limits().standard.subpages, languageOf };
+  return { page, rollover: host.rollover, report: host.report, mostSubPages: (): number => mostNumbered(host.services.limits()), languageOf };
 }
 
 /** A page drawn: its sub-pages as the protocol carries them, and a key that is the same exactly when they are. */
