@@ -65,7 +65,7 @@ export abstract class Component<P extends object = object, S extends object = ob
    * The language of its text (REQ-2152 item 1): its own `language` prop, a
    * tag of the server's languages, or the nearest above it, or the page's,
    * which is the viewer's (Services.language) when nothing names one; with
-   * its direction and mark rows. English before it is mounted.
+   * its direction. English before it is mounted.
    */
   protected get language(): TextLanguage {
     return this.#host?.languageOf(this) ?? UNMOUNTED_LANGUAGE;
@@ -181,11 +181,6 @@ export abstract class Component<P extends object = object, S extends object = ob
    */
   pointerCells(box: Box): Box | null {
     return box;
-  }
-
-  /** Whether it gives each line of its text the mark rows a language such as Thai needs (marks.ts): only then is the channel's stand-in drawn in such a language; otherwise its words are drawn as written, in English, which needs none. */
-  laysOutMarks(): boolean {
-    return false;
   }
 
   /** The background it lays under its children, for their bands to end back to (canvas.ts); null, the default, for none of its own. */

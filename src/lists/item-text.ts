@@ -15,39 +15,22 @@ export interface ItemTextProps {
   readonly text: string;
   /** Its colour: the row's look's. */
   readonly foreground: Colour;
-  /** Lines to wrap it over: 1 when absent. */
+  /** Rows to wrap it over: 1 when absent. */
   readonly rows?: number;
-  /** The rows from one line to the next: 1 when absent; in a language whose marks take the rows around its letters, two or three (list-rows.ts, ListPitch), its first line after its mark row. */
-  readonly pitch?: number;
 }
 
 export class ItemText extends Component<ItemTextProps> {
-  /** Each line has its mark rows where its language needs them (marks.ts). */
-  override laysOutMarks(): boolean {
-    return true;
-  }
-
-  get #lines(): number {
-    return Math.max(1, this.props.rows ?? 1);
-  }
-
-  get #pitch(): number {
-    return Math.max(1, this.props.pitch ?? 1);
-  }
-
-  /** Its lines' rows, and in a language with mark rows the rows above its first and below its last. */
   override measure(space: Size): Size {
-    const { markRows } = this.language;
-    return { width: space.width, height: Math.min((this.#lines - 1) * this.#pitch + 1 + 2 * markRows, space.height) };
+    return { width: space.width, height: Math.min(this.props.rows ?? 1, space.height) };
   }
 
   override paint(canvas: Canvas): void {
     // Wrapping breaks at spaces and drops them, the leading ones too.
     const lead = /^ */u.exec(this.props.text)?.[0] ?? "";
     const width = canvas.width - 1;
-    const lines = headline(this.props.text.slice(lead.length), width - cells(lead), this.#lines);
-    lines.forEach((line, index) => {
-      canvas.coloured(canvas.language.markRows + index * this.#pitch, 0, this.props.foreground, fit(`${lead}${line}`, width));
+    const lines = headline(this.props.text.slice(lead.length), width - cells(lead), Math.max(1, canvas.height));
+    lines.forEach((line, row) => {
+      canvas.coloured(row, 0, this.props.foreground, fit(`${lead}${line}`, width));
     });
   }
 }

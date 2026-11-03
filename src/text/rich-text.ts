@@ -9,8 +9,7 @@ import type { Canvas, CanvasCell } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { Attribute, Colour, COLUMNS, textCells, SPACE, textColour } from "../kit.ts";
-import type { TextLanguage } from "../core/language.ts";
-import { layLines, type LineLayout, placed } from "../core/marks.ts";
+import { oneLineRows } from "../core/text.ts";
 
 export interface RunStyle {
   /** Its colour; white when absent. */
@@ -122,42 +121,27 @@ export interface RichTextProps {
   readonly runs: readonly Run[];
   /** At most this many lines. */
   readonly lines?: number;
-  /** In double height (DEC-2222): each line a row more, Double Height in its first cell; single height on rows 22 to 24 and in Thai and Lao. */
+  /** In double height (DEC-2222): each line a row more, Double Height in its first cell; single height on rows 22 to 24. */
   readonly doubleHeight?: boolean;
 }
 
 /** Runs of styled text, wrapped to the box. */
 export class RichText extends Component<RichTextProps> {
-  /** Each line has its mark rows where its language needs them (marks.ts). */
-  override laysOutMarks(): boolean {
-    return true;
-  }
-
   #lines(width: number): CanvasCell[][] {
     const lines = layoutRuns(this.props.runs, width - (this.props.doubleHeight === true ? 1 : 0));
     return this.props.lines === undefined ? lines : lines.slice(0, this.props.lines);
   }
 
-  /** Where its lines go in `language`: a row each, two in double height, or with their mark rows (marks.ts). */
-  #layout(lines: readonly (readonly CanvasCell[])[], language: TextLanguage): LineLayout {
-    const lead = this.props.doubleHeight === true ? 1 : 0;
-    return layLines(
-      language,
-      lines.map((line) => placed(language, lead, line)),
-      this.props.doubleHeight === true,
-    );
-  }
-
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(this.#layout(this.#lines(space.width), this.language).height, space.height) };
+    return { width: space.width, height: Math.min(this.#lines(space.width).length * oneLineRows(this.props.doubleHeight === true), space.height) };
   }
 
   override paint(canvas: Canvas): void {
     const double = this.props.doubleHeight === true;
     const lines = this.#lines(canvas.width);
-    const { rows } = this.#layout(lines, canvas.language);
+    const pitch = oneLineRows(double);
     lines.forEach((line, index) => {
-      const row = rows[index] ?? 0;
+      const row = index * pitch;
       const codes = double && canvas.doubleHeightAllowed(row) ? [Attribute.DoubleHeight, ...line] : line;
       canvas.codes(row, 0, codes);
       // A background still on at the end of the line is ended in the box's last cell.

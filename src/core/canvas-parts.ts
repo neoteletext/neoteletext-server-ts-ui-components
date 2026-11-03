@@ -3,9 +3,9 @@
 // codes of a band and a chip, and the writing of a row's cells, its text as
 // runs in their languages for the server to encode (DEC-2199).
 
-import { Attribute, Colour, type Screen, SPACE, textColour } from "../kit.ts";
+import { Attribute, Colour, type Screen, textColour } from "../kit.ts";
 import type { DisplayAttributes } from "./enhancement.ts";
-import { FIRST_MARKED_ROW, LAST_MARKED_ROW, type TextLanguage, textRuns } from "./language.ts";
+import { type TextLanguage, textRuns } from "./language.ts";
 import type { Box } from "./layout.ts";
 
 /** One cell as a component writes it: a code, or a string, one character and its marks, for the server to encode. */
@@ -66,52 +66,11 @@ export function backgroundCodes(background: Colour): [number, number] {
   return background === Colour.Black ? [Attribute.BlackBackground, Attribute.BlackBackground] : [textColour(background), Attribute.NewBackground];
 }
 
-/** The highest alphanumeric colour attribute (EN 300 706 Table 26: 0x00 to 0x07). */
-const LAST_TEXT_COLOUR = 0x07;
-
-/** The highest code of a spacing attribute (EN 300 706 Table 26: 0x00 to 0x1F). */
-const LAST_ATTRIBUTE = 0x1f;
-
-/**
- * Gives a run's mark rows its letters' look: the server writes the marks
- * into the rows above and below in whatever is in force there, and on a
- * band (New Background) that is the band's own colour, so the marks vanish
- * into it; under Conceal or Flash the marks would show steady while their
- * letters are hidden or flash. The attributes the letters' row sets from
- * its last colour before `from`, in the box, are written in the same cells
- * of each mark row where those cells are spaces, and the marks take them
- * (clause 12.2, Table 26).
- */
-function inkMarkRows(screen: Screen, box: Box, page: number, from: number, markRows: number): void {
-  let at = from - 1;
-  while (at >= box.column && screen.at(page, at) > LAST_TEXT_COLOUR) {
-    at -= 1;
-  }
-  if (at < box.column) {
-    return;
-  }
-  for (let column = at; column < from; column += 1) {
-    const code = screen.at(page, column);
-    if (code > LAST_ATTRIBUTE) {
-      continue;
-    }
-    for (const row of [page - markRows, page + markRows]) {
-      if (screen.at(row, column) === SPACE) {
-        screen.code(row, column, code);
-      }
-    }
-  }
-}
-
 /**
  * Writes `cells` on `row` of `box` from `column`, cut at the box's edge:
  * each code as it is, and each stretch of strings as runs of text in
  * `language` (textRuns), its words of Latin letters drawn as the language's
- * stand-in where it has one (stand-in.ts). A run whose marks take the rows
- * around it is written only where those rows are the box's own and the
- * page's (FIRST_MARKED_ROW), since its marks overwrite their cells;
- * elsewhere its cells are spaces, and the channel's words are left as
- * written, in English, which needs no mark rows. Right to left, the runs
+ * stand-in where it has one (stand-in.ts). Right to left, the runs
  * are in visual order too: the text's first run takes its rightmost cells.
  */
 export function writeLine(screen: Screen, box: Box, row: number, column: number, cells: readonly CanvasCell[], language: TextLanguage): void {
@@ -119,26 +78,14 @@ export function writeLine(screen: Screen, box: Box, row: number, column: number,
     return;
   }
   const page = box.row + row;
-  const marksFit = row >= 1 && row < box.height - 1 && page >= FIRST_MARKED_ROW && page <= LAST_MARKED_ROW;
-  const standIn = language.markRows === 0 || marksFit ? language.standIn : undefined;
+  const { standIn } = language;
   let text: string[] = [];
   let textAt = 0;
   const flush = (): void => {
     const shown = standIn === undefined ? text : standIn.cells(text).map(String);
-    for (const run of textRuns(shown, language, marksFit)) {
+    for (const run of textRuns(shown, language)) {
       const from = box.column + textAt + (language.direction === "rtl" ? text.length - run.from - run.cells.length : run.from);
-      if (run.language === language.tag && language.markRows > 0 && !marksFit) {
-        screen.codes(
-          page,
-          from,
-          run.cells.map(() => SPACE),
-        );
-      } else {
-        screen.text(page, from, run.cells.join(""), run.language);
-        if (run.language === language.tag && language.markRows > 0) {
-          inkMarkRows(screen, box, page, from, language.markRows);
-        }
-      }
+      screen.text(page, from, run.cells.join(""), run.language);
     }
     text = [];
   };

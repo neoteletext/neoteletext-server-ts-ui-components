@@ -49,11 +49,6 @@ export interface TabStripProps {
 
 /** The tabs' names in a row, the chosen one marked; a click chooses one. It keeps nothing: its parent says which is chosen. */
 export class TabStrip extends Component<TabStripProps> {
-  /** Each line has its mark rows where its language needs them (marks.ts). */
-  override laysOutMarks(): boolean {
-    return true;
-  }
-
   get #style(): TabStyle {
     return this.props.style ?? "chips";
   }
@@ -62,15 +57,15 @@ export class TabStrip extends Component<TabStripProps> {
     return styleNeeds(this.#style);
   }
 
-  /** One row, or in a language whose marks take the rows around its letters three, the names on the middle one (marks.ts); and the underline's row below. */
+  /** One row, and the underline's row below. */
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(oneLineRows(this.language) + (this.#style === "underline" ? 1 : 0), space.height) };
+    return { width: space.width, height: Math.min(oneLineRows() + (this.#style === "underline" ? 1 : 0), space.height) };
   }
 
   override paint(canvas: Canvas): void {
     const style = this.#style;
-    const row = canvas.language.markRows;
-    const underline = oneLineRows(canvas.language);
+    const row = 0;
+    const underline = oneLineRows();
     let start = 0;
     for (const [index, name] of this.props.tabs.entries()) {
       const label = shown(name, index, style);

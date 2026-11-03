@@ -102,10 +102,7 @@ test("REQ-2217 item 3: the language picker lists the server's languages, and a c
       page: PAGE,
       title: "Languages",
       root: (): Element =>
-        frame(
-          "Languages",
-          h(LanguagePicker, { shown: 10, autoFocus: true, languages: ["en", "ru", "ar", "th"], names: { ru: "Русский", ar: "العربية", th: "ไทย" } }),
-        ),
+        frame("Languages", h(LanguagePicker, { shown: 10, autoFocus: true, languages: ["en", "ru", "ar", "el"], names: { ru: "Русский", ar: "العربية" } })),
     },
   ]);
   page.join(1, PAGE);
@@ -122,8 +119,8 @@ test("REQ-2217 item 3: the language picker lists the server's languages, and a c
     "a language's own name, in it",
   );
   assert.ok(
-    (content?.text ?? []).some((run) => run.text === "Thai" && run.language === "en"),
-    "Thai by its English name: its own would take three rows of the list",
+    (content?.text ?? []).some((run) => run.text === "Greek" && run.language === "en"),
+    "a language the channel gives no name for, by its English name",
   );
   assert.notEqual(page.channel.copy(2, PAGE)?.at(-1)?.content.language, "ru", "viewer 2's is not");
 });

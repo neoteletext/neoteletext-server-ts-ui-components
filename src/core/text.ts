@@ -2,7 +2,7 @@
 // encoder gives it, one a character with its marks (the kit's cellsOf),
 // broken at spaces, cut between cells with a mark.
 
-import { cellsOf, type Language, textCells } from "../kit.ts";
+import { cellsOf, textCells } from "../kit.ts";
 
 /** The cells `text` takes. */
 export function cells(text: string): number {
@@ -92,10 +92,7 @@ export function padStart(text: string, width: number): string {
 /** The rows double height takes: its own and the row below (EN 300 706 clause 12.3). */
 const DOUBLE_HEIGHT_ROWS = 2;
 
-/** The rows one line takes in `language`: its own, two in double height; in a language whose marks take the rows around its letters (DEC-604, marks.ts) its own and those above and below it, never double height (DEC-2222). */
-export function oneLineRows(language: Language, doubleHeight = false): number {
-  if (language.markRows > 0) {
-    return 1 + 2 * language.markRows;
-  }
+/** The rows one line takes: its own, two in double height (DEC-2222). */
+export function oneLineRows(doubleHeight = false): number {
   return doubleHeight ? DOUBLE_HEIGHT_ROWS : 1;
 }

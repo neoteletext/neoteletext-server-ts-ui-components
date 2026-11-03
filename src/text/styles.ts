@@ -15,25 +15,19 @@ export interface TextProps {
   readonly foreground?: Colour;
   /** Centred in its box. */
   readonly centre?: boolean;
-  /** In double height (DEC-2222): a row more; single height on rows 22 to 24 and in Thai and Lao. */
+  /** In double height (DEC-2222): a row more; single height on rows 22 to 24. */
   readonly doubleHeight?: boolean;
 }
 
 /**
  * One line of text in a colour: the colour takes the first cell, the text is
  * cut with a mark at the box's edge. Right to left it is flush with the
- * box's right edge; in a language whose marks take the rows around its
- * letters, it takes three rows, its text on the middle one (marks.ts).
+ * box's right edge.
  */
 export class Text extends Component<TextProps> {
-  /** Each line has its mark rows where its language needs them (marks.ts). */
-  override laysOutMarks(): boolean {
-    return true;
-  }
-
   override measure(space: Size): Size {
     const double = this.props.doubleHeight === true;
-    return { width: Math.min(space.width, cells(this.props.text) + leadCells(double)), height: Math.min(oneLineRows(this.language, double), space.height) };
+    return { width: Math.min(space.width, cells(this.props.text) + leadCells(double)), height: Math.min(oneLineRows(double), space.height) };
   }
 
   override paint(canvas: Canvas): void {
@@ -41,7 +35,7 @@ export class Text extends Component<TextProps> {
     const shown = fit(this.props.text, canvas.width - leadCells(double));
     const width = cells(shown) + leadCells(double);
     const column = this.props.centre === true ? Math.max(0, Math.floor((canvas.width - width) / 2)) : canvas.start(width);
-    canvas.line(canvas.language.markRows, column, this.props.foreground ?? Colour.White, shown, double);
+    canvas.line(0, column, this.props.foreground ?? Colour.White, shown, double);
   }
 }
 

@@ -5,9 +5,7 @@
 // (the kit's Screen.ownCodes, TODO-2228). Read on 3 November 2026 from the
 // demo site's character tables, which are each set's language page drawn by
 // the server at 28133db and read back with the engine's decoder; regenerated
-// by tmp/check/own-codes-gen.ts. Thai and Lao, whose tables the demo leaves
-// out, are read from the engine's own tables (neoteletext-core
-// charset/thai_lao.rs THAI_G0 and LAO_G0, at edbba2b).
+// by tmp/check/own-codes-gen.ts.
 
 import type { LanguageTag } from "../kit.ts";
 
@@ -61,7 +59,6 @@ export const OWN_CODES: Readonly<Partial<Record<LanguageTag, string>>> = {
   az: "!\"%&'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   kr: "!\"%&'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   mos: "!\"%&'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-  yo: "!\"%&'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   ig: "!\"%&'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   vi: "!\"%&'()*+,-./0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   be: "!\"#$%'()*+,-./0123456789:;<=>?",
@@ -82,8 +79,6 @@ export const OWN_CODES: Readonly<Partial<Record<LanguageTag, string>>> = {
   hy: "0123456789",
   zgh: "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   "tzm-Tfng": "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-  th: "!\"#$%&'()*+,-./0123456789:;<=>?",
-  lo: '!"#$%()*+,-./:;=?',
   ja: "!+-0123456789:?",
   "ja-Hira": "!+-0123456789:?",
   "ja-Hrkt": "!+-0123456789:?",

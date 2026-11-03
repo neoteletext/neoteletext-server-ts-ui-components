@@ -1,13 +1,13 @@
 // Text in any language (REQ-2152, DEC-2199): components hand the canvas
 // Unicode in their language and the page names its own, for the server to
-// encode; right-to-left layout; the rows Thai and Lao need; double height
-// by DEC-2222; and the marks a component draws, which every page shows.
+// encode; right-to-left layout; a line a row in every language (DEC-2239);
+// double height by DEC-2222; and the marks a component draws, which every page shows.
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { Harness } from "neoteletext-server-ts-protocol/testing";
-import { type Element, Breadcrumbs, DoubleHeight, Frame, Gap, h, LinesBlock, Paragraph, Rows, ScrollView, Text } from "../src/index.ts";
+import { type Element, Breadcrumbs, DoubleHeight, Gap, h, LinesBlock, Paragraph, Rows, Text } from "../src/index.ts";
 import { Colour, textCells } from "../src/kit.ts";
 import { languageOf, textRuns } from "../src/core/language.ts";
 import { SERVER_LANGUAGES } from "neoteletext-server-ts-protocol/testing";
@@ -90,75 +90,30 @@ test("REQ-2152 item 4: right to left, text is flush with the right edge and brea
   ]);
 });
 
-test("REQ-2152 item 5: a line of Thai takes three rows, its text on the middle one, and the title band three, single height", () => {
+test("DEC-2239: a line takes one row in every language, and the title band two, in double height", () => {
   const { page, content } = seen(
-    "th",
-    h(Text, { text: "สวัสดี" }),
-    h(Paragraph, { text: "ภาษาไทย" }),
-    h(LinesBlock, { lines: [{ foreground: Colour.White, text: "ไทย" }] }),
+    "ru",
+    h(Text, { text: "Привет" }),
+    h(Paragraph, { text: "Русский язык" }),
+    h(LinesBlock, { lines: [{ foreground: Colour.White, text: "Мир" }] }),
   );
-  const body = 4;
   assert.deepEqual(
     (content.text ?? []).map((run) => [run.row, run.text]),
     [
-      [2, "Title"],
-      [body + 1, "สวัสดี"],
-      [body + 4, "ภาษาไทย"],
-      [body + 7, "ไทย"],
+      [1, "Title"],
+      [BODY_ROW, "Привет"],
+      [BODY_ROW + 1, "Русский язык"],
+      [BODY_ROW + 2, "Мир"],
       [24, "Index"],
     ],
-    "the title on row 2 between its mark rows, the body from row 4, each line on the middle of its three",
+    "the title on row 1, the body from row 3, a line a row",
   );
-  const rows = page.seen(1, PAGE).rows;
-  assert.equal(rows[2]?.includes(0x0d), false, "no double height for Thai (DEC-2222 item 2)");
+  assert.equal(page.seen(1, PAGE).rows[1]?.includes(0x0d), true, "the title in double height");
 });
 
-test("REQ-2152 item 5: Thai where its marks would leave the component's rows or the page's is not written, and the Fastext row shows its page", () => {
-  const page = harness([
-    {
-      page: PAGE,
-      title: "Thai",
-      perViewer: true,
-      language: "th",
-      root: (): Element => frame("Title", h(ScrollView, { shown: 6, height: 6 }, h(Text, { text: "หนึ่ง", height: 1 }), h(Text, { text: "สอง" }))),
-    },
-  ]);
-  page.join(1, PAGE);
-  const content = (page.channel.copy(1, PAGE) ?? page.channel.copy("channel", PAGE))?.at(-1)?.content;
-  assert.deepEqual(page.errors, []);
-  assert.deepEqual(
-    (content?.text ?? []).map((run) => [run.row, run.text]),
-    [
-      [2, "Title"],
-      [6, "สอง"],
-      [23, "PgDn PgUp arrows Home End scroll"],
-      [24, "Index"],
-    ],
-    "the library's own words in English, which has no mark rows; a unit given one row has no room for its marks, on row 4; one without a height takes three, rows 5 to 7",
-  );
-});
-
-test("DEC-2222: double height in every language but Thai and Lao, never on rows 23 and 24", () => {
+test("DEC-2222: double height in every language, never on rows 23 and 24", () => {
   const { page } = seen("ru", h(DoubleHeight, { text: "Заголовок" }));
   assert.equal(page.seen(1, PAGE).rows[BODY_ROW]?.[0], 0x0d, "Cyrillic in double height");
-  const thai = seen("th", h(DoubleHeight, { text: "หัวข้อ" }));
-  assert.ok(!(thai.page.seen(1, PAGE).rows[5] ?? []).includes(0x0d), "Thai single height, on the middle of its three rows");
-  assert.deepEqual(runsOn(thai.content, 5), [{ row: 5, column: 2, text: "หัวข้อ", language: "th" }]);
   const low = seen("en", h(Rows, {}, h(Gap, { height: 20 }), h(DoubleHeight, { text: "Low" })));
   assert.ok(!(low.page.seen(1, PAGE).rows[23] ?? []).includes(0x0d), "not on row 23");
-});
-
-test("REQ-2152 item 5: a Fastext prompt in Thai, which row 24 has no mark rows for, shows the page it leads to", () => {
-  const page = harness([
-    {
-      page: PAGE,
-      title: "Thai",
-      language: "th",
-      root: (): Element => h(Frame, { title: "ไทย", background: Colour.Blue, prompts: [["หน้าแรก", 0x100]] }, h(Text, { text: "x" })),
-    },
-  ]);
-  page.join(1, PAGE);
-  const content = page.channel.copy("channel", PAGE)?.at(-1)?.content;
-  assert.ok(content !== undefined);
-  assert.deepEqual(runsOn(content, 24), [{ row: 24, column: 1, text: "100", language: "en" }]);
 });

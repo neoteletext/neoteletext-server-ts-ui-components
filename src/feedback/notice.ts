@@ -16,7 +16,7 @@ export interface NoticeProps {
   readonly kind: Kind;
   /** What it says, after the mark, cut to its row. */
   readonly text: string;
-  /** Its words in double height (DEC-2222), the mark's chip single: a row more; single height on rows 22 to 24 and in Thai and Lao. */
+  /** Its words in double height (DEC-2222), the mark's chip single: a row more; single height on rows 22 to 24. */
   readonly doubleHeight?: boolean;
 }
 
@@ -35,16 +35,11 @@ export function paintNotice(canvas: Canvas, row: number, kind: Kind, text: strin
 
 /** A notice that stays. */
 export class Notice extends Component<NoticeProps> {
-  /** Each line has its mark rows where its language needs them (marks.ts). */
-  override laysOutMarks(): boolean {
-    return true;
-  }
-
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(oneLineRows(this.language, this.props.doubleHeight === true), space.height) };
+    return { width: space.width, height: Math.min(oneLineRows(this.props.doubleHeight === true), space.height) };
   }
 
   override paint(canvas: Canvas): void {
-    paintNotice(canvas, canvas.language.markRows, this.props.kind, this.props.text, this.props.doubleHeight === true);
+    paintNotice(canvas, 0, this.props.kind, this.props.text, this.props.doubleHeight === true);
   }
 }

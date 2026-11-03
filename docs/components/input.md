@@ -617,7 +617,7 @@ page.typeKeys(1, "12");
 
 ## LanguagePicker
 
-LanguagePicker: the server's languages to choose from (REQ-2217 item 3), each by its name in its own language where the channel gives one and by its English name otherwise, in a list that scrolls. A choice sets the viewer's `language` cookie, which draws every page they have open again in it (Services.setCookie): a channel needs no code of its own to switch language. A name in a language whose marks take the rows around its letters (Thai, Lao) would take three rows of the list, so such a language is listed by its English name.
+LanguagePicker: the server's languages to choose from (REQ-2217 item 3), each by its name in its own language where the channel gives one and by its English name otherwise, in a list that scrolls. A choice sets the viewer's `language` cookie, which draws every page they have open again in it (Services.setCookie): a channel needs no code of its own to switch language.
 
 ```ts
 import { LanguagePicker } from "neoteletext-server-ts-ui-components";

@@ -44,10 +44,6 @@ export interface ListRowProps {
   readonly foreground?: Colour;
   /** Rows it takes: 1 when absent. */
   readonly rows?: number;
-  /** The lines of text it holds, in a language whose marks take the rows around its letters: its first on its second row, each two or three rows on (list-rows.ts, ListPitch); its band's control is from its first to its last. Its rows when absent, one a line. */
-  readonly lines?: number;
-  /** The rows below its own that what it holds may write its marks on: the next row's mark row, or its list's last row (ListPitch). None when absent. */
-  readonly markRoom?: number;
   /** Cells before the row's band and mark: a tree's depth, a control's label column. */
   readonly indent?: number;
   /** What those cells hold: a tree's guide lines. */
@@ -103,7 +99,7 @@ export class ListRow extends Component<ListRowProps> {
       first.place({ ...box, width: Math.min(box.width, this.#indent) });
     }
     const at = this.#indent + CONTENT_AT;
-    stack({ ...box, column: box.column + at, width: Math.max(0, box.width - at), height: box.height + (this.props.markRoom ?? 0) }, content);
+    stack({ ...box, column: box.column + at, width: Math.max(0, box.width - at) }, content);
   }
 
   override paint(canvas: Canvas): void {
@@ -115,13 +111,9 @@ export class ListRow extends Component<ListRowProps> {
     } else if (look.chosen) {
       canvas.coloured(0, this.#indent, SELECTED, MARK);
     }
-    // Where its band is, or would be, on every row of its text: one control, its rows joined; with mark rows, from its first line's letters to its last's.
+    // Where its band is, or would be, on every row it takes: one control, its rows joined.
     if (this.props.onPress !== undefined && !look.disabled) {
-      const { markRows } = canvas.language;
-      const lines = this.props.lines ?? canvas.height;
-      const pitch = Math.max(1, Math.floor(canvas.height / Math.max(1, lines)));
-      const height = markRows === 0 ? canvas.height : (lines - 1) * pitch + 1;
-      canvas.bandControl(markRows, this.#indent, height, BAND);
+      canvas.bandControl(0, this.#indent, canvas.height, BAND);
     }
   }
 

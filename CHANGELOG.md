@@ -3,6 +3,35 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 18.0.0 (3 November 2026)
+
+### To take it
+
+- **Take the protocol kit 10.0.0** beside it: the server's languages
+  no longer carry `mark_rows`, and Thai (`th`), Lao (`lo`) and Yoruba
+  (`yo`) are not among them (DEC-2239, DEC-2240).
+- **`oneLineRows(doubleHeight?)`** takes no language: one row a line, two
+  in double height, in every language.
+- **Gone**: `ListRow`'s `lines` and `markRoom`, `ItemText`'s `pitch`,
+  `ListRows`' `lineText`, and `Component.laysOutMarks`. A program that
+  passed them drops them.
+- **A page laid out for Thai or Lao** has rows to spare: every line takes
+  one row.
+
+### What changed
+
+- **Thai and Lao are gone** (DEC-2239): NeoTeletext dropped them, the only
+  languages whose lines took more than one row. The mark-row layout
+  (`marks.ts`), the rows a list, tab strip, ticker, title band and text
+  component kept for marks, the ink, Conceal and Flash copied onto mark
+  rows, the single-height rule for double height in Thai and Lao, the
+  Fastext row's page number in place of a Thai label, the language
+  picker's English name for Thai and Lao, and stand-in text's English for
+  components without mark rows are removed. Every language takes one row
+  a line.
+- **Yoruba is gone** (DEC-2240): its own codes and the characters its sets
+  cannot show are no longer listed.
+
 ## 17.0.2 (3 November 2026)
 
 ### What changed

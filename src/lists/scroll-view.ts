@@ -14,13 +14,12 @@
 import { type Child, type Element, flatten, h, isElement } from "../core/element.ts";
 import type { KeyEvent, WheelEvent } from "../core/events.ts";
 import type { Size } from "../core/layout.ts";
-import { languageOf } from "../core/language.ts";
 import { listStep, WheelLines } from "../core/list-cursor.ts";
 import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { Rows } from "../layout/layouts.ts";
 import { BAR_CELLS, ScrollBar, scrolled } from "./scroll.ts";
-import { drawnUnits, UnitRows, unitRows } from "./unit-rows.ts";
+import { UnitRows } from "./unit-rows.ts";
 
 export interface ScrollViewProps extends ControlProps {
   /** The rows it shows at once, beside its bar: the units that fit in them whole. */
@@ -63,13 +62,9 @@ export class ScrollView extends Control<ScrollViewProps, ScrollViewState> {
     return { width: space.width, height: Math.min(Math.max(0, this.props.shown), space.height) };
   }
 
-  /** Where the units stand: in a language with mark rows, the view keeps its last row for the lower vowels of the last text unit shown, whose next unit's mark row is out of view. */
+  /** Where the units stand among the rows it shows. */
   #rowsOf(units: readonly (Element | string)[]): UnitRows {
-    const languages = this.services.languages();
-    return new UnitRows(
-      unitRows(units, this.language, (tag) => languageOf(tag, languages)),
-      this.props.shown - this.language.markRows,
-    );
+    return new UnitRows(units, this.props.shown);
   }
 
   get #units(): (Element | string)[] {
@@ -84,7 +79,7 @@ export class ScrollView extends Control<ScrollViewProps, ScrollViewState> {
     return h(
       Columns,
       { widths: [null, BAR_CELLS] },
-      h(Rows, {}, ...drawnUnits(inView, this.language)),
+      h(Rows, {}, ...inView),
       h(ScrollBar, {
         top: rows.startOf(top),
         total: rows.total,

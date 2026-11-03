@@ -152,24 +152,19 @@ export interface DateTextProps {
   readonly fallback?: string;
   /** In the middle of its width. */
   readonly centre?: boolean;
-  /** In double height (DEC-2222): a row more; single height on rows 22 to 24 and in Thai and Lao. */
+  /** In double height (DEC-2222): a row more; single height on rows 22 to 24. */
   readonly doubleHeight?: boolean;
 }
 
 /** One date on one row, in its colour. */
 export class DateText extends Component<DateTextProps> {
-  /** Each line has its mark rows where its language needs them (marks.ts). */
-  override laysOutMarks(): boolean {
-    return true;
-  }
-
   get text(): string {
     return formatDate(this.props.value, this.props.pattern, this.props.fallback);
   }
 
   override measure(space: Size): Size {
     const double = this.props.doubleHeight === true;
-    return { width: Math.min(space.width, cells(this.text) + leadCells(double)), height: Math.min(oneLineRows(this.language, double), space.height) };
+    return { width: Math.min(space.width, cells(this.text) + leadCells(double)), height: Math.min(oneLineRows(double), space.height) };
   }
 
   override paint(canvas: Canvas): void {
@@ -177,6 +172,6 @@ export class DateText extends Component<DateTextProps> {
     const shown = fit(this.text, canvas.width - leadCells(double));
     const width = cells(shown) + leadCells(double);
     const column = this.props.centre === true ? Math.max(0, Math.floor((canvas.width - width) / 2)) : canvas.start(width);
-    canvas.line(canvas.language.markRows, column, this.props.foreground ?? Colour.White, shown, double);
+    canvas.line(0, column, this.props.foreground ?? Colour.White, shown, double);
   }
 }

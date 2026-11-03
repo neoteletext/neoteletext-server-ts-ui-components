@@ -1,6 +1,6 @@
 // A page's language and its text's (REQ-2152, REQ-2217): a tag of the
 // server's languages (start.languages, REQ-2215), each with the way it is
-// written and whether its marks take the rows above and below its letters.
+// written.
 // A component's language is the nearest `language` prop above it, or the
 // page's, or the viewer's (the `language` cookie), or the channel's.
 
@@ -15,14 +15,6 @@ export const ENGLISH: LanguageTag = "en";
 
 /** The cookie a viewer's language is kept in (REQ-2217 item 2). */
 export const LANGUAGE_COOKIE = "language";
-
-/**
- * The rows a run whose marks take the rows above and below may be on
- * (the server's mark_rows_out_of_range): 2 to 23, so its marks are within
- * rows 1 to 24.
- */
-export const FIRST_MARKED_ROW = 2;
-export const LAST_MARKED_ROW = 23;
 
 /** The cells Double Height takes with a line's colour before its text (Canvas.line). */
 const DOUBLE_HEIGHT_LEAD = 2;
@@ -42,15 +34,15 @@ export interface TextLanguage extends Language {
   readonly standIn?: StandIn;
 }
 
-/** The language `tag` names among `languages`; one the server did not list (or before it said) is taken as written left to right, with no mark rows. */
+/** The language `tag` names among `languages`; one the server did not list (or before it said) is taken as written left to right. */
 export function languageOf(tag: LanguageTag, languages: readonly Language[]): Language {
-  return languages.find((language) => language.tag === tag) ?? { tag, name: tag, direction: "ltr", markRows: 0 };
+  return languages.find((language) => language.tag === tag) ?? { tag, name: tag, direction: "ltr" };
 }
 
 /** `language` with no stand-in: its text drawn as it is written. */
 export function asWritten(language: Language): Language {
-  const { tag, name, direction, markRows } = language;
-  return { tag, name, direction, markRows };
+  const { tag, name, direction } = language;
+  return { tag, name, direction };
 }
 
 /** The nearest `language` prop from `node` up, or undefined when none names one. */
@@ -193,26 +185,14 @@ export function ownCodesOf(tag: LanguageTag): string {
  * (a Latin word in Russian), and each arrow they lack, is written in
  * English, whose set every page reaches; the rest stays in `language`. In
  * a stretch of only punctuation between words of a language whose script
- * has its own (Arabic's comma, the kana's) is written as its own. In
- * a language whose marks take the rows around its letters, ASCII its sets
- * show stays in its runs where those rows are there for it (`marksFit`)
- * and the text has letters of its own, which keeps a line one run;
- * elsewhere it is English, which needs no mark rows.
+ * has its own (Arabic's comma, the kana's) is written as its own.
  */
-export function textRuns(cells: readonly string[], language: Language, marksFit = true): LanguageRun[] {
+export function textRuns(cells: readonly string[], language: Language): LanguageRun[] {
   const { tag } = language;
   const folded = foldedCells(cells, tag);
   // A language whose sets lack some Latin letters writes every Latin word in English, rather than a word's letters in two sets.
   const latinWords = /[A-Za-z]/u.test(UNSHOWN[tag]);
-  // Text all of ASCII needs no mark rows: in English it takes none, so it never meets a neighbour's marks.
-  const marksTaken = marksFit && folded.some((cell) => !ASCII_PRINTABLE.test(cell));
-  const english = folded.map(
-    (cell) =>
-      tag !== ENGLISH &&
-      (unshownIn(tag, cell) ||
-        (latinWords && /^[A-Za-z]$/u.test(cell)) ||
-        (language.markRows > 0 && !marksTaken && ASCII_PRINTABLE.test(cell) && cell !== SPACE_CELL)),
-  );
+  const english = folded.map((cell) => tag !== ENGLISH && (unshownIn(tag, cell) || (latinWords && /^[A-Za-z]$/u.test(cell))));
   // A stretch of ASCII goes whole to English when any of it must, but for the spaces at its ends.
   let start = 0;
   for (let at = 0; at <= folded.length; at += 1) {

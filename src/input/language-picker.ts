@@ -3,9 +3,7 @@
 // its English name otherwise, in a list that scrolls. A choice sets the
 // viewer's `language` cookie, which draws every page they have open again
 // in it (Services.setCookie): a channel needs no code of its own to switch
-// language. A name in a language whose marks take the rows around its
-// letters (Thai, Lao) would take three rows of the list, so such a
-// language is listed by its English name.
+// language.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
@@ -39,7 +37,7 @@ export class LanguagePicker extends Component<LanguagePickerProps> {
   /** The name a language is listed by, and the language it is written in. */
   #name(language: Language): { readonly text: string; readonly language: LanguageTag } {
     const own = this.props.names?.[language.tag];
-    return own === undefined || language.markRows > 0 ? { text: language.name, language: "en" } : { text: own, language: language.tag };
+    return own === undefined ? { text: language.name, language: "en" } : { text: own, language: language.tag };
   }
 
   override render(): Child {

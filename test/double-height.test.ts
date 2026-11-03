@@ -1,6 +1,6 @@
 // Double height as a prop of the components that draw text it suits
 // (DEC-2222): headings and display text in every language, a row more;
-// single height in Thai and Lao, and on rows 22 to 24; never a control's.
+// single height on rows 22 to 24; never a control's.
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -67,13 +67,6 @@ for (const [name, example, grows = 1] of EXAMPLES) {
     assert.equal(afterRow(double), afterRow(single) + grows, "what follows is a row lower");
   });
 }
-
-test("DEC-2222 item 2: in Thai a double-height text is single height on the middle of its three rows, with no error", () => {
-  const rows = rowsOf(h(Text, { text: "หัวข้อ", doubleHeight: true }), "th");
-  const body = 4;
-  assert.equal(doubled(rows, body, afterRow(rows)), false);
-  assert.equal(afterRow(rows), body + 3 + 1, "its three rows, then AFTER's middle row");
-});
 
 test("DEC-2222 item 4: on row 22, whose row below is the hint row, and on rows 23 and 24 a double-height text is single height", () => {
   const rows = rowsOf([h(Gap, { height: 22 - BODY_ROW }), h(Text, { text: "Low", doubleHeight: true, height: 1 })]);

@@ -26,7 +26,7 @@ import { DateText } from "neoteletext-server-ts-ui-components";
 | `foreground` | `Colour` | Its colour; white when absent. |
 | `fallback` | `string` | What shows when `value` is not a date. |
 | `centre` | `boolean` | In the middle of its width. |
-| `doubleHeight` | `boolean` | In double height (DEC-2222): a row more; single height on rows 22 to 24 and in Thai and Lao. |
+| `doubleHeight` | `boolean` | In double height (DEC-2222): a row more; single height on rows 22 to 24. |
 
 ### In each format
 

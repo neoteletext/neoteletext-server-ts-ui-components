@@ -18,7 +18,7 @@ import { followItem, keepInView, listStep, moveChoice, WheelLines } from "../cor
 import { Control, type ControlProps, type KeyHelpEntry, type PageNeeds } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { digitMark, type KeyPick, keyLetters, pickBindings, pickedPlace } from "./key-picks.ts";
-import { itemsPitch, ListRows, type RowLook, within } from "./list-rows.ts";
+import { ListRows, type RowLook, within } from "./list-rows.ts";
 import { BAR_CELLS, ScrollBar } from "./scroll.ts";
 
 export interface ChoiceListProps<T = string> extends ControlProps {
@@ -63,10 +63,9 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
     return this.props.itemRows ?? 1;
   }
 
-  /** The items that fit in the rows it shows, each line with its mark rows in a language that has them (ListPitch). */
+  /** The items that fit in the rows it shows. */
   get #fit(): number {
-    const { pitch, after } = itemsPitch(this.language, { ...this.props, itemRows: this.#itemRows });
-    return Math.max(1, Math.floor((this.props.shown - after) / (this.#itemRows * pitch)));
+    return Math.max(1, Math.floor(this.props.shown / this.#itemRows));
   }
 
   /** The chosen item, kept to the items there are now: its user may take some away, or begin it past them (initial). */

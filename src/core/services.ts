@@ -48,7 +48,7 @@ export interface Services {
   streamPlace(session: number, name: string): number | null;
   /** The standard's maxima and the server's budgets, as the server's `start` gave them: a page holds up to `standard.subpages` sub-pages. */
   limits(): Limits;
-  /** The languages a page or its text may name, as the server's `start` listed them, each with its direction and mark rows (REQ-2215). */
+  /** The languages a page or its text may name, as the server's `start` listed them, each with its direction (REQ-2215). */
   languages(): readonly Language[];
   /**
    * The language a page that names none is drawn in for the viewer

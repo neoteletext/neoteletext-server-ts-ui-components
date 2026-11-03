@@ -11,7 +11,7 @@
 // looks, so each sub-page carries those it paints.
 
 import { Colour, COLUMNS, type Limits, ROWS, Screen, type SubpageBody } from "../kit.ts";
-import { asWritten, Canvas, nothingDeclared, ownCodesOf, type PageRequests, type Region, type TextLanguage } from "./canvas.ts";
+import { Canvas, nothingDeclared, ownCodesOf, type PageRequests, type Region, type TextLanguage } from "./canvas.ts";
 import type { Box, LayoutChild, Size } from "./layout.ts";
 import { type LocalEnhancement, localEnhancement } from "./enhancement.ts";
 import { type DeclaredControl, emptyGrid, type Grid, type Owned, reachedControls } from "./grid.ts";
@@ -134,9 +134,7 @@ function paint(
   const regions: Region[] = [];
   const declared = nothingDeclared();
   const language = host.languageOf(node);
-  // The channel's stand-in in a language whose marks take rows of their own only where the component gives them those rows.
-  const written = language.markRows > 0 && !node.component.laysOutMarks() ? asWritten(language) : language;
-  const canvas = new Canvas(screen, node.box, requests, regions, declared, surround, written);
+  const canvas = new Canvas(screen, node.box, requests, regions, declared, surround, language);
   node.component.paint(canvas);
   canvas.finish();
   owned.push({ node, declared });

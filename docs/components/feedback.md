@@ -284,7 +284,7 @@ import { MetricCard } from "neoteletext-server-ts-ui-components";
 | `big` | `boolean` | The figure in large text rather than a line. |
 | `history` | `readonly number[]` | Its values over time, oldest first, drawn beneath as a sparkline. |
 | `historyRows` | `number` | The sparkline's rows; one when absent. |
-| `doubleHeight` | `boolean` | The figure in double height (DEC-2222), a row more, when it is not big: single height on rows 22 to 24 and in Thai and Lao. |
+| `doubleHeight` | `boolean` | The figure in double height (DEC-2222), a row more, when it is not big: single height on rows 22 to 24. |
 
 ### Large with its history, and on a line
 
@@ -321,7 +321,7 @@ import { Notice } from "neoteletext-server-ts-ui-components";
 | --- | --- | --- |
 | `kind` (needed) | `Kind` | What happened: its mark and its colour (core/look.ts). |
 | `text` (needed) | `string` | What it says, after the mark, cut to its row. |
-| `doubleHeight` | `boolean` | Its words in double height (DEC-2222), the mark's chip single: a row more; single height on rows 22 to 24 and in Thai and Lao. |
+| `doubleHeight` | `boolean` | Its words in double height (DEC-2222), the mark's chip single: a row more; single height on rows 22 to 24. |
 
 ### Each kind
 

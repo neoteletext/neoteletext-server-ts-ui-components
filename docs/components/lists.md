@@ -258,8 +258,7 @@ import { ItemText } from "neoteletext-server-ts-ui-components";
 | --- | --- | --- |
 | `text` (needed) | `string` | The text, wrapped over its rows at word boundaries, the last cut with an ellipsis. |
 | `foreground` (needed) | `Colour` | Its colour: the row's look's. |
-| `rows` | `number` | Lines to wrap it over: 1 when absent. |
-| `pitch` | `number` | The rows from one line to the next: 1 when absent; in a language whose marks take the rows around its letters, two or three (list-rows.ts, ListPitch), its first line after its mark row. |
+| `rows` | `number` | Rows to wrap it over: 1 when absent. |
 
 ### Wrapped over two rows
 
@@ -290,8 +289,6 @@ import { ListRow } from "neoteletext-server-ts-ui-components";
 | `disabled` | `boolean` | It cannot be pressed: drawn dimmed, never on the band, and a click does nothing. |
 | `foreground` | `Colour` | Its foreground off the band, LABEL when absent. |
 | `rows` | `number` | Rows it takes: 1 when absent. |
-| `lines` | `number` | The lines of text it holds, in a language whose marks take the rows around its letters: its first on its second row, each two or three rows on (list-rows.ts, ListPitch); its band's control is from its first to its last. Its rows when absent, one a line. |
-| `markRoom` | `number` | The rows below its own that what it holds may write its marks on: the next row's mark row, or its list's last row (ListPitch). None when absent. |
 | `indent` | `number` | Cells before the row's band and mark: a tree's depth, a control's label column. |
 | `before` | `Child` | What those cells hold: a tree's guide lines. |
 | `content` (needed) | `(look: RowLook) => Child` | What it holds, drawn to its look. |
@@ -348,7 +345,6 @@ import { ListRows } from "neoteletext-server-ts-ui-components";
 | `empty` | `string` | What an empty list says. |
 | `render` | `(item: T, look: RowLook, index: number) => Child` | What an item's row holds: its text in its look by default. |
 | `text` | `(item: T, index: number) => string` | An item's text, for the default row: the item itself when it is text. |
-| `lineText` | `(item: T, index: number) => string` | The text an item drawn by `render` shows on its line, for laying out a language whose marks take the rows around its letters; without it (or `text`), such a list keeps a row below each item for its marks. |
 | `disabled` | `(item: T, index: number) => boolean` | Whether an item cannot be picked: drawn dimmed, and a click on it does nothing. |
 | `foreground` | `(item: T, index: number) => Colour \| undefined` | An item's foreground off the band. |
 | `onPick` (needed) | `(index: number, session: number) => void` | A click on an item's band: its place in `items`. |

@@ -18,12 +18,9 @@
 // (DEC-2199): a component hands the canvas cells, each a code (an
 // attribute, a mosaic) or a string (one character with its marks, as the
 // kit's textCells gives them), and the canvas writes each stretch of
-// strings as a run of text in its language. A language whose marks take the
-// rows above and below (Thai, Lao) is written only on rows 2 to 23, which
-// keep its marks on the page, and only where the rows above and below it
-// are the component's own, since its marks overwrite them; a component of
-// such text lays its lines out with their mark rows (marks.ts). Double height is the policy of DEC-2222:
-// never on rows 0, 23 and 24, never for such a language.
+// strings as a run of text in its language. Every language takes one row a
+// line (DEC-2239). Double height is the policy of DEC-2222: never on rows 0,
+// 22, 23 and 24.
 
 import {
   Attribute,
@@ -62,7 +59,7 @@ const NO_DOUBLE_HEIGHT_ROWS: ReadonlySet<number> = new Set([0, 22, 23, 24]);
 
 export { backgroundCodes, centredOnChip, CHIP_CELLS, CHIP_HEAD_CELLS, NEW_BACKGROUND_CELL, nothingDeclared } from "./canvas-parts.ts";
 export type { CanvasCell, Declared, PageRequests, Region } from "./canvas-parts.ts";
-export { asWritten, ownCodesOf, type TextLanguage } from "./language.ts";
+export { ownCodesOf, type TextLanguage } from "./language.ts";
 
 export class Canvas extends CanvasDeclarations {
   readonly #screen: Screen;
@@ -233,9 +230,9 @@ export class Canvas extends CanvasDeclarations {
     return column + 1 + codes.length;
   }
 
-  /** Whether double height may be drawn on `row` of the box (DEC-2222): not on rows 0, 22, 23 and 24 of the page, nor in a language whose marks take the rows around its letters. */
+  /** Whether double height may be drawn on `row` of the box (DEC-2222): not on rows 0, 22, 23 and 24 of the page. */
   doubleHeightAllowed(row: number): boolean {
-    return this.language.markRows === 0 && !NO_DOUBLE_HEIGHT_ROWS.has(this.box.row + row);
+    return !NO_DOUBLE_HEIGHT_ROWS.has(this.box.row + row);
   }
 
   /**

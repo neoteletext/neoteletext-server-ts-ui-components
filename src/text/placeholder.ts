@@ -11,17 +11,12 @@ import { Colour } from "../kit.ts";
 export interface PlaceholderProps {
   /** What it says, in white, centred in the box and cut to its width. */
   readonly text: string;
-  /** In double height (DEC-2222): a row more; single height on rows 22 to 24 and in Thai and Lao. */
+  /** In double height (DEC-2222): a row more; single height on rows 22 to 24. */
   readonly doubleHeight?: boolean;
 }
 
 /** What shows while something is still coming: a line centred in the box. */
 export class Placeholder extends Component<PlaceholderProps> {
-  /** Each line has its mark rows where its language needs them (marks.ts). */
-  override laysOutMarks(): boolean {
-    return true;
-  }
-
   override measure(space: Size): Size {
     return space;
   }
@@ -29,8 +24,8 @@ export class Placeholder extends Component<PlaceholderProps> {
   override paint(canvas: Canvas): void {
     const double = this.props.doubleHeight === true;
     const shown = fit(this.props.text, canvas.width - leadCells(double));
-    const rows = oneLineRows(canvas.language, double);
-    const row = Math.max(0, Math.floor((canvas.height - rows + 1) / 2)) + canvas.language.markRows;
+    const rows = oneLineRows(double);
+    const row = Math.max(0, Math.floor((canvas.height - rows + 1) / 2));
     canvas.line(row, Math.max(0, Math.floor((canvas.width - cells(shown) - leadCells(double)) / 2)), Colour.White, shown, double);
   }
 }

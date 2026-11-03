@@ -33,7 +33,7 @@ export interface MetricCardProps {
   readonly history?: readonly number[];
   /** The sparkline's rows; one when absent. */
   readonly historyRows?: number;
-  /** The figure in double height (DEC-2222), a row more, when it is not big: single height on rows 22 to 24 and in Thai and Lao. */
+  /** The figure in double height (DEC-2222), a row more, when it is not big: single height on rows 22 to 24. */
   readonly doubleHeight?: boolean;
 }
 

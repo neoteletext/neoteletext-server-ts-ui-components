@@ -35,7 +35,7 @@ import { Text } from "neoteletext-server-ts-ui-components";
 | `text` (needed) | `string` | The line, cut with a mark at the box's edge. |
 | `foreground` | `Colour` | Its colour; white when absent. |
 | `centre` | `boolean` | Centred in its box. |
-| `doubleHeight` | `boolean` | In double height (DEC-2222): a row more; single height on rows 22 to 24 and in Thai and Lao. |
+| `doubleHeight` | `boolean` | In double height (DEC-2222): a row more; single height on rows 22 to 24. |
 
 ### In double height
 
@@ -94,7 +94,7 @@ import { Paragraph } from "neoteletext-server-ts-ui-components";
 | `text` (needed) | `string` | The text, wrapped to the box's width. |
 | `foreground` | `Colour` | Its colour; white when absent. |
 | `lines` | `number` | At most this many lines; the last cut with an ellipsis. |
-| `doubleHeight` | `boolean` | In double height (DEC-2222): each line a row more; single height on rows 22 to 24 and in Thai and Lao. |
+| `doubleHeight` | `boolean` | In double height (DEC-2222): each line a row more; single height on rows 22 to 24. |
 
 ### Wrapped
 
@@ -132,7 +132,7 @@ import { RichText } from "neoteletext-server-ts-ui-components";
 | --- | --- | --- |
 | `runs` (needed) | `readonly Run[]` | The text, in runs of their own styles, wrapped to the box. |
 | `lines` | `number` | At most this many lines. |
-| `doubleHeight` | `boolean` | In double height (DEC-2222): each line a row more, Double Height in its first cell; single height on rows 22 to 24 and in Thai and Lao. |
+| `doubleHeight` | `boolean` | In double height (DEC-2222): each line a row more, Double Height in its first cell; single height on rows 22 to 24. |
 
 #### Run
 
@@ -173,7 +173,7 @@ import { Band } from "neoteletext-server-ts-ui-components";
 | `text` (needed) | `string` | Its text, cut to the row. |
 | `background` | `Colour` | The band's colour; blue when absent. |
 | `foreground` | `Colour` | The text's colour; white when absent. |
-| `doubleHeight` | `boolean` | In double height (DEC-2222): the band a row deeper; single height on rows 22 to 24 and in Thai and Lao. |
+| `doubleHeight` | `boolean` | In double height (DEC-2222): the band a row deeper; single height on rows 22 to 24. |
 
 ### Section headings
 
@@ -329,7 +329,7 @@ import { LinesBlock } from "neoteletext-server-ts-ui-components";
 | --- | --- | --- |
 | `lines` (needed) | `readonly Line[]` | The lines, a row each, cut to the width. |
 | `empty` | `string` | What it says when there are no lines; nothing when absent. |
-| `doubleHeight` | `boolean` | In double height (DEC-2222): each line a row more; single height on rows 22 to 24 and in Thai and Lao. |
+| `doubleHeight` | `boolean` | In double height (DEC-2222): each line a row more; single height on rows 22 to 24. |
 
 #### Line
 
@@ -557,7 +557,7 @@ import { Placeholder } from "neoteletext-server-ts-ui-components";
 | Prop | Type | What it is |
 | --- | --- | --- |
 | `text` (needed) | `string` | What it says, in white, centred in the box and cut to its width. |
-| `doubleHeight` | `boolean` | In double height (DEC-2222): a row more; single height on rows 22 to 24 and in Thai and Lao. |
+| `doubleHeight` | `boolean` | In double height (DEC-2222): a row more; single height on rows 22 to 24. |
 
 ### While the results come
 
