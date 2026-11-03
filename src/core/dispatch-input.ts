@@ -28,7 +28,7 @@ function keyEvent(session: number, input: Extract<Input, { kind: "key" }>): KeyE
 }
 
 /** The mouse as the mount takes it: a press holds its own button, a release none, a move those it says. */
-function pointerAt(input: Extract<Input, { kind: "mouse" }>): PointerAt {
+function pointerAt(input: Exclude<Extract<Input, { kind: "mouse" }>, { action: "gone" }>): PointerAt {
   const at = { row: input.row, column: input.column, ...pointed(input) };
   return input.action === "move"
     ? { ...at, action: "move", button: 0, buttons: input.buttons }
@@ -58,7 +58,13 @@ export function dispatchInput(mount: Mount, session: number, input: Input): bool
       return mount.compose({ session, cursor: input.cursor, text: input.text });
     }
     case "mouse": {
-      return mount.pointer.pointer(session, pointerAt(input));
+      return input.action === "gone" ? mount.pointer.gone(session) : mount.pointer.pointer(session, pointerAt(input));
+    }
+    case "touch": {
+      // The library follows one pointer: the first finger, which comes as
+      // the mouse. A second finger is the channel's to take, through its
+      // application's input, and no component takes it.
+      return false;
     }
     case "wheel": {
       return mount.pointer.wheel(session, { row: input.row, column: input.column, dx: input.dx, dy: input.dy, ...pointed(input) });

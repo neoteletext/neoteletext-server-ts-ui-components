@@ -158,6 +158,22 @@ export class Pointer {
     return taken;
   }
 
+  /**
+   * `session`'s pointer left the page, or its receiver lost it (protocol
+   * 11's mouse `gone`, REQ-1355): the control it was over is left, as a
+   * HOVER leave leaves it, and no component holds the pointer any longer.
+   * A button held has come first as a release marked lost.
+   */
+  gone(session: number): boolean {
+    this.#captured.delete(session);
+    const before = this.#hovered.get(session);
+    if (before === undefined) {
+      return false;
+    }
+    this.#hovered.delete(session);
+    return this.#hoverOn(before.node, session, false, before.control.row, before.control.column);
+  }
+
   #hoverOn(from: Node, session: number, entered: boolean, row: number, column: number): boolean {
     return bubble(from, (component, node) => {
       const event: HoverEvent = { session, entered, row, column, ...placed(node, row, column) };

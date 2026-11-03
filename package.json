@@ -18,12 +18,12 @@
     "dist"
   ],
   "peerDependencies": {
-    "neoteletext-server-ts-protocol": "11.0.0"
+    "neoteletext-server-ts-protocol": "12.0.0"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
     "knip": "6.43.0",
-    "neoteletext-server-ts-protocol": "file:vendor/neoteletext-server-ts-protocol-11.0.0.tgz",
+    "neoteletext-server-ts-protocol": "file:vendor/neoteletext-server-ts-protocol-12.0.0.tgz",
     "oxlint": "1.90.0",
     "oxlint-tsgolint": "7.0.2005",
     "prettier": "3.9.10",

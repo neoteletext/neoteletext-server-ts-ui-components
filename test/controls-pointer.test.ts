@@ -172,6 +172,18 @@ test("a hover where no control begins is dropped, as is a leave with no enter; a
   );
 });
 
+test("the pointer gone from the page leaves the control it was over, as a leave would; a second finger no component takes", () => {
+  const seen: string[] = [];
+  const page = viewer(h(HoverWatcher, { seen }, h(Button, { label: "one", onPress: () => {} })));
+  const [one] = inOrder(controlsOf(page, PAGE));
+  assert.ok(one !== undefined);
+  page.hover(1, "enter", one.column, one.row);
+  page.send(1, { kind: "mouse", action: "gone", column: one.column, row: one.row });
+  page.send(1, { kind: "mouse", action: "gone", column: one.column, row: one.row });
+  page.send(1, { kind: "touch", action: "press", contact: 2, column: one.column, row: one.row });
+  assert.deepEqual(seen, [`enter ${one.row},${one.column}`, `leave ${one.row},${one.column}`], "left once; a second gone has nothing to leave");
+});
+
 const lines = (spec: Partial<PageSpec>): string[] => {
   const seen = harness([{ page: PAGE, title: "Test", perViewer: true, root: button, ...spec }]);
   seen.join(1, PAGE);
