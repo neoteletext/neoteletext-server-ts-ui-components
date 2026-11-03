@@ -3,6 +3,31 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 20.0.0 (4 November 2026)
+
+### To take it
+
+- **Take the protocol kit 12.0.0** beside it: the server speaks program
+  protocol 11, and the kit stops on any other.
+- **The server's figures are typed** (the kit's `ServerStats` is
+  `ServerFigures` and `ChannelCounts`): a component or page that read them
+  with the kit's `figure`, `figuresIn` or `Figures`, which are gone, reads
+  their fields instead, `most_opened` being a list of pages and their opens,
+  the most opened first. A test gives a channel figures with the kit's
+  `serverStats` from its testing entry.
+- **A test that read a page's TTI through its own copy of `kept-tti.ts`**
+  imports `keptTti` from the kit's testing entry and deletes the copy.
+
+### What changed
+
+- **The pointer gone from the page** (protocol 11's mouse `gone`) leaves the
+  control it was over, as a HOVER leave would, and lets go of a component
+  holding the pointer. A second finger (`touch`) is taken by no component;
+  a channel's application still hears it.
+- **The kit refuses, before it sends, every message the server would
+  refuse**, and checks Opus packets as the server does; its `fakeOpus`
+  writes packets of the profile.
+
 ## 19.0.1 (3 November 2026)
 
 ### What changed
