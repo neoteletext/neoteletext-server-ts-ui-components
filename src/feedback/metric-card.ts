@@ -33,6 +33,8 @@ export interface MetricCardProps {
   readonly history?: readonly number[];
   /** The sparkline's rows; one when absent. */
   readonly historyRows?: number;
+  /** The figure in double height (DEC-2222), a row more, when it is not big: single height on rows 22 to 24 and in Thai and Lao. */
+  readonly doubleHeight?: boolean;
 }
 
 /** The most places shown after the point: more than any figure on a row needs, and within what toFixed takes (0 to 100), so a count from props never makes it throw. */
@@ -81,7 +83,7 @@ export class MetricCard extends Component<MetricCardProps> {
       h(Notice, { kind, text: this.props.label }),
       this.props.big === true
         ? [h(BigText, { text: shown, foreground: colour }), change === null ? null : h(Text, { text: change, foreground: Colour.White })]
-        : h(Text, { text: change === null ? shown : `${shown}  ${change}`, foreground: colour }),
+        : h(Text, { text: change === null ? shown : `${shown}  ${change}`, foreground: colour, doubleHeight: this.props.doubleHeight === true }),
       history === undefined ? null : h(Sparkline, { values: history, last: false, foreground: colour, plotRows: this.props.historyRows ?? 1 }),
     ];
   }

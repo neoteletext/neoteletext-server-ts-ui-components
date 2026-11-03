@@ -105,7 +105,7 @@ export class BreakdownBar extends Component<BreakdownBarProps> {
     const markRow = barRows;
     canvas.coloured(markRow, 0, LABEL, "");
     for (const run of runs) {
-      canvas.code(markRow, run.from + Math.floor((run.cells - 1) / 2), markCode(run.share, run.index));
+      canvas.codes(markRow, run.from + Math.floor((run.cells - 1) / 2), [markCode(run.share, run.index)]);
     }
     paintLegend(
       canvas,

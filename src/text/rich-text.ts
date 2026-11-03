@@ -5,10 +5,11 @@
 // colour, New Background and the ink) takes more cells, counted when the
 // line is broken.
 
-import type { Canvas } from "../core/canvas.ts";
+import type { Canvas, CanvasCell } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
-import { Attribute, Colour, COLUMNS, englishCodes, SPACE, textColour } from "../kit.ts";
+import { Attribute, Colour, COLUMNS, textCells, SPACE, textColour } from "../kit.ts";
+import { linePitch } from "../core/language.ts";
 
 export interface RunStyle {
   /** Its colour; white when absent. */
@@ -65,7 +66,7 @@ export function changes(from: Style, to: Style): number[] {
 }
 
 interface Word {
-  readonly codes: readonly number[];
+  readonly codes: readonly CanvasCell[];
   readonly style: Style;
 }
 
@@ -75,7 +76,7 @@ function words(runs: readonly Run[]): Word[] {
     run.text
       .split(/\s+/u)
       .filter((word) => word !== "")
-      .map((word) => ({ codes: englishCodes(word), style: styleOf(run) })),
+      .map((word) => ({ codes: textCells(word), style: styleOf(run) })),
   );
 }
 
@@ -94,9 +95,9 @@ function startOf(style: Style): number[] {
 }
 
 /** Lines of codes, each at most `width` cells: every attribute counted in the cell it takes. */
-export function layoutRuns(runs: readonly Run[], width: number): number[][] {
-  const lines: number[][] = [];
-  let line: number[] = [];
+export function layoutRuns(runs: readonly Run[], width: number): CanvasCell[][] {
+  const lines: CanvasCell[][] = [];
+  let line: CanvasCell[] = [];
   let style = PLAIN;
   for (const word of words(runs)) {
     const between = changes(style, word.style);
@@ -120,21 +121,27 @@ export interface RichTextProps {
   readonly runs: readonly Run[];
   /** At most this many lines. */
   readonly lines?: number;
+  /** In double height (DEC-2222): each line a row more, Double Height in its first cell; single height on rows 22 to 24 and in Thai and Lao. */
+  readonly doubleHeight?: boolean;
 }
 
 /** Runs of styled text, wrapped to the box. */
 export class RichText extends Component<RichTextProps> {
-  #lines(width: number): number[][] {
-    const lines = layoutRuns(this.props.runs, width);
+  #lines(width: number): CanvasCell[][] {
+    const lines = layoutRuns(this.props.runs, width - (this.props.doubleHeight === true ? 1 : 0));
     return this.props.lines === undefined ? lines : lines.slice(0, this.props.lines);
   }
 
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(this.#lines(space.width).length, space.height) };
+    return { width: space.width, height: Math.min(this.#lines(space.width).length * linePitch(this.language, this.props.doubleHeight === true), space.height) };
   }
 
   override paint(canvas: Canvas): void {
-    this.#lines(canvas.width).forEach((codes, row) => {
+    const double = this.props.doubleHeight === true;
+    const pitch = linePitch(canvas.language, double);
+    this.#lines(canvas.width).forEach((line, index) => {
+      const row = index * pitch + canvas.language.markRows;
+      const codes = double && canvas.doubleHeightAllowed(row) ? [Attribute.DoubleHeight, ...line] : line;
       canvas.codes(row, 0, codes);
       // A background still on at the end of the line is ended in the box's last cell.
       if (canvas.box.column + canvas.width < COLUMNS && codes.includes(Attribute.NewBackground)) {

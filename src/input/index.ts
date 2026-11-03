@@ -14,6 +14,8 @@ export { Control } from "./control.ts";
 export type { ControlProps, ControlSounds } from "./control.ts";
 export { Field } from "./field.ts";
 export type { FieldProps } from "./field.ts";
+export { LanguagePicker } from "./language-picker.ts";
+export type { LanguagePickerProps } from "./language-picker.ts";
 export { MultiTapField } from "./multi-tap-field.ts";
 export type { MultiTapFieldProps } from "./multi-tap-field.ts";
 export { NumberInput } from "./number-input.ts";

@@ -9,10 +9,11 @@ import { ComponentChannel, type Element, h, MultiTapField, SegmentField } from "
 import { MULTI_TAP_COMMIT_MS } from "../src/input/multi-tap-field.ts";
 import { Key } from "../src/kit.ts";
 import { BODY_ROW, frame, latestTti, PAGE, viewer } from "./controls-fixtures.ts";
+import { shown } from "./ascii.ts";
 import { BLOCK, Heard, pressAll, row } from "./input-more-fixtures.ts";
 
 /** The English set's up arrow, at ASCII's `^` (EN 300 706 Table 36): a row's text holds its code. */
-const UP_ARROW = "^";
+const UP_ARROW = "↑";
 
 /** A month's check, for the second segment of a date. */
 function month(segment: number, digits: string): string | null {
@@ -35,11 +36,11 @@ test("a segment field shows a fill in each empty slot and the cursor's block, an
     }),
   );
   assert.match(row(page, BODY_ROW), new RegExp(`${BLOCK}-/--/----`, "u"));
-  assert.equal(row(page, BODY_ROW + 1).indexOf(UP_ARROW), row(page, BODY_ROW).indexOf(BLOCK), "the cursor's slot is marked under it");
+  assert.equal(shown(page, 1, PAGE, BODY_ROW + 1).indexOf(UP_ARROW), row(page, BODY_ROW).indexOf(BLOCK), "the cursor's slot is marked under it");
   pressAll(page, "2", "5", "1", "2", "2", "0", "2", "6");
   assert.match(row(page, BODY_ROW), /25\/12\/2026/u);
   assert.equal(changes.at(-1), "25122026", "the value is the slots' digits");
-  assert.ok(!row(page, BODY_ROW + 1).includes(UP_ARROW), "past the last slot, no slot is marked");
+  assert.ok(!shown(page, 1, PAGE, BODY_ROW + 1).includes(UP_ARROW), "past the last slot, no slot is marked");
 });
 
 test("Backspace clears the slot before the cursor; Left and Right move between slots, and a digit there replaces its own", () => {

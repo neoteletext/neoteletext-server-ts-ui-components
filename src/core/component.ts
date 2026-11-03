@@ -17,9 +17,9 @@
 // component that declared the control; each bubbles to the parents until a
 // handler answers true.
 
-import type { Colour } from "../kit.ts";
+import type { Colour, Language } from "../kit.ts";
 import type { Canvas } from "./canvas.ts";
-import type { ComponentHost, FocusableAt, TimerOptions } from "./component-host.ts";
+import { type ComponentHost, type FocusableAt, type TimerOptions, UNMOUNTED_LANGUAGE } from "./component-host.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { Child, WithChildren } from "./element.ts";
 import type { ComposeEvent, HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
@@ -59,6 +59,16 @@ export abstract class Component<P extends object = object, S extends object = ob
       throw new Error(`${this.constructor.name}: services are reached once mounted`);
     }
     return this.#host.services;
+  }
+
+  /**
+   * The language of its text (REQ-2152 item 1): its own `language` prop, a
+   * tag of the server's languages, or the nearest above it, or the page's,
+   * which is the viewer's (Services.language) when nothing names one; with
+   * its direction and mark rows. English before it is mounted.
+   */
+  protected get language(): Language {
+    return this.#host?.languageOf(this) ?? UNMOUNTED_LANGUAGE;
   }
 
   /** Merges `change` into the state and asks for a render, as React's setState: batched until the event is handled. */

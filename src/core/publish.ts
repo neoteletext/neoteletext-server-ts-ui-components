@@ -5,7 +5,7 @@ import type { Mount } from "./mount.ts";
 
 /**
  * Publishes what changed: each mount with something new renders, and a page
- * is published only if its TTI changed. A viewer's copy is published only
+ * is published only if what it shows changed. A viewer's copy is published only
  * while it differs from the channel's; when it is the same again it is
  * released, so a viewer who only reads costs the server nothing. `own` is
  * which pages each viewer is sent their own copy of now.
@@ -19,29 +19,29 @@ export function publishChanges(
   // The channel's copies first: a viewer's is compared with its page's.
   for (const mount of shared.values()) {
     if (mount.dirty) {
-      const before = mount.lastTti;
-      const text = mount.render();
-      if (text !== before) {
-        context.publishTti("channel", mount.page, text);
+      const before = mount.lastPage?.key;
+      const drawn = mount.render();
+      if (drawn !== null && drawn.key !== before) {
+        context.publishSubpages("channel", mount.page, drawn.subpages);
       }
     }
   }
   for (const [session, pages] of viewers) {
     for (const mount of pages.values()) {
-      const sharedTti = shared.get(mount.page)?.lastTti ?? null;
+      const sharedKey = shared.get(mount.page)?.lastPage?.key ?? null;
       const ownPages = own.get(session) ?? new Set<number>();
       own.set(session, ownPages);
-      const before = mount.lastTti;
-      const text = mount.dirty ? mount.render() : before;
-      if (text === null) {
+      const before = mount.lastPage?.key;
+      const drawn = mount.dirty ? mount.render() : mount.lastPage;
+      if (drawn === null) {
         continue;
       }
-      if (text === sharedTti) {
+      if (drawn.key === sharedKey) {
         if (ownPages.delete(mount.page)) {
           context.release(session, mount.page);
         }
-      } else if (text !== before || !ownPages.has(mount.page)) {
-        context.publishTti(session, mount.page, text);
+      } else if (drawn.key !== before || !ownPages.has(mount.page)) {
+        context.publishSubpages(session, mount.page, drawn.subpages);
         ownPages.add(mount.page);
       }
     }

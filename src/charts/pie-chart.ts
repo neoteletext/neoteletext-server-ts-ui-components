@@ -12,12 +12,12 @@
 // names every slice with its share, those too thin to win a cell too, so
 // a slice is never told by its colour alone (core/look.ts).
 
-import type { Canvas } from "../core/canvas.ts";
+import type { Canvas, CanvasCell } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { paintEmpty } from "../core/look.ts";
 import { CELL_ASPECT, MOSAIC_BASE } from "../core/mosaics.ts";
-import { Attribute, Colour, mosaicColour, Sixels, SIXELS_ACROSS, SIXELS_DOWN, textColour } from "../kit.ts";
+import { Attribute, Colour, mosaicColour, Sixels, SIXELS_ACROSS, SIXELS_DOWN, SPACE, textColour } from "../kit.ts";
 import { cellCount } from "./numbers.ts";
 import { amountOf, colourOf, markCode, paintLegend, type Share, totalOf } from "./shares.ts";
 
@@ -229,8 +229,8 @@ export class PieChart extends Component<PieChartProps> {
    * is left to the legend. Answers, by row, the marks' cells and the codes
    * to put there.
    */
-  #marks(plot: readonly PlotRow[], disc: Disc, won: ReadonlySet<number>, total: number): Map<number, Map<number, number>> {
-    const marks = new Map<number, Map<number, number>>();
+  #marks(plot: readonly PlotRow[], disc: Disc, won: ReadonlySet<number>, total: number): Map<number, Map<number, CanvasCell>> {
+    const marks = new Map<number, Map<number, CanvasCell>>();
     const taken = (row: number, column: number): boolean => {
       const codes = plot[row]?.codes;
       const marked = marks.get(row);
@@ -257,7 +257,7 @@ export class PieChart extends Component<PieChartProps> {
       const outward = x < disc.centreX ? -1 : 1;
       for (let column = Math.max(1, Math.min(width - 2, PIE_AT + Math.floor(x / SIXELS_ACROSS))); column >= 1 && column < width - 1; column += outward) {
         if (!taken(row, column)) {
-          const marked = marks.get(row) ?? new Map<number, number>();
+          const marked = marks.get(row) ?? new Map<number, CanvasCell>();
           marked.set(column - 1, textColour(colourOf(share, index))).set(column, markCode(share, index));
           marks.set(row, marked);
           return;
@@ -275,13 +275,14 @@ export class PieChart extends Component<PieChartProps> {
    * as the block before it. A mark always has a blank cell after it, so a
    * colour never covers one.
    */
-  #coloured(row: PlotRow, marks: ReadonlyMap<number, number>): number[] {
+  #coloured(row: PlotRow, marks: ReadonlyMap<number, CanvasCell>): CanvasCell[] {
     const codes = [...row.codes];
     let current: Colour | null = null;
     for (let column = 0; column < codes.length; column += 1) {
       const mark = marks.get(column);
       if (mark !== undefined) {
-        codes[column] = mark;
+        // A mark's text reads as a space to the sixels either side of it; it takes its cell once the colours are placed.
+        codes[column] = typeof mark === "number" ? mark : SPACE;
         current = null;
         continue;
       }
@@ -293,6 +294,6 @@ export class PieChart extends Component<PieChartProps> {
       codes[colourCell(codes, column)] = mosaicColour(colour);
       current = colour;
     }
-    return codes;
+    return codes.map((code, column) => marks.get(column) ?? code);
   }
 }

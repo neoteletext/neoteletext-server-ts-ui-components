@@ -68,7 +68,7 @@ h(
 
 ## TitleBand
 
-TitleBand: rows 1 and 2 of the frame, the sub-page's name in double height on a band of its colour.
+TitleBand: rows 1 and 2 of the frame, the sub-page's name in double height on a band of its colour; rows 1 to 3 in a language whose marks take the rows around its letters, the name single height on row 2.
 
 ```ts
 import { TitleBand } from "neoteletext-server-ts-ui-components";

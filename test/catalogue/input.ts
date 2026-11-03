@@ -1,6 +1,7 @@
 // The input part's examples: fields, buttons, boxes and the other controls a viewer sets.
 
 import {
+  LanguagePicker,
   Action,
   Autocomplete,
   Button,
@@ -204,6 +205,11 @@ export const input: Part = {
       act: (page) => {
         page.typeKeys(1, "12");
       },
+    },
+    {
+      component: "LanguagePicker",
+      title: "The server's languages",
+      build: () => h(LanguagePicker, { shown: 8, names: { de: "Deutsch", fr: "Français", ru: "Русский", el: "Ελληνικά" } }),
     },
     {
       component: "Select",

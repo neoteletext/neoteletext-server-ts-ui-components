@@ -13,76 +13,65 @@
 // nothing is declared for the pointer's moves. A component asks for Level 2.5 display
 // attributes, which take no cell, at a cell of its own (enhancement.ts),
 // over a level 1 row that reads without them.
+//
+// Text is Unicode in the component's language, which the server encodes
+// (DEC-2199): a component hands the canvas cells, each a code (an
+// attribute, a mosaic) or a string (one character with its marks, as the
+// kit's textCells gives them), and the canvas writes each stretch of
+// strings as a run of text in its language. A language whose marks take the
+// rows above and below (Thai, Lao) is written only on rows 2 to 23, which
+// keep its marks on the page, and only where the rows above and below it
+// are the component's own, since its marks overwrite them; a component of
+// such text gives each line three rows (lineRows). Double height is the policy of DEC-2222:
+// never on rows 0, 23 and 24, never for such a language.
 
-import { Attribute, Colour, COLUMNS, englishCodes, mosaicColour, type Screen, type Sixels, SIXELS_ACROSS, SIXELS_DOWN, textColour } from "../kit.ts";
-import type { DisplayAttributes } from "./enhancement.ts";
+import {
+  Attribute,
+  Colour,
+  COLUMNS,
+  type Language,
+  type LanguageTag,
+  mosaicColour,
+  type Screen,
+  type Sixels,
+  SIXELS_ACROSS,
+  SIXELS_DOWN,
+  textCells,
+  textColour,
+} from "../kit.ts";
+import {
+  backgroundCodes,
+  BLACK_BACKGROUND_CELLS,
+  type CanvasCell,
+  CHIP_TAIL,
+  type Declared,
+  NEW_BACKGROUND_CELL,
+  nothingDeclared,
+  type PageRequests,
+  type Region,
+  writeLine,
+} from "./canvas-parts.ts";
+import { CanvasDeclarations } from "./canvas-declarations.ts";
+import { ENGLISH, languageOf } from "./language.ts";
 import type { Box } from "./layout.ts";
 
-/** A band's New Background is the cell after its colour's (EN 300 706 Table 26). */
-export const NEW_BACKGROUND_CELL = 1;
-/** The cell Black Background takes after a band. */
-const BLACK_BACKGROUND_CELLS = 1;
-/** The space of band a chip keeps after its text, so the text does not run into the band's end as its ink's cell keeps it from the start. */
-const CHIP_TAIL = " ";
+/** The language of the marks a component draws for itself: English, whose set has the arrows and signs they use. */
+const MARK_LANGUAGE: LanguageTag = ENGLISH;
 
-/** The cells before a chip's text: its background's colour and New Background (backgroundCodes), then its ink. */
-export const CHIP_HEAD_CELLS = 3;
+/** The rows double height never takes (DEC-2222 item 4): the header; the hint and Fastext rows, whose row below is not the page's to cover; and row 22, whose row below is the hint row. */
+const NO_DOUBLE_HEIGHT_ROWS: ReadonlySet<number> = new Set([0, 22, 23, 24]);
 
-/** The cells a chip takes beyond its text: its head, a space of band and Black Background after. */
-export const CHIP_CELLS = CHIP_HEAD_CELLS + CHIP_TAIL.length + BLACK_BACKGROUND_CELLS;
-/** The band a chip shows before its text: New Background's cell and the ink's. */
-const CHIP_BAND_BEFORE_TEXT = CHIP_HEAD_CELLS - NEW_BACKGROUND_CELL;
+export { backgroundCodes, centredOnChip, CHIP_CELLS, CHIP_HEAD_CELLS, NEW_BACKGROUND_CELL, nothingDeclared } from "./canvas-parts.ts";
+export type { CanvasCell, Declared, PageRequests, Region } from "./canvas-parts.ts";
 
-/** `text` padded so that, on a chip, it has as much band after it as before: a mark or a sign then sits in the middle of its chip. */
-export function centredOnChip(text: string): string {
-  return `${text}${" ".repeat(CHIP_BAND_BEFORE_TEXT - CHIP_TAIL.length)}`;
-}
-
-/** A region a component marks as it paints, for knowing what a click is on: its name and its cells, on the page. */
-export interface Region {
-  readonly id: string;
-  readonly row: number;
-  readonly column: number;
-  readonly width: number;
-  readonly height: number;
-}
-
-/** What painting asks of the sub-page as a whole: its cursor, and the display attributes in its local enhancement data, in cells of the page. */
-export interface PageRequests {
-  cursor: { row: number; column: number; flags: number } | null;
-  readonly displayAttributes: DisplayAttributes[];
-}
-
-/** What a component declares as it paints, in cells of the page: its controls. */
-export interface Declared {
-  readonly controls: Box[];
-}
-
-/** Nothing declared yet. */
-export function nothingDeclared(): Declared {
-  return { controls: [] };
-}
-
-/**
- * The two cells that set `background` from the second: its colour and New
- * Background; or, for black, Black Background in both, since black as a
- * colour code (alpha black) has no response at Level 1 (EN 300 706 Table
- * 26) and a page must read on a Level 1 decoder.
- */
-export function backgroundCodes(background: Colour): [number, number] {
-  return background === Colour.Black ? [Attribute.BlackBackground, Attribute.BlackBackground] : [textColour(background), Attribute.NewBackground];
-}
-
-export class Canvas {
-  readonly box: Box;
+export class Canvas extends CanvasDeclarations {
   readonly #screen: Screen;
-  readonly #requests: PageRequests;
-  readonly #regions: Region[];
-  readonly #declared: Declared;
   /** The background the component is drawn on: black, or the band of a component round it (Component.innerBackground), which a band of its own ends back to. */
   readonly #surround: Colour;
   /** The rows whose band ends back to the surround's, written once the component has painted (finish), so no text of its own falls on them. */
   readonly #bandRows = new Set<number>();
+  /** The language of the component's text. */
+  readonly language: Language;
 
   constructor(
     screen: Screen,
@@ -91,48 +80,17 @@ export class Canvas {
     regions: Region[] = [],
     declared: Declared = nothingDeclared(),
     surround: Colour = Colour.Black,
+    language: Language = languageOf(ENGLISH, []),
   ) {
+    super(box, requests, regions, declared);
     this.#screen = screen;
-    this.box = box;
-    this.#requests = requests;
-    this.#regions = regions;
-    this.#declared = declared;
     this.#surround = surround;
+    this.language = language;
   }
 
-  /**
-   * Marks `width` by `height` cells from `row`, `column` of the box as the
-   * region `id`: a click there reaches the component with the region's id
-   * (events.ts), so it need not lay itself out again to find what was hit.
-   */
-  region(id: string, row: number, column: number, width: number, height = 1): void {
-    this.#regions.push({ id, row: this.box.row + row, column: this.box.column + column, width, height });
-  }
-
-  /** `width` by `height` cells from `row`, `column` of the box cut to the box, in cells of the page; null when nothing is left. */
-  #inBox(row: number, column: number, width: number, height: number): Box | null {
-    const top = Math.max(0, row);
-    const left = Math.max(0, column);
-    const across = Math.min(this.box.width, column + width) - left;
-    const down = Math.min(this.box.height, row + height) - top;
-    return across > 0 && down > 0 ? { row: this.box.row + top, column: this.box.column + left, width: across, height: down } : null;
-  }
-
-  /**
-   * Declares `width` by `height` cells from `row`, `column` of the box, cut
-   * to the box, as a control: cells a press acts on, which the browser
-   * shows as it shows a link and lights under the pointer itself. With an
-   * `id`, the same cells are the region `id`.
-   */
-  control(row: number, column: number, width: number, height = 1, id?: string): void {
-    const cells = this.#inBox(row, column, width, height);
-    if (cells === null) {
-      return;
-    }
-    this.#declared.controls.push(cells);
-    if (id !== undefined) {
-      this.#regions.push({ id, ...cells });
-    }
+  /** Whether the component's language is written right to left: its text aligns to the right, and what it lays out in a row runs from the right. */
+  get rightToLeft(): boolean {
+    return this.language.direction === "rtl";
   }
 
   /** Declares the band `background` sets from `column` on `height` rows from `row` as a control, and with an `id` a region: from its New Background cell to the cell before the Black Background that ends it. */
@@ -143,21 +101,6 @@ export class Canvas {
   /** Declares the chip drawn from `column`, which `chip` answered `after` for, as a control, and with an `id` a region: its band, from New Background to the cell before Black Background, the space after its text too. */
   chipControl(row: number, column: number, after: number, id?: string): void {
     this.control(row, column + NEW_BACKGROUND_CELL, after - column - NEW_BACKGROUND_CELL - BLACK_BACKGROUND_CELLS, 1, id);
-  }
-
-  /**
-   * Asks for display attributes `flags` (DisplayAttribute) from `row`,
-   * `column` of the box, a cell of its own, in the sub-page's local
-   * enhancement data (EN 300 706 Table 29, mode 01100): non-spacing, they
-   * act from that cell to the end of the row or a further request there,
-   * with DisplayAttribute.None ending them all. Seen at Level 2.5; the
-   * level 1 row under them must read without them.
-   */
-  displayAttributes(row: number, column: number, flags: number): void {
-    const cell = this.#inBox(row, column, 1, 1);
-    if (cell !== null) {
-      this.#requests.displayAttributes.push({ row: cell.row, column: cell.column, flags });
-    }
   }
 
   /** The column a band `background` sets ends before: its Black Background in the box's last cell when the box stops short of the row's end, else the box's end. */
@@ -173,17 +116,31 @@ export class Canvas {
     return this.box.height;
   }
 
-  /** Writes `codes` at `row`, `column` of the box, cut at its edge. */
-  codes(row: number, column: number, codes: readonly number[]): void {
+  /**
+   * Writes `cells` at `row`, `column` of the box, cut at its edge: each
+   * code as it is, and each stretch of strings as a run of text in the
+   * component's language, or in `language` for a mark the component draws
+   * for itself (mark).
+   */
+  codes(row: number, column: number, cells: readonly CanvasCell[], language: LanguageTag = this.language.tag): void {
     if (row < 0 || row >= this.box.height) {
       return;
     }
-    codes.forEach((code, offset) => {
-      const at = column + offset;
-      if (at >= 0 && at < this.box.width) {
-        this.#screen.code(this.box.row + row, this.box.column + at, code);
-      }
-    });
+    const written = language === this.language.tag ? this.language : languageOf(language, []);
+    writeLine(this.#screen, this.box, row, column, cells, written);
+  }
+
+  /**
+   * Writes a mark the component draws for itself (an arrow, a sort mark, a
+   * separator), after the colour `foreground` takes a cell when it is
+   * given: in English, whose set every page reaches whatever its language
+   * (REQ-2152 item 6), so a mark is never one a language's own sets lack.
+   * Answers the column after it.
+   */
+  mark(row: number, column: number, text: string, foreground: Colour | null = null): number {
+    const cells = [...(foreground === null ? [] : [textColour(foreground)]), ...textCells(text)];
+    this.codes(row, column, cells, MARK_LANGUAGE);
+    return column + cells.length;
   }
 
   code(row: number, column: number, code: number): void {
@@ -192,17 +149,26 @@ export class Canvas {
 
   /** Writes `text` as it is, no attribute before it. */
   text(row: number, column: number, text: string): void {
-    this.codes(row, column, englishCodes(text));
+    this.codes(row, column, textCells(text));
   }
 
   /** Writes `text` in `colour`: the colour takes the cell at `column`, the text follows. */
   coloured(row: number, column: number, foreground: Colour, text: string): void {
-    this.codes(row, column, [textColour(foreground), ...englishCodes(text)]);
+    this.codes(row, column, [textColour(foreground), ...textCells(text)]);
   }
 
   /** Writes the attribute `code`, then `text` in `colour`. */
   attributed(row: number, column: number, code: number, foreground: Colour, text: string): void {
-    this.codes(row, column, [code, textColour(foreground), ...englishCodes(text)]);
+    this.codes(row, column, [code, textColour(foreground), ...textCells(text)]);
+  }
+
+  /**
+   * The column a text of `width` cells starts at in the box from `column`
+   * to the box's end less `end` cells: `column` left to right, flush with
+   * the right edge right to left.
+   */
+  start(width: number, column = 0, end = 0): number {
+    return this.rightToLeft ? Math.max(column, this.box.width - end - width) : column;
   }
 
   /**
@@ -243,9 +209,8 @@ export class Canvas {
    */
   chip(row: number, column: number, background: Colour, foreground: Colour, text: string): number {
     // Inside another band, its tail's space is the surround's colour, which shows as the chip's band, and New Background brings the surround back: no black after it.
-    const end =
-      this.#surround === Colour.Black ? [...englishCodes(CHIP_TAIL), Attribute.BlackBackground] : [textColour(this.#surround), Attribute.NewBackground];
-    const codes = [...backgroundCodes(background), textColour(foreground), ...englishCodes(text), ...end];
+    const end = this.#surround === Colour.Black ? [...textCells(CHIP_TAIL), Attribute.BlackBackground] : [textColour(this.#surround), Attribute.NewBackground];
+    const codes = [...backgroundCodes(background), textColour(foreground), ...textCells(text), ...end];
     this.codes(row, column, codes);
     return column + codes.length;
   }
@@ -256,9 +221,36 @@ export class Canvas {
     return column + 1 + codes.length;
   }
 
-  /** Writes double-height `text`: the row below is covered across the whole page (clause 12.3). */
+  /** Whether double height may be drawn on `row` of the box (DEC-2222): not on rows 0, 22, 23 and 24 of the page, nor in a language whose marks take the rows around its letters. */
+  doubleHeightAllowed(row: number): boolean {
+    return this.language.markRows === 0 && !NO_DOUBLE_HEIGHT_ROWS.has(this.box.row + row);
+  }
+
+  /**
+   * Writes double-height `text`: the row below is covered across the whole
+   * page (clause 12.3). Where double height is not allowed
+   * (doubleHeightAllowed), the text is single height: Normal Size takes the
+   * attribute's cell.
+   */
   doubleHeight(row: number, column: number, foreground: Colour, text: string): void {
-    this.attributed(row, column, Attribute.DoubleHeight, foreground, text);
+    const height = this.doubleHeightAllowed(row) ? Attribute.DoubleHeight : Attribute.NormalHeight;
+    this.attributed(row, column, height, foreground, text);
+  }
+
+  /**
+   * Writes a line of `text` in `foreground` from `column`: in double height
+   * when `doubleHeight` asks and the row allows it (doubleHeightAllowed),
+   * Double Height then taking the cell at `column` before the colour's;
+   * otherwise single height, as `coloured` writes it. Answers the cells it
+   * takes before the text: one, or two in double height.
+   */
+  line(row: number, column: number, foreground: Colour, text: string, doubleHeight = false): number {
+    if (doubleHeight && this.doubleHeightAllowed(row)) {
+      this.attributed(row, column, Attribute.DoubleHeight, foreground, text);
+      return 2;
+    }
+    this.coloured(row, column, foreground, text);
+    return 1;
   }
 
   /** Fills `count` cells from `column` with `code`. */
@@ -283,11 +275,6 @@ export class Canvas {
         this.code(row + cellRow, column + cellColumn, sixels.cell(cellColumn * SIXELS_ACROSS, cellRow * SIXELS_DOWN));
       }
     }
-  }
-
-  /** Places the input cursor at `row`, `column` of the box, with the cursor record's `flags` (`CursorFlag`). */
-  cursor(row: number, column: number, flags: number): void {
-    this.#requests.cursor = { row: this.box.row + row, column: this.box.column + column, flags };
   }
 
   /** The code at `row`, `column` of the box. */

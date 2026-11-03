@@ -4,10 +4,10 @@
 // told by its mark as well as by its colour (core/look.ts), so the legend
 // reads without colour, and a part too small to draw is still listed.
 
-import type { Canvas } from "../core/canvas.ts";
+import type { Canvas, CanvasCell } from "../core/canvas.ts";
 import { LABEL } from "../core/look.ts";
 import { fit, pad, padStart } from "../core/text.ts";
-import { Colour, englishCodes, textColour } from "../kit.ts";
+import { Colour, textCells, textColour } from "../kit.ts";
 
 /** One part of a whole: what it is, how much of the whole, and how it is told from the others. */
 export interface Share {
@@ -66,9 +66,9 @@ function markOf(share: Share, index: number): string {
   return own === "" ? (LETTERS[index % LETTERS.length] ?? "?") : own;
 }
 
-/** The mark's one code, as a row holds it. */
-export function markCode(share: Share, index: number): number {
-  return englishCodes(markOf(share, index))[0] ?? englishCodes("?")[0] ?? 0;
+/** The mark's one cell, as a row holds it. */
+export function markCode(share: Share, index: number): CanvasCell {
+  return textCells(markOf(share, index))[0] ?? "?";
 }
 
 /** `amount` of `total` as a whole percentage; a part that is something but rounds to nothing says so as "<1%". */

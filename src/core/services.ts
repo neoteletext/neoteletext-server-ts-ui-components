@@ -3,7 +3,7 @@
 // and the event bus. Calls made outside a server call (none should be) are
 // held until the next one.
 
-import type { Limits } from "../kit.ts";
+import type { CookieOptions, Language, LanguageTag, Limits } from "../kit.ts";
 import type { Bus } from "./bus.ts";
 import type { LibraryEvents } from "./library-events.ts";
 import type { Sound } from "./sound.ts";
@@ -48,6 +48,24 @@ export interface Services {
   streamPlace(session: number, name: string): number | null;
   /** The standard's maxima and the server's budgets, as the server's `start` gave them: a page holds up to `standard.subpages` sub-pages. */
   limits(): Limits;
+  /** The languages a page or its text may name, as the server's `start` listed them, each with its direction and mark rows (REQ-2215). */
+  languages(): readonly Language[];
+  /**
+   * The language a page that names none is drawn in for the viewer
+   * (REQ-2217 item 2): the tag in their `language` cookie when it names one
+   * of the server's languages, else the channel's own; the channel's for
+   * the copy every viewer shares (null).
+   */
+  language(session: number | null): LanguageTag;
+  /** The viewer's cookies (REQ-2217 item 1): as the server last gave them, with what setCookie set since; the program's own, untrusted, from the viewer. */
+  cookies(session: number): Readonly<Record<string, string>>;
+  /**
+   * Sets one of the viewer's cookies through the kit, with its checks, for
+   * every connection they have open; cookies(session) has it at once.
+   * `maxAge: 0` removes it. Names starting `_` are the server's. Setting
+   * `language` to one of the server's languages draws their pages again in it.
+   */
+  setCookie(session: number, name: string, value: string, options?: CookieOptions): void;
   /** A pseudo-random number below `bound`: for games, never for secrets. */
   below(bound: number): number;
   /** Reports a line in the server's log. */

@@ -8,17 +8,18 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { Badges, type Canvas, Checkbox, CHIP_CELLS, Component, type Element, h, NumberInput, type Size } from "../src/index.ts";
-import { Attribute, Colour, englishCodes, textColour } from "../src/kit.ts";
+import { Attribute, Colour, textColour } from "../src/kit.ts";
+import { ascii } from "./ascii.ts";
 import { PAGE, BODY_ROW, frame, controlsOf, inOrder, harness } from "./controls-fixtures.ts";
 
 /** A space: the cell of band after a chip's text. */
-const SPACE = englishCodes(" ")[0];
+const SPACE = ascii(" ")[0];
 /** A band's cells before its text: New Background and the ink. */
 const CELLS_BEFORE_TEXT = 2;
 
 /** A chip's codes: its band's colour, New Background, its ink, its text, a space of band, Black Background. */
 function chipCodes(background: Colour, foreground: Colour, text: string): number[] {
-  return [textColour(background), Attribute.NewBackground, textColour(foreground), ...englishCodes(text), SPACE, Attribute.BlackBackground].flatMap((code) =>
+  return [textColour(background), Attribute.NewBackground, textColour(foreground), ...ascii(text), SPACE, Attribute.BlackBackground].flatMap((code) =>
     code === undefined ? [] : [code],
   );
 }
@@ -97,7 +98,7 @@ test("a check box is a box with its mark in the middle: as much band after the m
     [1, "-"],
   ] as const) {
     const band = bandOf(rows[BODY_ROW + offset] ?? []);
-    const at = band.cells.indexOf(englishCodes(mark)[0] ?? -1);
+    const at = band.cells.indexOf(ascii(mark)[0] ?? -1);
     assert.deepEqual(band.cells.slice(0, CELLS_BEFORE_TEXT), [Attribute.NewBackground, textColour(Colour.Blue)], "white, the mark in blue");
     assert.equal(at, CELLS_BEFORE_TEXT, "the mark after the band's first cells");
     assert.equal(band.cells.length - 1 - at, at, `${mark}: the same band either side of the mark`);
@@ -114,7 +115,7 @@ test("a number input's - and + are each in the middle of their chip, and each ch
     [minus, "-", minusControl],
     [plus, "+", plusControl],
   ] as const) {
-    const at = band.cells.indexOf(englishCodes(sign)[0] ?? -1);
+    const at = band.cells.indexOf(ascii(sign)[0] ?? -1);
     assert.equal(band.cells.length - 1 - at, at, `${sign}: the same band either side`);
     assert.deepEqual(control, { row: BODY_ROW, column: band.start, width: band.cells.length, height: 1 }, `${sign}: the whole band`);
   }

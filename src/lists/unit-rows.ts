@@ -1,13 +1,15 @@
 // Where each unit of a scrolling view (scroll-view.ts) stands among the
 // rows of all of them: a unit takes the rows its element's `height` says,
-// and the view shows from a unit the units that fit whole.
+// else the rows a line of its language takes (three for Thai and Lao,
+// whose marks take the rows around it), and the view shows from a unit the
+// units that fit whole.
 
 import { type Element, isElement } from "../core/element.ts";
 
-/** The rows a unit takes: its element's `height`, a whole number of one or more, or one for text and for an element without one. */
-function unitRows(unit: Element | string): number {
+/** The rows a unit takes: its element's `height`, a whole number of one or more, or for text and for an element without one `lineRows`'s. */
+function unitRows(unit: Element | string, lineRows: (unit: Element | string) => number): number {
   const height = isElement(unit) ? unit.props.height : undefined;
-  return height !== undefined && Number.isFinite(height) && height >= 1 ? Math.floor(height) : 1;
+  return height !== undefined && Number.isFinite(height) && height >= 1 ? Math.floor(height) : lineRows(unit);
 }
 
 /** Where each unit stands among the rows of all of them, and what fits in `shown` rows from each. */
@@ -18,11 +20,12 @@ export class UnitRows {
   /** The last unit that may be the first shown: from it, every unit to the end is in view. */
   readonly last: number;
 
-  constructor(units: readonly (Element | string)[], shown: number) {
+  /** `lineRows` answers the rows a unit of a line takes, by its language: one, or three where its marks take the rows around it. */
+  constructor(units: readonly (Element | string)[], shown: number, lineRows: (unit: Element | string) => number = (): number => 1) {
     this.#shown = Math.max(1, shown);
     this.#starts = [0];
     for (const unit of units) {
-      this.#starts.push((this.#starts.at(-1) ?? 0) + unitRows(unit));
+      this.#starts.push((this.#starts.at(-1) ?? 0) + unitRows(unit, lineRows));
     }
     let last = units.length;
     while (last > 0 && this.total - this.startOf(last - 1) <= this.#shown) {

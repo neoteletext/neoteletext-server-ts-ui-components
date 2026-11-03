@@ -1,0 +1,79 @@
+// Each viewer's language (REQ-2217 item 2): the tag in their `language`
+// cookie when it names one of the server's languages, else the channel's;
+// and their cookies, which a component reads and sets through the kit.
+
+import type { Context, CookieOptions, LanguageTag } from "../kit.ts";
+import { ENGLISH, isListed, LANGUAGE_COOKIE } from "./language.ts";
+import type { Services } from "./services.ts";
+import { ViewerCookies } from "./viewer-cookies.ts";
+
+/** Each viewer's cookies and the language they choose by them. */
+export class ViewerLanguages {
+  readonly #cookies = new ViewerCookies();
+  /** The channel's language: a viewer's who chose none, and the copy every viewer shares. */
+  readonly #channel: LanguageTag;
+
+  /** What hears a viewer's language change. */
+  readonly #changed: (session: number, language: LanguageTag) => void;
+
+  /** The channel's language, English when undefined; `changed` hears each viewer's change of language. */
+  constructor(channel: LanguageTag | undefined, changed: (session: number, language: LanguageTag) => void) {
+    this.#channel = channel ?? ENGLISH;
+    this.#changed = changed;
+  }
+
+  /** The services a component reaches them by, `context` the server call's, or null outside one. */
+  services(context: () => Context | null): Pick<Services, "language" | "cookies" | "setCookie"> {
+    const inCall = (): Context => {
+      const now = context();
+      if (now === null) {
+        throw new Error("a component reached the channel outside a server call");
+      }
+      return now;
+    };
+    return {
+      language: (viewer) => this.of(context(), viewer),
+      cookies: (viewer) => this.cookies(inCall(), viewer),
+      setCookie: (viewer, name, value, options = {}) => {
+        this.set(inCall(), viewer, name, value, options);
+      },
+    };
+  }
+
+  /** The viewer's cookies, as the server gave them with what was set since. */
+  cookies(context: Context, session: number): Readonly<Record<string, string>> {
+    return this.#cookies.of(session, context.cookies(session));
+  }
+
+  /** The viewer's language: their `language` cookie when it names one of the server's languages, else the channel's; the channel's for the shared copy (null) and outside a call. */
+  of(context: Context | null, session: number | null): LanguageTag {
+    if (context === null || session === null) {
+      return this.#channel;
+    }
+    const chosen = this.cookies(context, session)[LANGUAGE_COOKIE];
+    return isListed(chosen, context.languages()) ? chosen : this.#channel;
+  }
+
+  /** Whether the viewer's language is not the channel's. */
+  differs(context: Context | null, session: number): boolean {
+    return this.of(context, session) !== this.#channel;
+  }
+
+  /** Sets a cookie on each connection the viewer has open; a change of their language is heard. */
+  set(context: Context, session: number, name: string, value: string, options: CookieOptions): void {
+    const before = this.of(context, session);
+    for (const connection of context.connectionsOf(session)) {
+      context.cookie(connection, name, value, options);
+    }
+    this.#cookies.set(session, name, value, options);
+    const after = this.of(context, session);
+    if (after !== before) {
+      this.#changed(session, after);
+    }
+  }
+
+  /** The viewer went. */
+  forget(session: number): void {
+    this.#cookies.forget(session);
+  }
+}

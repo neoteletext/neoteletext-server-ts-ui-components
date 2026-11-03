@@ -6,15 +6,16 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { Bracket, type BracketRound, FULL_BLOCK, h, MapMarkers } from "../src/index.ts";
-import { Attribute, Colour, COLUMNS, englishCodes, Key, mosaicColour, Screen, textColour } from "../src/kit.ts";
+import { Attribute, Colour, COLUMNS, Key, mosaicColour, Screen, textColour } from "../src/kit.ts";
+import { ascii } from "./ascii.ts";
 import { BODY_ROW } from "./components-fixtures.ts";
 import { codesOf, readable, rowText, viewer } from "./charts-more-fixtures.ts";
 
 /** The hint row, under the body. */
 const HINT_ROW = 23;
 /** The heading's arrows as a row holds them: the English set has arrows of its own (EN 300 706 Table 36). */
-const LEFT_ARROW = readable(englishCodes("←"));
-const RIGHT_ARROW = readable(englishCodes("→"));
+const LEFT_ARROW = readable(ascii("←"));
+const RIGHT_ARROW = readable(ascii("→"));
 
 /** Land everywhere: 39 cells by 10 rows of sixels, so a degree of longitude is a cell and a degree of latitude a row. */
 const LAND = Array.from({ length: 30 }, () => "#".repeat(78));
@@ -39,9 +40,9 @@ test("a map's places are marked and named beside them, to the right, else to the
   );
   const codes = codesOf(seen, ROW_AT_5_5);
   // Alpha's cell is the eleventh of the map, column 11, after the map's colour: its name to the right, then the map's colour again.
-  assert.deepEqual(codes.slice(10, 18), [textColour(Colour.Yellow), ...englishCodes("*Alpha"), mosaicColour(Colour.Green)]);
-  assert.deepEqual(codes.slice(3, 10), [textColour(Colour.Yellow), ...englishCodes("Beta*"), mosaicColour(Colour.Green)], "Beta's name would run into Alpha's");
-  assert.deepEqual(codes.slice(34, 40), [textColour(Colour.Yellow), ...englishCodes("East*")], "East's name would run off the box");
+  assert.deepEqual(codes.slice(10, 18), [textColour(Colour.Yellow), ...ascii("*Alpha"), mosaicColour(Colour.Green)]);
+  assert.deepEqual(codes.slice(3, 10), [textColour(Colour.Yellow), ...ascii("Beta*"), mosaicColour(Colour.Green)], "Beta's name would run into Alpha's");
+  assert.deepEqual(codes.slice(34, 40), [textColour(Colour.Yellow), ...ascii("East*")], "East's name would run off the box");
   assert.match(rowText(seen, STATUS_ROW), /3 places, 1 crowded out/u);
 });
 
@@ -65,13 +66,8 @@ test("a map leaves out the places outside its bounds, or not at a place at all, 
 
 test("a picture's map gets its own colour back after a name, and a name never covers its other attributes", () => {
   const screen = new Screen();
-  screen.codes(1, 0, [
-    mosaicColour(Colour.Blue),
-    ...Array.from({ length: 19 }, () => FULL_BLOCK),
-    textColour(Colour.Cyan),
-    ...englishCodes("sea and more sea"),
-  ]);
-  screen.codes(2, 0, [textColour(Colour.Red), ...englishCodes("abcd"), textColour(Colour.Green), Attribute.NewBackground, ...englishCodes("efgh")]);
+  screen.codes(1, 0, [mosaicColour(Colour.Blue), ...Array.from({ length: 19 }, () => FULL_BLOCK), textColour(Colour.Cyan), ...ascii("sea and more sea")]);
+  screen.codes(2, 0, [textColour(Colour.Red), ...ascii("abcd"), textColour(Colour.Green), Attribute.NewBackground, ...ascii("efgh")]);
   const seen = viewer(
     h(MapMarkers, {
       map: { tti: screen.toTti(0x100, 0), firstRow: 1 },
@@ -83,9 +79,9 @@ test("a picture's map gets its own colour back after a name, and a name never co
       ],
     }),
   );
-  assert.deepEqual(codesOf(seen, BODY_ROW).slice(24, 31), [textColour(Colour.Yellow), ...englishCodes("*Port"), textColour(Colour.Cyan)]);
+  assert.deepEqual(codesOf(seen, BODY_ROW).slice(24, 31), [textColour(Colour.Yellow), ...ascii("*Port"), textColour(Colour.Cyan)]);
   // To the right Isle's name would cover New Background; it has no room to the left, so its mark stands alone.
-  assert.deepEqual(codesOf(seen, BODY_ROW + 1).slice(1, 4), [textColour(Colour.Yellow), ...englishCodes("*"), textColour(Colour.Red)]);
+  assert.deepEqual(codesOf(seen, BODY_ROW + 1).slice(1, 4), [textColour(Colour.Yellow), ...ascii("*"), textColour(Colour.Red)]);
 });
 
 const match = (top: string, bottom: string, winner?: 0 | 1): BracketRound["matches"][number] => ({

@@ -3,7 +3,13 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
-import { fit } from "../core/text.ts";
+import { leadCells, linePitch } from "../core/language.ts";
+import { cells, fit } from "../core/text.ts";
+
+/** The background's colour and New Background, before the text. */
+const BACKGROUND_CELLS = 2;
+/** The cells of the band besides its text and what leads it: the background's two, and Black Background in the last. */
+const BAND_CELLS = BACKGROUND_CELLS + 1;
 import { Colour } from "../kit.ts";
 
 export interface BandProps {
@@ -13,17 +19,30 @@ export interface BandProps {
   readonly background?: Colour;
   /** The text's colour; white when absent. */
   readonly foreground?: Colour;
+  /** In double height (DEC-2222): the band a row deeper; single height on rows 22 to 24 and in Thai and Lao. */
+  readonly doubleHeight?: boolean;
 }
 
 /** A row on a background of its own colour, its text in another: "TOP STORY", "THE MAGAZINES". */
 export class Band extends Component<BandProps> {
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(1, space.height) };
+    return { width: space.width, height: Math.min(linePitch(this.language, this.props.doubleHeight === true), space.height) };
   }
 
   override paint(canvas: Canvas): void {
-    canvas.background(0, 0, this.props.background ?? Colour.Blue);
+    const double = this.props.doubleHeight === true;
+    const rows = linePitch(canvas.language, double);
+    for (let row = 0; row < rows; row += 1) {
+      canvas.background(row, 0, this.props.background ?? Colour.Blue);
+    }
     // After the background's colour and New Background; its Black Background may take the box's last cell.
-    canvas.coloured(0, 2, this.props.foreground ?? Colour.White, fit(this.props.text, canvas.width - 4));
+    const text = fit(this.props.text, canvas.width - BAND_CELLS - leadCells(double));
+    canvas.line(
+      canvas.language.markRows,
+      canvas.start(cells(text) + leadCells(double), BACKGROUND_CELLS, 1),
+      this.props.foreground ?? Colour.White,
+      text,
+      double,
+    );
   }
 }

@@ -2,7 +2,7 @@
 // the components on it need of their page (needs.ts) where the spec does
 // not say: found once, by a probe of its root.
 
-import type { PageDescription, PageEntry } from "../kit.ts";
+import type { LanguageTag, PageDescription, PageEntry } from "../kit.ts";
 import type { ColourTable } from "./rollover.ts";
 import type { Element } from "./element.ts";
 import { type PageNeeds, probeNeeds } from "./needs.ts";
@@ -22,6 +22,13 @@ export interface PageSpec {
   readonly perViewer?: boolean;
   /** A viewer's mount is kept while they are on other pages, until they go. */
   readonly keepWhileAway?: boolean;
+  /**
+   * The page's language (REQ-2152 item 1), a tag of the server's languages:
+   * every viewer sees it in this one. When absent, each viewer sees it in
+   * their own (Services.language), the page then a copy of their own when
+   * theirs is not the channel's.
+   */
+  readonly language?: LanguageTag;
   /** Its controls' colours under the pointer (rollover.ts): the library's ROLLOVER_COLOURS when absent, null for the receiver's own hover look. */
   readonly rollover?: ColourTable | null;
   /**

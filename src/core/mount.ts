@@ -1,19 +1,20 @@
 // A mount: one tree of component instances behind one copy of a page, the
 // channel's or one viewer's. Its tree (tree.ts) reconciles each render with
-// the last; it draws every sub-page (draw.ts) and answers the page as TTI;
+// the last; it draws every sub-page (draw.ts) and answers the page as the protocol carries it;
 // it routes the keys through focus, and the pointer, the wheel and hovers
 // to the components drawn where they land (pointer.ts); and it runs its
 // components' timers (timers.ts).
 
 // oxlint-disable import/max-dependencies -- the mount is where a page's tree, drawing, keys, pointer and timers meet
-import { Key } from "../kit.ts";
+import type { Language, LanguageTag } from "../kit.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { ComponentHost, FocusableAt } from "./component-host.ts";
 import type { Box } from "./layout.ts";
-import { draw, type DrawHost, type Reach, shownSubPages } from "./draw.ts";
+import { draw, type DrawHost, drawHost, type DrawnPage, type Reach, shownSubPages } from "./draw.ts";
 import type { Element } from "./element.ts";
-import { type ComposeEvent, isPress, type KeyEvent, type TextEvent, typedText } from "./events.ts";
-import { captured, FocusHistory, focusMove } from "./focus.ts";
+import { nearestLanguage } from "./language.ts";
+import type { ComposeEvent, KeyEvent, TextEvent } from "./events.ts";
+import { FocusHistory, routeKey } from "./focus.ts";
 import { emptyGrid } from "./grid.ts";
 import type { KeyHelpEntry } from "./key-bindings.ts";
 import { type AnyComponent, bubble, EMPTY, firstFocusable, focusables, nearest, type Node } from "./node.ts";
@@ -35,6 +36,8 @@ export interface MountHost {
   readonly viewed: () => boolean;
   /** The page's controls' rollover colours (rollover.ts), or null for the receiver's own hover look. */
   readonly rollover: ColourTable | null;
+  /** The page's own language (PageSpec.language), or null for the viewer's. */
+  readonly pageLanguage: LanguageTag | null;
 }
 
 export class Mount implements ComponentHost {
@@ -51,15 +54,15 @@ export class Mount implements ComponentHost {
   #reach: Reach = { grid: emptyGrid(), controls: [] };
   /** Presses, moves and the wheel go straight to it; a hover goes through {@link hover}, which draws the hint row again. */
   readonly pointer: Pointer;
-  /** The page as last answered. */
-  lastTti: string | null = null;
+  /** The page as last drawn. */
+  lastPage: DrawnPage | null = null;
 
   constructor(page: number, root: Element, host: MountHost) {
     this.page = page;
     this.#rootElement = root;
     this.#host = host;
     this.services = host.services;
-    this.#draw = { page, rollover: host.rollover, report: host.report, mostSubPages: (): number => host.services.limits().standard.subpages };
+    this.#draw = drawHost(page, host, (node): Language => this.#languageOfNode(node));
     this.#tree = new Tree({
       components: this,
       unmounted: (node): void => {
@@ -142,6 +145,21 @@ export class Mount implements ComponentHost {
     return node === undefined ? [] : focusables(node).flatMap((each) => (each === node ? [] : [{ component: each.component, box: each.box }]));
   }
 
+  languageOf(component: AnyComponent): Language {
+    return this.#languageOfNode(this.#tree.nodes.get(component) ?? null);
+  }
+
+  /** The nearest `language` prop from `node` up, else the page's, else the viewer's. */
+  #languageOfNode(node: Node | null): Language {
+    return nearestLanguage(node, this.#host.pageLanguage ?? this.services.language(this.services.session), this.services.languages());
+  }
+
+  /** Draws every component again: what they all read changed (the viewer's language). */
+  redrawAll(): void {
+    this.#tree.forceAll();
+    this.#dirty = true;
+  }
+
   hoveredHint(): string | null {
     return this.#hinted()?.hint() ?? null;
   }
@@ -159,8 +177,8 @@ export class Mount implements ComponentHost {
 
   // Rendering.
 
-  /** Renders what changed and answers the page as TTI. */
-  render(): string {
+  /** Renders what changed and answers the page drawn. */
+  render(): DrawnPage | null {
     for (let pass = 0; pass < MOST_PASSES && this.#dirty; pass += 1) {
       this.#dirty = false;
       this.#tree.reconcile(this.#rootElement);
@@ -171,14 +189,14 @@ export class Mount implements ComponentHost {
       }
       const drawn = draw(shown, this.#draw);
       this.#reach = drawn.reach;
-      this.lastTti = drawn.tti;
+      this.lastPage = drawn.page;
       this.#tree.commit();
     }
     if (this.#dirty) {
       this.#host.report(`page ${this.page.toString(16)}: still changing after ${MOST_PASSES} renders; a component's update sets state each time`);
       this.#dirty = false;
     }
-    return this.lastTti ?? "";
+    return this.lastPage;
   }
 
   /** Unmounts every component: the viewer left the page or went. */
@@ -223,29 +241,9 @@ export class Mount implements ComponentHost {
   }
 
   key(event: KeyEvent): boolean {
-    const focus = this.#focus ?? this.#tree.root;
-    if (captured(this.#focus, event) || focus?.component.onKey?.(event) === true) {
-      return true;
-    }
-    // Typing comes as each key's press and repeat with its text (DOC-1935): the component with the keys has it as text before any above it has it as a key, so a field types the letter a page's shortcut would take.
-    const typed = typedText(event);
-    const text = typed === undefined ? null : { session: event.session, text: typed };
-    if (text !== null && focus?.component.onText?.(text) === true) {
-      return true;
-    }
-    if (
-      bubble(focus?.parent ?? null, (component) => component.onKey?.(event)) ||
-      [...this.#tree.components()].some((component) => component.onPageKey?.(event) === true)
-    ) {
-      return true;
-    }
-    const moved = this.#focus === null && !isPress(event, Key.Tab) ? null : focusMove(event, this.#focus, focusables(this.#tree.root));
-    if (moved !== null) {
-      this.#focusOn(moved);
-      return true;
-    }
-    // What no component took as a key is typed text for those above the one with the keys.
-    return text !== null && bubble(focus?.parent ?? null, (component) => component.onText?.(text));
+    return routeKey(event, this.#focus, this.#tree.root, this.#tree.components(), (node) => {
+      this.#focusOn(node);
+    });
   }
 
   text(event: TextEvent): boolean {

@@ -24,7 +24,7 @@ import {
 } from "../src/index.ts";
 import { FULL_BLOCK, MOSAIC_BASE, SIXEL } from "../src/core/mosaics.ts";
 import { BIG_LETTERS } from "../src/text/big-text.ts";
-import { Attribute, Colour, Key, mosaicColour, SPACE_CODE, textColour } from "../src/kit.ts";
+import { Attribute, Colour, Key, mosaicColour, SPACE, textColour } from "../src/kit.ts";
 import { frame, harness, PAGE } from "./components-fixtures.ts";
 import { codes, drawn, heard, large, Loader, viewer, wait } from "./feedback-more-fixtures.ts";
 
@@ -226,7 +226,7 @@ test("loading told to show a skeleton shows its rows of separated blocks instead
   const seen = viewer(h(Loader, { skeleton: true }));
   assert.deepEqual(
     [0, 1, 2].map((row) => codes(seen, row)[1]),
-    [Attribute.Separated, Attribute.Separated, SPACE_CODE],
+    [Attribute.Separated, Attribute.Separated, SPACE],
   );
   assert.ok(!shows(seen.seen(1, PAGE).rows, "Loading"));
 });

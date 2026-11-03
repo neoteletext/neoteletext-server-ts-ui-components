@@ -18,7 +18,8 @@ import {
   keptDisplayAttributes,
   localEnhancement,
 } from "../src/core/enhancement.ts";
-import { Colour, COLUMNS, englishCodes, SPACE_CODE, textColour } from "../src/kit.ts";
+import { Colour, COLUMNS, SPACE, textColour } from "../src/kit.ts";
+import { ascii } from "./ascii.ts";
 import { BODY_ROW, frame, harness, latestTti, lineTriplets, PAGE, viewer } from "./controls-fixtures.ts";
 
 /** Table 29, column mode 01100: Display attributes. */
@@ -155,7 +156,7 @@ test("DoubleWidth's level 1 row is its colour and its letters, each followed by 
   }
   const colour = row.indexOf(textColour(Colour.Green));
   assert.ok(colour >= 0, "the colour is drawn");
-  assert.deepEqual(row.slice(colour + 1, colour + 1 + "G O A L ! ".length), englishCodes("G O A L ! "), "a Level 1 decoder reads it spaced out");
+  assert.deepEqual(row.slice(colour + 1, colour + 1 + "G O A L ! ".length), ascii("G O A L ! "), "a Level 1 decoder reads it spaced out");
 });
 
 test("DoubleWidth sets Double Width at its first letter and clears it at the cell after its last covered space, in its sub-page's X/26", () => {
@@ -181,7 +182,7 @@ test("DoubleWidth fits its text so nothing double width is in the row's last two
   const row = page.seen(1, PAGE).rows[BODY_ROW] ?? [];
   assert.deepEqual(
     row.slice(set, clear).filter((_, at) => at % 2 === 1),
-    Array.from({ length: (clear - set) / 2 }, () => SPACE_CODE),
+    Array.from({ length: (clear - set) / 2 }, () => SPACE),
     "every letter is followed by a space for it to cover",
   );
   assert.match(text(page.seen(1, PAGE).rows, BODY_ROW), /P \. \. *$/u, "cut short, with the cut mark spaced out too");

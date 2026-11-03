@@ -5,7 +5,8 @@ import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { paintEmpty } from "../core/look.ts";
-import { fit, wrap } from "../core/text.ts";
+import { leadCells, linePitch } from "../core/language.ts";
+import { cells, fit, wrap } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 /** One block of an article: a paragraph, a heading, a quotation or code, or an item of a list. */
@@ -73,12 +74,17 @@ export interface LinesProps {
   readonly lines: readonly Line[];
   /** What it says when there are no lines; nothing when absent. */
   readonly empty?: string;
+  /** In double height (DEC-2222): each line a row more; single height on rows 22 to 24 and in Thai and Lao. */
+  readonly doubleHeight?: boolean;
 }
 
 /** Lines as they are, a row each. */
 export class LinesBlock extends Component<LinesProps> {
   override measure(space: Size): Size {
-    const rows = this.props.lines.length === 0 && this.props.empty !== undefined ? 1 : this.props.lines.length;
+    const rows =
+      this.props.lines.length === 0 && this.props.empty !== undefined
+        ? 1
+        : this.props.lines.length * linePitch(this.language, this.props.doubleHeight === true);
     return { width: space.width, height: Math.min(rows, space.height) };
   }
 
@@ -87,9 +93,13 @@ export class LinesBlock extends Component<LinesProps> {
       paintEmpty(canvas, this.props.empty);
       return;
     }
-    this.props.lines.forEach((line, row) => {
+    // A line a row, or three in a language whose marks take the rows around it; right to left, each flush with the right edge.
+    const double = this.props.doubleHeight === true;
+    const pitch = linePitch(canvas.language, double);
+    this.props.lines.forEach((line, index) => {
       if (line.text !== "") {
-        canvas.coloured(row, 0, line.foreground, fit(line.text, canvas.width - 1));
+        const shown = fit(line.text, canvas.width - leadCells(double));
+        canvas.line(index * pitch + canvas.language.markRows, canvas.start(cells(shown) + leadCells(double)), line.foreground, shown, double);
       }
     });
   }

@@ -3,13 +3,55 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
-## Unreleased
+## 16.0.0 (3 November 2026)
 
 ### To take it
 
-- Nothing to change yet.
+- **Take the protocol kit 9.0.0** (program protocol 8) beside it: its
+  `englishCodes`, `foldCharacter`, `SPACE_CODE`, `UNSHOWN` and `ENGLISH` are
+  gone. A program that wrote codes for text writes text: `canvas.text`,
+  `coloured` and `codes` with strings (`CanvasCell`), and the kit's
+  `Screen.text(row, column, text, language)`.
+- **A page is published as content, not TTI.** `Mount.render()` answers a
+  `DrawnPage` (`key`, `subpages`) and `Mount.lastTti` is `lastPage`; a test
+  that read the TTI a channel published reads the kept content.
+- **`ComponentChannelOptions` and `LANGUAGE_COOKIE_SECONDS`** come from the
+  package as before; a channel that wants another language than English for
+  viewers who chose none passes `language`.
 
 ### What changed
+
+- **Text in any language** (REQ-2152, DEC-2199). Components hand the canvas
+  Unicode in their language, and the page names its own, for the server to
+  encode: no component chooses a code for text. Every element takes a
+  `language` prop (a tag of the server's languages) for itself and everything
+  under it, a `PageSpec` takes `language` for the whole page, and otherwise a
+  page is in the viewer's language. What a language's sets lack (a Latin word
+  in Russian, a digit in Arabic, an arrow) is written in English, which every
+  page reaches; what no set has (`[ ] { } \ | ~`) is folded as the kit folded
+  it before.
+- **Right to left.** In Arabic, Hebrew and the other right-to-left languages,
+  `Text`, `Paragraph`, `LinesBlock`, `DoubleHeight`, `DateText` and the title
+  band are flush with the right edge, breadcrumbs run from the right with a
+  left arrow, and a line of several runs is in visual order.
+- **Thai and Lao take three rows a line**, their marks on the rows around it:
+  `Text`, `Paragraph`, `LinesBlock` and a `ScrollView` unit without a height
+  take three rows, the title band three single-height rows, and the body
+  starts on row 4. Their text is written only where its marks stay in the
+  component's own rows on rows 2 to 23; a Fastext prompt in them shows its
+  page number.
+- **Double height** (DEC-2222): never on rows 0 and 22 to 24, never in Thai
+  and Lao, never for a control. `Text`, `Paragraph`, `LinesBlock`,
+  `RichText`, `Band`, `Placeholder`, `Notice`, `MetricCard` and `DateText`
+  take `doubleHeight`, false by default, a row more for each line.
+- **Cookies and the viewer's language** (REQ-2217). `Services.cookies(session)`,
+  `Services.setCookie(session, name, value, options)`, `Services.language(session)`
+  (the `language` cookie when the server lists it, else the channel's) and
+  `Services.languages()`. A new language draws every page the viewer has open
+  again in it, and the bus says `language`. `LanguagePicker` lists the server's
+  languages and sets the cookie.
+- **The rollover packet leaves the designations to the server**, which writes
+  them for the page's language.
 
 - **`ScrollView` scrolls any components** beside a scroll bar (REQ-2153, DEC-2219).
   Its children are its units, each as many rows as its `height` prop says, one when

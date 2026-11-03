@@ -24,7 +24,8 @@ import {
   type TreeNode,
 } from "../src/index.ts";
 import { Key } from "../src/kit.ts";
-import { BODY_ROW, NOTCH, viewer, controls, row, controlBy, click, enterAndLeave, RaiseToast } from "./mouse-fixtures.ts";
+import { shown } from "./ascii.ts";
+import { BODY_ROW, NOTCH, PAGE, viewer, controls, row, controlBy, click, enterAndLeave, RaiseToast } from "./mouse-fixtures.ts";
 
 test("an action is a control over its text from its first character; a click there acts, beside it does not; disabled, it declares nothing; it never takes the keys", () => {
   const pressed: string[] = [];
@@ -111,9 +112,9 @@ test("a crumb with an action is a control a click acts on; a menu's way down is 
   );
   page.press(1, Key.Enter);
   page.press(1, Key.Enter);
-  // The English set's → is 0x5D (EN 300 706 Table 36), which the row's text shows as "]"; the arrows are blue.
+  // The arrows are blue, text for the server to encode in English.
   // oxlint-disable-next-line eslint/no-control-regex -- a teletext row holds its colour codes; the test reads them
-  assert.match(row(page, BODY_ROW), /Main.\]\u0006Tools.\]\u0007Saw/u, "two menus down, the one open white");
+  assert.match(shown(page, 1, PAGE, BODY_ROW), /Main.→\u0006Tools.→\u0007Saw/u, "two menus down, the one open white");
   assert.match(row(page, BODY_ROW + 1), /Blade/u);
   const [main, tools] = controls(page).filter((control) => control.row === BODY_ROW);
   assert.ok(main !== undefined && tools !== undefined, "the two menus above are controls; the one open is not");

@@ -17,6 +17,7 @@ The controls a viewer sets with a remote or a keyboard: fields to type in, by a 
 - [Switch](#switch)
 - [Slider](#slider)
 - [NumberInput](#numberinput)
+- [LanguagePicker](#languagepicker)
 - [Select](#select)
 
 ## Control
@@ -612,6 +613,33 @@ Then the viewer:
 
 ```ts
 page.typeKeys(1, "12");
+```
+
+## LanguagePicker
+
+LanguagePicker: the server's languages to choose from (REQ-2217 item 3), each by its name in its own language where the channel gives one and by its English name otherwise, in a list that scrolls. A choice sets the viewer's `language` cookie, which draws every page they have open again in it (Services.setCookie): a channel needs no code of its own to switch language. A name in a language whose marks take the rows around its letters (Thai, Lao) would take three rows of the list, so such a language is listed by its English name.
+
+```ts
+import { LanguagePicker } from "neoteletext-server-ts-ui-components";
+```
+
+### Props
+
+| Prop | Type | What it is |
+| --- | --- | --- |
+| `shown` (needed) | `number` | The rows it shows; the rest scroll. |
+| `names` | `Readonly<Partial<Record<LanguageTag, string>>>` | Each language's name in its own language, where the channel has it; its English name, from the server, otherwise. |
+| `languages` | `readonly LanguageTag[]` | The languages it offers, in this order; every one the server lists when absent. |
+| `onChoose` | `(language: LanguageTag, session: number) => void` | A viewer chose a language: after their cookie is set. |
+
+And the props of [`ControlProps`](common.md#controlprops).
+
+### The server's languages
+
+![LanguagePicker: The server's languages](../images/input/languagepicker-the-server-s-languages.png)
+
+```ts
+h(LanguagePicker, { shown: 8, names: { de: "Deutsch", fr: "Français", ru: "Русский", el: "Ελληνικά" } })
 ```
 
 ## Select

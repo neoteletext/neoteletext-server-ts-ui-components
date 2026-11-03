@@ -34,6 +34,22 @@ export const text: Part = {
   examples: [
     {
       component: "Text",
+      title: "In double height",
+      build: () => [
+        h(Text, { key: "heading", text: "Weather for the week", foreground: Colour.Yellow, doubleHeight: true }),
+        h(Paragraph, { key: "body", text: "A heading in double height takes two rows; text after it starts below them." }),
+      ],
+    },
+    {
+      component: "Text",
+      title: "In Russian and Arabic",
+      build: () => [
+        h(Text, { key: "russian", text: "Погода на неделю", language: "ru", foreground: Colour.Cyan }),
+        h(Text, { key: "arabic", text: "الطقس هذا الأسبوع", language: "ar", foreground: Colour.Green }),
+      ],
+    },
+    {
+      component: "Text",
       title: "In colours",
       build: () => [
         h(Text, { key: "white", text: "Rain at first, then brighter" }),

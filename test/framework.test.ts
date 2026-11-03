@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { fakeOpus, Harness, SERVER_LIMITS, text } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, SERVER_LANGUAGES, SERVER_LIMITS, text } from "neoteletext-server-ts-protocol/testing";
 import {
   type Canvas,
   type Child,
@@ -113,7 +113,7 @@ test("start ends every viewer: the kit's ended comes first, each mount goes once
   harness.press(7, Key.Enter);
   assert.match(text(harness.own(7, PAGE), 3), /count 1/u);
   events.length = 0;
-  harness.channel.start(0, SERVER_LIMITS);
+  harness.channel.start(0, SERVER_LIMITS, SERVER_LANGUAGES);
   assert.equal(harness.ownPages(7, PAGE), undefined, "nothing of the viewer's own is kept");
   assert.deepEqual(
     events.filter((event) => event === "unmount count"),

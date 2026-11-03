@@ -7,7 +7,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { bandEdges, bandLevels, BreakdownBar, FULL_BLOCK, h, LEFT_HALF, MOSAIC_BASE, PieChart, RATE, Spectrum, tone } from "../src/index.ts";
-import { Attribute, Colour, COLUMNS, englishCodes, mosaicColour, SIXELS_ACROSS, textColour } from "../src/kit.ts";
+import { Attribute, Colour, COLUMNS, mosaicColour, SIXELS_ACROSS, textColour } from "../src/kit.ts";
+import { ascii } from "./ascii.ts";
 import { BODY_ROW } from "./components-fixtures.ts";
 import { codesOf, readable, rowText, type Shown, shown, viewer } from "./charts-more-fixtures.ts";
 
@@ -27,7 +28,7 @@ function run(cells: number): number[] {
 
 /** The column of `mark` in `codes`, or -1. */
 function columnOf(codes: readonly number[], mark: string): number {
-  return codes.indexOf(englishCodes(mark)[0] ?? -1);
+  return codes.indexOf(ascii(mark)[0] ?? -1);
 }
 
 test("a breakdown bar shares its cells by the largest remainder, each part's run in its colour, with Hold Mosaics so the runs meet", () => {
@@ -219,5 +220,5 @@ test("band levels are nought for silence or no samples, bounded for short sounds
 
 test("a part's mark in a pie's legend is in its colour", () => {
   const seen = viewer(h(PieChart, { slices: [{ label: "only", value: 1, foreground: Colour.Magenta, mark: "#" }] }));
-  assert.deepEqual(codesOf(seen, BODY_ROW).slice(PLOT_CELLS, PLOT_CELLS + 3), [textColour(Colour.Magenta), ...englishCodes("#"), textColour(Colour.White)]);
+  assert.deepEqual(codesOf(seen, BODY_ROW).slice(PLOT_CELLS, PLOT_CELLS + 3), [textColour(Colour.Magenta), ...ascii("#"), textColour(Colour.White)]);
 });

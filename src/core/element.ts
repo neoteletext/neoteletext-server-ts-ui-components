@@ -3,10 +3,13 @@
 // mount (mount.ts) turns a tree of them into component instances, keeping
 // an instance wherever the same class is rendered in the same place.
 
+import type { LanguageTag } from "../kit.ts";
 import type { Component } from "./component.ts";
 
-/** The props every element may carry, read by the parent's layout (layout.ts). */
+/** The props every element may carry: those the parent's layout reads (layout.ts), and the language of its text. */
 export interface LayoutProps {
+  /** The language of its text and of everything under it that names none (REQ-2152 item 1): a tag of the server's languages; the page's, or the viewer's, when absent. */
+  readonly language?: LanguageTag;
   /** A fixed width, in cells. */
   readonly width?: number;
   /** A fixed height, in rows. */

@@ -7,9 +7,10 @@
 // control nearest in its direction.
 
 import { Key } from "../kit.ts";
-import type { KeyEvent } from "./events.ts";
+import type { Component } from "./component.ts";
+import { isPress, type KeyEvent, typedText } from "./events.ts";
 import type { Box } from "./layout.ts";
-import type { Node } from "./node.ts";
+import { bubble, focusables, type Node } from "./node.ts";
 
 /** The components remembered: enough for dialogs over dialogs, few enough that walking them costs nothing. */
 const MOST_REMEMBERED = 16;
@@ -86,7 +87,7 @@ function nearestIn(key: string, from: Node, candidates: readonly Node[]): Node |
 }
 
 /** Offers `event` to each component above `focus`, from the root down, before `focus` has it; answers whether one took it. */
-export function captured(focus: Node | null, event: KeyEvent): boolean {
+function captured(focus: Node | null, event: KeyEvent): boolean {
   const above: Node[] = [];
   for (let node = focus?.parent ?? null; node !== null; node = node.parent) {
     above.push(node);
@@ -95,7 +96,7 @@ export function captured(focus: Node | null, event: KeyEvent): boolean {
 }
 
 /** Where a key no component took moves the keys from `focus` among `order`, the components that take them as drawn: Tab to the next, wrapping; an arrow to the nearest that way. Null for nowhere. */
-export function focusMove(event: KeyEvent, focus: Node | null, order: readonly Node[]): Node | null {
+function focusMove(event: KeyEvent, focus: Node | null, order: readonly Node[]): Node | null {
   if (event.action === "release") {
     return null;
   }
@@ -104,4 +105,34 @@ export function focusMove(event: KeyEvent, focus: Node | null, order: readonly N
     return next === undefined || next === focus ? null : next;
   }
   return focus === null || !isArrow(event.key) ? null : nearestIn(event.key, focus, order);
+}
+
+/**
+ * Where a key goes on a page whose keys `focus` has: captured on its way
+ * down, to the focused component (or the root), as typed text to it, up to
+ * those above it, to every component as a page key, then Tab or an arrow
+ * moves the keys (`moveTo`); what none took as a key is typed text for those
+ * above. Answers whether it was taken.
+ */
+export function routeKey(event: KeyEvent, focused: Node | null, root: Node | null, components: Iterable<Component>, moveTo: (node: Node) => void): boolean {
+  const focus = focused ?? root;
+  if (captured(focused, event) || focus?.component.onKey?.(event) === true) {
+    return true;
+  }
+  // Typing comes as each key's press and repeat with its text (DOC-1935): the component with the keys has it as text before any above it has it as a key, so a field types the letter a page's shortcut would take.
+  const typed = typedText(event);
+  const text = typed === undefined ? null : { session: event.session, text: typed };
+  if (text !== null && focus?.component.onText?.(text) === true) {
+    return true;
+  }
+  if (bubble(focus?.parent ?? null, (component) => component.onKey?.(event)) || [...components].some((component) => component.onPageKey?.(event) === true)) {
+    return true;
+  }
+  const moved = focused === null && !isPress(event, Key.Tab) ? null : focusMove(event, focused, focusables(root));
+  if (moved !== null) {
+    moveTo(moved);
+    return true;
+  }
+  // What no component took as a key is typed text for those above the one with the keys.
+  return text !== null && bubble(focus?.parent ?? null, (component) => component.onText?.(text));
 }

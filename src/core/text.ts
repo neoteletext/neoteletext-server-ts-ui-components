@@ -1,12 +1,17 @@
-// Text as a teletext row holds it: measured in the cells the English
-// option set gives each character (the kit's englishCodes), broken at
-// spaces, cut with a mark.
+// Text as a teletext row holds it: measured in the cells the server's
+// encoder gives it, one a character with its marks (the kit's cellsOf),
+// broken at spaces, cut between cells with a mark.
 
-import { englishCodes } from "../kit.ts";
+import { cellsOf, textCells } from "../kit.ts";
 
 /** The cells `text` takes. */
 export function cells(text: string): number {
-  return englishCodes(text).length;
+  return cellsOf(text);
+}
+
+/** The cells of `text` from `from` to before `to`, joined: never a mark parted from its letter. */
+function sliceCells(text: string, from: number, to?: number): string {
+  return textCells(text).slice(from, to).join("");
 }
 
 /** `text` broken at spaces into lines of at most `width` cells; a word longer than a line is cut across lines. */
@@ -26,8 +31,8 @@ export function wrap(text: string, width: number): string[] {
         lines.push(line);
         line = "";
       }
-      lines.push(word.slice(0, width));
-      word = word.slice(width);
+      lines.push(sliceCells(word, 0, width));
+      word = sliceCells(word, width);
     }
     const candidate = line === "" ? word : `${line} ${word}`;
     if (cells(candidate) > width) {
@@ -43,7 +48,7 @@ export function wrap(text: string, width: number): string[] {
   return lines;
 }
 
-/** The mark a text cut short ends with, in characters the English set has. */
+/** The mark a text cut short ends with: full stops, which every language's sets have (the ellipsis is not in the English set). */
 export const CUT_MARK = "..";
 
 /** `text` cut to `width` cells, ending in the mark when cut. */
@@ -51,7 +56,7 @@ export function fit(text: string, width: number): string {
   if (cells(text) <= width) {
     return text;
   }
-  return width <= CUT_MARK.length ? text.slice(0, Math.max(0, width)) : `${text.slice(0, width - CUT_MARK.length)}${CUT_MARK}`;
+  return width <= CUT_MARK.length ? sliceCells(text, 0, Math.max(0, width)) : `${sliceCells(text, 0, width - CUT_MARK.length)}${CUT_MARK}`;
 }
 
 /** What ends a headline cut short. */
@@ -66,7 +71,7 @@ export function headline(title: string, width: number, most: number): string[] {
   const kept = lines.slice(0, most);
   let last = kept.at(-1) ?? "";
   while (last !== "" && cells(`${last}${HEADLINE_CUT}`) > width) {
-    last = last.includes(" ") ? last.slice(0, last.lastIndexOf(" ")) : last.slice(0, -1);
+    last = last.includes(" ") ? last.slice(0, last.lastIndexOf(" ")) : sliceCells(last, 0, -1);
   }
   kept[kept.length - 1] = `${last.trimEnd()}${HEADLINE_CUT}`;
   return kept;

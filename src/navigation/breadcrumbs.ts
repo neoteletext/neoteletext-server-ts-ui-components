@@ -9,7 +9,7 @@ import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import type { PointerEvent } from "../core/events.ts";
 import { cells, fit } from "../core/text.ts";
-import { Colour, englishCodes, textColour } from "../kit.ts";
+import { Colour } from "../kit.ts";
 
 /** One step: its label, and the page it is on or what a click on it does. */
 export interface Crumb {
@@ -28,8 +28,9 @@ export interface BreadcrumbsProps {
   readonly separator?: "arrow" | "slash";
 }
 
-/** What joins the steps. */
+/** What joins the steps, left to right and right to left. */
 const SEPARATORS = { arrow: "→", slash: "/" } as const;
+const SEPARATORS_RIGHT_TO_LEFT = { arrow: "←", slash: "/" } as const;
 /** The cells a separator takes: its colour and itself. */
 const SEPARATOR_CELLS = 2;
 
@@ -38,8 +39,15 @@ export class Breadcrumbs extends Component<BreadcrumbsProps> {
     return { width: space.width, height: Math.min(1, space.height) };
   }
 
+  /**
+   * The steps from the start of the row: from the left, or for a language
+   * written right to left from the right, its arrow pointing left. Each
+   * block, a step or a separator, keeps its colour's cell before its text.
+   */
   override paint(canvas: Canvas): void {
-    const join = englishCodes(SEPARATORS[this.props.separator ?? "arrow"]);
+    const separator = this.props.separator ?? "arrow";
+    const join = (canvas.rightToLeft ? SEPARATORS_RIGHT_TO_LEFT : SEPARATORS)[separator];
+    const placed = (from: number, width: number): number => (canvas.rightToLeft ? canvas.width - from - width : from);
     const last = this.props.trail.length - 1;
     let column = 0;
     for (const [index, crumb] of this.props.trail.entries()) {
@@ -50,12 +58,13 @@ export class Breadcrumbs extends Component<BreadcrumbsProps> {
         break;
       }
       if (index > 0) {
-        canvas.codes(0, column, [textColour(Colour.Blue), ...join]);
+        canvas.mark(0, placed(column, SEPARATOR_CELLS), join, Colour.Blue);
       }
       const text = fit(crumb.label, room);
-      canvas.coloured(0, start, index === last ? Colour.White : Colour.Cyan, text);
+      const at = placed(start, 1 + cells(text));
+      canvas.coloured(0, at, index === last ? Colour.White : Colour.Cyan, text);
       if (crumb.page !== undefined || crumb.onPress !== undefined) {
-        canvas.control(0, start + 1, cells(text), 1, String(index));
+        canvas.control(0, at + 1, cells(text), 1, String(index));
       }
       column = start + 1 + cells(text);
     }

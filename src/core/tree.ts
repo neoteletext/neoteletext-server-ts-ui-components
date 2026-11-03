@@ -155,4 +155,11 @@ export class Tree {
   components(): IterableIterator<Component> {
     return this.nodes.keys();
   }
+
+  /** Every mounted component renders again at the next reconcile. */
+  forceAll(): void {
+    for (const component of this.nodes.keys()) {
+      this.forced.add(component);
+    }
+  }
 }

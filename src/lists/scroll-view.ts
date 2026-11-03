@@ -14,6 +14,7 @@
 import { type Child, type Element, flatten, h, isElement } from "../core/element.ts";
 import type { KeyEvent, WheelEvent } from "../core/events.ts";
 import type { Size } from "../core/layout.ts";
+import { languageOf, lineRows } from "../core/language.ts";
 import { listStep, WheelLines } from "../core/list-cursor.ts";
 import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
@@ -62,13 +63,19 @@ export class ScrollView extends Control<ScrollViewProps, ScrollViewState> {
     return { width: space.width, height: Math.min(Math.max(0, this.props.shown), space.height) };
   }
 
+  /** The rows a unit of a line takes in its language, its own `language` prop or the view's: three where its marks take the rows around it (REQ-2152 item 5). */
+  readonly #lineRows = (unit: Element | string): number => {
+    const own = isElement(unit) ? unit.props.language : undefined;
+    return lineRows(own === undefined ? this.language : languageOf(own, this.services.languages()));
+  };
+
   get #units(): (Element | string)[] {
     return flatten(this.props.children ?? null);
   }
 
   override render(): Child {
     const units = this.#units;
-    const rows = new UnitRows(units, this.props.shown);
+    const rows = new UnitRows(units, this.props.shown, this.#lineRows);
     const top = rows.clamp(this.state.top);
     const inView = units.slice(top, top + rows.fitFrom(top)).map((unit, at) => keyed(unit, top + at));
     return h(
@@ -88,7 +95,7 @@ export class ScrollView extends Control<ScrollViewProps, ScrollViewState> {
   }
 
   override onKey(event: KeyEvent): boolean {
-    const rows = new UnitRows(this.#units, this.props.shown);
+    const rows = new UnitRows(this.#units, this.props.shown, this.#lineRows);
     const top = rows.clamp(this.state.top);
     const step = listStep(event, rows.fitFrom(top));
     if (step === null || this.disabled) {
@@ -102,7 +109,7 @@ export class ScrollView extends Control<ScrollViewProps, ScrollViewState> {
     if (this.disabled) {
       return false;
     }
-    const rows = new UnitRows(this.#units, this.props.shown);
+    const rows = new UnitRows(this.#units, this.props.shown, this.#lineRows);
     this.setState({ top: rows.clamp(rows.clamp(this.state.top) + this.#wheel.lines(event.dy)) });
     return true;
   }

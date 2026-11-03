@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { type Harness, rowOf, text } from "neoteletext-server-ts-protocol/testing";
 import { Component, type ComponentEvent } from "../src/index.ts";
 import { CURSOR_BLOCK } from "../src/input/drawn-line.ts";
-import { SPACE_CODE } from "../src/kit.ts";
+import { SPACE } from "../src/kit.ts";
 import { PAGE } from "./controls-fixtures.ts";
 
 /** The cursor's block, as a row's text holds it. */
@@ -31,7 +31,7 @@ export function rowWith(page: Harness, wanted: string): number {
 export function shown(page: Harness): string {
   const { rows } = page.seen(1, PAGE);
   return rows
-    .map((codes) => String.fromCodePoint(...codes.map((code) => (code <= LAST_ATTRIBUTE ? SPACE_CODE : code))))
+    .map((codes) => String.fromCodePoint(...codes.map((code) => (code <= LAST_ATTRIBUTE ? SPACE : code))))
     .join(" ")
     .replaceAll(/\s+/gu, " ");
 }

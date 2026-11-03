@@ -6,6 +6,7 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
+import { leadCells, linePitch } from "../core/language.ts";
 import { cells, fit } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
@@ -151,6 +152,8 @@ export interface DateTextProps {
   readonly fallback?: string;
   /** In the middle of its width. */
   readonly centre?: boolean;
+  /** In double height (DEC-2222): a row more; single height on rows 22 to 24 and in Thai and Lao. */
+  readonly doubleHeight?: boolean;
 }
 
 /** One date on one row, in its colour. */
@@ -160,12 +163,15 @@ export class DateText extends Component<DateTextProps> {
   }
 
   override measure(space: Size): Size {
-    return { width: Math.min(space.width, cells(this.text) + 1), height: Math.min(1, space.height) };
+    const double = this.props.doubleHeight === true;
+    return { width: Math.min(space.width, cells(this.text) + leadCells(double)), height: Math.min(linePitch(this.language, double), space.height) };
   }
 
   override paint(canvas: Canvas): void {
-    const shown = fit(this.text, canvas.width - 1);
-    const column = this.props.centre === true ? Math.max(0, Math.floor((canvas.width - cells(shown) - 1) / 2)) : 0;
-    canvas.coloured(0, column, this.props.foreground ?? Colour.White, shown);
+    const double = this.props.doubleHeight === true;
+    const shown = fit(this.text, canvas.width - leadCells(double));
+    const width = cells(shown) + leadCells(double);
+    const column = this.props.centre === true ? Math.max(0, Math.floor((canvas.width - width) / 2)) : canvas.start(width);
+    canvas.line(canvas.language.markRows, column, this.props.foreground ?? Colour.White, shown, double);
   }
 }

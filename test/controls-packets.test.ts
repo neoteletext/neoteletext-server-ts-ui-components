@@ -107,12 +107,16 @@ test("a page never writes column mode 01010, the pointer area DEC-657 withdrew: 
   );
 });
 
-test("the rollover packet is X/28/0 format 1 (Table 4): a basic English page, CLUT 2 the Level 1 colours, CLUT 3 the rollover colours, re-mapping 6", () => {
+test("the rollover packet is X/28/0 format 1 (Table 4): a basic page whose designations the server writes, CLUT 2 the Level 1 colours, CLUT 3 the rollover colours, re-mapping 6", () => {
   const line = rolloverLine();
   assert.ok(line.startsWith("OL,28,@"), "packet 28, designation code 0");
   const triplets = lineTriplets(line);
-  assert.equal(triplets[0], 0xf << 14, "page function and coding 0, default designation Latin English, the second G0 set's low bits 1111");
-  assert.equal(triplets[1]! & 0x3ff, 0x7, "the second G0 set's high bits 111 (none), no side panels");
+  assert.equal(
+    triplets[0],
+    0,
+    "page function and coding 0, and the designations left to the server, which writes them for the page's language (REQ-2214 item 7)",
+  );
+  assert.equal(triplets[1]! & 0x3ff, 0, "the second G0 set's high bits the server's too, no side panels");
   const words = Array.from({ length: 16 }, (_, index) => streamBits(triplets, 28 + 12 * index, 12)).map(
     (word) => ((word & 0xf) << 8) | (word & 0xf0) | ((word >> 8) & 0xf),
   );

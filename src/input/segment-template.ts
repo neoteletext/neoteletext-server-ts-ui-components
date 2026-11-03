@@ -3,7 +3,8 @@
 // the characters that stand as they are; its value, a character a slot,
 // read back into digits; and the template drawn with them in it.
 
-import { COLUMNS, englishCodes } from "../kit.ts";
+import type { CanvasCell } from "../core/canvas.ts";
+import { COLUMNS, textCells } from "../kit.ts";
 import { CURSOR_BLOCK, firstCharacters } from "./drawn-line.ts";
 
 /** What marks a slot for a digit in the template. */
@@ -92,18 +93,18 @@ export function filledText(template: Template, digits: readonly Slot[]): string 
 
 /** The template drawn: its codes, and where among them the cursor's slot is, or null where it shows none. */
 export interface TemplateCodes {
-  readonly codes: readonly number[];
+  readonly codes: readonly CanvasCell[];
   readonly cursorAt: number | null;
 }
 
 /** The codes `template` is drawn in with `digits` in it: the cursor's slot, when it is empty, a block; a filled slot `*` when concealed. */
 export function templateCodes(template: Template, digits: readonly Slot[], cursor: number | null, conceal: boolean): TemplateCodes {
-  const codes: number[] = [];
+  const codes: CanvasCell[] = [];
   let cursorAt: number | null = null;
   for (const [place, piece] of template.pieces.entries()) {
     const slot = template.slotOf[place] ?? null;
     if (slot === null) {
-      codes.push(...englishCodes(piece));
+      codes.push(...textCells(piece));
       continue;
     }
     if (slot === cursor) {
@@ -111,9 +112,9 @@ export function templateCodes(template: Template, digits: readonly Slot[], curso
     }
     const digit = digits[slot] ?? null;
     if (digit === null) {
-      codes.push(...(slot === cursor ? [CURSOR_BLOCK] : englishCodes(FILL)));
+      codes.push(...(slot === cursor ? [CURSOR_BLOCK] : textCells(FILL)));
     } else {
-      codes.push(...englishCodes(conceal ? CONCEALED : digit));
+      codes.push(...textCells(conceal ? CONCEALED : digit));
     }
   }
   return { codes, cursorAt };

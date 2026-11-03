@@ -6,7 +6,7 @@
 
 import type { Canvas } from "../core/canvas.ts";
 import { cells, CUT_MARK } from "../core/text.ts";
-import { CONTROL_CHARACTER, type Colour, englishCodes, textColour } from "../kit.ts";
+import { CONTROL_CHARACTER, type Colour, textCells, textColour } from "../kit.ts";
 
 /** The prompt before what is typed, as a text field's. */
 const PROMPT = "> ";
@@ -57,7 +57,7 @@ function lastCells(text: string, width: number): string {
 /** Draws the prompt and `text` in `ink` from `column`, its end in sight, and the cursor's block after it when `cursor`. */
 export function paintDrawnLine(canvas: Canvas, row: number, column: number, ink: Colour, text: string, cursor: boolean): void {
   const shown = lastCells(text, lineRoom(canvas.width - column));
-  canvas.codes(row, column, [textColour(ink), ...englishCodes(`${PROMPT}${shown}`), ...(cursor ? [CURSOR_BLOCK] : [])]);
+  canvas.codes(row, column, [textColour(ink), ...textCells(`${PROMPT}${shown}`), ...(cursor ? [CURSOR_BLOCK] : [])]);
 }
 
 /**

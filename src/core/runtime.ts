@@ -15,12 +15,15 @@
 // released, so a viewer who only reads costs the server nothing.
 
 // oxlint-disable import/max-dependencies -- the runtime is where the protocol's calls meet the mounts, streams, sounds and publication
-import { type Application, type Context, ffmpegOpus, type Input, type OpusEncoder, type PageEntry, type PageRequest, type ServerStats } from "../kit.ts";
+import { type Application, type Context, ffmpegOpus, type Input, type LanguageTag, type PageEntry, type PageRequest, type ServerStats } from "../kit.ts";
+import { type ComponentChannelOptions } from "./channel-options.ts";
+import { channelServices } from "./channel-services.ts";
 import { EventBus } from "./bus.ts";
 import { ViewerAddresses } from "./viewer-addresses.ts";
 import type { LibraryEvents } from "./library-events.ts";
-import type { PageParams } from "./services.ts";
+import type { PageParams, Services } from "./services.ts";
 import { ViewerParams } from "./viewer-params.ts";
+import { ViewerLanguages } from "./viewer-languages.ts";
 import { dispatchInput } from "./dispatch-input.ts";
 import { LiveStreams } from "./live-streams.ts";
 import { Mount } from "./mount.ts";
@@ -28,13 +31,6 @@ import { describedBy, type PageSpec, SpecNeeds } from "./page-spec.ts";
 import { earliestWake, publishChanges } from "./publish.ts";
 import { SoundObjects } from "./sound-objects.ts";
 import { ROLLOVER_COLOURS } from "./rollover.ts";
-import type { Services } from "./services.ts";
-import { fit } from "./text.ts";
-
-export interface ComponentChannelOptions {
-  /** What encodes its sounds as Opus, the one format desktop and phone receivers play: ffmpeg with libopus, found on the path, when absent. */
-  readonly opus?: OpusEncoder;
-}
 
 export class ComponentChannel implements Application {
   readonly bus = new EventBus<LibraryEvents>();
@@ -53,9 +49,11 @@ export class ComponentChannel implements Application {
   readonly #params = new ViewerParams();
   readonly #streams: LiveStreams;
   readonly #addresses = new ViewerAddresses();
+  readonly #languages: ViewerLanguages;
 
   constructor(specs: readonly PageSpec[], options: ComponentChannelOptions = {}) {
     this.#specs = new Map(specs.map((spec) => [spec.page, spec]));
+    this.#languages = new ViewerLanguages(options.language, this.#languageChanged);
     const opus = options.opus ?? ffmpegOpus();
     this.#sounds = new SoundObjects(opus);
     this.#streams = new LiveStreams(opus);
@@ -117,7 +115,7 @@ export class ComponentChannel implements Application {
       watching.add(session);
       this.#watching.set(page, watching);
       const spec = this.#specs.get(page);
-      if (spec !== undefined && this.#needs.perViewer(spec)) {
+      if (spec !== undefined && this.#ownCopy(spec, session)) {
         this.#viewerMount(spec, session);
       }
       // A clock that waited while nobody watched catches up before the page is sent.
@@ -149,7 +147,7 @@ export class ComponentChannel implements Application {
       if (spec === undefined) {
         return;
       }
-      const mount = this.#needs.perViewer(spec) ? this.#viewerMount(spec, session) : this.#shared.get(page);
+      const mount = this.#viewers.get(session)?.get(page) ?? (this.#ownCopy(spec, session) ? this.#viewerMount(spec, session) : this.#shared.get(page));
       if (mount === undefined) {
         return;
       }
@@ -179,6 +177,7 @@ export class ComponentChannel implements Application {
       this.#streams.forget(session);
       this.#params.forget(session);
       this.#addresses.forget(session);
+      this.#languages.forget(session);
       for (const watching of this.#watching.values()) {
         watching.delete(session);
       }
@@ -197,6 +196,25 @@ export class ComponentChannel implements Application {
   }
 
   // The mounts.
+
+  /** Whether the viewer is to see a copy of the page of their own: its components need one, or the page is in the viewer's language and that is not the channel's. */
+  #ownCopy(spec: PageSpec, session: number): boolean {
+    return this.#needs.perViewer(spec) || (spec.language === undefined && this.#languages.differs(this.#context, session));
+  }
+
+  /** A viewer's new language draws every page they have open again in it. */
+  readonly #languageChanged = (session: number, language: LanguageTag): void => {
+    this.bus.emit("language", { session, language }, { session });
+    for (const [page, watching] of this.#watching) {
+      const spec = this.#specs.get(page);
+      if (spec !== undefined && watching.has(session) && this.#ownCopy(spec, session)) {
+        this.#viewerMount(spec, session);
+      }
+    }
+    for (const mount of this.#viewers.get(session)?.values() ?? []) {
+      mount.redrawAll();
+    }
+  };
 
   *#mounts(): Generator<Mount> {
     yield* this.#shared.values();
@@ -226,6 +244,7 @@ export class ComponentChannel implements Application {
       },
       report: (text) => this.#context?.log(text),
       rollover: spec.rollover === undefined ? ROLLOVER_COLOURS : spec.rollover,
+      pageLanguage: spec.language ?? null,
       viewed: () => {
         const watching = this.#watching.get(spec.page);
         return session === null ? (watching?.size ?? 0) > 0 : watching?.has(session) === true;
@@ -234,49 +253,29 @@ export class ComponentChannel implements Application {
   }
 
   #services(page: number, session: number | null): Services {
-    const context = (): Context => {
-      if (this.#context === null) {
-        throw new Error("a component reached the channel outside a server call");
-      }
-      return this.#context;
-    };
-    return {
-      session,
+    return channelServices(
+      {
+        bus: this.bus,
+        context: () => this.#context,
+        parameters: (viewer) => this.#addresses.parameters(viewer, page),
+        redirect: this.#redirect,
+        streams: this.#streams,
+        sounds: this.#sounds,
+        languages: this.#languages,
+      },
       page,
-      bus: this.bus.at({ page, session }),
-      now: () => context().now(),
-      epochMs: () => context().epochMs(),
-      parameters: (viewer) => this.#addresses.parameters(viewer, page),
-      redirect: (to: number, target: number | string, params?: PageParams): void => {
-        if (typeof target === "string") {
-          context().redirect(to, target);
-        } else {
-          this.#redirect(context(), to, target, params);
-        }
-      },
-      ...this.#streams.services(context, page, () => this.#context?.now() ?? 0),
-      title: (text) => {
-        context().title(page, fit(text, context().limits().budgets.titleCharacters));
-      },
-      limits: () => context().limits(),
-      below: (bound) => context().below(bound),
-      log: (text) => {
-        context().log(text);
-      },
-      play: (sound, to) => {
-        this.#sounds.play(context(), sound, to ?? session, page);
-      },
-    };
+      session,
+    );
   }
 
   /** Sends a viewer to a page, with what it is to show: a page they already have open shows it at once. */
-  #redirect(context: Context, session: number, page: number, params: PageParams | undefined): void {
+  readonly #redirect = (context: Context, session: number, page: number, params: PageParams | undefined): void => {
     if (params !== undefined) {
       this.#params.redirected(session, page, params);
       this.#show(session, page);
     }
     context.redirect(session, page);
-  }
+  };
 
   /** Runs `work` in a server call, then publishes what changed and asks for the next wake. */
   #run(context: Context, work: () => void): void {

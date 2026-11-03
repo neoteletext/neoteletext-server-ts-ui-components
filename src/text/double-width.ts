@@ -5,7 +5,7 @@ import { Component } from "../core/component.ts";
 import { DisplayAttribute } from "../core/enhancement.ts";
 import { type Size } from "../core/layout.ts";
 import { fit } from "../core/text.ts";
-import { Colour, COLUMNS, englishCodes, textColour } from "../kit.ts";
+import { Colour, COLUMNS, textCells, textColour } from "../kit.ts";
 import type { StyledProps } from "./styles.ts";
 
 /** The cell before the letters: the colour's. */
@@ -41,7 +41,7 @@ export class DoubleWidth extends Component<StyledProps> {
     if (letters.length === 0) {
       return;
     }
-    canvas.codes(0, 0, [textColour(this.props.foreground ?? Colour.Yellow), ...englishCodes(letters.map((letter) => `${letter} `).join(""))]);
+    canvas.codes(0, 0, [textColour(this.props.foreground ?? Colour.Yellow), ...textCells(letters.map((letter) => `${letter} `).join(""))]);
     canvas.displayAttributes(0, LEAD_CELLS, DisplayAttribute.DoubleWidth);
     canvas.displayAttributes(0, LEAD_CELLS + LETTER_CELLS * letters.length, DisplayAttribute.None);
   }

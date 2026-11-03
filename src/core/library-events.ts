@@ -2,7 +2,7 @@
 // bus (bus.ts): what one page's components tell others that share nothing
 // else with them.
 
-import type { ServerStats } from "../kit.ts";
+import type { LanguageTag, ServerStats } from "../kit.ts";
 
 /** A notice for a toast (feedback/notice.ts): what it says and how it is meant. Sent to one viewer or page with the bus's audience. */
 export interface ToastEvent {
@@ -23,6 +23,8 @@ export interface LibraryEvents {
   readonly toast: ToastEvent;
   /** The parameters of a viewer's selection of this page changed, null once another selection has left them behind: untrusted text, undecoded. */
   readonly parameters: { readonly session: number; readonly parameters: string | null };
+  /** A viewer chose another language (REQ-2217 item 2): their pages are drawn again in it. */
+  readonly language: { readonly session: number; readonly language: LanguageTag };
   /** A viewer went: what a component keeps for them, beyond its own copy, can go. */
   readonly ended: { readonly session: number };
 }

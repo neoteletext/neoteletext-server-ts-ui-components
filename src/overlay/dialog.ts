@@ -12,7 +12,7 @@ import { type Box, type LayoutChild, type Size, stack, stackSize } from "../core
 import { isPress, type KeyEvent, type PointerEvent } from "../core/events.ts";
 import { CHOSEN, DISABLED_BAND, inkOn, type Kind, KINDS } from "../core/look.ts";
 import { cells, fit, wrap } from "../core/text.ts";
-import { Attribute, Colour, englishCodes, Key, SPACE, textColour } from "../kit.ts";
+import { Attribute, Colour, textCells, Key, SPACE, textColour } from "../kit.ts";
 import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { keyStep } from "../input/key-step.ts";
 import { within } from "../lists/list-rows.ts";
@@ -188,7 +188,7 @@ export class Dialog extends Control<DialogProps, DialogState> {
       canvas.codes(row, start, [
         ...backgroundCodes(band.background),
         textColour(band.foreground),
-        ...englishCodes(label),
+        ...textCells(label),
         textColour(BACKGROUND),
         Attribute.NewBackground,
       ]);

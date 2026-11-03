@@ -6,7 +6,7 @@
 import type { Box, LayoutChild } from "../core/layout.ts";
 import { type Child, h } from "../core/element.ts";
 import { SubPage, type SubPageLinks } from "../core/page.ts";
-import { type Colour, COLUMNS } from "../kit.ts";
+import { type Colour, COLUMNS, type Language } from "../kit.ts";
 import { Rows } from "../layout/layouts.ts";
 import { FastextBar, fastextLinks } from "./fastext-bar.ts";
 import { HintLine } from "./hint-line.ts";
@@ -15,6 +15,11 @@ import { TitleBand } from "./title-band.ts";
 /** The rows of the frame, from row 0 (left to the page) to row 24. */
 export const BAND_ROW = 1;
 export const BAND_ROWS = 2;
+
+/** The rows the title band takes in `language`: two, or three where its marks take the rows around its letters (DEC-2222 item 2). */
+export function bandRows(language: Language): number {
+  return BAND_ROWS + language.markRows;
+}
 export const BODY_ROW = 3;
 export const BODY_ROWS = 20;
 export const HINT_ROW = 23;
@@ -72,11 +77,12 @@ export class Frame extends SubPage<FrameProps> {
     const bare = this.props.bare === true;
     const [first, ...rest] = children;
     const parts = bare ? children : rest;
+    const band = bandRows(this.language);
     if (!bare && first !== undefined) {
-      first.place({ row: BAND_ROW, column: 0, width: COLUMNS, height: BAND_ROWS });
+      first.place({ row: BAND_ROW, column: 0, width: COLUMNS, height: band });
     }
     const [body, ...after] = parts;
-    const top = bare ? BAND_ROW : BODY_ROW;
+    const top = bare ? BAND_ROW : BAND_ROW + band;
     body?.place({ row: top, column: 0, width: COLUMNS, height: BODY_ROW + BODY_ROWS - top });
     const prompts = after.at(-1);
     after[0]?.place({ row: HINT_ROW, column: 0, width: COLUMNS, height: 1 });

@@ -1,6 +1,7 @@
 // Drawing a mount's tree: each sub-page laid out on the whole screen,
-// painted, and answered as TTI with the local enhancement data its
-// components asked for (enhancement.ts). A receiver opens a page at its
+// painted, and answered as the protocol's content, with the local
+// enhancement data its components asked for (enhancement.ts) and its text
+// for the server to encode in the page's language (DEC-2199). A receiver opens a page at its
 // first sub-page and shows each as a page of its own, never cycling them
 // (the browser's decision 111). Clicks are found on the first
 // sub-page's cells only, since a channel is not told which sub-page a
@@ -9,7 +10,7 @@
 // another sub-page's component. Display attributes are how a sub-page
 // looks, so each sub-page carries those it paints.
 
-import { Colour, COLUMNS, ROWS, Screen, tti as subpagesTti } from "../kit.ts";
+import { Colour, COLUMNS, type Language, type Limits, ROWS, Screen, type SubpageBody } from "../kit.ts";
 import { Canvas, nothingDeclared, type PageRequests, type Region } from "./canvas.ts";
 import type { Box, LayoutChild, Size } from "./layout.ts";
 import { type LocalEnhancement, localEnhancement } from "./enhancement.ts";
@@ -17,7 +18,7 @@ import { type DeclaredControl, emptyGrid, type Grid, type Owned, reachedControls
 import type { Node } from "./node.ts";
 import { isSubPage, SCREEN, type SubPage, type SubPageLinks } from "./page.ts";
 import { RawSubPage } from "./raw-sub-page.ts";
-import { rawTti } from "./raw-tti.ts";
+import { rawContent } from "./raw-tti.ts";
 import { type ColourTable, rolloverLine } from "./rollover.ts";
 
 /** What drawing needs of the mount. */
@@ -28,6 +29,23 @@ export interface DrawHost {
   readonly report: (text: string) => void;
   /** The most sub-pages a whole page may have, as the server's `start` said. */
   readonly mostSubPages: () => number;
+  /** The language of a node's text: its nearest `language` prop, else the page's or the viewer's. */
+  readonly languageOf: (node: Node) => Language;
+}
+
+/** What drawing page `page` needs, from its mount's `host` and `languageOf` its nodes. */
+export function drawHost(
+  page: number,
+  host: { readonly rollover: ColourTable | null; readonly report: (text: string) => void; readonly services: { limits(): Limits } },
+  languageOf: (node: Node) => Language,
+): DrawHost {
+  return { page, rollover: host.rollover, report: host.report, mostSubPages: (): number => host.services.limits().standard.subpages, languageOf };
+}
+
+/** A page drawn: its sub-pages as the protocol carries them, and a key that is the same exactly when they are. */
+export interface DrawnPage {
+  readonly key: string;
+  readonly subpages: readonly SubpageBody[];
 }
 
 /** What the first sub-page's cells reach, for the pointer. */
@@ -103,10 +121,19 @@ function markPointerCells(node: Node, grid: Grid): void {
 }
 
 /** Paints `node` and what is under it on `screen`, collecting what each declares; on the first sub-page, keeps each one's regions for the pointer. */
-function paint(node: Node, screen: Screen, requests: PageRequests, grid: Grid, owned: Owned[], first: boolean, surround: Colour = Colour.Black): void {
+function paint(
+  node: Node,
+  screen: Screen,
+  requests: PageRequests,
+  grid: Grid,
+  owned: Owned[],
+  first: boolean,
+  host: DrawHost,
+  surround: Colour = Colour.Black,
+): void {
   const regions: Region[] = [];
   const declared = nothingDeclared();
-  const canvas = new Canvas(screen, node.box, requests, regions, declared, surround);
+  const canvas = new Canvas(screen, node.box, requests, regions, declared, surround, host.languageOf(node));
   node.component.paint(canvas);
   canvas.finish();
   owned.push({ node, declared });
@@ -117,7 +144,7 @@ function paint(node: Node, screen: Screen, requests: PageRequests, grid: Grid, o
   // A component that lays a band under its children (a dialog, a band panel) is their surround: a band of theirs ends back to its colour.
   const within = node.component.innerBackground() ?? surround;
   for (const child of node.children) {
-    paint(child, screen, requests, grid, owned, first, within);
+    paint(child, screen, requests, grid, owned, first, host, within);
   }
 }
 
@@ -129,20 +156,22 @@ function keptControls(declared: readonly DeclaredControl[], { kept }: LocalEnhan
   });
 }
 
-/** A sub-page drawn from its components: its TTI, and on the first sub-page what its cells reach. */
+/** A sub-page drawn from its components: its screen, and on the first sub-page what its cells reach. */
 function drawScreen(
   node: Node,
   links: SubPageLinks,
   screenColour: number | null,
   first: boolean,
   host: DrawHost,
-): { readonly text: string; readonly reach: Reach } {
+): { readonly screen: Screen; readonly reach: Reach } {
   const screen = new Screen();
+  // The page names its language, so the server writes its designation, in the header and in the rollover's X/28/0 (REQ-2214 item 7).
+  screen.language(host.languageOf(node).tag);
   const requests: PageRequests = { cursor: null, displayAttributes: [] };
   const grid = emptyGrid();
   const owned: Owned[] = [];
   layoutChild(node).place(SCREEN);
-  paint(node, screen, requests, grid, owned, first);
+  paint(node, screen, requests, grid, owned, first, host);
   screen.fastext(links.fastext);
   if (links.index !== null) {
     screen.indexLink(links.index);
@@ -159,28 +188,27 @@ function drawScreen(
   const controls = keptControls(declared, enhancement);
   // The rollover colours go with the sub-page whose controls show them.
   const rollover = controls.length > 0 && host.rollover !== null ? [rolloverLine(host.rollover)] : [];
-  const lines = [...rollover, ...enhancement.lines];
-  return {
-    text: subpagesTti(host.page, [{ screen }]) + lines.map((line) => `${line}\n`).join(""),
-    reach: { grid, controls },
-  };
+  for (const line of [...rollover, ...enhancement.lines]) {
+    screen.packed(line);
+  }
+  return { screen, reach: { grid, controls } };
 }
 
-/** The sub-pages as one TTI text, in their order, which the server numbers (its docs/applications.md section 3.2), and what the first one's cells reach. */
-export function draw(shown: readonly FoundSubPage[], host: DrawHost): { readonly tti: string; readonly reach: Reach } {
+/** The sub-pages in their order, which the server numbers (its docs/applications.md section 3.2), and what the first one's cells reach. */
+export function draw(shown: readonly FoundSubPage[], host: DrawHost): { readonly page: DrawnPage; readonly reach: Reach } {
   let reach = NO_REACH;
-  const parts = shown.map(({ node, subPage }, index) => {
+  const subpages = shown.map(({ node, subPage }, index): SubpageBody => {
     const links = subPage.links();
     if (subPage instanceof RawSubPage) {
       const { tti: text, title, background, foreground } = subPage.props;
       const band = title === undefined ? null : { title, background: background ?? Colour.Blue, foreground: foreground ?? Colour.White };
-      return rawTti(text, host.page, links.fastext, band);
+      return { content: rawContent(text, links.fastext, band, host.languageOf(node).tag) };
     }
     const drawn = drawScreen(node, links, subPage.props.screenColour ?? null, index === 0, host);
     if (index === 0) {
       reach = drawn.reach;
     }
-    return drawn.text;
+    return { content: drawn.screen.content() };
   });
-  return { tti: parts.join(""), reach };
+  return { page: { key: JSON.stringify(subpages), subpages }, reach };
 }

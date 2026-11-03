@@ -14,12 +14,14 @@
 // is given each colour's rollover colour, which the hover look then shows.
 // A receiver of Level 1 or 1.5 ignores the packet, and has no hover look.
 //
-// The packet also carries the page's character set designation: English,
-// the Latin set with its English national option and no second G0 set
-// (Tables 32 and 33), which the kit's pages are. Its page function is a
-// basic Level 1 page, so the engine reads the designation (its
-// level1/designation.rs). No side panels; screen and row colour black; no
-// Black Background Colour Substitution.
+// The packet also carries the page's character set designations (Tables
+// 32 and 33), which are the server's to write: every page the library
+// draws names its language, so the server writes the designation its
+// encoder chose into this packet and keeps every other field (REQ-2214
+// item 7). They are left zero here. Its page function is a basic Level 1
+// page, so the engine reads the designation (its level1/designation.rs).
+// No side panels; screen and row colour black; no Black Background Colour
+// Substitution.
 
 import { packedLine } from "./controls.ts";
 
@@ -46,15 +48,8 @@ const DESIGNATION_PAGE_DATA = 0;
 /** Clause 12.3.1: a packet's thirteen triplets of 18 bits, read as one stream of bits from triplet 1's least significant. */
 const TRIPLETS_PER_PACKET = 13;
 const TRIPLET_BITS = 18;
-/** Table 4, triplet 1: bits 1 to 4 the page function (0000, a basic Level 1 page), 5 to 7 the page coding (000, seven bits and odd parity), 8 to 14 the default G0 and G2 designation, 15 to 18 the low four bits of the second G0 designation. */
-const DEFAULT_DESIGNATION_SHIFT = 7;
-const SECOND_DESIGNATION_LOW_SHIFT = 14;
-const SECOND_DESIGNATION_LOW_BITS = 4;
+/** Table 4, triplet 1: bits 1 to 4 the page function (0000, a basic Level 1 page), 5 to 7 the page coding (000, seven bits and odd parity); bits 8 to 18 and triplet 2's bits 1 to 3, the designations, are the server's. */
 const NIBBLE = 0xf;
-/** Table 32: the Latin set with the English national option, designation 0000 000. */
-const DESIGNATION_LATIN_ENGLISH = 0x00;
-/** Table 33: 1111 111, no second G0 set. */
-const NO_SECOND_G0 = 0x7f;
 /** Table 4: the sixteen colour words, CLUT 2's entries 0 to 7 then CLUT 3's, start at bit 11 of triplet 2 (stream bit 28), twelve bits each: red, green, blue, four bits each from the least significant. */
 const COLOUR_WORDS_START = 28;
 const COLOUR_WORD_BITS = 12;
@@ -90,8 +85,6 @@ function colourWord(colour: Rgb12): number {
 /** The thirteen triplets of X/28/0 format 1 that give a page `rollover` as its controls' hover colours. */
 function rolloverTriplets(rollover: ColourTable = ROLLOVER_COLOURS): number[] {
   const triplets = Array.from({ length: TRIPLETS_PER_PACKET }, () => 0);
-  triplets[0] = (DESIGNATION_LATIN_ENGLISH << DEFAULT_DESIGNATION_SHIFT) | ((NO_SECOND_G0 & NIBBLE) << SECOND_DESIGNATION_LOW_SHIFT);
-  triplets[1] = NO_SECOND_G0 >> SECOND_DESIGNATION_LOW_BITS;
   [...LEVEL_1_COLOURS, ...rollover].forEach((colour, index) => {
     setBits(triplets, COLOUR_WORDS_START + index * COLOUR_WORD_BITS, COLOUR_WORD_BITS, colourWord(colour));
   });

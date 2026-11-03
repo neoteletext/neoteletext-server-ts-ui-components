@@ -12,12 +12,12 @@
 // A place outside the bounds is not drawn, and the row under the map says
 // how many were left out, and how many are marked without their names.
 
-import type { Canvas } from "../core/canvas.ts";
+import type { Canvas, CanvasCell } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { LABEL } from "../core/look.ts";
 import { cells, fit } from "../core/text.ts";
-import { Colour, englishCodes, mosaicColour, readTti, SIXELS_ACROSS, SIXELS_DOWN, SPACE, textColour } from "../kit.ts";
+import { Colour, textCells, mosaicColour, readTti, SIXELS_ACROSS, SIXELS_DOWN, SPACE, textColour } from "../kit.ts";
 import { cellCount } from "../charts/numbers.ts";
 import { type Bitmap, sixelsOf } from "./mosaic.ts";
 
@@ -172,7 +172,7 @@ function cellOf(place: MapPlace, bounds: MapBounds, map: DrawnMap): { row: numbe
 interface Marker {
   readonly row: number;
   readonly from: number;
-  readonly codes: readonly number[];
+  readonly codes: readonly CanvasCell[];
 }
 
 /** What became of the places. */
@@ -197,8 +197,8 @@ export class MapMarkers extends Component<MapMarkersProps> {
   /** The ways to draw `place` at its cell, each from its colour's cell to the cell setting the map's colour again: its name to the right, to the left, or, last, with no name. */
   #ways(place: MapPlace, row: number, column: number, map: DrawnMap): Marker[] {
     const mapCodes = map.rows[row] ?? [];
-    const name = englishCodes(fit(place.name, this.#nameCells));
-    const mark = englishCodes(MARK);
+    const name = textCells(fit(place.name, this.#nameCells));
+    const mark = textCells(MARK);
     const colour = textColour(place.foreground ?? MARK_COLOUR);
     const after = (last: number): number => colourAfter(mapCodes, last);
     const right = column + cells(MARK) + name.length;

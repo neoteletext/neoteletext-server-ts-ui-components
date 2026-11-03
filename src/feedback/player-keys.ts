@@ -47,7 +47,8 @@ export const PLAYER_KEYS: readonly KeyHelpEntry[] = [
   ["m", "mute"],
   ["r", "repeat off, all, one"],
   ["z", "shuffle"],
-  ["[ ]", "slower, faster"],
+  // The English set has no square brackets (EN 300 706 Table 36): the keys are named, as the server can show them.
+  ["Brackets", "slower, faster"],
   ["l", "loop from, to, off"],
   ["t", "sleep 15, 30, 60, off"],
   ["x or Delete", "take out of the queue"],
