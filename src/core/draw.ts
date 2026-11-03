@@ -10,7 +10,7 @@
 // another sub-page's component. Display attributes are how a sub-page
 // looks, so each sub-page carries those it paints.
 
-import { Colour, COLUMNS, type Limits, mostNumbered, ROWS, Screen, type Subpage } from "../kit.ts";
+import { Colour, COLUMNS, type Limits, mostNumbered, ROWS, Screen, type Subpage, type WireTextLevel } from "../kit.ts";
 import { Canvas, nothingDeclared, ownCodesOf, type PageRequests, type Region, type TextLanguage } from "./canvas.ts";
 import type { Box, LayoutChild, Size } from "./layout.ts";
 import { type LocalEnhancement, localEnhancement } from "./enhancement.ts";
@@ -31,15 +31,29 @@ export interface DrawHost {
   readonly mostSubPages: () => number;
   /** The language of a node's text: its nearest `language` prop, else the page's or the viewer's. */
   readonly languageOf: (node: Node) => TextLanguage;
+  /** The level the page's text is written for, or null for NeoTeletext's own (REQ-2151). */
+  readonly level: WireTextLevel | null;
 }
 
 /** What drawing page `page` needs, from its mount's `host` and `languageOf` its nodes. */
 export function drawHost(
   page: number,
-  host: { readonly rollover: ColourTable | null; readonly report: (text: string) => void; readonly services: { limits(): Limits } },
+  host: {
+    readonly rollover: ColourTable | null;
+    readonly report: (text: string) => void;
+    readonly services: { limits(): Limits };
+    readonly level: WireTextLevel | null;
+  },
   languageOf: (node: Node) => TextLanguage,
 ): DrawHost {
-  return { page, rollover: host.rollover, report: host.report, mostSubPages: (): number => mostNumbered(host.services.limits()), languageOf };
+  return {
+    page,
+    rollover: host.rollover,
+    report: host.report,
+    mostSubPages: (): number => mostNumbered(host.services.limits()),
+    languageOf,
+    level: host.level,
+  };
 }
 
 /** A page drawn: its sub-pages as the protocol carries them, and a key that is the same exactly when they are. */
@@ -169,6 +183,7 @@ function drawScreen(
   // The page names its language, so the server writes its designation, in the header and in the rollover's X/28/0 (REQ-2214 item 7).
   const { tag } = host.languageOf(node);
   screen.language(tag);
+  screen.level(host.level);
   // Past the protocol's 64 runs, runs of what its set shows at their own codes are left to them (TODO-2228).
   screen.ownCodes(ownCodesOf(tag));
   const requests: PageRequests = { cursor: null, displayAttributes: [] };

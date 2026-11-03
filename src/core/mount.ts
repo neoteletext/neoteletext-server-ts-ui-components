@@ -1,12 +1,11 @@
 // A mount: one tree of component instances behind one copy of a page, the
 // channel's or one viewer's. Its tree (tree.ts) reconciles each render with
-// the last; it draws every sub-page (draw.ts) and answers the page as the protocol carries it;
-// it routes the keys through focus, and the pointer, the wheel and hovers
-// to the components drawn where they land (pointer.ts); and it runs its
-// components' timers (timers.ts).
+// the last; it draws every sub-page (draw.ts) and answers the page as the protocol carries it; it
+// routes keys through focus, and the pointer, the wheel and hovers to the
+// components drawn where they land (pointer.ts); it runs their timers (timers.ts).
 
 // oxlint-disable import/max-dependencies -- the mount is where a page's tree, drawing, keys, pointer and timers meet
-import type { LanguageTag } from "../kit.ts";
+import type { LanguageTag, WireTextLevel } from "../kit.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { ComponentHost, FocusableAt } from "./component-host.ts";
 import type { Box } from "./layout.ts";
@@ -36,8 +35,9 @@ export interface MountHost {
   readonly viewed: () => boolean;
   /** The page's controls' rollover colours (rollover.ts), or null for the receiver's own hover look. */
   readonly rollover: ColourTable | null;
-  /** The page's own language (PageSpec.language), or null for the viewer's. */
+  /** The page's own language and level (PageSpec), or null for the viewer's language and NeoTeletext's own level. */
   readonly pageLanguage: LanguageTag | null;
+  readonly level: WireTextLevel | null;
   /** The stand-in for the channel's words in `language`, the viewer's, or undefined where they are drawn as written (ComponentChannelOptions.standIn). */
   readonly standIn: (language: LanguageTag) => TextLanguage["standIn"];
 }

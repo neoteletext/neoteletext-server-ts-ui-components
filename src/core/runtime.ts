@@ -244,6 +244,7 @@ export class ComponentChannel implements Application {
       report: (text) => this.#context?.log(text),
       rollover: spec.rollover === undefined ? ROLLOVER_COLOURS : spec.rollover,
       pageLanguage: spec.language ?? null,
+      level: spec.level ?? null,
       standIn: (language) => this.#languages.standIn(language),
       viewed: () => {
         const watching = this.#watching.get(spec.page);
