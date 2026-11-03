@@ -20,8 +20,13 @@ export interface PageNeeds {
 /** The deepest a probe goes: a tree deeper than this renders itself without end. */
 const MOST_DEPTH = 64;
 
-/** What the components under `root` need, together. */
-export function probeNeeds(root: Element): Required<PageNeeds> {
+/**
+ * What the components under `root` need, together. A render that cannot
+ * run unmounted, because it reaches the channel (services, the session),
+ * hides what is under it: `unprobed` is told the component's name, so the
+ * page's needs are never lost without a word (TODO-2229 item 7 in rdm).
+ */
+export function probeNeeds(root: Element, unprobed: (component: string) => void = (): void => {}): Required<PageNeeds> {
   const found = { digits: false, colourKeys: false, ownCopy: false };
   const visit = (element: Element, depth: number): void => {
     if (depth > MOST_DEPTH) {
@@ -37,6 +42,7 @@ export function probeNeeds(root: Element): Required<PageNeeds> {
       children = flatten(component.render());
     } catch {
       // A render that reaches the channel (services, the session) cannot run unmounted: what is under it is not known.
+      unprobed(component.constructor.name);
       return;
     }
     for (const child of children) {

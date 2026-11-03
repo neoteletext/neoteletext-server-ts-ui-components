@@ -1,12 +1,10 @@
 // Pages of components as one of the kit's applications: the protocol's
 // events become mounts, renders and publications (DOC-1964).
 //
-// - `start`: every page is mounted once as the channel's copy, which every
-//   viewer is sent, and published.
+// - `start`: every page is mounted once as the channel's copy, and published.
 // - `open`: a page that keeps state for each viewer is mounted again for
 //   that viewer (or found, if it was kept while they were away).
-// - `input`: to the viewer's mount, or the channel's for a page every viewer
-//   shares, whose state is then everyone's.
+// - `input`: to the viewer's mount, or the channel's for a shared page.
 // - `leave` and `close`: the viewer's mounts are unmounted.
 // - `wake`: the timers that are due run.
 // After each call every mount with something new renders, and a page is
@@ -70,6 +68,7 @@ export class ComponentChannel implements Application {
   }
 
   start(context: Context): void {
+    this.#needs.logUnprobed(context);
     this.#run(context, () => {
       // A program the server started again is sent start again: whatever was mounted before goes.
       for (const mount of this.#mounts()) {

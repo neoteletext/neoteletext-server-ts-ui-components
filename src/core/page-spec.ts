@@ -49,11 +49,23 @@ export function describedBy(spec: PageSpec | undefined): PageDescription | null 
 /** What each page's components need, found once (needs.ts), and what that makes of its spec. */
 export class SpecNeeds {
   readonly #needs = new Map<number, Required<PageNeeds>>();
+  readonly #unprobed: string[] = [];
+
+  /** Logs what the probe could not see, each said once. */
+  logUnprobed(context: { log(text: string): void }): void {
+    for (const text of this.#unprobed.splice(0)) {
+      context.log(text);
+    }
+  }
 
   #of(spec: PageSpec): Required<PageNeeds> {
     let needs = this.#needs.get(spec.page);
     if (needs === undefined) {
-      needs = probeNeeds(spec.root());
+      needs = probeNeeds(spec.root(), (component) => {
+        this.#unprobed.push(
+          `page ${spec.page.toString(16)}: ${component}'s render reaches the channel before it is mounted, so the digits, coloured keys or own copy its children need were not found; render without services while this.mounted is false, or say ownsDigits, ownsColourKeys or perViewer on the page`,
+        );
+      });
       this.#needs.set(spec.page, needs);
     }
     return needs;

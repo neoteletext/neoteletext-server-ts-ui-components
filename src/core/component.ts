@@ -155,7 +155,13 @@ export abstract class Component<P extends object = object, S extends object = ob
 
   // What the component draws.
 
-  /** The elements this component is made of; by default its children. */
+  /**
+   * The elements this component is made of; by default its children. It is
+   * also called once before mounting, to find what the page needs (digits,
+   * coloured keys, a copy for each viewer): a render that reads the services
+   * then throws, and what is under it is not found, which the channel's log
+   * says. Read the services only while `this.mounted` is true.
+   */
   render(): Child {
     return this.props.children ?? null;
   }
