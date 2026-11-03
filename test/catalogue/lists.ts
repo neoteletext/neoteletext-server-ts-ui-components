@@ -5,6 +5,7 @@ import {
   ChoiceList,
   Columns,
   DataTable,
+  DoubleHeight,
   FilterList,
   h,
   ItemText,
@@ -14,6 +15,7 @@ import {
   NumberedRows,
   ScrollBar,
   ScrollingText,
+  ScrollView,
   Table,
   ToggleList,
 } from "../../src/index.ts";
@@ -219,6 +221,24 @@ export const lists: Part = {
           h(ListRows, { items: ["Monday", "Tuesday", "Wednesday", "Thursday"], shown: 4, chosen: null, focused: false, onPick: () => {} }),
           h(ScrollBar, { top: 3, total: 12, shown: 4, onScroll: () => {} }),
         ),
+    },
+    {
+      component: "ScrollView",
+      title: "Headings of two rows and lines of one, a step down",
+      build: () =>
+        h(
+          ScrollView,
+          { shown: 5 },
+          h(DoubleHeight, { text: "Getting there", height: 2 }),
+          "By train: the station is a",
+          "short walk from the gate.",
+          h(DoubleHeight, { text: "Opening times", height: 2 }),
+          "Doors open at 9am.",
+          "Last entry is at 5pm.",
+        ),
+      act: (page) => {
+        page.press(1, Key.Down);
+      },
     },
     {
       component: "ScrollingText",

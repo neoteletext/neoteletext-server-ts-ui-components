@@ -11,6 +11,7 @@ Lists to choose from, by the arrows, a digit, a coloured key or what is typed; t
 - [LogView](#logview)
 - [NumberedRows](#numberedrows)
 - [ScrollBar](#scrollbar)
+- [ScrollView](#scrollview)
 - [ScrollingText](#scrollingtext)
 - [Table](#table)
 - [ToggleList](#togglelist)
@@ -488,7 +489,7 @@ h(NumberedRows, {
 
 ## ScrollBar
 
-A scroll bar of whole cells that tells its parent where to go, as React's controlled components do: the lists, the menu, the tree and ScrollingText (scrolling-text.ts) scroll beside one.
+A scroll bar of whole cells that tells its parent where to go, as React's controlled components do: the lists, the menu, the tree and ScrollView (scroll-view.ts) scroll beside one.
 
 ```ts
 import { ScrollBar } from "neoteletext-server-ts-ui-components";
@@ -517,17 +518,56 @@ h(
 )
 ```
 
-## ScrollingText
+## ScrollView
 
-Lines that scroll in their box beside a scroll bar (scroll.ts), moved with the keys (core/list-cursor.ts), the wheel and the bar.
+A view that scrolls any components beside a scroll bar (scroll.ts), moved with the arrows a unit, Page Up and Page Down a screen less one unit, Home and End to the ends (core/list-cursor.ts), the wheel a unit a notch, and presses and drags on the bar: the one scrolling mechanism of the library (REQ-2153). Its children are its units, each as many rows as its `height` prop says, one when absent, as a line of text is and a DoubleHeight line with `height: 2` is two. A unit is never cut at the view's edge. Only the units in view are rendered, so those out of it are neither laid out nor painted and cost the page nothing; what a unit keeps in its own state goes as it leaves the view, so a unit that must remember something keeps it in its parent. Where it stands is each viewer's own, as every control's state is.
 
 ```ts
-import { ScrollingText } from "neoteletext-server-ts-ui-components";
+import { ScrollView } from "neoteletext-server-ts-ui-components";
 ```
 
 **Keys:** `PgDn PgUp arrows Home End` scroll; `wheel or the bar` too.
 
 **It takes of its page:** a copy of the page for each viewer.
+
+### Props
+
+| Prop | Type | What it is |
+| --- | --- | --- |
+| `shown` (needed) | `number` | The rows it shows at once, beside its bar: the units that fit in them whole. |
+
+And the props of [`ControlProps`](common.md#controlprops).
+
+### Headings of two rows and lines of one, a step down
+
+![ScrollView: Headings of two rows and lines of one, a step down](../images/lists/scrollview-headings-of-two-rows-and-lines-of-one-a-step-down.png)
+
+```ts
+h(
+  ScrollView,
+  { shown: 5 },
+  h(DoubleHeight, { text: "Getting there", height: 2 }),
+  "By train: the station is a",
+  "short walk from the gate.",
+  h(DoubleHeight, { text: "Opening times", height: 2 }),
+  "Doors open at 9am.",
+  "Last entry is at 5pm.",
+)
+```
+
+Then the viewer:
+
+```ts
+page.press(1, Key.Down);
+```
+
+## ScrollingText
+
+Lines of text in a scrolling view (scroll-view.ts): each line a unit of one row, so the lines scroll with the keys, the wheel and the bar as any components in a ScrollView do.
+
+```ts
+import { ScrollingText } from "neoteletext-server-ts-ui-components";
+```
 
 ### Props
 

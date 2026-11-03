@@ -18,6 +18,8 @@ export { NumberedRows } from "./numbered-rows.ts";
 export type { NumberedRow, NumberedRowsProps } from "./numbered-rows.ts";
 export { BAR_CELLS, ScrollBar, thumb, topAt } from "./scroll.ts";
 export type { ScrollBarProps } from "./scroll.ts";
+export { ScrollView } from "./scroll-view.ts";
+export type { ScrollViewProps } from "./scroll-view.ts";
 export { ScrollingText } from "./scrolling-text.ts";
 export type { ScrollingTextProps } from "./scrolling-text.ts";
 export { Table } from "./table.ts";

@@ -1,6 +1,6 @@
 // A scroll bar of whole cells that tells its parent where to go, as
 // React's controlled components do: the lists, the menu, the tree and
-// ScrollingText (scrolling-text.ts) scroll beside one.
+// ScrollView (scroll-view.ts) scroll beside one.
 
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";

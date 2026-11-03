@@ -11,6 +11,17 @@ and what such a program has to change to take it.
 
 ### What changed
 
+- **`ScrollView` scrolls any components** beside a scroll bar (REQ-2153, DEC-2219).
+  Its children are its units, each as many rows as its `height` prop says, one when
+  absent: `h(ScrollView, { shown: 10 }, h(DoubleHeight, { text: "News", height: 2 }),
+  "a line", ...)`. A unit is never cut at the view's edge; the arrows move it a unit,
+  Page Up and Page Down a screen less one unit, Home and End to the ends, the wheel a
+  unit a notch, and a press or a drag on the bar where it is put. Only the units in
+  view are rendered, so units out of view are not painted and declare nothing on the
+  page; a unit's own state goes when it leaves the view. Where the view stands is each
+  viewer's own.
+- **`ScrollingText` is a `ScrollView` of its lines,** a line a unit, with the same props
+  and the same look. It is no longer a control itself: the `ScrollView` it renders is.
 - **The wheel and a press where no component is drawn go to the page's root
   component,** as a key with nothing focused does. A page given whole
   (`RawSubPage`), which declares no cells, now hears the wheel and the pointer
