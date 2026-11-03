@@ -3,7 +3,7 @@
 // and the event bus. Calls made outside a server call (none should be) are
 // held until the next one.
 
-import type { CookieOptions, Language, LanguageTag, Limits } from "../kit.ts";
+import type { CookieOptions, Language, LanguageTag, Limits, WireDeniedStatus } from "../kit.ts";
 import type { Bus } from "./bus.ts";
 import type { LibraryEvents } from "./library-events.ts";
 import type { Sound } from "./sound.ts";
@@ -27,6 +27,8 @@ export interface Services {
   redirect(session: number, page: number, params?: PageParams): void;
   /** Sends a viewer to another channel's address: their receiver shows a notice, and then opens it by its own rules. */
   redirect(session: number, address: string): void;
+  /** Ends a viewer's selection with no page, the kit's `Context.deny` (DOC-1961): 403 forbidden, 404 not found, 429 too many, 503 unavailable. Called while their selection is being answered (from a page's render or mount), the status is the answer in place of the page; at any other time it ends the selection they have. */
+  deny(session: number, status: WireDeniedStatus): void;
   /** Gives this page a new title in the channel's contents (section 3.5). */
   title(text: string): void;
   /** Plays a sound to one viewer, or to everyone with this page open. */

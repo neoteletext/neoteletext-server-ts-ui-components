@@ -46,6 +46,9 @@ export function channelServices(parts: ServiceParts, page: number, session: numb
         parts.redirect(context(), to, target, params);
       }
     },
+    deny: (to, status) => {
+      context().deny(to, status);
+    },
     ...parts.streams.services(context, page, () => parts.context()?.now() ?? 0),
     title: (text) => {
       context().title(page, fit(text, context().limits().budgets.titleCharacters));
