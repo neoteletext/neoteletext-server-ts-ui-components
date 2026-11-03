@@ -72,6 +72,7 @@ export class Mount implements ComponentHost {
       focusOn: (node): void => {
         this.#focusOn(node);
       },
+      root: (): Node | null => this.#tree.root,
     });
   }
 

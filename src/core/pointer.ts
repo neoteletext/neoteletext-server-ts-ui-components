@@ -1,6 +1,7 @@
 // The pointer on a mount's page: the component each viewer's pointer is
 // held by and the control it is over, and each pointer, wheel and hover
-// event taken to the component drawn where it lands (grid.ts), then up.
+// event taken to the component drawn where it lands (grid.ts), then up; a
+// press or the wheel where no component is drawn goes to the page's root.
 
 import type { Box } from "./layout.ts";
 import type { Reach } from "./draw.ts";
@@ -15,6 +16,8 @@ export interface PointerHost {
   readonly reach: () => Reach;
   /** A press gives the keys to the component pressed, or the nearest one round it that takes them. */
   readonly focusOn: (node: Node) => void;
+  /** The page's root component, which a press or the wheel on a cell no component reaches goes to, as a key with nothing focused does. */
+  readonly root: () => Node | null;
 }
 
 /** Where an event at a cell is for the component it goes to: the cell within it, and the region it marked there. */
@@ -88,7 +91,7 @@ export class Pointer {
       return true;
     }
     // Every move over the page comes (DOC-1945), a button held or not: it goes, as a press does, to the component drawn where it is, then up.
-    const target = this.#host.reach().grid[row]?.[column] ?? null;
+    const target = this.#reached(row, column);
     if (action === "press") {
       for (let node = target; node !== null; node = node.parent) {
         if (node.component.focusable()) {
@@ -110,11 +113,21 @@ export class Pointer {
 
   wheel(session: number, at: WheelAt): boolean {
     const { row, column } = at;
-    const target = this.#host.reach().grid[row]?.[column] ?? null;
-    return bubble(target, (component, node) => {
+    return bubble(this.#reached(row, column), (component, node) => {
       const event: WheelEvent = { session, ...at, ...placed(node, row, column) };
       return component.onWheel?.(event);
     });
+  }
+
+  /**
+   * The component a press, a move or the wheel on a cell goes to: the one
+   * drawn deepest there, or else the page's root, as a key with nothing
+   * focused goes to the root (mount.ts). A sub-page given whole
+   * (RawSubPage) declares no cells, so without this its page would hear
+   * neither the wheel nor a press (TODO-2013).
+   */
+  #reached(row: number, column: number): Node | null {
+    return this.#host.reach().grid[row]?.[column] ?? this.#host.root();
   }
 
   /**

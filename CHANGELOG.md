@@ -3,6 +3,19 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## Unreleased
+
+### To take it
+
+- Nothing to change yet.
+
+### What changed
+
+- **The wheel and a press where no component is drawn go to the page's root
+  component,** as a key with nothing focused does. A page given whole
+  (`RawSubPage`), which declares no cells, now hears the wheel and the pointer
+  in its root's `onWheel` and `onPointer` (TODO-2013).
+
 ## 15.1.0 (2 November 2026)
 
 ### To take it
