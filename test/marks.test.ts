@@ -7,8 +7,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Band, ChoiceList, ComponentChannel, type Element, h, LinesBlock, Paragraph, ScrollView, TabStrip, Ticker } from "../src/index.ts";
-import { Colour, Key } from "../src/kit.ts";
+import { Band, ChoiceList, Concealed, ComponentChannel, type Element, h, LinesBlock, Paragraph, ScrollView, TabStrip, Ticker } from "../src/index.ts";
+import { Attribute, Colour, Key } from "../src/kit.ts";
 import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
 import type { LanguageTag, SubPageContent } from "../src/kit.ts";
 import { clashes, layLines } from "../src/core/marks.ts";
@@ -200,4 +200,15 @@ test("TODO-2229 item 9: a Thai line on a band gives its mark rows its ink, so it
   assert.ok(ink >= 0, "the letters' ink");
   assert.equal(rows[row - 1]?.[ink], Colour.White, "the row of the marks above");
   assert.equal(rows[row + 1]?.[ink], Colour.White, "the row of the marks below");
+});
+
+test("TODO-2229 item 9: concealed Thai conceals its marks too, its mark rows taking its Conceal", () => {
+  const { page, runs } = thai(h(Concealed, { text: "ที่นี่" }));
+  const [row] = runs.filter(([, text]) => text === "ที่นี่").map(([at]) => at);
+  assert.ok(row !== undefined);
+  const rows = page.seen(1, PAGE).rows;
+  const conceal = (rows[row] ?? []).indexOf(Attribute.Conceal);
+  assert.ok(conceal >= 0);
+  assert.equal(rows[row - 1]?.[conceal], Attribute.Conceal);
+  assert.equal(rows[row + 1]?.[conceal], Attribute.Conceal);
 });

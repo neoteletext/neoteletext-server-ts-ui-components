@@ -69,13 +69,18 @@ export function backgroundCodes(background: Colour): [number, number] {
 /** The highest alphanumeric colour attribute (EN 300 706 Table 26: 0x00 to 0x07). */
 const LAST_TEXT_COLOUR = 0x07;
 
+/** The highest code of a spacing attribute (EN 300 706 Table 26: 0x00 to 0x1F). */
+const LAST_ATTRIBUTE = 0x1f;
+
 /**
- * Gives a run's mark rows its letters' ink: the server writes the marks
- * into the rows above and below in whatever colour is in force there, and
- * on a band (New Background) that is the band's own colour, so the marks
- * vanish into it. The colour the letters' row last sets before `from`, in
- * the box, is written in the same cell of each mark row where that cell is
- * a space, which the marks then take (clause 12.2, Table 26).
+ * Gives a run's mark rows its letters' look: the server writes the marks
+ * into the rows above and below in whatever is in force there, and on a
+ * band (New Background) that is the band's own colour, so the marks vanish
+ * into it; under Conceal or Flash the marks would show steady while their
+ * letters are hidden or flash. The attributes the letters' row sets from
+ * its last colour before `from`, in the box, are written in the same cells
+ * of each mark row where those cells are spaces, and the marks take them
+ * (clause 12.2, Table 26).
  */
 function inkMarkRows(screen: Screen, box: Box, page: number, from: number, markRows: number): void {
   let at = from - 1;
@@ -85,10 +90,15 @@ function inkMarkRows(screen: Screen, box: Box, page: number, from: number, markR
   if (at < box.column) {
     return;
   }
-  const ink = screen.at(page, at);
-  for (const row of [page - markRows, page + markRows]) {
-    if (screen.at(row, at) === SPACE) {
-      screen.code(row, at, ink);
+  for (let column = at; column < from; column += 1) {
+    const code = screen.at(page, column);
+    if (code > LAST_ATTRIBUTE) {
+      continue;
+    }
+    for (const row of [page - markRows, page + markRows]) {
+      if (screen.at(row, column) === SPACE) {
+        screen.code(row, column, code);
+      }
     }
   }
 }

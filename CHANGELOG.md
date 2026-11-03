@@ -3,6 +3,14 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 17.0.2 (3 November 2026)
+
+### What changed
+
+- **Concealed and flashing Thai and Lao keep their marks with their
+  letters**: a line's mark rows take every attribute its letters' row sets
+  from its colour on (Conceal, Flash), not the colour alone.
+
 ## 17.0.1 (3 November 2026)
 
 ### What changed
