@@ -198,7 +198,7 @@ function drawScreen(
   return { screen, reach: { grid, controls } };
 }
 
-/** The sub-pages in their order, which the server numbers (its docs/applications.md section 3.2), and what the first one's cells reach. */
+/** The sub-pages in their order, which the server numbers (DOC-1971), and what the first one's cells reach. */
 export function draw(shown: readonly FoundSubPage[], host: DrawHost): { readonly page: DrawnPage; readonly reach: Reach } {
   let reach = NO_REACH;
   const subpages = shown.map(({ node, subPage }, index): SubpageBody => {

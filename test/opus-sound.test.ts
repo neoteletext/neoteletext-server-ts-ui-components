@@ -1,5 +1,5 @@
 // Sound goes as Opus alone, the one format desktop and phone receivers play
-// (docs/applications.md section 3.4): a stored sound encoded once and sent
+// (DOC-1972): a stored sound encoded once and sent
 // once to each viewer, a stream started once its encoder gives out its
 // first packets, and an encoder that fails said so, never thrown.
 

@@ -1,5 +1,5 @@
-// Sound too long to send whole: a live sound (docs/applications.md section
-// 3.4; the engine's audio.md section 8.3), played to one viewer as it is
+// Sound too long to send whole: a live sound (DOC-1972;
+// the engine's audio.md section 8.3), played to one viewer as it is
 // sent. Its samples go to an Opus encoder ahead of real time, and its
 // packets to the viewer a tick at a time, never more than the receiver's
 // ring holds ahead of what it plays. Where the samples come from

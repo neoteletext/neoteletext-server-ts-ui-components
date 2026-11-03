@@ -12,7 +12,7 @@ import { Colour, mosaicColour } from "../kit.ts";
 /** The scroll bar's cells: its colour, then the bar. */
 export const BAR_CELLS = 2;
 
-/** The left button, held, as a move's buttons say (docs/applications.md section 2). */
+/** The left button, held, as a move's buttons say (DOC-1968). */
 const LEFT_HELD = 1;
 
 /** The scroll bar's block: its first cell and its length, for `shown` of `total` from `top` on a track of `track` cells. */

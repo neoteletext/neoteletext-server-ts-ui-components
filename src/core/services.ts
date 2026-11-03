@@ -23,7 +23,7 @@ export interface Services {
   epochMs(): number;
   /** The parameters of the viewer's selection of this page, the query of its address, or null: untrusted text from the viewer, undecoded (DEC-1730). The bus's `parameters` says when they change. */
   parameters(session: number): string | null;
-  /** Sends a viewer to a page (docs/applications.md section 3.3), opened with `params` when given: a page whose root takes them shows that one of many. */
+  /** Sends a viewer to a page (DOC-1970), opened with `params` when given: a page whose root takes them shows that one of many. */
   redirect(session: number, page: number, params?: PageParams): void;
   /** Sends a viewer to another channel's address: their receiver shows a notice, and then opens it by its own rules. */
   redirect(session: number, address: string): void;

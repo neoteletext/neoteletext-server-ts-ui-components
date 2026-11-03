@@ -1,5 +1,5 @@
-// Input as components receive it: the server's events (docs/applications.md
-// section 2), with the session they came from and, for the pointer, the
+// Input as components receive it: the server's events (DOC-1968)
+//, with the session they came from and, for the pointer, the
 // wheel and a hover, the cell both on the page and inside the component's
 // own box.
 

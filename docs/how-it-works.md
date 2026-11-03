@@ -11,7 +11,7 @@ repositories beside this one.
 | --- | --- | --- |
 | **The browser** | The viewer's receiver: a native desktop program, with no web engine and no scripts, in separate processes: a fetcher and a decoder for each channel, a trusted core, the window, and a sound helper. | `neoteletext-browser`, docs/architecture.md §1, §6.1 |
 | **The engine** | The teletext receiver library the browser decodes and draws with: Levels 1 to 3.5, TTI and T42, the input protocol, audio. Its `neottx` program renders pages to pictures. | `neoteletext-engine`, README.md, ARCHITECTURE.md §1 |
-| **The server** | Runs channels: a state machine for each, hosted on tokio and hyper. It starts each channel's program and talks to it in lines of JSON on the program's standard input and output. | `teletext-server`, docs/architecture.md §3, docs/applications.md |
+| **The server** | Runs channels: a state machine for each, hosted on tokio and hyper. It starts each channel's program and talks to it in lines of JSON on the program's standard input and output. | `teletext-server`, docs/architecture.md §3, DOC-1964 |
 | **The protocol kit** | What a channel program in TypeScript is written on: `runChannel`, the `Application` it runs, the `Context` it publishes through, page selection (`Navigation`), and the test `Harness`. | `neoteletext-server-ts-protocol` |
 | **This library** | `ComponentChannel`, one `Application` whose pages are trees of components. | `src/core/runtime.ts` |
 | **The shared rules** | The input protocol, and the standard's limits. | `neoteletext-common`, `PROTOCOL.html`, STANDARD-LIMITS.md |
@@ -56,7 +56,7 @@ repositories beside this one.
 6. **The server relays it.** It checks every message against its schema,
    encodes the sub-page with the engine's encoder and sends it as 42-byte
    teletext packets in binary WebSocket messages, the index and the
-   sub-page list as records (`teletext-server`, docs/applications.md).
+   sub-page list as records (`teletext-server`, DOC-1964).
    It writes nothing in row 0: columns 8 to 39 are the page's own, and
    columns 0 to 7 the receiver's (EN 300 706 clause 9.3.1.4).
 7. **The browser draws it.** Its decoder renders the page, 480 by 500, in
@@ -78,7 +78,7 @@ repositories beside this one.
 2. **The server forwards it** to the program as an `input` line naming
    the session and the page; a viewer's PAGE message, sent as keys start
    to go to a page, becomes `open` and `leave` (`teletext-server`,
-   docs/applications.md §2).
+   DOC-1968).
 3. **Page selection comes first**, in the protocol kit: three digits go to
    a page and the coloured keys follow the Fastext links, unless the page
    owns them (`neoteletext-server-ts-protocol`, src/channel/channel.ts). This
@@ -105,7 +105,7 @@ repositories beside this one.
   browser's decision 121): mono, 48 kHz, constant-rate packets of 20 ms
   at 16 kbit/s. The library encodes it, with ffmpeg's libopus by default
   (the protocol kit's `ffmpegOpus`); the server checks each packet and
-  carries it unchanged (`teletext-server`, docs/applications.md §3.4,
+  carries it unchanged (`teletext-server`, DOC-1972,
   decision 21).
 - **Short sounds** are made at 8 kHz, encoded once, and sent once to each
   viewer as a stored sound, then played by a command
@@ -138,20 +138,19 @@ repositories beside this one.
   picture of the shared copy. A page without it shows nothing of itself
   (`neoteletext-common`'s REQ-1728).
 - **When the program restarts**, the server drops the viewers' copies and
-  tells it again who is where (`teletext-server`, docs/applications.md §1).
+  tells it again who is where (`teletext-server`, DOC-1965).
 
 ## Limits a channel meets
 
 | Limit | Where |
 | --- | --- |
-| The standard's 2,022 pages a channel and 8,069 sub-pages a whole page (8,190 put by sub-code), titles of 120 characters: what the server's `start` says, read with `services.limits()`; the library writes none of them | teletext-server's docs/applications.md §2 |
-| A line of at most 16 MiB; pages declared within 30 seconds of starting | docs/applications.md §1 |
+| The standard's 2,022 pages a channel and 8,069 sub-pages a whole page (8,190 put by sub-code), titles of 120 characters: what the server's `start` says, read with `services.limits()`; the library writes none of them | DOC-1968 |
+| A line of at most 16 MiB; pages declared within 30 seconds of starting | DOC-1965 |
 | 32 controls a page, on rows 1 to 23 | DOC-1844 |
 | The browser sends at most 120 input units a second | DOC-1943 |
 | 256 messages queued for a connection; past that, the newest are dropped | crates/teletext-native/src/hub.rs |
-| A stored sound of at most two minutes | docs/applications.md §3.4 |
+| A stored sound of at most two minutes | DOC-1972 |
 
-The server records no addresses and no typed text (docs/applications.md
-§7). A channel learns the pointer only over its own open page, while keys
+The server records no addresses and no typed text (DOC-1968). A channel learns the pointer only over its own open page, while keys
 go to it: its clicks, drags and moves at most 60 a second, and nothing of
 the pointer anywhere else (DOC-2033).

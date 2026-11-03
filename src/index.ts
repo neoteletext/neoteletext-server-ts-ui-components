@@ -1,6 +1,6 @@
 // The NeoTeletext component library: class components for teletext
 // channels, as React's are for the web, over the reference kit
-// (teletext-server's docs/applications.md section 5). A channel imports
+// (DOC-1974). A channel imports
 // everything from here.
 //
 //   core/         elements, components, the canvas, controls and their rollover

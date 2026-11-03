@@ -2,7 +2,7 @@
 // renders one or more SubPage elements (directly or through components such
 // as Document that make several); the mount lays each out on a screen of
 // its own and publishes them together, numbered 1 to n, or 0 when there is
-// one (docs/applications.md section 3.2).
+// one (DOC-1971).
 
 import { COLUMNS, type FastextLinks, ROWS } from "../kit.ts";
 import type { Canvas } from "./canvas.ts";

@@ -1,5 +1,5 @@
 // Pages of components as one of the kit's applications: the protocol's
-// events become mounts, renders and publications (docs/applications.md).
+// events become mounts, renders and publications (DOC-1964).
 //
 // - `start`: every page is mounted once as the channel's copy, which every
 //   viewer is sent, and published.

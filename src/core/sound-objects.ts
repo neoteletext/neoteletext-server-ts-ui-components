@@ -1,5 +1,5 @@
 // The short sounds components play (sound.ts), each encoded as Opus once
-// (docs/applications.md section 3.4), sent once to a viewer as a stored
+// (DOC-1972), sent once to a viewer as a stored
 // sound and played after by its handle. There are only
 // as many handles as the profile has, less the streams' own, so a sound
 // past that takes the oldest's handle, and every viewer forgets they hold

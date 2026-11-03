@@ -1,6 +1,6 @@
 // Sounds made in the program: tones, noise and sequences of them, as 16-bit
 // samples at 8 kHz, sent once to each audience as a stored sound object and
-// played by a command after (docs/applications.md section 3.4; the
+// played by a command after (DOC-1972; the
 // engine's audio profile).
 
 import type { SampleRate } from "../kit.ts";
