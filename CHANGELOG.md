@@ -3,6 +3,36 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 21.0.0 (4 November 2026)
+
+### To take it
+
+- **Nothing must change.** A channel that passes no store keeps nothing, as
+  before. The version is major because the library's interface grew:
+  `SqliteStateStore`, `StateStore`, `KeptAs`, `Component.keptAs`, the
+  option `state` of `ComponentChannel`, and `Tally`'s third argument.
+
+### What changed
+
+- **What outlasts the program (REQ-1057).** `SqliteStateStore` keeps a
+  channel's values in a SQLite database of its own, through Node's built-in
+  `node:sqlite`: what every viewer shares by name, and what one viewer owns
+  by their session's number and a name, each plain JSON with a version; a
+  value of another version is dropped as it is read. Its tables are STRICT,
+  every value is a bound parameter, and its schema is made by numbered
+  migrations, recorded in the database. A viewer's values go 30 days after
+  they were last read or written, the life of a session's cookie, and at
+  most 262,144 of 8,192 characters each are kept, the oldest going first.
+- **A component's state kept when asked (REQ-1058).** A component whose
+  `keptAs()` names a key and a version has its state written to the
+  channel's store (`ComponentChannelOptions.state`) as it changes, and laid
+  over its own state when it is mounted again for the same session, after
+  a restart too; state of another version is dropped. On a viewer's own
+  copy of a page only.
+- **A poll's votes and ballots kept.** `new Tally(name, options, store)`
+  keeps its votes and each viewer's ballot in the store, so a viewer back
+  after a restart moves their vote rather than casting another.
+
 ## 20.0.0 (4 November 2026)
 
 ### To take it

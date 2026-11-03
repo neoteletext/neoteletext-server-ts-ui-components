@@ -110,6 +110,32 @@ the control that has them. Each part of `src/` has an
 `index.ts` that names what it exports; everything is exported from the
 package's root.
 
+## What outlasts the program
+
+A channel's program is started again at every deploy and every save of its
+source. What must outlast it goes in a `SqliteStateStore`, a SQLite file of
+the channel's own (Node's `node:sqlite`), given to the channel and to what
+it keeps itself:
+
+```ts
+const store = new SqliteStateStore("/var/lib/my-channel/state.sqlite");
+const tally = new Tally("best", ["one", "two"], store);
+await runChannel([new ComponentChannel(specs, { state: store })]);
+```
+
+A component keeps its state for its viewer by naming a key and the version
+of its state's shape; it gets it back when it is mounted again for the same
+session, and state of another version is dropped:
+
+```ts
+class Draft extends Component<object, { readonly text: string }> {
+  override state = { text: "" };
+  override keptAs(): KeptAs {
+    return { key: "draft", version: 1 };
+  }
+}
+```
+
 ## Tests
 
 `neoteletext-server-ts-protocol/testing`'s `Harness` drives a channel of
