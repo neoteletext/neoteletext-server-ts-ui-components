@@ -3,6 +3,26 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 21.1.0 (4 November 2026)
+
+### To take it
+
+- **Take the protocol kit 12.1.0 with it.** The library pins the kit
+  exactly, and now names 12.1.0; nothing else must change.
+
+### What changed
+
+- **Text from outside the program (DEC-2326).** An element takes the prop
+  `outside`, read like `language`: under `outside: true` a component's text
+  is sent as runs from outside the program, so the server shows a stand-in
+  for a character the run's language cannot show instead of refusing the
+  page. Give it to what shows text the channel did not write, a dataset's
+  or a feed's; the channel's own words stay unmarked, and so do the marks a
+  component draws for itself.
+- **The kit 12.1.0:** a program can be reached over the Unix domain socket
+  `NEOTELETEXT_SOCKET` names, and the testing entry tells tests the
+  server's reply limit of 7,000 ms.
+
 ## 21.0.0 (4 November 2026)
 
 ### To take it
