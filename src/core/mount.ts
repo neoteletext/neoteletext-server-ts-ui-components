@@ -1,8 +1,5 @@
-// A mount: one tree of component instances behind one copy of a page, the
-// channel's or one viewer's. Its tree (tree.ts) reconciles each render with
-// the last; it draws every sub-page (draw.ts) and answers the page as the protocol carries it; it
-// routes keys through focus, and the pointer, the wheel and hovers to the
-// components drawn where they land (pointer.ts); it runs their timers (timers.ts).
+// A mount: one tree of component instances (tree.ts) behind one copy of a page, the channel's or one viewer's, reconciled with each render. It draws every
+// sub-page (draw.ts), routes keys through focus and the pointer, wheel and hovers to the components drawn there (pointer.ts), and runs timers (timers.ts).
 
 // oxlint-disable import/max-dependencies -- the mount is where a page's tree, drawing, keys, pointer and timers meet
 import type { LanguageTag, WireTextLevel } from "../kit.ts";
@@ -15,6 +12,7 @@ import { namedLanguage, type TextLanguage, textLanguageOf } from "./language.ts"
 import type { ComposeEvent, KeyEvent, TextEvent } from "./events.ts";
 import { FocusHistory, routeKey } from "./focus.ts";
 import { emptyGrid } from "./grid.ts";
+import type { KeptComponents } from "./kept-components.ts";
 import type { KeyHelpEntry } from "./key-bindings.ts";
 import { type AnyComponent, bubble, EMPTY, firstFocusable, focusables, nearest, type Node } from "./node.ts";
 import type { ColourTable } from "./rollover.ts";
@@ -30,6 +28,7 @@ const MOST_PASSES = 8;
 export interface MountHost {
   readonly services: Services;
   readonly nextTimerId: () => number;
+  readonly kept: KeptComponents;
   readonly report: (text: string) => void;
   /** Whether someone has the page open, for the timers that run only then. */
   readonly viewed: () => boolean;
@@ -67,6 +66,7 @@ export class Mount implements ComponentHost {
     this.#draw = drawHost(page, host, (node): TextLanguage => this.#languageOfNode(node));
     this.#tree = new Tree({
       components: this,
+      kept: host.kept,
       unmounted: (node): void => {
         this.#forget(node);
       },

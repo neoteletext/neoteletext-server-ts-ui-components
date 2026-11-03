@@ -7,6 +7,17 @@ export { DisplayAttribute } from "./enhancement.ts";
 export type { DisplayAttributes } from "./enhancement.ts";
 export type { ComponentEvent, ComponentEventInit, Origin } from "./component-events.ts";
 export { Component } from "./component.ts";
+export type { KeptAs } from "./kept-components.ts";
+export {
+  IN_MEMORY,
+  MOST_NAME_LENGTH,
+  MOST_SESSION_VALUE_LENGTH,
+  MOST_SESSION_VALUES,
+  MOST_SHARED_VALUE_LENGTH,
+  SESSION_LIFETIME_MS,
+  SqliteStateStore,
+} from "./state-store.ts";
+export type { StateStore, StateStoreOptions } from "./state-store.ts";
 export { stack, stackSize } from "./layout.ts";
 export type { ComponentHost, FocusableAt, TimerOptions } from "./component-host.ts";
 export type { Box, LayoutChild, Size } from "./layout.ts";

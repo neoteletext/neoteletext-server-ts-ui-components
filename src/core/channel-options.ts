@@ -2,6 +2,7 @@
 // language a viewer chooses is kept.
 
 import type { LanguageTag, OpusEncoder } from "../kit.ts";
+import type { StateStore } from "./state-store.ts";
 
 export interface ComponentChannelOptions {
   /** What encodes its sounds as Opus, the one format desktop and phone receivers play: ffmpeg with libopus, found on the path, when absent. */
@@ -17,6 +18,14 @@ export interface ComponentChannelOptions {
    * the words as written.
    */
   readonly standIn?: (language: LanguageTag) => string | undefined;
+  /**
+   * Where what outlasts the program is kept (REQ-1057): the components'
+   * kept state (Component.keptAs, REQ-1058), each viewer's under their
+   * session's number. The channel opens it, usually a SqliteStateStore on
+   * a file of its own, and gives the same store to what it keeps itself,
+   * such as a poll's Tally. Nothing is kept when absent.
+   */
+  readonly state?: StateStore;
 }
 
 /** How long the language a viewer chooses is kept: a year, in seconds (REQ-2217 item 3). */

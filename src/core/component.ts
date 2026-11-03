@@ -199,6 +199,11 @@ export abstract class Component<P extends object = object, S extends object = ob
     return false;
   }
 
+  /** Where its state is kept for its viewer's session (REQ-1058), as JSON, written as it changes and given back when mounted again; null, the default, for none. */
+  keptAs(): { readonly key: string; readonly version: number } | null {
+    return null;
+  }
+
   /** What it needs of its page (needs.ts); asked of an unmounted instance, so it reads only props. */
   needs(): PageNeeds {
     return {};

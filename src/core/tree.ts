@@ -6,6 +6,7 @@
 
 import type { Component } from "./component.ts";
 import type { ComponentHost } from "./component-host.ts";
+import type { KeptComponents } from "./kept-components.ts";
 import { instantiate } from "./instantiate.ts";
 import { type Element, flatten, h, isElement } from "./element.ts";
 import { type AnyComponent, Node } from "./node.ts";
@@ -15,6 +16,8 @@ import { Text } from "../text/styles.ts";
 export interface TreeHost {
   /** What a mounted component reaches of the channel: the mount itself. */
   readonly components: ComponentHost;
+  /** The components whose state is kept for the viewer (REQ-1058). */
+  readonly kept: KeptComponents;
   /** A node is unmounting: what the mount keeps of it goes, after its children's. */
   readonly unmounted: (node: Node) => void;
 }
@@ -56,6 +59,7 @@ export class Tree {
 
   #create(element: Element, parent: Node | null): Node {
     const component = instantiate(element);
+    this.#host.kept.restore(component);
     const node = new Node(element, component, parent);
     this.nodes.set(component, node);
     component.attach(this.#host.components);
@@ -121,6 +125,7 @@ export class Tree {
       this.#unmount(child);
     }
     this.#host.unmounted(node);
+    this.#host.kept.forget(node.component);
     this.nodes.delete(node.component);
     node.component.detach();
   }
@@ -133,7 +138,7 @@ export class Tree {
     }
   }
 
-  /** The lifecycle's commit phase: what mounted, then what updated, each still mounted. */
+  /** The lifecycle's commit phase: what mounted, then what updated, each still mounted; then the kept state that changed is written. */
   commit(): void {
     const mounted = this.#mounted;
     const updated = this.#updated;
@@ -149,6 +154,7 @@ export class Tree {
         node.component.componentDidUpdate?.(props, state);
       }
     }
+    this.#host.kept.keepChanged();
   }
 
   /** Every mounted component. */

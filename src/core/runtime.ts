@@ -2,15 +2,11 @@
 // events become mounts, renders and publications (DOC-1964).
 //
 // - `start`: every page is mounted once as the channel's copy, and published.
-// - `open`: a page that keeps state for each viewer is mounted again for
-//   that viewer (or found, if it was kept while they were away).
-// - `input`: to the viewer's mount, or the channel's for a shared page.
-// - `leave` and `close`: the viewer's mounts are unmounted.
-// - `wake`: the timers that are due run.
-// After each call every mount with something new renders, and a page is
-// published only if its TTI changed. A viewer's copy is published only
-// while it differs from the channel's; when it is the same again it is
-// released, so a viewer who only reads costs the server nothing.
+// - `opened`: a page with a copy for each viewer is mounted for that viewer (or found, if it was kept while they were away).
+// - `input`: to the viewer's mount, or the channel's for a shared page; `wake`: the timers that are due run.
+// - `leftPage` and `ended`: the viewer's mounts are unmounted; what their components keep (REQ-1058) stays in the store.
+// After each call every mount with something new renders, and a page is published only if its TTI changed. A viewer's copy is published only while it
+// differs from the channel's; when it is the same again it is released, so a viewer who only reads costs the server nothing.
 
 // oxlint-disable import/max-dependencies -- the runtime is where the protocol's calls meet the mounts, streams, sounds and publication
 import { type Application, type Context, ffmpegOpus, type Input, type LanguageTag, type PageEntry, type PageRequest, type ServerStats } from "../kit.ts";
@@ -28,6 +24,7 @@ import { Mount } from "./mount.ts";
 import { describedBy, type PageSpec, SpecNeeds } from "./page-spec.ts";
 import { earliestWake, publishChanges } from "./publish.ts";
 import { SoundObjects } from "./sound-objects.ts";
+import { KeptComponents } from "./kept-components.ts";
 import { ROLLOVER_COLOURS } from "./rollover.ts";
 
 export class ComponentChannel implements Application {
@@ -48,6 +45,7 @@ export class ComponentChannel implements Application {
   readonly #streams: LiveStreams;
   readonly #addresses = new ViewerAddresses();
   readonly #languages: ViewerLanguages;
+  readonly #store: ComponentChannelOptions["state"] | null;
 
   constructor(specs: readonly PageSpec[], options: ComponentChannelOptions = {}) {
     this.#specs = new Map(specs.map((spec) => [spec.page, spec]));
@@ -55,6 +53,7 @@ export class ComponentChannel implements Application {
     const opus = options.opus ?? ffmpegOpus();
     this.#sounds = new SoundObjects(opus);
     this.#streams = new LiveStreams(opus);
+    this.#store = options.state ?? null;
   }
 
   /** Whether the page's spec, or what is on it, keeps a copy for each viewer: for tests. */
@@ -246,6 +245,7 @@ export class ComponentChannel implements Application {
       pageLanguage: spec.language ?? null,
       level: spec.level ?? null,
       standIn: (language) => this.#languages.standIn(language),
+      kept: new KeptComponents(this.#store ?? null, session, (text) => this.#context?.log(`page ${spec.page.toString(16)}: ${text}`)),
       viewed: () => {
         const watching = this.#watching.get(spec.page);
         return session === null ? (watching?.size ?? 0) > 0 : watching?.has(session) === true;
