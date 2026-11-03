@@ -32,6 +32,8 @@ export function leadCells(doubleHeight: boolean): number {
  */
 export interface TextLanguage extends Language {
   readonly standIn?: StandIn;
+  /** Text from outside the program, what a viewer typed: the server shows a stand-in for what its language cannot show, rather than refuse the page (DEC-2326, REQ-2150). */
+  readonly outside?: boolean;
 }
 
 /** The language `tag` names among `languages`; one the server did not list (or before it said) is taken as written left to right. */

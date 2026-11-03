@@ -85,7 +85,7 @@ export function writeLine(screen: Screen, box: Box, row: number, column: number,
     const shown = standIn === undefined ? text : standIn.cells(text).map(String);
     for (const run of textRuns(shown, language)) {
       const from = box.column + textAt + (language.direction === "rtl" ? text.length - run.from - run.cells.length : run.from);
-      screen.text(page, from, run.cells.join(""), run.language);
+      screen.text(page, from, run.cells.join(""), run.language, language.outside === true);
     }
     text = [];
   };

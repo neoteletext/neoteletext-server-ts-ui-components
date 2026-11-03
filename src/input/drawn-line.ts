@@ -58,7 +58,7 @@ function lastCells(text: string, width: number): string {
 export function paintDrawnLine(canvas: Canvas, row: number, column: number, ink: Colour, text: string, cursor: boolean): void {
   const shown = lastCells(text, lineRoom(canvas.width - column));
   // What the viewer typed reads as typed, never as the channel's stand-in.
-  canvas.asWritten(row, column, [textColour(ink), ...textCells(`${PROMPT}${shown}`), ...(cursor ? [CURSOR_BLOCK] : [])]);
+  canvas.typed(row, column, [textColour(ink), ...textCells(`${PROMPT}${shown}`), ...(cursor ? [CURSOR_BLOCK] : [])]);
 }
 
 /**

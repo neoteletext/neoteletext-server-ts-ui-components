@@ -139,6 +139,11 @@ export class Canvas extends CanvasDeclarations {
     writeLine(this.#screen, this.box, row, column, cells, asWritten(this.language));
   }
 
+  /** Writes `cells` as `asWritten` does, as text from outside the program: what a viewer typed, never refused for a character (DEC-2326). */
+  typed(row: number, column: number, cells: readonly CanvasCell[]): void {
+    if (row >= 0 && row < this.box.height) writeLine(this.#screen, this.box, row, column, cells, { ...asWritten(this.language), outside: true });
+  }
+
   /**
    * Writes a mark the component draws for itself (an arrow, a sort mark, a
    * separator), after the colour `foreground` takes a cell when it is

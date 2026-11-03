@@ -105,7 +105,7 @@ export class TextField extends ValueControl<string, TextFieldProps> {
       return;
     }
     // What the viewer typed reads as typed, never as the channel's stand-in.
-    canvas.asWritten(0, at, [textColour(Colour.Yellow), ...textCells(`${PROMPT}${shown}`)]);
+    canvas.typed(0, at, [textColour(Colour.Yellow), ...textCells(`${PROMPT}${shown}`)]);
     const cursorAt = at + 1 + cells(PROMPT) + cells(shown);
     if (shown === "" && this.props.placeholder !== undefined && !this.focused) {
       canvas.coloured(0, cursorAt - 1, EMPTY, fit(this.props.placeholder, room));
