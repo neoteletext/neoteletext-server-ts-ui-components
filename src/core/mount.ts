@@ -6,13 +6,13 @@
 // components' timers (timers.ts).
 
 // oxlint-disable import/max-dependencies -- the mount is where a page's tree, drawing, keys, pointer and timers meet
-import type { Language, LanguageTag } from "../kit.ts";
+import type { LanguageTag } from "../kit.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { ComponentHost, FocusableAt } from "./component-host.ts";
 import type { Box } from "./layout.ts";
 import { draw, type DrawHost, drawHost, type DrawnPage, type Reach, shownSubPages } from "./draw.ts";
 import type { Element } from "./element.ts";
-import { nearestLanguage } from "./language.ts";
+import { namedLanguage, type TextLanguage, textLanguageOf } from "./language.ts";
 import type { ComposeEvent, KeyEvent, TextEvent } from "./events.ts";
 import { FocusHistory, routeKey } from "./focus.ts";
 import { emptyGrid } from "./grid.ts";
@@ -38,6 +38,8 @@ export interface MountHost {
   readonly rollover: ColourTable | null;
   /** The page's own language (PageSpec.language), or null for the viewer's. */
   readonly pageLanguage: LanguageTag | null;
+  /** The stand-in for the channel's words in `language`, the viewer's, or undefined where they are drawn as written (ComponentChannelOptions.standIn). */
+  readonly standIn: (language: LanguageTag) => TextLanguage["standIn"];
 }
 
 export class Mount implements ComponentHost {
@@ -62,7 +64,7 @@ export class Mount implements ComponentHost {
     this.#rootElement = root;
     this.#host = host;
     this.services = host.services;
-    this.#draw = drawHost(page, host, (node): Language => this.#languageOfNode(node));
+    this.#draw = drawHost(page, host, (node): TextLanguage => this.#languageOfNode(node));
     this.#tree = new Tree({
       components: this,
       unmounted: (node): void => {
@@ -145,13 +147,14 @@ export class Mount implements ComponentHost {
     return node === undefined ? [] : focusables(node).flatMap((each) => (each === node ? [] : [{ component: each.component, box: each.box }]));
   }
 
-  languageOf(component: AnyComponent): Language {
+  languageOf(component: AnyComponent): TextLanguage {
     return this.#languageOfNode(this.#tree.nodes.get(component) ?? null);
   }
 
-  /** The nearest `language` prop from `node` up, else the page's, else the viewer's. */
-  #languageOfNode(node: Node | null): Language {
-    return nearestLanguage(node, this.#host.pageLanguage ?? this.services.language(this.services.session), this.services.languages());
+  /** The nearest `language` prop from `node` up, else the page's, else the viewer's, with the channel's stand-in for it when it has one. */
+  #languageOfNode(node: Node | null): TextLanguage {
+    const { services } = this;
+    return textLanguageOf(namedLanguage(node) ?? this.#host.pageLanguage, () => services.language(services.session), services.languages(), this.#host.standIn);
   }
 
   /** Draws every component again: what they all read changed (the viewer's language). */

@@ -57,7 +57,8 @@ function lastCells(text: string, width: number): string {
 /** Draws the prompt and `text` in `ink` from `column`, its end in sight, and the cursor's block after it when `cursor`. */
 export function paintDrawnLine(canvas: Canvas, row: number, column: number, ink: Colour, text: string, cursor: boolean): void {
   const shown = lastCells(text, lineRoom(canvas.width - column));
-  canvas.codes(row, column, [textColour(ink), ...textCells(`${PROMPT}${shown}`), ...(cursor ? [CURSOR_BLOCK] : [])]);
+  // What the viewer typed reads as typed, never as the channel's stand-in.
+  canvas.asWritten(row, column, [textColour(ink), ...textCells(`${PROMPT}${shown}`), ...(cursor ? [CURSOR_BLOCK] : [])]);
 }
 
 /**

@@ -129,7 +129,8 @@ export class SegmentField extends ValueControl<string, SegmentFieldProps, Segmen
     const { codes, cursorAt } = templateCodes(this.#template, this.#digits, cursor, this.props.conceal === true);
     const at = field + BACKGROUND_CELLS;
     // The ink's cell, then the template, which stops before the band's end.
-    canvas.codes(0, at, [textColour(this.disabled ? DISABLED : Colour.Yellow), ...codes].slice(0, Math.max(0, canvas.bandEnd - at)));
+    // What the viewer typed reads as typed, never as the channel's stand-in.
+    canvas.asWritten(0, at, [textColour(this.disabled ? DISABLED : Colour.Yellow), ...codes].slice(0, Math.max(0, canvas.bandEnd - at)));
     const complaint = this.#shownComplaint;
     if (complaint !== null) {
       canvas.coloured(1, field, Colour.Red, fit(`! ${complaint}`, canvas.width - field - 1));

@@ -1,15 +1,72 @@
 // Where each unit of a scrolling view (scroll-view.ts) stands among the
-// rows of all of them: a unit takes the rows its element's `height` says,
-// else the rows a line of its language takes (three for Thai and Lao,
-// whose marks take the rows around it), and the view shows from a unit the
-// units that fit whole.
+// rows of all of them: the rows each takes, in its language and with the
+// mark rows of a language whose marks take rows of their own (marks.ts);
+// the units the view shows from a unit, those that fit whole; and how the
+// units in view are drawn.
 
-import { type Element, isElement } from "../core/element.ts";
+import { type Element, h, isElement } from "../core/element.ts";
+import type { TextLanguage } from "../core/language.ts";
+import { clashes, placed } from "../core/marks.ts";
+import { oneLineRows } from "../core/text.ts";
+import { Colour, type Language, type LanguageTag } from "../kit.ts";
+import { LinesBlock } from "../text/lines.ts";
 
-/** The rows a unit takes: its element's `height`, a whole number of one or more, or for text and for an element without one `lineRows`'s. */
-function unitRows(unit: Element | string, lineRows: (unit: Element | string) => number): number {
-  const height = isElement(unit) ? unit.props.height : undefined;
-  return height !== undefined && Number.isFinite(height) && height >= 1 ? Math.floor(height) : lineRows(unit);
+/** The cell a unit of text starts at, after its colour's (Text, LinesBlock). */
+const TEXT_AT = 1;
+/** The rows between consecutive lines of text with mark rows: the shared mark row and the next letters (marks.ts). */
+const MARKED_PITCH = 2;
+
+/**
+ * The rows each unit takes in a view in `language`: its element's
+ * `height`, a whole number of one or more; else a line of its own language's
+ * (`languageOf` its `language` prop) or the view's. In a language whose
+ * marks take the rows around its letters, a unit of text takes two rows,
+ * its upper marks' and its letters, its lower vowels sharing the next text
+ * unit's mark row, and a row more where a column needs both (marks.ts);
+ * before anything else, or at the end, it takes its own row below.
+ */
+export function unitRows(units: readonly (Element | string)[], language: TextLanguage, languageOf: (tag: LanguageTag) => Language): number[] {
+  return units.map((unit, index) => {
+    if (isElement(unit)) {
+      const height = unit.props.height;
+      if (height !== undefined && Number.isFinite(height) && height >= 1) {
+        return Math.floor(height);
+      }
+      const own = unit.props.language;
+      return oneLineRows(own === undefined ? language : languageOf(own));
+    }
+    if (language.markRows === 0) {
+      return 1;
+    }
+    const next = units[index + 1];
+    const below = typeof next !== "string" || clashes(placed(language, TEXT_AT, unit), placed(language, TEXT_AT, next)) ? language.markRows : 0;
+    return MARKED_PITCH + below;
+  });
+}
+
+/** The units in view, each run of text units in a language with mark rows drawn as one block, whose lines share their mark rows. */
+export function drawnUnits(inView: readonly (Element | string)[], language: TextLanguage): (Element | string)[] {
+  if (language.markRows === 0) {
+    return [...inView];
+  }
+  const drawn: (Element | string)[] = [];
+  let lines: string[] = [];
+  const flush = (): void => {
+    if (lines.length > 0) {
+      drawn.push(h(LinesBlock, { key: `lines ${drawn.length}`, lines: lines.map((text) => ({ foreground: Colour.White, text })) }));
+      lines = [];
+    }
+  };
+  for (const unit of inView) {
+    if (typeof unit === "string") {
+      lines.push(unit);
+    } else {
+      flush();
+      drawn.push(unit);
+    }
+  }
+  flush();
+  return drawn;
 }
 
 /** Where each unit stands among the rows of all of them, and what fits in `shown` rows from each. */
@@ -20,19 +77,19 @@ export class UnitRows {
   /** The last unit that may be the first shown: from it, every unit to the end is in view. */
   readonly last: number;
 
-  /** `lineRows` answers the rows a unit of a line takes, by its language: one, or three where its marks take the rows around it. */
-  constructor(units: readonly (Element | string)[], shown: number, lineRows: (unit: Element | string) => number = (): number => 1) {
+  /** `rows` is the rows each unit takes, in order; `shown` the rows the units are shown in. */
+  constructor(rows: readonly number[], shown: number) {
     this.#shown = Math.max(1, shown);
     this.#starts = [0];
-    for (const unit of units) {
-      this.#starts.push((this.#starts.at(-1) ?? 0) + unitRows(unit, lineRows));
+    for (const each of rows) {
+      this.#starts.push((this.#starts.at(-1) ?? 0) + Math.max(1, each));
     }
-    let last = units.length;
+    let last = rows.length;
     while (last > 0 && this.total - this.startOf(last - 1) <= this.#shown) {
       last -= 1;
     }
     // When even the last unit alone is taller than the view, it is the last first one, shown alone.
-    this.last = Math.min(last, Math.max(0, units.length - 1));
+    this.last = Math.min(last, Math.max(0, rows.length - 1));
   }
 
   get count(): number {

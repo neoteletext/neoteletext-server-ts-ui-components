@@ -5,7 +5,8 @@ import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { paintEmpty } from "../core/look.ts";
-import { leadCells, linePitch } from "../core/language.ts";
+import { leadCells, type TextLanguage } from "../core/language.ts";
+import { layLines, type LineLayout, placed } from "../core/marks.ts";
 import { cells, fit, wrap } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
@@ -80,11 +81,28 @@ export interface LinesProps {
 
 /** Lines as they are, a row each. */
 export class LinesBlock extends Component<LinesProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
+  /** Its lines as drawn in `width`, each cut to it. */
+  #shown(width: number): string[] {
+    return this.props.lines.map((line) => fit(line.text, width - leadCells(this.props.doubleHeight === true)));
+  }
+
+  /** Where its lines go in `language`: a row each, two in double height, or with their mark rows (marks.ts). */
+  #layout(shown: readonly string[], language: TextLanguage): LineLayout {
+    const lead = leadCells(this.props.doubleHeight === true);
+    return layLines(
+      language,
+      shown.map((line) => placed(language, lead, line)),
+      this.props.doubleHeight === true,
+    );
+  }
+
   override measure(space: Size): Size {
-    const rows =
-      this.props.lines.length === 0 && this.props.empty !== undefined
-        ? 1
-        : this.props.lines.length * linePitch(this.language, this.props.doubleHeight === true);
+    const rows = this.props.lines.length === 0 && this.props.empty !== undefined ? 1 : this.#layout(this.#shown(space.width), this.language).height;
     return { width: space.width, height: Math.min(rows, space.height) };
   }
 
@@ -93,13 +111,14 @@ export class LinesBlock extends Component<LinesProps> {
       paintEmpty(canvas, this.props.empty);
       return;
     }
-    // A line a row, or three in a language whose marks take the rows around it; right to left, each flush with the right edge.
+    // A line a row, or two apart with their mark rows in a language whose marks take the rows around it; right to left, each flush with the right edge.
     const double = this.props.doubleHeight === true;
-    const pitch = linePitch(canvas.language, double);
+    const shown = this.#shown(canvas.width);
+    const { rows } = this.#layout(shown, canvas.language);
     this.props.lines.forEach((line, index) => {
-      if (line.text !== "") {
-        const shown = fit(line.text, canvas.width - leadCells(double));
-        canvas.line(index * pitch + canvas.language.markRows, canvas.start(cells(shown) + leadCells(double)), line.foreground, shown, double);
+      const text = shown[index] ?? "";
+      if (text !== "") {
+        canvas.line(rows[index] ?? 0, canvas.start(cells(text) + leadCells(double)), line.foreground, text, double);
       }
     });
   }

@@ -6,6 +6,8 @@
 
 import type { Language, LanguageTag } from "../kit.ts";
 import type { Node } from "./node.ts";
+import type { StandIn } from "./stand-in.ts";
+import { OWN_CODES } from "./own-codes.ts";
 import { UNSHOWN } from "./unshown.ts";
 
 /** The language of a channel that names none, and of a viewer with no `language` cookie: Latin English. */
@@ -22,25 +24,22 @@ export const LANGUAGE_COOKIE = "language";
 export const FIRST_MARKED_ROW = 2;
 export const LAST_MARKED_ROW = 23;
 
-/** The rows a line of a language takes: its own, and for Thai and Lao one above and one below for its marks. */
-export function lineRows(language: Language): number {
-  return 1 + 2 * language.markRows;
-}
-
-/** The rows double height takes: its own and the row below (EN 300 706 clause 12.3). */
-const DOUBLE_HEIGHT_ROWS = 2;
-
-/** The rows a line takes in `language`, asked for in double height or not (DEC-2222): three where its marks take the rows around it, whatever was asked, else two for double height and one otherwise. */
-export function linePitch(language: Language, doubleHeight: boolean): number {
-  if (language.markRows > 0) {
-    return lineRows(language);
-  }
-  return doubleHeight ? DOUBLE_HEIGHT_ROWS : 1;
-}
+/** The cells Double Height takes with a line's colour before its text (Canvas.line). */
+const DOUBLE_HEIGHT_LEAD = 2;
 
 /** The cells a line takes before its text: its colour's, and Double Height's when asked (Canvas.line). */
 export function leadCells(doubleHeight: boolean): number {
-  return doubleHeight ? DOUBLE_HEIGHT_ROWS : 1;
+  return doubleHeight ? DOUBLE_HEIGHT_LEAD : 1;
+}
+
+/**
+ * The language a component's text is drawn in: a language of the server's,
+ * and, where the language is the viewer's and not the channel's and the
+ * channel gave text of it, the stand-in its words of Latin letters are drawn
+ * as (stand-in.ts).
+ */
+export interface TextLanguage extends Language {
+  readonly standIn?: StandIn;
 }
 
 /** The language `tag` names among `languages`; one the server did not list (or before it said) is taken as written left to right, with no mark rows. */
@@ -48,15 +47,40 @@ export function languageOf(tag: LanguageTag, languages: readonly Language[]): La
   return languages.find((language) => language.tag === tag) ?? { tag, name: tag, direction: "ltr", markRows: 0 };
 }
 
-/** The language of `node`'s text: the nearest `language` prop from it up, else `base`. */
-export function nearestLanguage(node: Node | null, base: LanguageTag, languages: readonly Language[]): Language {
+/** `language` with no stand-in: its text drawn as it is written. */
+export function asWritten(language: Language): Language {
+  const { tag, name, direction, markRows } = language;
+  return { tag, name, direction, markRows };
+}
+
+/** The nearest `language` prop from `node` up, or undefined when none names one. */
+export function namedLanguage(node: Node | null): LanguageTag | undefined {
   for (let at = node; at !== null; at = at.parent) {
     const { language } = at.element.props;
     if (language !== undefined) {
-      return languageOf(language, languages);
+      return language;
     }
   }
-  return languageOf(base, languages);
+  return undefined;
+}
+
+/**
+ * The language a component's text is drawn in: `named`, a `language` prop
+ * or the page's, as written; else the `viewer`'s, with the channel's
+ * stand-in for its words in it where there is one (`standIn`).
+ */
+export function textLanguageOf(
+  named: LanguageTag | null,
+  viewer: () => LanguageTag,
+  languages: readonly Language[],
+  standIn: (language: LanguageTag) => StandIn | undefined,
+): TextLanguage {
+  if (named !== null) {
+    return languageOf(named, languages);
+  }
+  const language = languageOf(viewer(), languages);
+  const found = standIn(language.tag);
+  return found === undefined ? language : { ...language, standIn: found };
 }
 
 /** Whether `value` is a tag of `languages`: a prop or a cookie, which may name anything, is taken only then. */
@@ -82,6 +106,38 @@ const FOLDED: ReadonlyMap<string, string> = new Map([
   ["~", "-"],
 ]);
 
+/** The Arabic script's own comma, semicolon and question mark, for ASCII's that its sets lack (unshown.ts). */
+const ARABIC_PUNCTUATION: ReadonlyMap<string, string> = new Map([
+  [",", "\u060C"],
+  [";", "\u061B"],
+  ["?", "\u061F"],
+]);
+
+/** The Japanese kana's comma, for ASCII's, which the kana sets lack (unshown.ts). */
+const KANA_PUNCTUATION: ReadonlyMap<string, string> = new Map([[",", "\u3001"]]);
+
+/**
+ * The languages whose sets lack ASCII punctuation but show their script's
+ * own (read on 3 November 2026 from the demo site's character tables, the
+ * engine's decoder's reading of each set): punctuation between their words
+ * is written as their own, which keeps a line one run.
+ */
+const OWN_PUNCTUATION: Readonly<Partial<Record<LanguageTag, ReadonlyMap<string, string>>>> = {
+  ja: KANA_PUNCTUATION,
+  "ja-Hira": KANA_PUNCTUATION,
+  "ja-Hrkt": KANA_PUNCTUATION,
+  "ja-Kana": KANA_PUNCTUATION,
+  ar: ARABIC_PUNCTUATION,
+  bal: ARABIC_PUNCTUATION,
+  ckb: ARABIC_PUNCTUATION,
+  fa: ARABIC_PUNCTUATION,
+  prs: ARABIC_PUNCTUATION,
+  ps: ARABIC_PUNCTUATION,
+  sd: ARABIC_PUNCTUATION,
+  ug: ARABIC_PUNCTUATION,
+  ur: ARABIC_PUNCTUATION,
+};
+
 /** What no language's sets show (unshown.ts leaves them out). */
 const NO_SET_SHOWS: ReadonlySet<string> = new Set(["[", "]", "{", "}", "\\", "|", "~"]);
 
@@ -101,28 +157,61 @@ function unshownIn(language: LanguageTag, cell: string): boolean {
   return UNSHOWN[language].includes(cell);
 }
 
-/**
- * Text in `language` as runs the server can show (REQ-2152 item 6): a
- * character neither its sets nor English's show is folded to its stand-in
- * (FOLDED); each stretch of ASCII with a character its sets lack (a digit
- * in Arabic, an @ in German), or with a Latin letter where they lack some
- * (a Latin word in Russian), and each arrow they lack, is written in English, whose set every page reaches; the rest stays
- * in `language`.
- */
-export function textRuns(cells: readonly string[], language: Language): LanguageRun[] {
-  const { tag } = language;
-  const folded = cells.map((cell) => {
+/** Puts `tag`'s own punctuation for each cell from `from` to before `to` its sets lack and it has its own for, when that stretch of ASCII has no letter or digit: punctuation between words of the language, not in a Latin word or a number. Answers whether every cell it lacks was put so. */
+function ownPunctuation(cells: string[], from: number, to: number, tag: LanguageTag): boolean {
+  const own = OWN_PUNCTUATION[tag];
+  const stretch = cells.slice(from, to);
+  if (own === undefined || stretch.some((cell) => /^[A-Za-z0-9]$/u.test(cell)) || !stretch.every((cell) => !unshownIn(tag, cell) || own.has(cell))) {
+    return false;
+  }
+  for (let at = from; at < to; at += 1) {
+    cells[at] = own.get(cells[at] ?? "") ?? cells[at] ?? "";
+  }
+  return true;
+}
+
+/** `cells` with what neither `tag`'s sets nor English's show folded to its stand-in (FOLDED). */
+function foldedCells(cells: readonly string[], tag: LanguageTag): string[] {
+  return cells.map((cell) => {
     const stand = FOLDED.get(cell);
     // UNSHOWN leaves out what no language shows: those are folded always, the rest where neither the language nor English shows them.
     const folds = stand !== undefined && (NO_SET_SHOWS.has(cell) || (unshownIn(tag, cell) && unshownIn(ENGLISH, cell)));
     return folds ? stand : cell;
   });
-  // A language whose sets lack some Latin letters writes every Latin word in English, rather than a word's letters in two sets; one whose marks take the rows around its letters writes all its ASCII so, which has no marks and so needs no rows.
+}
+
+/** The printable ASCII `tag`'s own set shows at their own codes (own-codes.ts), for the kit to leave runs of them to their codes past 64 a page. */
+export function ownCodesOf(tag: LanguageTag): string {
+  return OWN_CODES[tag] ?? "";
+}
+
+/**
+ * Text in `language` as runs the server can show (REQ-2152 item 6): a
+ * character neither its sets nor English's show is folded to its stand-in
+ * (FOLDED); each stretch of ASCII with a character its sets lack (a digit
+ * in Arabic, an @ in German), or with a Latin letter where they lack some
+ * (a Latin word in Russian), and each arrow they lack, is written in
+ * English, whose set every page reaches; the rest stays in `language`. In
+ * a stretch of only punctuation between words of a language whose script
+ * has its own (Arabic's comma, the kana's) is written as its own. In
+ * a language whose marks take the rows around its letters, ASCII its sets
+ * show stays in its runs where those rows are there for it (`marksFit`)
+ * and the text has letters of its own, which keeps a line one run;
+ * elsewhere it is English, which needs no mark rows.
+ */
+export function textRuns(cells: readonly string[], language: Language, marksFit = true): LanguageRun[] {
+  const { tag } = language;
+  const folded = foldedCells(cells, tag);
+  // A language whose sets lack some Latin letters writes every Latin word in English, rather than a word's letters in two sets.
   const latinWords = /[A-Za-z]/u.test(UNSHOWN[tag]);
+  // Text all of ASCII needs no mark rows: in English it takes none, so it never meets a neighbour's marks.
+  const marksTaken = marksFit && folded.some((cell) => !ASCII_PRINTABLE.test(cell));
   const english = folded.map(
     (cell) =>
       tag !== ENGLISH &&
-      (unshownIn(tag, cell) || (latinWords && /^[A-Za-z]$/u.test(cell)) || (language.markRows > 0 && ASCII_PRINTABLE.test(cell) && cell !== SPACE_CELL)),
+      (unshownIn(tag, cell) ||
+        (latinWords && /^[A-Za-z]$/u.test(cell)) ||
+        (language.markRows > 0 && !marksTaken && ASCII_PRINTABLE.test(cell) && cell !== SPACE_CELL)),
   );
   // A stretch of ASCII goes whole to English when any of it must, but for the spaces at its ends.
   let start = 0;
@@ -131,7 +220,9 @@ export function textRuns(cells: readonly string[], language: Language): Language
     if (cell !== undefined && ASCII_PRINTABLE.test(cell)) {
       continue;
     }
-    if (english.slice(start, at).some(Boolean)) {
+    if (english.slice(start, at).some(Boolean) && ownPunctuation(folded, start, at, tag)) {
+      english.fill(false, start, at);
+    } else if (english.slice(start, at).some(Boolean)) {
       let from = start;
       let to = at;
       while (from < to && folded[from] === SPACE_CELL) {

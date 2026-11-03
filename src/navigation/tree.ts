@@ -17,7 +17,7 @@ import { keepInView, listStep, moveChoice, WheelLines } from "../core/list-curso
 import { Colour, COLUMNS, Key } from "../kit.ts";
 import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
-import { ListRows, within } from "../lists/list-rows.ts";
+import { itemsPitch, ListRows, within } from "../lists/list-rows.ts";
 import { BAR_CELLS, ScrollBar } from "../lists/scroll.ts";
 import { type GuidePlace, guidesIndent, TreeGuides } from "./tree-guides.ts";
 
@@ -156,8 +156,19 @@ export class Tree extends Control<TreeProps, TreeState> {
     ];
   }
 
+  /** The rows its items take: a row each, or with their mark rows where its language has them (ListPitch). */
+  get #height(): number {
+    const guides = this.props.guides === true;
+    const { pitch, after } = itemsPitch(this.language, {
+      items: this.#rows(),
+      indent: (item: Visible) => indentOf(item, guides),
+      text: (item: Visible) => `${markOf(item, this.state.open)} ${item.node.label}`,
+    });
+    return this.props.shown * pitch + after;
+  }
+
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(this.props.shown, space.height) };
+    return { width: space.width, height: Math.min(this.#height, space.height) };
   }
 
   #rows(): Visible[] {

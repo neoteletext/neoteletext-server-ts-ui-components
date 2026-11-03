@@ -4,7 +4,7 @@
 import type { ComponentEventInit } from "./component-events.ts";
 import type { Component } from "./component.ts";
 import type { Language } from "../kit.ts";
-import { ENGLISH, languageOf } from "./language.ts";
+import { ENGLISH, languageOf, type TextLanguage } from "./language.ts";
 
 /** The language of a component that is not mounted: English. */
 export const UNMOUNTED_LANGUAGE: Language = languageOf(ENGLISH, []);
@@ -37,7 +37,7 @@ export interface ComponentHost {
   /** The components under `component` that take the keys, in the order they are drawn, with their boxes. */
   focusablesUnder(component: Component): readonly FocusableAt[];
   /** The language of the component's text: the nearest `language` prop on it or above it, else the viewer's (Services.language). */
-  languageOf(component: Component): Language;
+  languageOf(component: Component): TextLanguage;
 }
 
 /** A component that takes the keys, and where it was laid out. */

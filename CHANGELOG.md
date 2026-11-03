@@ -3,6 +3,42 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 17.0.0 (3 November 2026)
+
+### To take it
+
+- **Take the protocol kit 9.2.0** beside it.
+- **`lineRows` is gone**: `oneLineRows(language, doubleHeight?)` answers the
+  rows one line takes (three in Thai and Lao, its text on the middle one).
+  A block of lines in such a language takes fewer rows than before, so a
+  page laid out for three rows a line has rows to spare.
+- **A list row's props**: `ListRow` takes `lines` and `markRoom`, `ItemText`
+  takes `pitch`, and `ListRows` takes `lineText` (an item's text where
+  `render` draws it) for laying out Thai and Lao.
+
+### What changed
+
+- **Thai and Lao lines two rows apart** (DEC-2236): in Paragraph,
+  LinesBlock, RichText, Headline and a ScrollView's units of text, a line's
+  lower vowels share a row with the next line's upper marks, as DEC-604 and
+  the server lay them out; a row more only where one column needs both. A
+  block of n lines takes 2n + 1 rows, not 3n.
+- **Thai and Lao in one-row components**: list rows (ChoiceList,
+  LanguagePicker, ToggleList, Menu, Tree, Autocomplete), tabs, Ticker,
+  Newsflash, Flashing and Concealed take their mark rows and show the
+  language; a list row's control is its letters' row.
+- **Stand-in text** (DEC-2237): `ComponentChannelOptions.standIn` gives
+  text in a language, and on a page in a viewer's language other than the
+  channel's, the channel's own words are drawn as that text, cell for cell,
+  so every component shows the language's script. Text that names its
+  language, the Fastext row and what a viewer typed are drawn as written
+  (`Canvas.asWritten`).
+- **Pages in any language fit protocol 8** (DEC-2238): the library tells
+  the kit which ASCII each language's set shows at its own codes, so a
+  page past 64 runs leaves those runs to their codes; punctuation between
+  Arabic-script or kana words is written as the script's own; a Thai or
+  Lao line keeps its digits and punctuation in its run.
+
 ## 16.0.1 (3 November 2026)
 
 ### To take it

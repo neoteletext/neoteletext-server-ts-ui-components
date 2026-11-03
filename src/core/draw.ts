@@ -10,8 +10,8 @@
 // another sub-page's component. Display attributes are how a sub-page
 // looks, so each sub-page carries those it paints.
 
-import { Colour, COLUMNS, type Language, type Limits, ROWS, Screen, type SubpageBody } from "../kit.ts";
-import { Canvas, nothingDeclared, type PageRequests, type Region } from "./canvas.ts";
+import { Colour, COLUMNS, type Limits, ROWS, Screen, type SubpageBody } from "../kit.ts";
+import { asWritten, Canvas, nothingDeclared, ownCodesOf, type PageRequests, type Region, type TextLanguage } from "./canvas.ts";
 import type { Box, LayoutChild, Size } from "./layout.ts";
 import { type LocalEnhancement, localEnhancement } from "./enhancement.ts";
 import { type DeclaredControl, emptyGrid, type Grid, type Owned, reachedControls } from "./grid.ts";
@@ -30,14 +30,14 @@ export interface DrawHost {
   /** The most sub-pages a whole page may have, as the server's `start` said. */
   readonly mostSubPages: () => number;
   /** The language of a node's text: its nearest `language` prop, else the page's or the viewer's. */
-  readonly languageOf: (node: Node) => Language;
+  readonly languageOf: (node: Node) => TextLanguage;
 }
 
 /** What drawing page `page` needs, from its mount's `host` and `languageOf` its nodes. */
 export function drawHost(
   page: number,
   host: { readonly rollover: ColourTable | null; readonly report: (text: string) => void; readonly services: { limits(): Limits } },
-  languageOf: (node: Node) => Language,
+  languageOf: (node: Node) => TextLanguage,
 ): DrawHost {
   return { page, rollover: host.rollover, report: host.report, mostSubPages: (): number => host.services.limits().standard.subpages, languageOf };
 }
@@ -133,7 +133,10 @@ function paint(
 ): void {
   const regions: Region[] = [];
   const declared = nothingDeclared();
-  const canvas = new Canvas(screen, node.box, requests, regions, declared, surround, host.languageOf(node));
+  const language = host.languageOf(node);
+  // The channel's stand-in in a language whose marks take rows of their own only where the component gives them those rows.
+  const written = language.markRows > 0 && !node.component.laysOutMarks() ? asWritten(language) : language;
+  const canvas = new Canvas(screen, node.box, requests, regions, declared, surround, written);
   node.component.paint(canvas);
   canvas.finish();
   owned.push({ node, declared });
@@ -166,7 +169,10 @@ function drawScreen(
 ): { readonly screen: Screen; readonly reach: Reach } {
   const screen = new Screen();
   // The page names its language, so the server writes its designation, in the header and in the rollover's X/28/0 (REQ-2214 item 7).
-  screen.language(host.languageOf(node).tag);
+  const { tag } = host.languageOf(node);
+  screen.language(tag);
+  // Past the protocol's 64 runs, runs of what its set shows at their own codes are left to them (TODO-2228).
+  screen.ownCodes(ownCodesOf(tag));
   const requests: PageRequests = { cursor: null, displayAttributes: [] };
   const grid = emptyGrid();
   const owned: Owned[] = [];

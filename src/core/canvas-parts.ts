@@ -3,9 +3,9 @@
 // codes of a band and a chip, and the writing of a row's cells, its text as
 // runs in their languages for the server to encode (DEC-2199).
 
-import { Attribute, Colour, type Language, type Screen, SPACE, textColour } from "../kit.ts";
+import { Attribute, Colour, type Screen, SPACE, textColour } from "../kit.ts";
 import type { DisplayAttributes } from "./enhancement.ts";
-import { FIRST_MARKED_ROW, LAST_MARKED_ROW, textRuns } from "./language.ts";
+import { FIRST_MARKED_ROW, LAST_MARKED_ROW, type TextLanguage, textRuns } from "./language.ts";
 import type { Box } from "./layout.ts";
 
 /** One cell as a component writes it: a code, or a string, one character and its marks, for the server to encode. */
@@ -69,22 +69,26 @@ export function backgroundCodes(background: Colour): [number, number] {
 /**
  * Writes `cells` on `row` of `box` from `column`, cut at the box's edge:
  * each code as it is, and each stretch of strings as runs of text in
- * `language` (textRuns). A run whose marks take the rows around it is
- * written only where those rows are the box's own and the page's
- * (FIRST_MARKED_ROW), since its marks overwrite their cells; elsewhere its
- * cells are spaces. Right to left, the runs are in visual order too: the
- * text's first run takes its rightmost cells.
+ * `language` (textRuns), its words of Latin letters drawn as the language's
+ * stand-in where it has one (stand-in.ts). A run whose marks take the rows
+ * around it is written only where those rows are the box's own and the
+ * page's (FIRST_MARKED_ROW), since its marks overwrite their cells;
+ * elsewhere its cells are spaces, and the channel's words are left as
+ * written, in English, which needs no mark rows. Right to left, the runs
+ * are in visual order too: the text's first run takes its rightmost cells.
  */
-export function writeLine(screen: Screen, box: Box, row: number, column: number, cells: readonly CanvasCell[], language: Language): void {
+export function writeLine(screen: Screen, box: Box, row: number, column: number, cells: readonly CanvasCell[], language: TextLanguage): void {
   if (row < 0 || row >= box.height) {
     return;
   }
   const page = box.row + row;
   const marksFit = row >= 1 && row < box.height - 1 && page >= FIRST_MARKED_ROW && page <= LAST_MARKED_ROW;
+  const standIn = language.markRows === 0 || marksFit ? language.standIn : undefined;
   let text: string[] = [];
   let textAt = 0;
   const flush = (): void => {
-    for (const run of textRuns(text, language)) {
+    const shown = standIn === undefined ? text : standIn.cells(text).map(String);
+    for (const run of textRuns(shown, language, marksFit)) {
       const from = box.column + textAt + (language.direction === "rtl" ? text.length - run.from - run.cells.length : run.from);
       if (run.language === language.tag && language.markRows > 0 && !marksFit) {
         screen.codes(

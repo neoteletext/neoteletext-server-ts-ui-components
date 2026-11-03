@@ -53,7 +53,7 @@ export class ComponentChannel implements Application {
 
   constructor(specs: readonly PageSpec[], options: ComponentChannelOptions = {}) {
     this.#specs = new Map(specs.map((spec) => [spec.page, spec]));
-    this.#languages = new ViewerLanguages(options.language, this.#languageChanged);
+    this.#languages = new ViewerLanguages(options.language, this.#languageChanged, options.standIn);
     const opus = options.opus ?? ffmpegOpus();
     this.#sounds = new SoundObjects(opus);
     this.#streams = new LiveStreams(opus);
@@ -245,6 +245,7 @@ export class ComponentChannel implements Application {
       report: (text) => this.#context?.log(text),
       rollover: spec.rollover === undefined ? ROLLOVER_COLOURS : spec.rollover,
       pageLanguage: spec.language ?? null,
+      standIn: (language) => this.#languages.standIn(language),
       viewed: () => {
         const watching = this.#watching.get(spec.page);
         return session === null ? (watching?.size ?? 0) > 0 : watching?.has(session) === true;

@@ -17,8 +17,8 @@
 // component that declared the control; each bubbles to the parents until a
 // handler answers true.
 
-import type { Colour, Language } from "../kit.ts";
-import type { Canvas } from "./canvas.ts";
+import type { Colour } from "../kit.ts";
+import type { Canvas, TextLanguage } from "./canvas.ts";
 import { type ComponentHost, type FocusableAt, type TimerOptions, UNMOUNTED_LANGUAGE } from "./component-host.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { Child, WithChildren } from "./element.ts";
@@ -67,7 +67,7 @@ export abstract class Component<P extends object = object, S extends object = ob
    * which is the viewer's (Services.language) when nothing names one; with
    * its direction and mark rows. English before it is mounted.
    */
-  protected get language(): Language {
+  protected get language(): TextLanguage {
     return this.#host?.languageOf(this) ?? UNMOUNTED_LANGUAGE;
   }
 
@@ -181,6 +181,11 @@ export abstract class Component<P extends object = object, S extends object = ob
    */
   pointerCells(box: Box): Box | null {
     return box;
+  }
+
+  /** Whether it gives each line of its text the mark rows a language such as Thai needs (marks.ts): only then is the channel's stand-in drawn in such a language; otherwise its words are drawn as written, in English, which needs none. */
+  laysOutMarks(): boolean {
+    return false;
   }
 
   /** The background it lays under its children, for their bands to end back to (canvas.ts); null, the default, for none of its own. */

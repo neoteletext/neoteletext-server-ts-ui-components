@@ -29,6 +29,11 @@ export interface TitleBandProps {
 
 /** The title band: a background of the band's colour, the title in double height. */
 export class TitleBand extends Component<TitleBandProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
   override measure(space: Size): Size {
     return { width: space.width, height: Math.min(bandRows(this.language), space.height) };
   }

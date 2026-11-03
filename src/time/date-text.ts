@@ -6,8 +6,8 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
-import { leadCells, linePitch } from "../core/language.ts";
-import { cells, fit } from "../core/text.ts";
+import { leadCells } from "../core/language.ts";
+import { cells, fit, oneLineRows } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 /** A date: a `Date`, milliseconds since the Unix epoch, or ISO 8601 text, which without a zone is UTC and without a time is that calendar day. */
@@ -158,13 +158,18 @@ export interface DateTextProps {
 
 /** One date on one row, in its colour. */
 export class DateText extends Component<DateTextProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
   get text(): string {
     return formatDate(this.props.value, this.props.pattern, this.props.fallback);
   }
 
   override measure(space: Size): Size {
     const double = this.props.doubleHeight === true;
-    return { width: Math.min(space.width, cells(this.text) + leadCells(double)), height: Math.min(linePitch(this.language, double), space.height) };
+    return { width: Math.min(space.width, cells(this.text) + leadCells(double)), height: Math.min(oneLineRows(this.language, double), space.height) };
   }
 
   override paint(canvas: Canvas): void {

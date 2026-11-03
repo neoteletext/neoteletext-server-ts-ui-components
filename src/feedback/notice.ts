@@ -8,8 +8,8 @@ import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { type Kind, KINDS } from "../core/look.ts";
-import { leadCells, linePitch } from "../core/language.ts";
-import { cells, fit } from "../core/text.ts";
+import { leadCells } from "../core/language.ts";
+import { cells, fit, oneLineRows } from "../core/text.ts";
 
 export interface NoticeProps {
   /** What happened: its mark and its colour (core/look.ts). */
@@ -35,8 +35,13 @@ export function paintNotice(canvas: Canvas, row: number, kind: Kind, text: strin
 
 /** A notice that stays. */
 export class Notice extends Component<NoticeProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(linePitch(this.language, this.props.doubleHeight === true), space.height) };
+    return { width: space.width, height: Math.min(oneLineRows(this.language, this.props.doubleHeight === true), space.height) };
   }
 
   override paint(canvas: Canvas): void {

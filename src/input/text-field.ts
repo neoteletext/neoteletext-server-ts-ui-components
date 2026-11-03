@@ -14,7 +14,7 @@ import { isPress, type KeyEvent, type PointerEvent, type TextEvent } from "../co
 import { DISABLED, EMPTY } from "../core/look.ts";
 import type { PageNeeds } from "../core/needs.ts";
 import { cells, fit } from "../core/text.ts";
-import { Colour, CONTROL_CHARACTER, Key } from "../kit.ts";
+import { Colour, CONTROL_CHARACTER, Key, textCells, textColour } from "../kit.ts";
 import { type ValueProps, ValueControl, type KeyHelpEntry } from "./value-control.ts";
 
 /** The prompt before what is typed. */
@@ -104,7 +104,8 @@ export class TextField extends ValueControl<string, TextFieldProps> {
       canvas.coloured(0, at, DISABLED, fit(`${PROMPT}${shown === "" ? "(disabled)" : shown}`, room + cells(PROMPT)));
       return;
     }
-    canvas.coloured(0, at, Colour.Yellow, `${PROMPT}${shown}`);
+    // What the viewer typed reads as typed, never as the channel's stand-in.
+    canvas.asWritten(0, at, [textColour(Colour.Yellow), ...textCells(`${PROMPT}${shown}`)]);
     const cursorAt = at + 1 + cells(PROMPT) + cells(shown);
     if (shown === "" && this.props.placeholder !== undefined && !this.focused) {
       canvas.coloured(0, cursorAt - 1, EMPTY, fit(this.props.placeholder, room));

@@ -5,7 +5,7 @@ import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { cells } from "../core/text.ts";
-import { Colour, type FastextLinks, type Language, pageText } from "../kit.ts";
+import { Colour, type FastextLinks, type Language, pageText, textCells, textColour } from "../kit.ts";
 import type { Prompt, Prompts } from "./frame.ts";
 
 /** The Fastext colours, red to cyan (EN 300 706 clause 9.6). */
@@ -66,7 +66,8 @@ export class FastextBar extends Component<FastextBarProps> {
       const column = columns[index];
       const foreground = KEY_COLOURS[index];
       if (column !== null && column !== undefined && foreground !== undefined) {
-        canvas.coloured(0, column, foreground, shownLabel(label, page, canvas.language));
+        // The prompts are the way about the channel: never a stand-in (DEC-1987 item 6 keeps them the channel's words).
+        canvas.asWritten(0, column, [textColour(foreground), ...textCells(shownLabel(label, page, canvas.language))]);
       }
     });
   }

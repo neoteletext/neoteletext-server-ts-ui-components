@@ -4,8 +4,8 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
-import { leadCells, linePitch } from "../core/language.ts";
-import { cells, fit } from "../core/text.ts";
+import { leadCells } from "../core/language.ts";
+import { cells, fit, oneLineRows } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 export interface TextProps {
@@ -23,12 +23,17 @@ export interface TextProps {
  * One line of text in a colour: the colour takes the first cell, the text is
  * cut with a mark at the box's edge. Right to left it is flush with the
  * box's right edge; in a language whose marks take the rows around its
- * letters, it takes three rows, its text on the middle one (lineRows).
+ * letters, it takes three rows, its text on the middle one (marks.ts).
  */
 export class Text extends Component<TextProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
   override measure(space: Size): Size {
     const double = this.props.doubleHeight === true;
-    return { width: Math.min(space.width, cells(this.props.text) + leadCells(double)), height: Math.min(linePitch(this.language, double), space.height) };
+    return { width: Math.min(space.width, cells(this.props.text) + leadCells(double)), height: Math.min(oneLineRows(this.language, double), space.height) };
   }
 
   override paint(canvas: Canvas): void {

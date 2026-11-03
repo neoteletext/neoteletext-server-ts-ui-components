@@ -3,7 +3,8 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
-import { leadCells, linePitch } from "../core/language.ts";
+import { leadCells, type TextLanguage } from "../core/language.ts";
+import { layLines, type LineLayout, placed } from "../core/marks.ts";
 import { cells, headline, wrap } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
@@ -20,22 +21,38 @@ export interface ParagraphProps {
 
 /** Text wrapped to the box's width, a line a row. */
 export class Paragraph extends Component<ParagraphProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
   #lines(width: number): string[] {
     const most = this.props.lines;
     const room = width - leadCells(this.props.doubleHeight === true);
     return most === undefined ? wrap(this.props.text, room) : headline(this.props.text, room, most);
   }
 
-  override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(this.#lines(space.width).length * linePitch(this.language, this.props.doubleHeight === true), space.height) };
+  /** Where its lines go in `language`: a row each, two in double height, or with their mark rows (marks.ts). */
+  #layout(lines: readonly string[], language: TextLanguage): LineLayout {
+    const lead = leadCells(this.props.doubleHeight === true);
+    return layLines(
+      language,
+      lines.map((line) => placed(language, lead, line)),
+      this.props.doubleHeight === true,
+    );
   }
 
-  /** A line a row, or three in a language whose marks take the rows around it; right to left, each flush with the right edge. */
+  override measure(space: Size): Size {
+    return { width: space.width, height: Math.min(this.#layout(this.#lines(space.width), this.language).height, space.height) };
+  }
+
+  /** A line a row, or two apart with their mark rows in a language whose marks take the rows around it; right to left, each flush with the right edge. */
   override paint(canvas: Canvas): void {
     const double = this.props.doubleHeight === true;
-    const pitch = linePitch(canvas.language, double);
-    this.#lines(canvas.width).forEach((line, index) => {
-      canvas.line(index * pitch + canvas.language.markRows, canvas.start(cells(line) + leadCells(double)), this.props.foreground ?? Colour.White, line, double);
+    const lines = this.#lines(canvas.width);
+    const { rows } = this.#layout(lines, canvas.language);
+    lines.forEach((line, index) => {
+      canvas.line(rows[index] ?? 0, canvas.start(cells(line) + leadCells(double)), this.props.foreground ?? Colour.White, line, double);
     });
   }
 }

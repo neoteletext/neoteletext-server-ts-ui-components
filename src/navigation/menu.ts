@@ -19,7 +19,7 @@ import { Colour, Key } from "../kit.ts";
 import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
 import { Columns } from "../layout/columns.ts";
 import { Rows } from "../layout/layouts.ts";
-import { ListRows } from "../lists/list-rows.ts";
+import { itemsPitch, ListRows, type ListRowsProps } from "../lists/list-rows.ts";
 import { BAR_CELLS, ScrollBar } from "../lists/scroll.ts";
 import { Text } from "../text/styles.ts";
 import { Breadcrumbs } from "./breadcrumbs.ts";
@@ -122,31 +122,49 @@ export class Menu extends Control<MenuProps, MenuState> {
     return this.props.shown ?? Math.max(1, this.#open().items.length);
   }
 
+  /** Each choice's number, counting choices alone, as the digits choose them. */
+  #numbers(items: readonly MenuItem[]): (number | null)[] {
+    let counted = 0;
+    return items.map((item) => (item.rule === true ? null : (counted += 1)));
+  }
+
+  /** What the open menu's rows show, for laying them out with their mark rows where its language has them (ListPitch). */
+  #rowText(items: readonly MenuItem[]): Pick<ListRowsProps<MenuItem>, "items" | "lineText" | "render"> {
+    const numbers = this.#numbers(items);
+    return {
+      items,
+      render: (item, look, index) => menuRow(item, this.props.numbered === true ? (numbers[index] ?? null) : null, look),
+      lineText: (item, index) => (item.rule === true ? "" : `${this.props.numbered === true ? `${numbers[index] ?? ""} ` : ""}${item.label}`),
+    };
+  }
+
+  /** The rows its choices take: a row each, or with their mark rows where its language has them. */
+  get #rows(): number {
+    const { pitch, after } = itemsPitch(this.language, this.#rowText(this.#open().items));
+    return this.#shown * pitch + after;
+  }
+
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(space.height, this.#shown + (this.#titled ? 1 : 0)) };
+    return { width: space.width, height: Math.min(space.height, this.#rows + (this.#titled ? 1 : 0)) };
   }
 
   override render(): Child {
     const { items, labels } = this.#open();
-    // Each choice's number, counting choices alone, as the digits choose them.
-    let counted = 0;
-    const numbers = items.map((item) => (item.rule === true ? null : (counted += 1)));
     return h(
       Rows,
       {},
       this.#titled ? this.#title(labels) : null,
       h(
         Columns,
-        { widths: [null, BAR_CELLS], height: this.#shown },
+        { widths: [null, BAR_CELLS], height: this.#rows },
         h(ListRows<MenuItem>, {
-          items,
+          ...this.#rowText(items),
           top: this.state.top,
           shown: this.#shown,
           chosen: this.state.chosen,
           focused: this.focused,
           empty: this.props.empty ?? "no choices",
           disabled: (item: MenuItem) => this.disabled || !choosable(item),
-          render: (item, look, index) => menuRow(item, this.props.numbered === true ? (numbers[index] ?? null) : null, look),
           onPick: (index: number, session: number) => {
             this.#choose(index, session);
           },

@@ -9,7 +9,8 @@ import type { Canvas, CanvasCell } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import { Attribute, Colour, COLUMNS, textCells, SPACE, textColour } from "../kit.ts";
-import { linePitch } from "../core/language.ts";
+import type { TextLanguage } from "../core/language.ts";
+import { layLines, type LineLayout, placed } from "../core/marks.ts";
 
 export interface RunStyle {
   /** Its colour; white when absent. */
@@ -127,20 +128,36 @@ export interface RichTextProps {
 
 /** Runs of styled text, wrapped to the box. */
 export class RichText extends Component<RichTextProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
   #lines(width: number): CanvasCell[][] {
     const lines = layoutRuns(this.props.runs, width - (this.props.doubleHeight === true ? 1 : 0));
     return this.props.lines === undefined ? lines : lines.slice(0, this.props.lines);
   }
 
+  /** Where its lines go in `language`: a row each, two in double height, or with their mark rows (marks.ts). */
+  #layout(lines: readonly (readonly CanvasCell[])[], language: TextLanguage): LineLayout {
+    const lead = this.props.doubleHeight === true ? 1 : 0;
+    return layLines(
+      language,
+      lines.map((line) => placed(language, lead, line)),
+      this.props.doubleHeight === true,
+    );
+  }
+
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(this.#lines(space.width).length * linePitch(this.language, this.props.doubleHeight === true), space.height) };
+    return { width: space.width, height: Math.min(this.#layout(this.#lines(space.width), this.language).height, space.height) };
   }
 
   override paint(canvas: Canvas): void {
     const double = this.props.doubleHeight === true;
-    const pitch = linePitch(canvas.language, double);
-    this.#lines(canvas.width).forEach((line, index) => {
-      const row = index * pitch + canvas.language.markRows;
+    const lines = this.#lines(canvas.width);
+    const { rows } = this.#layout(lines, canvas.language);
+    lines.forEach((line, index) => {
+      const row = rows[index] ?? 0;
       const codes = double && canvas.doubleHeightAllowed(row) ? [Attribute.DoubleHeight, ...line] : line;
       canvas.codes(row, 0, codes);
       // A background still on at the end of the line is ended in the box's last cell.

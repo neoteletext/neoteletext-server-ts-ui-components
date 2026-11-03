@@ -5,6 +5,8 @@
 import type { Context, CookieOptions, LanguageTag } from "../kit.ts";
 import { ENGLISH, isListed, LANGUAGE_COOKIE } from "./language.ts";
 import type { Services } from "./services.ts";
+import type { StandIn } from "./stand-in.ts";
+import { StandIns } from "./stand-ins.ts";
 import { ViewerCookies } from "./viewer-cookies.ts";
 
 /** Each viewer's cookies and the language they choose by them. */
@@ -16,10 +18,23 @@ export class ViewerLanguages {
   /** What hears a viewer's language change. */
   readonly #changed: (session: number, language: LanguageTag) => void;
 
-  /** The channel's language, English when undefined; `changed` hears each viewer's change of language. */
-  constructor(channel: LanguageTag | undefined, changed: (session: number, language: LanguageTag) => void) {
+  /** The stand-in for the channel's words in each language (ComponentChannelOptions.standIn). */
+  readonly #standIns: StandIns;
+
+  /** The channel's language, English when undefined; `changed` hears each viewer's change of language; `standIn` gives text in a language for the channel's words. */
+  constructor(
+    channel: LanguageTag | undefined,
+    changed: (session: number, language: LanguageTag) => void,
+    standIn?: (language: LanguageTag) => string | undefined,
+  ) {
     this.#channel = channel ?? ENGLISH;
     this.#changed = changed;
+    this.#standIns = new StandIns(this.#channel, standIn);
+  }
+
+  /** The stand-in for the channel's words in `language`, or undefined where they are drawn as written. */
+  standIn(language: LanguageTag): StandIn | undefined {
+    return this.#standIns.of(language);
   }
 
   /** The services a component reaches them by, `context` the server call's, or null outside one. */

@@ -13,7 +13,7 @@ import type { PointerEvent } from "../core/events.ts";
 import { CHOSEN, DISABLED, DISABLED_CHIP, inkOn, LABEL } from "../core/look.ts";
 import { TOP_ROW } from "../core/mosaics.ts";
 import type { PageNeeds } from "../core/needs.ts";
-import { cells } from "../core/text.ts";
+import { cells, oneLineRows } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 import { KEY_COLOURS } from "../frame/fastext-bar.ts";
 
@@ -49,6 +49,11 @@ export interface TabStripProps {
 
 /** The tabs' names in a row, the chosen one marked; a click chooses one. It keeps nothing: its parent says which is chosen. */
 export class TabStrip extends Component<TabStripProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
   get #style(): TabStyle {
     return this.props.style ?? "chips";
   }
@@ -57,12 +62,15 @@ export class TabStrip extends Component<TabStripProps> {
     return styleNeeds(this.#style);
   }
 
+  /** One row, or in a language whose marks take the rows around its letters three, the names on the middle one (marks.ts); and the underline's row below. */
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(this.#style === "underline" ? 2 : 1, space.height) };
+    return { width: space.width, height: Math.min(oneLineRows(this.language) + (this.#style === "underline" ? 1 : 0), space.height) };
   }
 
   override paint(canvas: Canvas): void {
     const style = this.#style;
+    const row = canvas.language.markRows;
+    const underline = oneLineRows(canvas.language);
     let start = 0;
     for (const [index, name] of this.props.tabs.entries()) {
       const label = shown(name, index, style);
@@ -75,15 +83,15 @@ export class TabStrip extends Component<TabStripProps> {
       if (this.props.disabled === true) {
         // Every look the same when none can be chosen: the chosen one on a dim chip, the rest dim.
         if (chosen) {
-          canvas.chip(0, start, DISABLED_CHIP.background, DISABLED_CHIP.foreground, label);
+          canvas.chip(row, start, DISABLED_CHIP.background, DISABLED_CHIP.foreground, label);
         } else {
-          canvas.coloured(0, start + TEXT_IN_SLOT - 1, DISABLED, label);
+          canvas.coloured(row, start + TEXT_IN_SLOT - 1, DISABLED, label);
         }
       } else if (style === "underline") {
-        canvas.coloured(0, start + TEXT_IN_SLOT - 1, chosen ? Colour.Yellow : LABEL, label);
+        canvas.coloured(row, start + TEXT_IN_SLOT - 1, chosen ? Colour.Yellow : LABEL, label);
         if (chosen) {
           canvas.mosaics(
-            1,
+            underline,
             start + TEXT_IN_SLOT - 1,
             Colour.Yellow,
             Array.from({ length: cells(label) }, () => TOP_ROW),
@@ -91,20 +99,20 @@ export class TabStrip extends Component<TabStripProps> {
         }
       } else if (style === "fastext") {
         if (chosen) {
-          canvas.chip(0, start, keyColour, inkOn(keyColour), label);
+          canvas.chip(row, start, keyColour, inkOn(keyColour), label);
         } else {
-          canvas.coloured(0, start + TEXT_IN_SLOT - 1, keyColour, label);
+          canvas.coloured(row, start + TEXT_IN_SLOT - 1, keyColour, label);
         }
       } else if (chosen) {
-        canvas.chip(0, start, this.props.focused === false ? Colour.Cyan : CHOSEN.background, CHOSEN.foreground, label);
+        canvas.chip(row, start, this.props.focused === false ? Colour.Cyan : CHOSEN.background, CHOSEN.foreground, label);
       } else if (style === "chips") {
-        canvas.chip(0, start, Colour.Blue, Colour.White, label);
+        canvas.chip(row, start, Colour.Blue, Colour.White, label);
       } else {
-        canvas.coloured(0, start + TEXT_IN_SLOT - 1, LABEL, label);
+        canvas.coloured(row, start + TEXT_IN_SLOT - 1, LABEL, label);
       }
       if (this.props.disabled !== true) {
         // Where a chip's band is, chosen or not, so the control never moves.
-        canvas.chipControl(0, start, start + width, String(index));
+        canvas.chipControl(row, start, start + width, String(index));
       }
       start += width;
     }

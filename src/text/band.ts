@@ -3,8 +3,8 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
-import { leadCells, linePitch } from "../core/language.ts";
-import { cells, fit } from "../core/text.ts";
+import { leadCells } from "../core/language.ts";
+import { cells, fit, oneLineRows } from "../core/text.ts";
 
 /** The background's colour and New Background, before the text. */
 const BACKGROUND_CELLS = 2;
@@ -25,13 +25,18 @@ export interface BandProps {
 
 /** A row on a background of its own colour, its text in another: "TOP STORY", "THE MAGAZINES". */
 export class Band extends Component<BandProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
   override measure(space: Size): Size {
-    return { width: space.width, height: Math.min(linePitch(this.language, this.props.doubleHeight === true), space.height) };
+    return { width: space.width, height: Math.min(oneLineRows(this.language, this.props.doubleHeight === true), space.height) };
   }
 
   override paint(canvas: Canvas): void {
     const double = this.props.doubleHeight === true;
-    const rows = linePitch(canvas.language, double);
+    const rows = oneLineRows(canvas.language, double);
     for (let row = 0; row < rows; row += 1) {
       canvas.background(row, 0, this.props.background ?? Colour.Blue);
     }

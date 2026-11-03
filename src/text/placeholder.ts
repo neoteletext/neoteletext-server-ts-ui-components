@@ -4,8 +4,8 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
-import { leadCells, linePitch } from "../core/language.ts";
-import { cells, fit } from "../core/text.ts";
+import { leadCells } from "../core/language.ts";
+import { cells, fit, oneLineRows } from "../core/text.ts";
 import { Colour } from "../kit.ts";
 
 export interface PlaceholderProps {
@@ -17,6 +17,11 @@ export interface PlaceholderProps {
 
 /** What shows while something is still coming: a line centred in the box. */
 export class Placeholder extends Component<PlaceholderProps> {
+  /** Each line has its mark rows where its language needs them (marks.ts). */
+  override laysOutMarks(): boolean {
+    return true;
+  }
+
   override measure(space: Size): Size {
     return space;
   }
@@ -24,7 +29,7 @@ export class Placeholder extends Component<PlaceholderProps> {
   override paint(canvas: Canvas): void {
     const double = this.props.doubleHeight === true;
     const shown = fit(this.props.text, canvas.width - leadCells(double));
-    const rows = linePitch(canvas.language, double);
+    const rows = oneLineRows(canvas.language, double);
     const row = Math.max(0, Math.floor((canvas.height - rows + 1) / 2)) + canvas.language.markRows;
     canvas.line(row, Math.max(0, Math.floor((canvas.width - cells(shown) - leadCells(double)) / 2)), Colour.White, shown, double);
   }

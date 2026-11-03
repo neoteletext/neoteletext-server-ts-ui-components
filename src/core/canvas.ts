@@ -22,14 +22,13 @@
 // rows above and below (Thai, Lao) is written only on rows 2 to 23, which
 // keep its marks on the page, and only where the rows above and below it
 // are the component's own, since its marks overwrite them; a component of
-// such text gives each line three rows (lineRows). Double height is the policy of DEC-2222:
+// such text lays its lines out with their mark rows (marks.ts). Double height is the policy of DEC-2222:
 // never on rows 0, 23 and 24, never for such a language.
 
 import {
   Attribute,
   Colour,
   COLUMNS,
-  type Language,
   type LanguageTag,
   mosaicColour,
   type Screen,
@@ -52,7 +51,7 @@ import {
   writeLine,
 } from "./canvas-parts.ts";
 import { CanvasDeclarations } from "./canvas-declarations.ts";
-import { ENGLISH, languageOf } from "./language.ts";
+import { asWritten, ENGLISH, languageOf, type TextLanguage } from "./language.ts";
 import type { Box } from "./layout.ts";
 
 /** The language of the marks a component draws for itself: English, whose set has the arrows and signs they use. */
@@ -63,6 +62,7 @@ const NO_DOUBLE_HEIGHT_ROWS: ReadonlySet<number> = new Set([0, 22, 23, 24]);
 
 export { backgroundCodes, centredOnChip, CHIP_CELLS, CHIP_HEAD_CELLS, NEW_BACKGROUND_CELL, nothingDeclared } from "./canvas-parts.ts";
 export type { CanvasCell, Declared, PageRequests, Region } from "./canvas-parts.ts";
+export { asWritten, ownCodesOf, type TextLanguage } from "./language.ts";
 
 export class Canvas extends CanvasDeclarations {
   readonly #screen: Screen;
@@ -70,8 +70,8 @@ export class Canvas extends CanvasDeclarations {
   readonly #surround: Colour;
   /** The rows whose band ends back to the surround's, written once the component has painted (finish), so no text of its own falls on them. */
   readonly #bandRows = new Set<number>();
-  /** The language of the component's text. */
-  readonly language: Language;
+  /** The language of the component's text, with the stand-in for the channel's words where it has one. */
+  readonly language: TextLanguage;
 
   constructor(
     screen: Screen,
@@ -80,7 +80,7 @@ export class Canvas extends CanvasDeclarations {
     regions: Region[] = [],
     declared: Declared = nothingDeclared(),
     surround: Colour = Colour.Black,
-    language: Language = languageOf(ENGLISH, []),
+    language: TextLanguage = languageOf(ENGLISH, []),
   ) {
     super(box, requests, regions, declared);
     this.#screen = screen;
@@ -128,6 +128,18 @@ export class Canvas extends CanvasDeclarations {
     }
     const written = language === this.language.tag ? this.language : languageOf(language, []);
     writeLine(this.#screen, this.box, row, column, cells, written);
+  }
+
+  /**
+   * Writes `cells` as `codes` does, its text never as the channel's
+   * stand-in (stand-in.ts): what a viewer typed, and the Fastext row's
+   * prompts, which must read as they are written.
+   */
+  asWritten(row: number, column: number, cells: readonly CanvasCell[]): void {
+    if (row < 0 || row >= this.box.height) {
+      return;
+    }
+    writeLine(this.#screen, this.box, row, column, cells, asWritten(this.language));
   }
 
   /**
