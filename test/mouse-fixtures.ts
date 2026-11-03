@@ -2,8 +2,7 @@
 
 import assert from "node:assert/strict";
 
-import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing";
-import { keptTti } from "./kept-tti.ts";
+import { fakeOpus, Harness, keptTti, text } from "neoteletext-server-ts-protocol/testing";
 import { Action, type Box, type Child, Component, ComponentChannel, type Element, Frame, h, type PageSpec, readControls } from "../src/index.ts";
 import { Colour } from "../src/kit.ts";
 

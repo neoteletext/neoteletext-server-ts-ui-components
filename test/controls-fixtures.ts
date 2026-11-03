@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 
-import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, keptTti } from "neoteletext-server-ts-protocol/testing";
 import {
   Button,
   type Child,
@@ -18,7 +18,6 @@ import {
   type Size,
 } from "../src/index.ts";
 import { localEnhancement } from "../src/core/enhancement.ts";
-import { keptTti } from "./kept-tti.ts";
 import { Colour } from "../src/kit.ts";
 
 export const PAGE = 0x150;
@@ -37,7 +36,7 @@ export function frame(title: string, ...body: Child[]): ReturnType<typeof h> {
   return h(Frame, { title, background: Colour.Blue, prompts: PROMPTS }, ...body);
 }
 
-/** The TTI of the copy of `page` viewer 1 sees: its own while it has one, else the channel's (kept-tti.ts). */
+/** The TTI of the copy of `page` viewer 1 sees: its own while it has one, else the channel's (the kit's keptTti). */
 export function latestTti(channel: Harness, page: number): string {
   const seen = keptTti(channel, page);
   assert.ok(seen !== undefined, `page ${page.toString(16)} was published`);
