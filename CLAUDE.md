@@ -4,9 +4,11 @@ The NeoTeletext component library: class components for teletext
 channels in TypeScript, over the server's channel protocol
 (neoteletext-server-ts-protocol). These rules add to `~/.claude/CLAUDE.md`.
 
-## Gates and the work branch
+## How we work
 
-@~/devel/neoteletext-common/gates.md
+@~/devel/neoteletext-common/DEVELOPMENT.md
+
+That is the one document of how we work, for every NeoTeletext repository, with rdm as the record of all work (DEC-2162). This file says only what is particular to this repository; where the two differ, that document holds. The gates and the work branch are its section 9.
 
 ## Working on the code
 
