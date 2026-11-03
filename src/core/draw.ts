@@ -10,7 +10,7 @@
 // another sub-page's component. Display attributes are how a sub-page
 // looks, so each sub-page carries those it paints.
 
-import { Colour, COLUMNS, type Limits, mostNumbered, ROWS, Screen, type SubpageBody } from "../kit.ts";
+import { Colour, COLUMNS, type Limits, mostNumbered, ROWS, Screen, type Subpage } from "../kit.ts";
 import { Canvas, nothingDeclared, ownCodesOf, type PageRequests, type Region, type TextLanguage } from "./canvas.ts";
 import type { Box, LayoutChild, Size } from "./layout.ts";
 import { type LocalEnhancement, localEnhancement } from "./enhancement.ts";
@@ -45,7 +45,7 @@ export function drawHost(
 /** A page drawn: its sub-pages as the protocol carries them, and a key that is the same exactly when they are. */
 export interface DrawnPage {
   readonly key: string;
-  readonly subpages: readonly SubpageBody[];
+  readonly subpages: readonly Subpage[];
 }
 
 /** What the first sub-page's cells reach, for the pointer. */
@@ -201,18 +201,20 @@ function drawScreen(
 /** The sub-pages in their order, which the server numbers (DOC-1971), and what the first one's cells reach. */
 export function draw(shown: readonly FoundSubPage[], host: DrawHost): { readonly page: DrawnPage; readonly reach: Reach } {
   let reach = NO_REACH;
-  const subpages = shown.map(({ node, subPage }, index): SubpageBody => {
+  const subpages = shown.map(({ node, subPage }, index): Subpage => {
     const links = subPage.links();
+    const listed = subPage.listTitle();
+    const named = listed === undefined ? {} : { title: listed };
     if (subPage instanceof RawSubPage) {
       const { tti: text, title, background, foreground } = subPage.props;
       const band = title === undefined ? null : { title, background: background ?? Colour.Blue, foreground: foreground ?? Colour.White };
-      return { content: rawContent(text, links.fastext, band, host.languageOf(node).tag) };
+      return { content: rawContent(text, links.fastext, band, host.languageOf(node).tag), ...named };
     }
     const drawn = drawScreen(node, links, subPage.props.screenColour ?? null, index === 0, host);
     if (index === 0) {
       reach = drawn.reach;
     }
-    return { content: drawn.screen.content() };
+    return { content: drawn.screen.content(), ...named };
   });
   return { page: { key: JSON.stringify(subpages), subpages }, reach };
 }

@@ -39,6 +39,12 @@ export class SubPage<P extends SubPageProps = SubPageProps> extends Component<P>
     return { fastext: this.props.fastext ?? [null, null, null, null], index: this.props.index ?? null };
   }
 
+  /** Its name in the page's sub-page list (REQ-1503): its `title` prop when it has one, as a frame and a page given whole do; the kit cuts it to the list's 40 characters. */
+  listTitle(): string | undefined {
+    const { props } = this;
+    return "title" in props && typeof props.title === "string" ? props.title : undefined;
+  }
+
   override measure(space: Size): Size {
     return space;
   }
