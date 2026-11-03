@@ -3,6 +3,32 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 19.0.0 (3 November 2026)
+
+### To take it
+
+- **Take the protocol kit 11.0.0** beside it: the server speaks program
+  protocol 10 (DEC-2326), and the kit stops on any other.
+
+### What changed
+
+- **What a viewer types is text from outside** (DEC-2326, REQ-2150): the
+  text field, the segment field and the typed line of TypeToConfirm and
+  the multi-tap field send it as runs marked `outside`, so a character
+  its language cannot show becomes a stand-in instead of refusing the
+  page. `Canvas.typed` writes such text for a component of your own.
+- **`Services.deny(session, status)`** ends a viewer's selection with no
+  page, as the kit's `Context.deny` does (DEC-2375).
+- **Sub-pages are named in their page's sub-page list** by their frame's
+  or page given whole's title, cut to 40 characters (REQ-1503).
+- **`PageSpec.level`**: `"3.5"` says the page's text is written for
+  Level 3.5, which the server then keeps it within (REQ-2151).
+- **A drawn page stops at the 8,069 sub-pages the kit numbers**, reporting
+  the rest, instead of making the kit throw past them (TODO-1579 in rdm).
+- **A render that reads the services before it is mounted** is named in
+  the channel's log at start, since the probe of the page's needs cannot
+  see under it.
+
 ## 18.0.0 (3 November 2026)
 
 ### To take it
