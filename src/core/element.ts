@@ -10,6 +10,14 @@ import type { Component } from "./component.ts";
 export interface LayoutProps {
   /** The language of its text and of everything under it that names none (REQ-2152 item 1): a tag of the server's languages; the page's, or the viewer's, when absent. */
   readonly language?: LanguageTag;
+  /**
+   * Whether its text, and everything under it that says nothing, came from
+   * outside the program (a dataset, a feed): the server then shows a
+   * stand-in for a character its language cannot show, instead of refusing
+   * the page (DEC-2326, REQ-2150 item 3). The program's own words are left
+   * unmarked, so a character it writes wrongly is still refused.
+   */
+  readonly outside?: boolean;
   /** A fixed width, in cells. */
   readonly width?: number;
   /** A fixed height, in rows. */

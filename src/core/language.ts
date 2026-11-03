@@ -48,7 +48,7 @@ export function asWritten(language: Language): Language {
 }
 
 /** The nearest `language` prop from `node` up, or undefined when none names one. */
-export function namedLanguage(node: Node | null): LanguageTag | undefined {
+function namedLanguage(node: Node | null): LanguageTag | undefined {
   for (let at = node; at !== null; at = at.parent) {
     const { language } = at.element.props;
     if (language !== undefined) {
@@ -58,12 +58,28 @@ export function namedLanguage(node: Node | null): LanguageTag | undefined {
   return undefined;
 }
 
+/** Whether the nearest `outside` prop from `node` up marks its text as from outside the program; unmarked when none says. */
+function markedOutside(node: Node | null): boolean {
+  for (let at = node; at !== null; at = at.parent) {
+    const { outside } = at.element.props;
+    if (outside !== undefined) {
+      return outside;
+    }
+  }
+  return false;
+}
+
+/** `language`, marked as from outside the program when `outside`. */
+export function fromOutside(language: TextLanguage, outside: boolean): TextLanguage {
+  return outside ? { ...language, outside: true } : language;
+}
+
 /**
  * The language a component's text is drawn in: `named`, a `language` prop
  * or the page's, as written; else the `viewer`'s, with the channel's
  * stand-in for its words in it where there is one (`standIn`).
  */
-export function textLanguageOf(
+function textLanguageOf(
   named: LanguageTag | null,
   viewer: () => LanguageTag,
   languages: readonly Language[],
@@ -75,6 +91,21 @@ export function textLanguageOf(
   const language = languageOf(viewer(), languages);
   const found = standIn(language.tag);
   return found === undefined ? language : { ...language, standIn: found };
+}
+
+/**
+ * The language `node`'s text is drawn in (textLanguageOf): its nearest
+ * `language` prop's, else `page`'s, else the `viewer`'s; from outside the
+ * program when its nearest `outside` prop says so.
+ */
+export function nodeLanguage(
+  node: Node | null,
+  page: LanguageTag | null,
+  viewer: () => LanguageTag,
+  languages: readonly Language[],
+  standIn: (language: LanguageTag) => StandIn | undefined,
+): TextLanguage {
+  return fromOutside(textLanguageOf(namedLanguage(node) ?? page, viewer, languages, standIn), markedOutside(node));
 }
 
 /** Whether `value` is a tag of `languages`: a prop or a cookie, which may name anything, is taken only then. */

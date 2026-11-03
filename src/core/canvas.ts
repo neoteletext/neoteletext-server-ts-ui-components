@@ -48,7 +48,7 @@ import {
   writeLine,
 } from "./canvas-parts.ts";
 import { CanvasDeclarations } from "./canvas-declarations.ts";
-import { asWritten, ENGLISH, languageOf, type TextLanguage } from "./language.ts";
+import { asWritten, ENGLISH, fromOutside, languageOf, type TextLanguage } from "./language.ts";
 import type { Box } from "./layout.ts";
 
 /** The language of the marks a component draws for itself: English, whose set has the arrows and signs they use. */
@@ -136,7 +136,7 @@ export class Canvas extends CanvasDeclarations {
     if (row < 0 || row >= this.box.height) {
       return;
     }
-    writeLine(this.#screen, this.box, row, column, cells, asWritten(this.language));
+    writeLine(this.#screen, this.box, row, column, cells, fromOutside(asWritten(this.language), this.language.outside === true));
   }
 
   /** Writes `cells` as `asWritten` does, as text from outside the program: what a viewer typed, never refused for a character (DEC-2326). */
@@ -148,12 +148,13 @@ export class Canvas extends CanvasDeclarations {
    * Writes a mark the component draws for itself (an arrow, a sort mark, a
    * separator), after the colour `foreground` takes a cell when it is
    * given: in English, whose set every page reaches whatever its language
-   * (REQ-2152 item 6), so a mark is never one a language's own sets lack.
+   * (REQ-2152 item 6), so a mark is never one a language's own sets lack;
+   * and never as from outside the program, since the component wrote it.
    * Answers the column after it.
    */
   mark(row: number, column: number, text: string, foreground: Colour | null = null): number {
     const cells = [...(foreground === null ? [] : [textColour(foreground)]), ...textCells(text)];
-    this.codes(row, column, cells, MARK_LANGUAGE);
+    writeLine(this.#screen, this.box, row, column, cells, languageOf(MARK_LANGUAGE, []));
     return column + cells.length;
   }
 

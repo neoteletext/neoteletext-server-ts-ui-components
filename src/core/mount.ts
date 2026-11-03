@@ -8,7 +8,7 @@ import type { ComponentHost, FocusableAt } from "./component-host.ts";
 import type { Box } from "./layout.ts";
 import { draw, type DrawHost, drawHost, type DrawnPage, type Reach, shownSubPages } from "./draw.ts";
 import type { Element } from "./element.ts";
-import { namedLanguage, type TextLanguage, textLanguageOf } from "./language.ts";
+import { nodeLanguage, type TextLanguage } from "./language.ts";
 import type { ComposeEvent, KeyEvent, TextEvent } from "./events.ts";
 import { FocusHistory, routeKey } from "./focus.ts";
 import { emptyGrid } from "./grid.ts";
@@ -151,10 +151,10 @@ export class Mount implements ComponentHost {
     return this.#languageOfNode(this.#tree.nodes.get(component) ?? null);
   }
 
-  /** The nearest `language` prop from `node` up, else the page's, else the viewer's, with the channel's stand-in for it when it has one. */
+  /** The nearest `language` prop from `node` up, else the page's, else the viewer's, with the channel's stand-in for it when it has one; from outside the program when the nearest `outside` prop says so. */
   #languageOfNode(node: Node | null): TextLanguage {
     const { services } = this;
-    return textLanguageOf(namedLanguage(node) ?? this.#host.pageLanguage, () => services.language(services.session), services.languages(), this.#host.standIn);
+    return nodeLanguage(node, this.#host.pageLanguage, () => services.language(services.session), services.languages(), this.#host.standIn);
   }
 
   /** Draws every component again: what they all read changed (the viewer's language). */

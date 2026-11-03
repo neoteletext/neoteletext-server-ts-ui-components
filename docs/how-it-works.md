@@ -150,6 +150,7 @@ repositories beside this one.
 | The browser sends at most 120 input units a second | DOC-1943 |
 | 256 messages queued for a connection; past that, the newest are dropped | crates/teletext-native/src/hub.rs |
 | A stored sound of at most two minutes | DOC-1972 |
+| A character a text run's language cannot show refuses the whole page, unless the run is marked as from outside the program: what a viewer types is, and text from a dataset or a feed is when its component, or one above it, has the prop `outside: true`; the server then shows a stand-in for the character | DEC-2326 |
 
 The server records no addresses and no typed text (DOC-1968). A channel learns the pointer only over its own open page, while keys
 go to it: its clicks, drags and moves at most 60 a second, and nothing of
