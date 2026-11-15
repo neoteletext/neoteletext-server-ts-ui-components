@@ -32,7 +32,7 @@ const SUBPAGE_DIGITS = 4;
 function engine(): string {
   const path = process.env["NEOTTX"];
   if (path === undefined || path === "") {
-    throw new Error("set NEOTTX to the engine's neottx program (neoteletext-engine: cargo build --release)");
+    throw new Error("set NEOTTX to the engine's neottx program (neoteletext-renderer-teletext: cargo build --release)");
   }
   const version = execFileSync(path, ["--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   if (version !== ENGINE_VERSION) {
