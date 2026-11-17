@@ -72,6 +72,13 @@ export function dispatchInput(mount: Mount, session: number, input: Input): bool
     case "hover": {
       return mount.hover(session, input.action === "enter", input.row, input.column);
     }
+    case "pick":
+    case "drawingHover": {
+      // A page drawn in ReGIS is a picture, not a tree of components: what
+      // the pointer met in it is the channel's to take, through its
+      // application's input, and no component takes it.
+      return false;
+    }
     case "focus": {
       mount.focusChanged(true);
       return false;
