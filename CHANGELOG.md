@@ -3,6 +3,40 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 22.0.0 (18 November 2026)
+
+### To take it
+
+- **Take the protocol kit 14.0.0 with it**, which speaks program protocol
+  12: the library pins the kit exactly, and a program on an older kit
+  stops at the server's `start`. A channel that sends synthesizer sounds
+  through the kit renames them as DEC-6461 says; the library sends none.
+- **Every browser tab is a session of its own (DEC-6443, the kit
+  13.0.0).** The `session` a component, a handler or the bus is given is
+  now one tab's, numbered as its connection. Nothing has to change to
+  compile; what a channel keeps by session it now keeps by tab.
+
+### What changed
+
+- **By tab, where it was by session:** a viewer's own copy of a page and
+  everything in it (the keys' place, a field's text, a wizard's step, the
+  pointer); what `play`, `stream`, `redirect` and `deny` reach; a page's
+  parameters and params; the bus's events for one session; and a cookie a
+  component sets, which reaches the tab that set it at once and the
+  viewer's other tabs when they next connect, so a language chosen in one
+  tab is drawn in that tab alone until then.
+- **`ended` comes for each tab when the server's session closes,** five
+  minutes after the viewer's last tab closed, not when the tab closes.
+- **State kept for a session (`keptAs`, a poll's vote) is kept under the
+  tab's number.** A tab that connects again has another number and starts
+  without it, and the server numbers connections from 1 each time it
+  starts, so a value kept in a store can be read by another viewer's tab
+  of the same number after a restart. Not yet settled: do not keep
+  anything private this way until it is.
+- **`pick` and `drawingHover`,** the inputs of a page drawn in ReGIS, are
+  given to no component: they are the channel's to take through its
+  application's input.
+
 ## 21.1.0 (4 November 2026)
 
 ### To take it
