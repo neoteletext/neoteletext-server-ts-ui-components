@@ -2,7 +2,7 @@
 // server's languages (start.languages, REQ-2215), each with the way it is
 // written.
 // A component's language is the nearest `language` prop above it, or the
-// page's, or the viewer's (the `language` cookie), or the channel's.
+// page's, or the viewer's (the one they chose), or the channel's.
 
 import type { Language, LanguageTag } from "../kit.ts";
 import type { Node } from "./node.ts";
@@ -10,11 +10,8 @@ import type { StandIn } from "./stand-in.ts";
 import { OWN_CODES } from "./own-codes.ts";
 import { UNSHOWN } from "./unshown.ts";
 
-/** The language of a channel that names none, and of a viewer with no `language` cookie: Latin English. */
+/** The language of a channel that names none, and of a viewer who chose none: Latin English. */
 export const ENGLISH: LanguageTag = "en";
-
-/** The cookie a viewer's language is kept in (REQ-2217 item 2). */
-export const LANGUAGE_COOKIE = "language";
 
 /** The cells Double Height takes with a line's colour before its text (Canvas.line). */
 const DOUBLE_HEIGHT_LEAD = 2;
@@ -108,7 +105,7 @@ export function nodeLanguage(
   return fromOutside(textLanguageOf(namedLanguage(node) ?? page, viewer, languages, standIn), markedOutside(node));
 }
 
-/** Whether `value` is a tag of `languages`: a prop or a cookie, which may name anything, is taken only then. */
+/** Whether `value` is a tag of `languages`: a prop or a kept choice, which may name anything, is taken only then. */
 export function isListed(value: unknown, languages: readonly Language[]): value is LanguageTag {
   return typeof value === "string" && languages.some((language) => language.tag === value);
 }

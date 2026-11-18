@@ -57,7 +57,7 @@ test("a program that starts again gives a component the parameters of the connec
   }
   const harness = channel([{ page: PAGE, title: "Reader", perViewer: true, root: (): Element => frame("Reader", h(Reader, {})) }]);
   read.length = 0;
-  harness.channel.connected(1, 1, 1, { page: PAGE, sub: ANY_SUB }, [], "150", "a=1");
+  harness.channel.connected(1, 1, { page: PAGE, sub: ANY_SUB }, "150", "a=1");
   assert.deepEqual(read, ["a=1"]);
 });
 

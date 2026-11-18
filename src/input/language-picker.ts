@@ -1,14 +1,12 @@
 // LanguagePicker: the server's languages to choose from (REQ-2217 item 3),
 // each by its name in its own language where the channel gives one and by
 // its English name otherwise, in a list that scrolls. A choice sets the
-// viewer's `language` cookie, which draws every page they have open again
-// in it (Services.setCookie): a channel needs no code of its own to switch
+// viewer's language, which draws every page they have open again in it
+// (Services.setLanguage): a channel needs no code of its own to switch
 // language.
 
 import { Component } from "../core/component.ts";
 import { type Child, h } from "../core/element.ts";
-import { LANGUAGE_COOKIE } from "../core/language.ts";
-import { LANGUAGE_COOKIE_SECONDS } from "../core/channel-options.ts";
 import type { Language, LanguageTag } from "../kit.ts";
 import { ChoiceList } from "../lists/choice-list.ts";
 import { Text } from "../text/styles.ts";
@@ -21,7 +19,7 @@ export interface LanguagePickerProps extends ControlProps {
   readonly names?: Readonly<Partial<Record<LanguageTag, string>>>;
   /** The languages it offers, in this order; every one the server lists when absent. */
   readonly languages?: readonly LanguageTag[];
-  /** A viewer chose a language: after their cookie is set. */
+  /** A viewer chose a language: after it is set. */
   readonly onChoose?: (language: LanguageTag, connection: number) => void;
 }
 
@@ -62,7 +60,7 @@ export class LanguagePicker extends Component<LanguagePickerProps> {
         if (chosen === undefined) {
           return;
         }
-        this.services.setCookie(viewer, LANGUAGE_COOKIE, chosen.tag, { path: "/", maxAge: LANGUAGE_COOKIE_SECONDS, sameSite: "Lax" });
+        this.services.setLanguage(viewer, chosen.tag);
         onChoose?.(chosen.tag, viewer);
       },
     });

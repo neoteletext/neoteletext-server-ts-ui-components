@@ -268,9 +268,9 @@ test("a stream is sent as a live Opus sound, its packets ahead of real time a ti
         "first" in sent &&
         "packets" in sent &&
         typeof sent.first === "number" &&
-        typeof sent.packets === "string" &&
+        sent.packets instanceof Uint8Array &&
         generationOf(sent)?.[0] === latest()
-        ? [{ first: sent.first, count: Buffer.from(sent.packets, "base64").length / OPUS_PACKET_BYTES }]
+        ? [{ first: sent.first, count: sent.packets.length / OPUS_PACKET_BYTES }]
         : [];
     });
   const sentBy = (): number => packets().reduce((sum, each) => sum + each.count, 0);

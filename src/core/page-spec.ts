@@ -2,7 +2,7 @@
 // the components on it need of their page (needs.ts) where the spec does
 // not say: found once, by a probe of its root.
 
-import type { LanguageTag, PageDescription, PageEntry, WireTextLevel } from "../kit.ts";
+import type { LanguageTag, PageDescription, PageEntry, TextLevel } from "../kit.ts";
 import type { ColourTable } from "./rollover.ts";
 import type { Element } from "./element.ts";
 import { type PageNeeds, probeNeeds } from "./needs.ts";
@@ -30,7 +30,7 @@ export interface PageSpec {
    */
   readonly language?: LanguageTag;
   /** The presentation level its text is written for (REQ-2151): `"3.5"` keeps it within the standard's own means, which the server checks; NeoTeletext's own level when absent. */
-  readonly level?: WireTextLevel;
+  readonly level?: TextLevel;
   /** Its controls' colours under the pointer (rollover.ts): the library's ROLLOVER_COLOURS when absent, null for the receiver's own hover look. */
   readonly rollover?: ColourTable | null;
   /**

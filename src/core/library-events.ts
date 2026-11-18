@@ -25,6 +25,6 @@ export interface LibraryEvents {
   readonly parameters: { readonly connection: number; readonly parameters: string | null };
   /** A viewer chose another language (REQ-2217 item 2): their pages are drawn again in it. */
   readonly language: { readonly connection: number; readonly language: LanguageTag };
-  /** A viewer went: what a component keeps for them, beyond its own copy, can go. */
-  readonly ended: { readonly connection: number };
+  /** A connection closed for good (the kit's gone): what a component keeps for it, beyond its own copy, can go. */
+  readonly gone: { readonly connection: number };
 }

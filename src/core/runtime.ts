@@ -3,7 +3,7 @@
 // - `start`: every page is mounted once as the channel's copy, and published.
 // - `opened`: a page with a copy for each viewer is mounted for that viewer (or found, if it was kept while they were away).
 // - `input`: to the viewer's mount, or the channel's for a shared page; `wake`: the timers that are due run.
-// - `leftPage` and `ended`: the viewer's mounts are unmounted; what their components keep (REQ-1058) stays in the store.
+// - `leftPage` and `gone`: the viewer's mounts are unmounted; what their components keep (REQ-1058) stays in the store.
 // After each call every mount with something new renders, and a page is published only if its TTI changed. A viewer's copy is published only while it
 // differs from the channel's; when it is the same again it is released, so a viewer who only reads costs the server nothing.
 
@@ -164,7 +164,7 @@ export class ComponentChannel implements Application {
     });
   }
 
-  ended(connection: number, context: Context): void {
+  gone(connection: number, context: Context): void {
     this.#run(context, () => {
       for (const mount of this.#viewers.get(connection)?.values() ?? []) {
         mount.unmount();
@@ -179,7 +179,7 @@ export class ComponentChannel implements Application {
       for (const watching of this.#watching.values()) {
         watching.delete(connection);
       }
-      this.bus.emit("ended", { connection });
+      this.bus.emit("gone", { connection });
     });
   }
 

@@ -10,7 +10,7 @@
 // another sub-page's component. Display attributes are how a sub-page
 // looks, so each sub-page carries those it paints.
 
-import { Colour, COLUMNS, type Limits, mostNumbered, ROWS, Screen, type Subpage, type WireTextLevel } from "../kit.ts";
+import { Colour, COLUMNS, type Limits, mostNumbered, ROWS, Screen, type Subpage, type TextLevel } from "../kit.ts";
 import { Canvas, nothingDeclared, ownCodesOf, type PageRequests, type Region, type TextLanguage } from "./canvas.ts";
 import type { Box, LayoutChild, Size } from "./layout.ts";
 import { type LocalEnhancement, localEnhancement } from "./enhancement.ts";
@@ -32,7 +32,7 @@ export interface DrawHost {
   /** The language of a node's text: its nearest `language` prop, else the page's or the viewer's. */
   readonly languageOf: (node: Node) => TextLanguage;
   /** The level the page's text is written for, or null for NeoTeletext's own (REQ-2151). */
-  readonly level: WireTextLevel | null;
+  readonly level: TextLevel | null;
 }
 
 /** What drawing page `page` needs, from its mount's `host` and `languageOf` its nodes. */
@@ -42,7 +42,7 @@ export function drawHost(
     readonly rollover: ColourTable | null;
     readonly report: (text: string) => void;
     readonly services: { limits(): Limits };
-    readonly level: WireTextLevel | null;
+    readonly level: TextLevel | null;
   },
   languageOf: (node: Node) => TextLanguage,
 ): DrawHost {

@@ -57,7 +57,7 @@ export class Poll extends Control<PollProps, PollState> {
           this.setState({ votes });
         }
       }),
-      this.services.bus.on("ended", ({ connection }) => {
+      this.services.bus.on("gone", ({ connection }) => {
         tally.forget(connection);
       }),
     );

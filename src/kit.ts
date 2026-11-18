@@ -2,3 +2,5 @@
 // the library to import it from.
 
 export * from "neoteletext-server-ts-protocol";
+// The protocol's own types, generated from the server's schema, that the library names.
+export type { TextLevel, TextRun } from "neoteletext-server-ts-protocol/protocol";

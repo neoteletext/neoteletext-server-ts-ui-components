@@ -107,7 +107,7 @@ test("a viewer's own copy is sent only once it differs from the shared one, and 
   assert.deepEqual(events, ["mount count", "update count 0->0", "mount count", "update count 0->0", "update count 0->1", "unmount count"]);
 });
 
-test("start ends every viewer: the kit's ended comes first, each mount goes once, and a viewer that returns starts afresh", () => {
+test("start ends every viewer: the kit's gone comes first, each mount goes once, and a viewer that returns starts afresh", () => {
   const harness = channel([{ page: PAGE, title: "Test", perViewer: true, root: (): Element => frame("Counter", h(Counter, { label: "count" })) }]);
   harness.join(7, PAGE);
   harness.press(7, Key.Enter);
@@ -163,7 +163,11 @@ test("a timer runs while its component is on the page and stops when it leaves",
   harness.open(5, OTHER);
   const before = harness.sent.length;
   harness.advance(5_000);
-  assert.equal(harness.sent.slice(before).filter((message) => message["session"] === 5).length, 0, "nothing more for the viewer who left");
+  assert.equal(
+    harness.sent.slice(before).filter((message) => Array.isArray(message["connections"]) && message["connections"].includes(5)).length,
+    0,
+    "nothing more for the viewer who left",
+  );
 });
 
 test("a picture's TTI with CR LF line ends draws no Double Height: a CR kept in a row would hide the row below", () => {

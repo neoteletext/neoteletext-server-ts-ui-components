@@ -1,21 +1,21 @@
-// Each viewer's language (REQ-2217 item 2): the tag in their `language`
-// cookie when it names one of the server's languages, else the channel's;
-// and their cookies, which a component reads and sets through the kit.
+// Each connection's language (REQ-2217 item 2): the one its viewer chose
+// with a LanguagePicker when it is one of the server's languages, else the
+// channel's.
 
-import type { Context, CookieOptions, LanguageTag } from "../kit.ts";
-import { ENGLISH, isListed, LANGUAGE_COOKIE } from "./language.ts";
+import type { Context, LanguageTag } from "../kit.ts";
+import { ENGLISH, isListed } from "./language.ts";
 import type { Services } from "./services.ts";
 import type { StandIn } from "./stand-in.ts";
 import { StandIns } from "./stand-ins.ts";
-import { ViewerCookies } from "./viewer-cookies.ts";
 
-/** Each viewer's cookies and the language they choose by them. */
+/** The language each connection's viewer chose. */
 export class ViewerLanguages {
-  readonly #cookies = new ViewerCookies();
+  /** By connection, the tag its viewer chose. */
+  readonly #chosen = new Map<number, LanguageTag>();
   /** The channel's language: a viewer's who chose none, and the copy every viewer shares. */
   readonly #channel: LanguageTag;
 
-  /** What hears a viewer's language change. */
+  /** What hears a viewer's change of language. */
   readonly #changed: (connection: number, language: LanguageTag) => void;
 
   /** The stand-in for the channel's words in each language (ComponentChannelOptions.standIn). */
@@ -38,57 +38,47 @@ export class ViewerLanguages {
   }
 
   /** The services a component reaches them by, `context` the server call's, or null outside one. */
-  services(context: () => Context | null): Pick<Services, "language" | "cookies" | "setCookie"> {
-    const inCall = (): Context => {
-      const now = context();
-      if (now === null) {
-        throw new Error("a component reached the channel outside a server call");
-      }
-      return now;
-    };
+  services(context: () => Context | null): Pick<Services, "language" | "setLanguage"> {
     return {
-      language: (viewer) => this.of(context(), viewer),
-      cookies: (viewer) => this.cookies(inCall(), viewer),
-      setCookie: (viewer, name, value, options = {}) => {
-        this.set(inCall(), viewer, name, value, options);
+      language: (connection) => this.of(context(), connection),
+      setLanguage: (connection, language) => {
+        const now = context();
+        if (now === null) {
+          throw new Error("a component reached the channel outside a server call");
+        }
+        this.set(now, connection, language);
       },
     };
   }
 
-  /** The viewer's cookies, as the server gave them with what was set since. */
-  cookies(context: Context, connection: number): Readonly<Record<string, string>> {
-    return this.#cookies.of(connection, context.cookies(connection));
-  }
-
-  /** The viewer's language: their `language` cookie when it names one of the server's languages, else the channel's; the channel's for the shared copy (null) and outside a call. */
+  /** The connection's language: the one its viewer chose when the server lists it, else the channel's; the channel's for the shared copy (null) and outside a call. */
   of(context: Context | null, connection: number | null): LanguageTag {
     if (context === null || connection === null) {
       return this.#channel;
     }
-    const chosen = this.cookies(context, connection)[LANGUAGE_COOKIE];
+    const chosen = this.#chosen.get(connection);
     return isListed(chosen, context.languages()) ? chosen : this.#channel;
   }
 
-  /** Whether the viewer's language is not the channel's. */
+  /** Whether the connection's language is not the channel's. */
   differs(context: Context | null, connection: number): boolean {
     return this.of(context, connection) !== this.#channel;
   }
 
-  /** Sets a cookie on each connection the viewer has open; a change of their language is heard. */
-  set(context: Context, connection: number, name: string, value: string, options: CookieOptions): void {
-    const before = this.of(context, connection);
-    for (const open of context.connectionsOf(connection)) {
-      context.cookie(open, name, value, options);
+  /** The connection's viewer chose `language`: one the server does not list is no choice; a change is heard. */
+  set(context: Context, connection: number, language: LanguageTag): void {
+    if (!isListed(language, context.languages())) {
+      return;
     }
-    this.#cookies.set(connection, name, value, options);
-    const after = this.of(context, connection);
-    if (after !== before) {
-      this.#changed(connection, after);
+    const before = this.of(context, connection);
+    this.#chosen.set(connection, language);
+    if (language !== before) {
+      this.#changed(connection, language);
     }
   }
 
-  /** The viewer went. */
+  /** The connection is gone. */
   forget(connection: number): void {
-    this.#cookies.forget(connection);
+    this.#chosen.delete(connection);
   }
 }

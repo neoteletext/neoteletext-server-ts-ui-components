@@ -80,7 +80,7 @@ await runChannel([
   Fastext prompts, red, green, yellow and cyan.
 - **The bus** (`this.services.bus`) carries what one page's components
   tell another's: polls' votes, toasts, the server's figures, and
-  `ended` when a viewer goes.
+  `gone` when a connection closes.
 
 A generic class component names its type in `h`, as
 `h(ChoiceList<Round>, { items: rounds, … })`: TypeScript reads a class's

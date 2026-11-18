@@ -122,8 +122,8 @@ export class LiveStream {
       packets.set(packet, index * packetBytes);
     });
     context.sound(
-      { session: connection },
-      { opusPackets: { handle: STREAM_HANDLE, generation: this.generation, packetBytes, first: this.#sent % WRAP, packets } },
+      { connection },
+      { kind: "opus_packets", handle: STREAM_HANDLE, generation: this.generation, packet_bytes: packetBytes, first: this.#sent % WRAP, packets },
     );
     this.#sent += count;
   }

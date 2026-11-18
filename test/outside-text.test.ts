@@ -7,12 +7,12 @@ import { test } from "node:test";
 
 import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
 import { ChoiceList, ComponentChannel, type Element, Frame, h, Paragraph, Rows, Text, TextField } from "../src/index.ts";
-import { Colour, type WireTextRun } from "../src/kit.ts";
+import { Colour, type TextRun } from "../src/kit.ts";
 
 const PAGE = 0x150;
 
 /** The text runs of the latest sub-page `connection` was sent of `page`. */
-function lastRuns(harness: Harness, connection: number, page: number): readonly WireTextRun[] {
+function lastRuns(harness: Harness, connection: number, page: number): readonly TextRun[] {
   return (harness.channel.copy(connection, page) ?? harness.channel.copy("channel", page))?.at(-1)?.content.text ?? [];
 }
 

@@ -7,6 +7,8 @@
 // sound other than the one it names now.
 
 import type { Context, EncodedOpus, OpusEncoder } from "../kit.ts";
+import type { SoundOpusMember } from "neoteletext-server-ts-protocol/protocol";
+import { playMember } from "./sound-commands.ts";
 import { RATE, type Sound } from "./sound.ts";
 import { STREAM_HANDLE } from "./stream.ts";
 
@@ -76,8 +78,8 @@ export class SoundObjects {
     if (encoded === null) {
       return;
     }
-    const object = { opus: { handle, generation: GENERATION, ...encoded } };
-    const play = { play: { channel: SOUND_CHANNEL, handle, generation: GENERATION, page } };
+    const object: SoundOpusMember = { kind: "opus", handle, generation: GENERATION, ...encoded };
+    const play = playMember(SOUND_CHANNEL, handle, GENERATION, page);
     if (connection === null) {
       // Everyone on the page: whoever arrived since may not have it, so it goes with each play.
       context.sound({ page }, object);
@@ -86,11 +88,11 @@ export class SoundObjects {
     }
     const sent = this.#sent.get(connection) ?? new Set<string>();
     if (!sent.has(sound.name)) {
-      context.sound({ session: connection }, object);
+      context.sound({ connection }, object);
       sent.add(sound.name);
       this.#sent.set(connection, sent);
     }
-    context.sound({ session: connection }, play);
+    context.sound({ connection }, play);
   }
 
   /** The viewer went. */

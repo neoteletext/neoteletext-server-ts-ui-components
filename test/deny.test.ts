@@ -6,11 +6,11 @@ import { test } from "node:test";
 
 import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
 import { type Child, Component, ComponentChannel, type Element, Frame, h } from "../src/index.ts";
-import { Colour, type WireDeniedStatus } from "../src/kit.ts";
+import { Colour, type DeniedStatus } from "../src/kit.ts";
 
 const OPEN = 0x150;
 const MEMBERS = 0x151;
-const FORBIDDEN: WireDeniedStatus = 403;
+const FORBIDDEN: DeniedStatus = 403;
 
 /** A page for members only, which nobody is: it refuses every viewer as it is mounted for them. */
 class MembersOnly extends Component {

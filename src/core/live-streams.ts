@@ -7,8 +7,9 @@
 // of what it holds (a stretched source's speed undone), so a player can
 // take it up there again at any speed.
 
-import { type Context, FULL_GAIN, type OpusEncoder } from "../kit.ts";
+import type { Context, OpusEncoder } from "../kit.ts";
 import { LiveStream } from "./live-stream.ts";
+import { FULL_GAIN, gainMember, playMember, stopMember } from "./sound-commands.ts";
 import type { Services } from "./services.ts";
 import { FIRST_PACKETS_MS, type Listening, SECOND_MS, STREAM_CHANNEL, STREAM_HANDLE, type StreamSource, TICK_MS, WRAP } from "./stream.ts";
 
@@ -64,9 +65,9 @@ export class LiveStreams {
     const generation = ((this.#generations.get(connection) ?? 0) + 1) % WRAP;
     this.#generations.set(connection, generation);
     const encoder = this.#encoder.stream(source.rate);
-    context.sound({ session: connection }, { opusLive: { handle: STREAM_HANDLE, generation, packetBytes: encoder.packetBytes } });
+    context.sound({ connection }, { kind: "opus_live", handle: STREAM_HANDLE, generation, packet_bytes: encoder.packetBytes });
     // Bound to the page: the receiver fades it out when the viewer leaves, before the server hears (the engine's audio.md 7.3).
-    context.sound({ session: connection }, { play: { channel: STREAM_CHANNEL, handle: STREAM_HANDLE, generation, page, gain: this.#gain(connection) } });
+    context.sound({ connection }, playMember(STREAM_CHANNEL, STREAM_HANDLE, generation, page, this.#gain(connection)));
     this.#streams.set(connection, new LiveStream(source, page, generation, from, encoder));
     this.pump(context, context.now());
   }
@@ -80,7 +81,7 @@ export class LiveStreams {
     const kept = Number.isFinite(gain) ? Math.min(FULL_GAIN, Math.max(0, Math.round(gain))) : FULL_GAIN;
     this.#gains.set(connection, kept);
     if (this.#streams.has(connection)) {
-      context.sound({ session: connection }, { gain: { channel: STREAM_CHANNEL, gain: kept } });
+      context.sound({ connection }, gainMember(STREAM_CHANNEL, kept));
     }
   }
 
@@ -103,7 +104,7 @@ export class LiveStreams {
     this.#keepPlace(connection, context.now());
     this.#streams.get(connection)?.close();
     if (this.#streams.delete(connection)) {
-      context.sound({ session: connection }, { stop: { channel: STREAM_CHANNEL } });
+      context.sound({ connection }, stopMember(STREAM_CHANNEL));
     }
   }
 
@@ -159,7 +160,7 @@ export class LiveStreams {
       return;
     }
     const at = stream.from + stream.heard(context.now());
-    context.sound({ session: connection }, { stop: { channel: STREAM_CHANNEL } });
+    context.sound({ connection }, stopMember(STREAM_CHANNEL));
     stream.close();
     this.#streams.set(connection, LiveStream.paused(stream.source, stream.page, stream.generation, at));
   }

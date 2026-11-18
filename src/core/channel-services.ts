@@ -1,6 +1,6 @@
 // What a mounted component reaches of its channel (services.ts), made from
 // the runtime's parts for one copy of one page: the server call's context,
-// the viewer's address, streams and sounds, and their cookies and language.
+// the viewer's address, streams and sounds, and their language.
 
 import type { Context } from "../kit.ts";
 import type { EventBus } from "./bus.ts";
