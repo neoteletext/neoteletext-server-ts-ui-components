@@ -3,6 +3,21 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 26.2.1 (19 November 2026)
+
+### What it changes
+
+- **Test data only.** The picture goldens are drawn again, at format 3,
+  by the server whose NAPLPS renderer gives an object exactly the canvas
+  pixels whose centre lies in its design rectangle (its DEC-6829). The
+  format 2 goldens froze an object's background painting the next row's
+  first raster line, so the audio player's "Repeat off" read "ott".
+  Nothing the library writes or exports changed.
+
+### To take it
+
+- Nothing to change: replace 26.2.0 with 26.2.1 in `vendor/`.
+
 ## 26.2.0 (19 November 2026)
 
 ### What it changes
