@@ -36,6 +36,7 @@ import {
   press,
   rowsRect,
   rulesSent,
+  SELECTION,
   table,
   tableSent,
   TEXT,
@@ -80,7 +81,7 @@ test("RULE-54: a page with more areas than a table has rectangles asks the whole
   assert.deepEqual(
     tableSent(viewer(...rows(3))),
     table(
-      [press("spot_1"), wheel("turned_2"), press("spot_3")],
+      [...SELECTION, press("spot_1"), wheel("turned_2"), press("spot_3")],
       [rowsRect("spot_1", BODY_ROW), rowsRect("turned_2", BODY_ROW + 1), rowsRect("spot_3", BODY_ROW + 2)],
     ),
   );
@@ -89,6 +90,7 @@ test("RULE-54: a page with more areas than a table has rectangles asks the whole
   assert.deepEqual(
     tableSent(many),
     table([
+      ...SELECTION,
       { name: "press", on: { event: "press", target: "page", button: "any" }, do: send },
       { name: "wheel", on: { event: "wheel", target: "page" }, do: send },
     ]),
@@ -97,14 +99,14 @@ test("RULE-54: a page with more areas than a table has rectangles asks the whole
   assert.deepEqual(
     logged,
     [
-      `page 150: ${MOST_RECTS + 1} pointer areas and ${MOST_RECTS + 1} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`,
+      `page 150: ${MOST_RECTS + 1} pointer areas and ${MOST_RECTS + 1 + SELECTION.length} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`,
     ],
     "the channel's log says, as the table is sent, that the page asks more widely than its components take",
   );
 });
 
 test("RULE-54: a component that says it takes nothing of the pointer is asked nothing for, whatever handlers it has", () => {
-  assert.deepEqual(tableSent(viewer(h(Stop, {}))), { rules: [] });
+  assert.deepEqual(tableSent(viewer(h(Stop, {}))), { rules: SELECTION }, "only the keys the kit selects pages by");
 });
 
 /** A page that shows a field once its action is pressed. */
@@ -125,7 +127,7 @@ class Opens extends Component<object, { readonly open: boolean }> {
 
 test("RULE-54: a page's table is sent again when its components come to take something else, and not while they take the same", () => {
   const page = viewer(h(Opens, {}));
-  assert.deepEqual(tableSent(page), table([...HOVER, press("action_1")], [rowsRect("action_1", BODY_ROW)]));
+  assert.deepEqual(tableSent(page), table([...SELECTION, ...HOVER, press("action_1")], [rowsRect("action_1", BODY_ROW)]));
   const open = controlBy(page, "Open");
   page.hover(1, "enter", open.column, open.row);
   assert.equal(rulesSent(page).length, 1, "a hover changes the hint row and no component: the same table is not sent twice");

@@ -9,7 +9,10 @@
 // - the wheel on the cells of a component that scrolls;
 // - the pointer coming onto a control and leaving it, where a component
 //   draws something of its own for it;
-// - the keyboard's focus coming and going, where a component hears it.
+// - the keyboard's focus coming and going, where a component hears it;
+// - the keys the protocol kit selects pages by, which it takes of every
+//   page that has no use of its own for them: the digits and the coloured
+//   keys (page-selection.ts).
 // Every rule only sends: the receiver does nothing locally for it, so the
 // components behave as they did when every input was sent. An input that
 // comes back is given to its component by where it landed and who has the
@@ -21,6 +24,7 @@ import type { Component } from "./component.ts";
 import type { Reach } from "./draw.ts";
 import { takenByHandlers } from "./events.ts";
 import type { Node } from "./node.ts";
+import { MOST_SELECTION_RULES } from "./page-selection.ts";
 
 /** A page's table and a key that is the same exactly when the table is. */
 export interface PageRules {
@@ -264,17 +268,20 @@ function hoverRules(sources: RuleSources): PageRule[] {
   ];
 }
 
-/** The table of a page whose tree is `sources` (page-rules.md RULE-54): with no rules when nothing on it takes input. */
+/** The table of a page whose tree is `sources` (page-rules.md RULE-54), before the kit's page selection: with no rules when nothing on it takes input. */
 export function pageRules(sources: RuleSources): PageRules {
-  const others = [...keyboardRules([...sources.components]), ...hoverRules(sources)];
+  const keyboard = keyboardRules([...sources.components]);
+  const others = [...keyboard, ...hoverRules(sources)];
   const { areas, everything } = areasOf(sources);
   const byArea = areaRules(areas, everything);
-  const fits = byArea.rects.length <= MOST_RECTS && others.length + byArea.rules.length <= MOST_RULES;
+  // A page that does not ask for every key may be given page selection's rules as well.
+  const room = MOST_RULES - (keyboard.some((rule) => rule.name === "keys") ? 0 : MOST_SELECTION_RULES);
+  const fits = byArea.rects.length <= MOST_RECTS && others.length + byArea.rules.length <= room;
   const table: RuleTable = fits
     ? { ...(byArea.rects.length === 0 ? {} : { rects: byArea.rects }), rules: [...others, ...byArea.rules] }
     : { rules: [...others, ...wholePageRules(everything)] };
   const widened = fits
     ? null
-    : `${byArea.rects.length} pointer areas and ${others.length + byArea.rules.length} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`;
+    : `${byArea.rects.length} pointer areas and ${others.length + byArea.rules.length + MOST_RULES - room} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`;
   return { key: JSON.stringify(table), table, widened };
 }

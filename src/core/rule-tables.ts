@@ -5,14 +5,39 @@
 // have one, else the channel's. It is sent when a connection opens the
 // page, and again whenever the components on it come to take something
 // else, so that the viewer's receiver sends what they take and no more.
+// With it go the rules for the keys the protocol kit selects pages by
+// (page-selection.ts).
 
 import type { Context } from "../kit.ts";
 import type { ConnectionMounts } from "./connection-mounts.ts";
 import type { PageRules } from "./page-rules.ts";
+import { type PageSelectionKeys, withPageSelection } from "./page-selection.ts";
+
+/** What the tables are sent by. */
+export interface RuleTablesOptions {
+  /** Which keys the kit's page selection takes of `page`. */
+  readonly selection: (page: number) => PageSelectionKeys;
+}
 
 export class RuleTables {
   /** The key of the table last sent, by connection, then page. */
   readonly #sent = new Map<number, Map<number, string>>();
+  readonly #options: RuleTablesOptions;
+  /** Each mount's table with page selection's rules, made once for each table a mount writes. */
+  readonly #whole = new WeakMap<PageRules, PageRules>();
+
+  constructor(options: RuleTablesOptions) {
+    this.#options = options;
+  }
+
+  #wholeOf(page: number, components: PageRules): PageRules {
+    let whole = this.#whole.get(components);
+    if (whole === undefined) {
+      whole = withPageSelection(components, this.#options.selection(page));
+      this.#whole.set(components, whole);
+    }
+    return whole;
+  }
 
   /**
    * The connection opened `page`: its table is sent again whatever was
@@ -45,7 +70,8 @@ export class RuleTables {
     for (const [page, watching] of mounts.watching) {
       const owed = new Map<string, { readonly rules: PageRules; readonly connections: number[] }>();
       for (const connection of watching) {
-        const rules = (mounts.of(connection, page) ?? mounts.shared.get(page))?.rules ?? null;
+        const components = (mounts.of(connection, page) ?? mounts.shared.get(page))?.rules ?? null;
+        const rules = components === null ? null : this.#wholeOf(page, components);
         const sent = this.#sent.get(connection) ?? new Map<number, string>();
         if (rules !== null && sent.get(page) !== rules.key) {
           sent.set(page, rules.key);

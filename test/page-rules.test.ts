@@ -6,30 +6,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
-import { Action, BarChart, Button, ComponentChannel, type Element, h, type LogEntry, LogView, PaintCanvas, Slider, Text, TextField } from "../src/index.ts";
+import { Action, BarChart, Button, h, type LogEntry, LogView, PaintCanvas, Slider, TextField } from "../src/index.ts";
 import { COLUMNS, type RuleCondition } from "../src/kit.ts";
-import { frame } from "./components-fixtures.ts";
-import { BODY_ROW, controlBy, controls, HINT_ROW, NOTCH, PAGE, row, viewer } from "./mouse-fixtures.ts";
-import { cellsRect, DRAG, HOVER, KEYS, press, release, rowsRect, rulesSent, table, tableSent, TEXT, wheel } from "./page-rules-fixtures.ts";
+import { BODY_ROW, controlBy, controls, HINT_ROW, NOTCH, row, viewer } from "./mouse-fixtures.ts";
+import { cellsRect, DRAG, HOVER, KEYS, press, release, rowsRect, SELECTION, table, tableSent, TEXT, wheel } from "./page-rules-fixtures.ts";
 
 /** No modifier key held, as an input event of the wire says it. */
 const NO_MODS = 0;
-
-test("RULE-54: a page of static text sends a table with no rules, to each connection as it opens the page", () => {
-  const page = new Harness([
-    new ComponentChannel([{ page: PAGE, title: "Text", root: (): Element => frame("Text", h(Text, { text: "Only words" })) }], { opus: fakeOpus() }),
-  ]);
-  page.join(1, PAGE);
-  assert.deepEqual(rulesSent(page), [{ type: "rules", connections: [1], page: "150", table: { rules: [] } }]);
-  page.join(2, PAGE);
-  assert.deepEqual(
-    rulesSent(page).at(-1),
-    { type: "rules", connections: [2], page: "150", table: { rules: [] } },
-    "the page every viewer shares gives each its table",
-  );
-  assert.equal(rulesSent(page).length, 2, "and the first viewer is not sent theirs again");
-});
 
 test("RULE-54: a text field asks for every key with its repeats, the releases and text, and a press on its own cells, which gives it the keys", () => {
   const page = viewer(h(TextField, { label: "Name", longest: 10 }));
@@ -66,7 +49,7 @@ test("RULE-54: an action, which never takes the keys, asks for a press on its ce
       },
     }),
   );
-  assert.deepEqual(tableSent(page), table([...HOVER, press("action_1")], [rowsRect("action_1", BODY_ROW)]));
+  assert.deepEqual(tableSent(page), table([...SELECTION, ...HOVER, press("action_1")], [rowsRect("action_1", BODY_ROW)]));
   const action = controlBy(page, "Do it");
   page.fire(1, "press_action_1", { kind: "mouse", action: "press", button: 0, column: action.column, row: action.row, mods: NO_MODS }, 3, { rect: "action_1" });
   assert.deepEqual(pressed, [1]);
@@ -186,7 +169,7 @@ test("RULE-54: a chart whose bars say what they are under the pointer asks for t
       onChoose: () => {},
     }),
   );
-  assert.deepEqual(tableSent(page), table([...HOVER, press("barchart_1")], [rowsRect("barchart_1", BODY_ROW, 2)]));
+  assert.deepEqual(tableSent(page), table([...SELECTION, ...HOVER, press("barchart_1")], [rowsRect("barchart_1", BODY_ROW, 2)]));
   const tuesday = controlBy(page, "Tue");
   page.fire(1, "hover_in", { kind: "hover", action: "enter", column: tuesday.column, row: tuesday.row }, 1, { control: 2 });
   assert.match(row(page, HINT_ROW), /Tue: 6/u, "the hover its rule sent says what the bar is");

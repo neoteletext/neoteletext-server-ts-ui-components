@@ -41,6 +41,7 @@ import { ConnectionMounts } from "./connection-mounts.ts";
 import { type MountParts, newMount } from "./page-mounts.ts";
 import { describedBy, type PageSpec, SpecNeeds } from "./page-spec.ts";
 import { earliestWake, publishChanges } from "./publish.ts";
+import type { PageSelectionKeys } from "./page-selection.ts";
 import { RuleTables } from "./rule-tables.ts";
 import { SoundObjects } from "./sound-objects.ts";
 import type { KeptComponents } from "./kept-components.ts";
@@ -49,7 +50,7 @@ export class ComponentChannel implements Application {
   readonly bus = new EventBus<LibraryEvents>();
   readonly #specs: ReadonlyMap<number, PageSpec>;
   readonly #mounts = new ConnectionMounts();
-  readonly #tables = new RuleTables();
+  readonly #tables: RuleTables;
   #context: Context | null = null;
   #timerId = 0;
   readonly #sounds: SoundObjects;
@@ -66,6 +67,7 @@ export class ComponentChannel implements Application {
   constructor(specs: readonly PageSpec[], options: ComponentChannelOptions = {}) {
     this.#specs = new Map(specs.map((spec) => [spec.page, spec]));
     this.#store = options.state ?? null;
+    this.#tables = new RuleTables({ selection: this.#selection });
     this.#viewerStates = new ViewerStates(this.#store);
     this.#languages = new ViewerLanguages({
       channel: options.language,
@@ -78,6 +80,12 @@ export class ComponentChannel implements Application {
     this.#sounds = new SoundObjects(opus);
     this.#streams = new LiveStreams(opus);
   }
+
+  /** The keys the kit's page selection takes of `page`: those its spec, or what is on it, has no use for. */
+  readonly #selection = (page: number): PageSelectionKeys => {
+    const spec = this.#specs.get(page);
+    return { digits: spec !== undefined && !this.#needs.ownsDigits(spec), colourKeys: spec !== undefined && !this.#needs.ownsColourKeys(spec) };
+  };
 
   /** Whether the page's spec, or what is on it, keeps a copy for each viewer: for tests. */
   perViewer(page: number): boolean {

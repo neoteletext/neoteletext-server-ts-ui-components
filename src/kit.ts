@@ -7,6 +7,7 @@ export type {
   PageRule,
   RectDeclaration,
   RuleCondition,
+  RuleKey,
   RuleTable,
   RuleTarget,
   ServerMessageRulesFault,

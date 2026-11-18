@@ -24,6 +24,36 @@ export const KEYS: readonly PageRule[] = [
   { name: "keys_up", on: { event: "key_up", keys: "any" }, do: SEND },
 ];
 
+const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
+
+/** The rules that ask for the digits the protocol kit selects a page by: the digit row's keys by their place, and the keypad's. */
+export const SELECT_DIGITS: readonly PageRule[] = [
+  { name: "select_digits", on: { event: "key", keys: DIGITS.map((digit) => ({ physical: digit })) }, do: SEND },
+  { name: "select_keypad", on: { event: "key", keys: DIGITS.map((digit) => ({ name: `Numpad${digit}` })) }, do: SEND },
+];
+
+/** The rule that asks for the keys the kit follows a Fastext link by. */
+export const FASTEXT_KEYS: PageRule = {
+  name: "fastext_keys",
+  on: {
+    event: "key",
+    keys: [
+      { name: "F1" },
+      { name: "F2" },
+      { name: "F3" },
+      { name: "F4" },
+      { name: "ColorF0Red" },
+      { name: "ColorF1Green" },
+      { name: "ColorF2Yellow" },
+      { name: "ColorF3Blue" },
+    ],
+  },
+  do: SEND,
+};
+
+/** What a page whose components take no keys asks for, so that the kit's page selection goes on. */
+export const SELECTION: readonly PageRule[] = [...SELECT_DIGITS, FASTEXT_KEYS];
+
 /** The rule that asks for text that came from no key. */
 export const TEXT: PageRule = { name: "text", on: { event: "text" }, do: SEND };
 
