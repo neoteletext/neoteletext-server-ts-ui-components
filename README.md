@@ -93,6 +93,16 @@ await runChannel([
   ```ts
   new ComponentChannel(pages, { ruleTables: "none" });
   ```
+- **A page drawn as a picture.** `renderer: "regis"` or `"naplps"` in a
+  `PageSpec` draws the same components as a ReGIS or NAPLPS picture on
+  the same cell grid, each interactive component a drawing or an object
+  of its own with its looks, links and cursor, its text written by the
+  server in the provided character sets
+  ([How it works](docs/how-it-works.md#a-page-drawn-as-a-picture-regis-and-naplps)):
+
+  ```ts
+  { page: 0x150, title: "Form", renderer: "regis", root: () => h(Frame, { title: "Form", prompts: [["Index", 0x100]] }, h(TextField, { label: "Name", longest: 20 })) }
+  ```
 - **`Frame`** is a sub-page with a title band, a hint row and up to four
   Fastext prompts, red, green, yellow and cyan.
 - **The bus** (`this.services.bus`) carries what one page's components

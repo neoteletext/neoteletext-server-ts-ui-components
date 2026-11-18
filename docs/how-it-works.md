@@ -65,6 +65,60 @@ repositories beside this one.
    (`neoteletext-browser`, docs/architecture.md §10). Each sub-page is
    selected and shown on its own; the browser never cycles them.
 
+## A page drawn as a picture: ReGIS and NAPLPS
+
+A page spec may name its renderer (`renderer: "regis"` or `"naplps"`;
+`"teletext"` when it names none), and the same components draw the page
+as a picture, with the same props, state, events and focus (renderer
+parity PAR-42, REQ-6774). The page is still a teletext page beneath: it
+is published as every page is, its rows 0 and 24 shown above and below
+the picture, and the whole of it shown to a receiver that does not draw
+the picture's language.
+
+1. **The same layout.** Each component paints on a picture canvas
+   (`RegisCanvas`, `NaplpsCanvas`, `src/picture/`): the library's `Canvas`,
+   on the same 40 columns, over a screen that keeps its text cell by cell
+   (`recording-screen.ts`). A component that wants to know asks
+   `canvas.renderer`.
+2. **The cells as a receiver shows them.** Rows 1 to 23 are read as a
+   Level 1 receiver reads their codes (EN 300 706 clause 12.2, Table 26;
+   `cells.ts`): backgrounds, mosaics held and separated, double height
+   covering the row below. Flash shows steady and concealed text as
+   spaces, since a picture is still and has no reveal.
+3. **Drawn on the grid.** ReGIS: a cell is 20 by 20 pixels, row r at
+   y = 10 + 20 (r - 1), column c at x = 20 c. NAPLPS: the teletext
+   raster's own 12 by 20 cells, written in the 640 by 480 design
+   picture. Backgrounds and sixels are filled rectangles; text is text
+   parts, which the server writes in the language's provided sets
+   (PAR-21, DEC-6669), so a picture's text is never in letters of its
+   own.
+4. **Interactive components are drawings or objects.** A component that
+   takes the pointer or the keys, or declares a control, is a numbered
+   ReGIS drawing, with hidden drawings for its hover and pressed looks,
+   or a NAPLPS macro object with macros for its looks; the library
+   numbers it and keeps the number while it is mounted (`numbers.ts`).
+   Its hover look shows its controls in the page's rollover colours, as
+   a teletext receiver shows a control; its pressed look their ink and
+   background exchanged. A NAPLPS component whose macros could pass
+   `MAX_MACRO_BYTES`, or past the sub-page's 31 slots, is a region of the
+   stream instead, detectable and without looks. The page's rule table
+   names the drawings and objects (RULE-12 kind 2); a `PageLink` is the
+   picture's link to its page; the focused field's caret is drawing or
+   object 1, the picture's cursor.
+5. **Only what changed is sent.** A render sends the base rows that
+   changed, drawn again over themselves, and the drawings or objects
+   whose components changed: ReGIS drawings defined again and committed
+   together, NAPLPS macros defined again and their objects redefined one
+   at a time (`ONE`). A stream that has grown past half of what the
+   server keeps starts again whole.
+6. **Kept for every viewer.** The channel's copy goes to the audience
+   `{ kept: true }`, which the server keeps for the page and sub-code and
+   gives to every viewer who selects it; a viewer's own copy goes to
+   their connection. A ReGIS click is placed by the PICK that follows it,
+   the pixel of the picture; a NAPLPS click is on the raster's cell.
+7. **On the web.** A picture page's public picture is its kept first
+   sub-page (PAR-26), unless its `describe` names one.
+
 ## A key: from the viewer to a component, and back
 
 1. **The browser sends it, if the page's rule table asks for it.** A page

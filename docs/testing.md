@@ -80,6 +80,24 @@ the viewer does first (`act`). The catalogue serves three ends:
 
       NEOTTX=/path/to/neottx node test/screenshots.ts [PART]
 
+- **The pictures in ReGIS and NAPLPS** (`test/picture-goldens.ts`):
+  each example staged on a page drawn in each picture language, its
+  picture kept by the real server and drawn by it as the page's public
+  PNG, which `test/picture-goldens.test.ts` compares with
+  `test/goldens/pictures/` (their format in `VERSION`). The server writes
+  the text parts and draws with the browser's renderers, so it is the
+  one program that draws a picture as a receiver does; the test is
+  skipped without it, and refuses a build other than the one the
+  goldens were drawn by:
+
+      TELETEXT_SERVER=/path/to/teletext-server node --test test/picture-goldens.test.ts
+      TELETEXT_SERVER=/path/to/teletext-server node test/picture-goldens.ts
+
+  The second writes the goldens again. They are written flat, every
+  cell in the stream, until the server composes a public ReGIS picture's
+  numbered drawings and the NAPLPS renderer clips an object in the
+  design picture's pixels; the drawings and objects are tested by
+  `test/picture-pages.test.ts`.
 - **The docs** (`test/docs.ts`): the pages under `docs/components/`,
   made from the catalogue and the source. `test/docs.test.ts` fails when
   they are out of step; `node test/docs.ts` writes them again.
