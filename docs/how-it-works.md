@@ -154,8 +154,9 @@ so a dialog over a button takes the button's cells from it. Areas share
 no cell, so one event is sent by one rule. An area is named for the
 component that takes the pointer there and numbered, as `button_1`. A
 sub-page with more areas than `MAX_RECTS`, or whose rules would pass
-`MAX_RULES` (the engine's limits, REQ-6608, whose figures the library
-reads from the kit's schema, `tableLimits`), asks the whole sub-page
+`MAX_RULES` (the engine's limits, REQ-6608, which the library takes by
+name from the protocol kit, a copy generated from the engine's
+`neoteletext_rules::limits`), asks the whole sub-page
 instead, under the names the server's default table uses: `press`,
 `release`, `wheel`, and `move` or `drag`, and the channel's log says so.
 

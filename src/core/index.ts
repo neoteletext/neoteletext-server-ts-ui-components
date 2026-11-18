@@ -52,7 +52,6 @@ export {
 export type { ControlLook, Kind } from "./look.ts";
 export { BOTTOM_ROW, FULL_BLOCK, LEFT_HALF, LOWER_TWO, MIDDLE_ROW, MOSAIC_BASE, RIGHT_HALF, SIXEL, TOP_ROW, UPPER_TWO } from "./mosaics.ts";
 export type { PageNeeds } from "./needs.ts";
-export { type TableLimits, tableLimits } from "./table-limits.ts";
 export { SubPage } from "./page.ts";
 export type { SubPageLinks, SubPageProps } from "./page.ts";
 export { RawSubPage } from "./raw-sub-page.ts";

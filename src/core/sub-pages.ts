@@ -10,7 +10,6 @@ import type { Component } from "./component.ts";
 import { type FoundSubPage, NO_REACH, type Reach } from "./draw.ts";
 import type { Node } from "./node.ts";
 import { type PageRules, pageRules } from "./page-rules.ts";
-import { tableLimits } from "./table-limits.ts";
 
 /** The components a sub-page's table is written from: those drawn on it, under `node`, and those it is drawn within, which a key or a press bubbles up to. */
 function subPageComponents(node: Node): Component[] {
@@ -49,9 +48,8 @@ export class SubPages {
 
   /** Writes each sub-page's table again, from the components drawn on it and those round it alone. */
   writeRules(root: Node | null, hoverRead: boolean): void {
-    const most = tableLimits(this.#limits());
     this.rules = this.#shown.map(({ node }, place) =>
-      pageRules({ components: subPageComponents(node), root, reach: this.#reaches[place] ?? NO_REACH, hoverRead, most }),
+      pageRules({ components: subPageComponents(node), root, reach: this.#reaches[place] ?? NO_REACH, hoverRead }),
     );
   }
 
