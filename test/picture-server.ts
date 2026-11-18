@@ -14,15 +14,16 @@ import type { PictureExample } from "./picture-goldens.ts";
 
 /**
  * The server the goldens are drawn by: neoteletext-app-server's branch
- * `parity` at 486de90, built with `cargo build --release`, which composes a
+ * `parity` at bcb5e40, built with `cargo build --release`, which composes a
  * ReGIS picture's numbered drawings (TODO-6813) and pins the ReGIS renderer
- * at 9c1a162, the NAPLPS renderer at 9122afd (objects clipped by the
- * design picture, TODO-6814) and the engine at d0243525. Another build may
- * draw them otherwise, so another is refused.
+ * at 9c1a162, the NAPLPS renderer at 016a83c (an object has exactly the
+ * canvas pixels whose centre lies in its design rectangle, TODO-6826) and
+ * the engine at 6efa8fef. Another build may draw them otherwise, so another
+ * is refused.
  */
 const PICTURE_SERVER = {
-  commit: "486de90",
-  sha256: "e85be1079b43c6655362a32a5a55a901b1fe4ba924ce9fb083b46291960197d3",
+  commit: "bcb5e40",
+  sha256: "c845c30c88559edcd65fd6232ef69d6858760fff74c79135294637769b4078ea",
 } as const;
 
 const SCRATCH = join(import.meta.dirname, "..", "tmp", "picture-goldens");
