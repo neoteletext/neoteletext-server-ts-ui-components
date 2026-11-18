@@ -47,7 +47,15 @@ coloured key or a link.
 
 ## Who has the keys
 
-Exactly one component on a page has the keys: the focused one. It is:
+Exactly one component on a page has the keys: the focused one. A
+sub-page is a page of its own (DEC-6599), so each sub-page of a page
+number has its own focused component and its own history of who had the
+keys, and a key, typed text or a paste goes to the focus of the sub-page
+it came from: Tab and the arrows move among that sub-page's components,
+and a page key (`onPageKey`) is offered to the components drawn on it and
+those it is drawn within alone, never to another sub-page's. The hint row
+and the key help name the focus of the sub-page the last input came from.
+The focused component is:
 
 - the first component that takes the keys (`focusable()`), in the order
   they are drawn, when the page opens;

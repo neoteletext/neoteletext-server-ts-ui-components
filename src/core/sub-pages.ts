@@ -12,7 +12,7 @@ import type { Node } from "./node.ts";
 import { type PageRules, pageRules } from "./page-rules.ts";
 
 /** The components a sub-page's table is written from: those drawn on it, under `node`, and those it is drawn within, which a key or a press bubbles up to. */
-function subPageComponents(node: Node): Component[] {
+export function subPageComponents(node: Node): Component[] {
   const found: Component[] = [];
   for (let above = node.parent; above !== null; above = above.parent) {
     found.push(above.component);
@@ -48,6 +48,21 @@ export class SubPages {
 
   constructor(limits: () => Limits) {
     this.#limits = limits;
+  }
+
+  /** The sub-pages were found in the tree, before they are drawn: each one's keys are its own from now (mount.ts). */
+  found(shown: readonly FoundSubPage[]): void {
+    this.#shown = shown;
+  }
+
+  /** Each sub-page's own component, the root of what is drawn on it, in the order drawn. */
+  roots(): readonly Node[] {
+    return this.#shown.map(({ node }) => node);
+  }
+
+  /** The component of the sub-page the input being routed came from, or null when the page has no such sub-page drawn. */
+  routedRoot(): Node | null {
+    return this.#shown[this.#routed]?.node ?? null;
   }
 
   /** The sub-pages were drawn: `shown`, whose cells reach what `reaches` says, in the same order. */

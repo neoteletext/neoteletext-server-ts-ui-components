@@ -10,14 +10,15 @@ import { draw, type DrawHost, drawHost, type DrawnPage, type Reach, shownSubPage
 import type { Element } from "./element.ts";
 import { nodeLanguage, type TextLanguage } from "./language.ts";
 import type { KeyEvent } from "./events.ts";
-import { FocusHistory, routeKey } from "./focus.ts";
+import { routeKey } from "./focus.ts";
 import type { KeptComponents } from "./kept-components.ts";
 import type { KeyHelpEntry } from "./key-bindings.ts";
 import { Hints } from "./hints.ts";
-import { type AnyComponent, bubble, EMPTY, firstFocusable, focusables, type Node } from "./node.ts";
+import { type AnyComponent, bubble, EMPTY, focusables, type Node } from "./node.ts";
 import type { ColourTable } from "./rollover.ts";
 import { Pointer } from "./pointer.ts";
-import { SubPages } from "./sub-pages.ts";
+import { SubPageKeys } from "./sub-page-keys.ts";
+import { SubPages, subPageComponents } from "./sub-pages.ts";
 import type { Services } from "./services.ts";
 import { Timers } from "./timers.ts";
 import { Tree } from "./tree.ts";
@@ -51,8 +52,8 @@ export class Mount implements ComponentHost {
   readonly #timers: Timers;
   #rootElement: Element;
   #dirty = true;
-  #focus: Node | null = null;
-  readonly #history = new FocusHistory();
+  /** The keys of each sub-page drawn, a page of its own (DEC-6599). */
+  readonly #keys: SubPageKeys;
   /** Presses, moves and the wheel go straight to it; a hover goes through {@link hover}, which draws the hint row again. */
   readonly pointer: Pointer;
   /** The page as last drawn. */
@@ -68,6 +69,12 @@ export class Mount implements ComponentHost {
     this.#host = host;
     this.services = host.services;
     this.subPages = new SubPages(() => this.services.limits());
+    this.#keys = new SubPageKeys(
+      () => this.subPages.roots(),
+      (before, node) => {
+        this.#moved(before, node);
+      },
+    );
     this.#draw = drawHost(page, host, (node): TextLanguage => this.#languageOfNode(node));
     this.#tree = new Tree({
       components: this,
@@ -78,13 +85,13 @@ export class Mount implements ComponentHost {
     });
     this.#timers = new Timers({ nextTimerId: host.nextTimerId, now: (): number => this.services.now(), viewed: host.viewed });
     this.#hints = new Hints({
-      focused: (): AnyComponent | null => this.#focus?.component ?? null,
+      focused: (): AnyComponent | null => this.#keys.focusOf(this.subPages.routedRoot())?.component ?? null,
       hovered: (): Node | null => (this.services.connection === null ? null : this.pointer.hoveredBy(this.services.connection)),
     });
     this.pointer = new Pointer({
       reach: (): Reach => this.subPages.routedReach(),
       focusOn: (node): void => {
-        this.#focusOn(node);
+        this.#keys.focusOn(this.#keys.rootOf(node), node);
       },
       root: (): Node | null => this.#tree.root,
     });
@@ -113,12 +120,14 @@ export class Mount implements ComponentHost {
   focus(component: AnyComponent): void {
     const node = this.#tree.nodes.get(component);
     if (node !== undefined) {
-      this.#focusOn(node);
+      this.#keys.focusOn(this.#keys.rootOf(node), node);
     }
   }
 
+  /** Whether `component` has the keys of the sub-page it is drawn on. */
   isFocused(component: AnyComponent): boolean {
-    return this.#focus?.component === component;
+    const node = this.#tree.nodes.get(component);
+    return node !== undefined && this.#keys.isFocused(node);
   }
 
   isHovered(component: AnyComponent): boolean {
@@ -149,7 +158,7 @@ export class Mount implements ComponentHost {
   }
 
   focusedBindings(): readonly KeyHelpEntry[] {
-    return this.#focus?.component.keyBindings() ?? [];
+    return this.#keys.focusOf(this.subPages.routedRoot())?.component.keyBindings() ?? [];
   }
 
   focusablesUnder(component: AnyComponent): readonly FocusableAt[] {
@@ -189,10 +198,9 @@ export class Mount implements ComponentHost {
       this.#dirty = false;
       this.#tree.reconcile(this.#rootElement);
       const shown = shownSubPages(this.#tree.root, this.#draw);
-      // The keys go back to what had them before the one that went (a dialog), or else to the first component that takes them; chosen before painting, so a focused component draws itself so.
-      if (this.#focus === null || !this.#focus.component.mounted) {
-        this.#focusOn(this.#history.back() ?? firstFocusable(this.#tree.root));
-      }
+      this.subPages.found(shown);
+      // The keys are placed before painting, so a focused component draws itself so.
+      this.#keys.place(this.#tree.root);
       const drawn = draw(shown, this.#draw);
       this.subPages.drawn(shown, drawn.reaches);
       this.lastPage = drawn.page;
@@ -217,26 +225,14 @@ export class Mount implements ComponentHost {
   #forget(node: Node): void {
     this.#timers.clearOwner(node.component);
     this.pointer.forget(node);
-    this.#history.forget(node);
-    if (this.#focus === node) {
-      this.#focus = null;
-    }
+    this.#keys.forget(node);
   }
 
   // The keys.
 
-  /** Gives the keys to `node`, telling the one that had them and the one that has them now. */
-  #focusOn(node: Node | null): void {
-    if (node === this.#focus) {
-      return;
-    }
-    const before = this.#focus;
-    if (before !== null) {
-      this.#history.left(before);
-    }
-    this.#focus = node;
+  /** The keys of a sub-page went from `before` to `node`: both render again, since what they render may say whether they have the keys, and each is told. */
+  #moved(before: Node | null, node: Node | null): void {
     this.#dirty = true;
-    // Both render again: what they render may say whether they have the keys.
     for (const each of [before, node]) {
       if (each !== null) {
         this.#tree.forced.add(each.component);
@@ -248,15 +244,19 @@ export class Mount implements ComponentHost {
     node?.component.componentDidFocus?.();
   }
 
+  /** A key, on the sub-page the input came from: to its focused component, its own components and those it is drawn within alone (DEC-6599). */
   key(event: KeyEvent): boolean {
-    return routeKey(event, this.#focus, this.#tree.root, this.#tree.components(), (node) => {
-      this.#focusOn(node);
+    const root = this.subPages.routedRoot();
+    const components = root === null ? this.#tree.components() : subPageComponents(root);
+    return routeKey(event, this.#keys.focusOf(root), root ?? this.#tree.root, components, (node) => {
+      this.#keys.focusOn(root, node);
     });
   }
 
-  /** Where text that came from no key goes first, as typing does: the component with the keys, or else the root (focus.ts, routeTyped). */
+  /** Where text that came from no key goes first, as typing does: the component with the keys of the sub-page it came from, or else that sub-page (focus.ts, routeTyped). */
   get typedAt(): Node | null {
-    return this.#focus ?? this.#tree.root;
+    const root = this.subPages.routedRoot();
+    return this.#keys.focusOf(root) ?? root ?? this.#tree.root;
   }
 
   /** The keys came to the page, or left it: every component hears it. */
