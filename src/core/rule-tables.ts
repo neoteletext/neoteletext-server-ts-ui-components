@@ -10,11 +10,12 @@
 // (RULE-40, RULE-111), and again whenever the components on the sub-page
 // come to take something else, so that the viewer's receiver sends what
 // they take and no more. With it go the rules for the keys the protocol
-// kit selects pages by (page-selection.ts). A channel that says
+// kit selects pages by (page-selection.ts), as that sub-page's own components
+// leave them to it. A channel that says
 // `ruleTables: "none"` is sent no table at all: its pages are left to the
 // table the server's configuration gives the channel (RULE-53).
 
-import { type Context, pageText } from "../kit.ts";
+import { type Context, type PageKeys, pageText } from "../kit.ts";
 import type { ConnectionMounts } from "./connection-mounts.ts";
 import type { PageRules } from "./page-rules.ts";
 import { type PageSelectionKeys, withPageSelection } from "./page-selection.ts";
@@ -24,8 +25,8 @@ import type { Selections } from "./selections.ts";
 export interface RuleTablesOptions {
   /** Whether the library writes tables at all (ComponentChannelOptions.ruleTables). */
   readonly written: boolean;
-  /** Which keys the kit's page selection takes of `page`. */
-  readonly selection: (page: number) => PageSelectionKeys;
+  /** Which keys the kit's page selection takes of a sub-page of `page` whose own components take `owned` themselves. */
+  readonly selection: (page: number, owned: PageKeys) => PageSelectionKeys;
   /** The sub-page each connection's selection shows. */
   readonly selections: Selections;
 }
@@ -51,19 +52,23 @@ export class RuleTables {
   /** What was last sent to each connection, for the one sub-page it has selected: the sub-code and the table's key. */
   readonly #sent = new Map<number, string>();
   readonly #options: RuleTablesOptions;
-  /** Each sub-page's table with page selection's rules, made once for each table a mount writes. */
-  readonly #whole = new WeakMap<PageRules, PageRules>();
+  /** Each sub-page's table with page selection's rules, made once for each table a mount writes and the keys page selection takes of it. */
+  readonly #whole = new WeakMap<PageRules, { readonly takes: string; readonly whole: PageRules }>();
 
   constructor(options: RuleTablesOptions) {
     this.#options = options;
   }
 
-  #wholeOf(page: number, components: PageRules): PageRules {
-    let whole = this.#whole.get(components);
-    if (whole === undefined) {
-      whole = withPageSelection(components, this.#options.selection(page));
-      this.#whole.set(components, whole);
+  /** The table of a sub-page of `page` whose components wrote `components` and take `owned` themselves, with the rules of the keys page selection takes of that sub-page alone (RULE-54 item 5, DEC-6599). */
+  #wholeOf(page: number, components: PageRules, owned: PageKeys): PageRules {
+    const takes = this.#options.selection(page, owned);
+    const key = JSON.stringify(takes);
+    const made = this.#whole.get(components);
+    if (made?.takes === key) {
+      return made.whole;
     }
+    const whole = withPageSelection(components, takes);
+    this.#whole.set(components, { takes: key, whole });
     return whole;
   }
 
@@ -104,10 +109,11 @@ export class RuleTables {
         const mount = mounts.of(connection, page) ?? mounts.shared.get(page);
         const sub = mount?.subPages.shownSub(this.#options.selections.subOf(connection, page)) ?? null;
         const components = sub === null ? null : (mount?.subPages.rulesOf(sub) ?? null);
-        if (sub === null || components === null) {
+        const owned = sub === null ? null : (mount?.subPages.keysOf(sub) ?? null);
+        if (sub === null || components === null || owned === null) {
           continue;
         }
-        const rules = this.#wholeOf(page, components);
+        const rules = this.#wholeOf(page, components, owned);
         const key = `${sub}:${rules.key}`;
         if (this.#sent.get(connection) !== key) {
           this.#sent.set(connection, key);

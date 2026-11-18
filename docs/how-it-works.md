@@ -163,7 +163,8 @@ instead, under the names the server's default table uses: `press`,
 The last two rows are **page selection** (`src/core/page-selection.ts`).
 The protocol kit takes three typed digits as a page number and the
 coloured keys as the page's Fastext links, on every page that does not
-own them, and it can only take what it is sent. So a page of text asks
+own them (each sub-page by its own components, DEC-6599), and it can
+only take what it is sent. So a page of text asks
 for those keys and nothing else, and a page whose components take
 something of the pointer but no keys asks for them beside its pointer
 rules. A page that asks for every key (`keys`) has them already. A page

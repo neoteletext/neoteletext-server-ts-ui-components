@@ -33,11 +33,17 @@ that page ([How it works](how-it-works.md#the-rule-table-what-a-page-asks-for)).
 
 A page owns the digits, or the coloured keys, when a component on it
 needs them: a numbered menu, a list picked by digit, a quiz answered by
-colour, a field typed on with the keypad. The library finds this itself
-by rendering the page's root once before anything runs (`core/needs.ts`),
-and `PageSpec`'s `ownsDigits` and `ownsColourKeys` say it outright. A
-page that owns the digits cannot be left by typing a page number, so it
-should offer a way out on a coloured key or a link.
+colour, a field typed on with the keypad. A sub-page is a page of its own
+(DEC-6599), so each sub-page owns them by its own components and those it
+is drawn within, as last drawn (`core/sub-pages.ts`): on a page whose
+second sub-page holds a field, a page number typed on the first, a page
+of text, still selects that page. The library tells the kit so through
+each page entry's `keysOf`. Before a sub-page is first drawn, the
+library goes by rendering the page's root once before anything runs
+(`core/needs.ts`), and `PageSpec`'s `ownsDigits` and `ownsColourKeys` say
+it outright for every sub-page. A sub-page that owns the digits cannot
+be left by typing a page number, so it should offer a way out on a
+coloured key or a link.
 
 ## Who has the keys
 

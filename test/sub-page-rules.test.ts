@@ -10,12 +10,15 @@ import { fakeOpus, Harness, text } from "neoteletext-server-ts-protocol/testing"
 import { Button, type Child, Component, ComponentChannel, type Element, Frame, h, Text, TextField } from "../src/index.ts";
 import { Colour } from "../src/kit.ts";
 import { BODY_ROW, PAGE } from "./mouse-fixtures.ts";
-import { FASTEXT_KEYS, HOVER, KEYS, press, rowsRect, rulesSent, table, TEXT } from "./page-rules-fixtures.ts";
+import { HOVER, KEYS, press, rowsRect, rulesSent, SELECTION, table, TEXT } from "./page-rules-fixtures.ts";
 
 /** The sub-codes the kit gives a page of two sub-pages given whole, numbered by place (its README: 2 to 79 are 0001 to 0079). */
 const FIRST_SUB_PAGE = 0x0001;
 
 const SECOND_SUB_PAGE = 0x0002;
+
+/** Another page of the channel, for the digits to select. */
+const OTHER_PAGE = 0x151;
 
 const NO_PROMPTS = [
   ["", null],
@@ -41,8 +44,8 @@ function harness(root: () => Element): Harness {
 test("RULE-112: two sub-pages of one page number with different components get two tables, each for its own sub-code at its own selection", () => {
   const page = harness(() => h(TextThenField, {}));
   page.join(1, PAGE);
-  // The field on the second sub-page makes the page number own the digits in the kit's page entry, which is the page number's (needs.ts), so neither sub-page asks for them.
-  const words = { type: "rules", connections: [1], page: "150", sub: "0001", table: { rules: [FASTEXT_KEYS] } };
+  // The field on the second sub-page owns the digits there alone (DEC-6599): the first, a page of text, asks for page selection's digits and coloured keys.
+  const words = { type: "rules", connections: [1], page: "150", sub: "0001", table: { rules: [...SELECTION] } };
   assert.deepEqual(rulesSent(page), [words], "the page selected with no sub-page in particular shows its first, a page of text");
   page.open(1, PAGE, SECOND_SUB_PAGE);
   const field = {
@@ -98,4 +101,26 @@ test("RULE-112: a press is given to the button drawn there on the sub-page it ca
   page.open(1, PAGE, SECOND_SUB_PAGE);
   page.fire(1, "press_button_1", click, undefined, { rect: "button_1" });
   assert.deepEqual(pressed, ["one", "two"]);
+});
+
+test("TODO-6681 item 2, DEC-6599: digits typed on a sub-page whose components take none select a page, and on its neighbour's field they are typed", () => {
+  const page = new Harness([
+    new ComponentChannel(
+      [
+        { page: PAGE, title: "Two", root: (): Element => h(TextThenField, {}) },
+        { page: OTHER_PAGE, title: "Other", root: (): Element => h(Text, { text: "Elsewhere" }) },
+      ],
+      { opus: fakeOpus() },
+    ),
+  ]);
+  page.join(1, PAGE);
+  page.open(1, PAGE, SECOND_SUB_PAGE);
+  page.fire(1, "keys", { kind: "key", action: "press", key: "1", mods: 0, text: "1" });
+  assert.match(text(page.seen(1, PAGE).rows, BODY_ROW), /Name.*1/u, "the field owns the digits on its own sub-page");
+  assert.deepEqual(page.redirects(1), []);
+  page.open(1, PAGE, FIRST_SUB_PAGE);
+  for (const digit of OTHER_PAGE.toString(16)) {
+    page.fire(1, "select_digits", { kind: "key", action: "press", key: digit, mods: 0, text: digit });
+  }
+  assert.deepEqual(page.redirects(1), [OTHER_PAGE], "the page of text leaves them to page selection");
 });

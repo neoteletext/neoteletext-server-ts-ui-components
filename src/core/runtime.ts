@@ -20,6 +20,7 @@ import {
   type Input,
   type LanguageTag,
   type PageEntry,
+  type PageKeys,
   type PageRequest,
   type ServerMessageRulesFault,
   type ServerStats,
@@ -85,11 +86,29 @@ export class ComponentChannel implements Application {
     this.#streams = new LiveStreams(opus);
   }
 
-  /** The keys the kit's page selection takes of `page`: those its spec, or what is on it, has no use for. */
-  readonly #selection = (page: number): PageSelectionKeys => {
+  /** The keys the kit's page selection takes of a sub-page of `page` whose components take `owned` themselves: those its spec, or else what is on that sub-page, has no use for (DEC-6599). */
+  readonly #selection = (page: number, owned: PageKeys): PageSelectionKeys => {
     const spec = this.#specs.get(page);
-    return { digits: spec !== undefined && !this.#needs.ownsDigits(spec), colourKeys: spec !== undefined && !this.#needs.ownsColourKeys(spec) };
+    const keys = spec === undefined ? null : this.#ownedBy(spec, owned);
+    return { digits: keys !== null && keys.ownsDigits !== true, colourKeys: keys !== null && keys.ownsColourKeys !== true };
   };
+
+  /** The keys a sub-page of `spec`'s page takes itself, its components taking `owned`: what the spec says, else what is on the sub-page. */
+  #ownedBy(spec: PageSpec, owned: PageKeys): PageKeys {
+    return { ownsDigits: spec.ownsDigits ?? owned.ownsDigits === true, ownsColourKeys: spec.ownsColourKeys ?? owned.ownsColourKeys === true };
+  }
+
+  /**
+   * The keys sub-page `sub` of `spec`'s page takes itself as `connection`
+   * sees it, for the kit's page selection (PageEntry.keysOf): those of the
+   * sub-page as last drawn on the connection's own copy, or the channel's;
+   * before it is drawn, those of the whole page (needs.ts).
+   */
+  #keysOf(spec: PageSpec, connection: number, sub: number): PageKeys {
+    const mount = this.#mounts.of(connection, spec.page) ?? this.#mounts.shared.get(spec.page);
+    const owned = mount?.subPages.keysOf(sub) ?? null;
+    return owned === null ? { ownsDigits: this.#needs.ownsDigits(spec), ownsColourKeys: this.#needs.ownsColourKeys(spec) } : this.#ownedBy(spec, owned);
+  }
 
   /** Whether the page's spec, or what is on it, keeps a copy for each viewer: for tests. */
   perViewer(page: number): boolean {
@@ -98,7 +117,9 @@ export class ComponentChannel implements Application {
   }
 
   pages(): readonly PageEntry[] {
-    return [...this.#specs.values()].map((spec) => this.#needs.entryOf(spec));
+    return [...this.#specs.values()].map((spec) =>
+      Object.assign(this.#needs.entryOf(spec), { keysOf: (connection: number, sub: number): PageKeys => this.#keysOf(spec, connection, sub) }),
+    );
   }
 
   start(context: Context): void {
