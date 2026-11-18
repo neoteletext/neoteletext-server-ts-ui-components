@@ -3,6 +3,70 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 23.0.0 (18 November 2026)
+
+### To take it
+
+- **Take the protocol kit 15.0.0 with it**, which speaks program protocol
+  13 (DEC-6462, DEC-6471): the library pins the kit exactly, and a
+  program on an older kit stops at the server's `start`. The kit's own
+  changes (sounds as generated members, `{ connection }` audiences,
+  `gone`, no cookies) are in its release notes.
+- **`session` is `connection` everywhere** (viewer-state.md VS-403): in
+  every event a component hears (`event.connection`), every callback the
+  library gives (`onPress(connection)` and the rest), `services.connection`,
+  the bus's audiences and its events. There is no server session.
+- **Cookies are gone** (VS-408): `Services.cookies`, `Services.setCookie`,
+  `ViewerCookies`, `LANGUAGE_COOKIE` and `LANGUAGE_COOKIE_SECONDS` are
+  removed, with no replacement for a channel's own cookies; what a channel
+  kept in one it keeps per viewer in its store. A viewer's language is
+  set with `services.setLanguage(connection, tag)`, which the
+  `LanguagePicker` calls.
+- **The store is keyed by viewer** (VS-405, VS-406): `ofViewer`,
+  `keepForViewer`, `update`, `atomically`, `forgetViewer` and
+  `forgetViewers` replace `ofSession` and `keepForSession`;
+  `MOST_VIEWER_VALUES`, `MOST_VIEWER_VALUE_LENGTH`, `VISIT_VALUE_IDLE_MS`
+  and `REMEMBERED_VALUE_IDLE_MS` replace `MOST_SESSION_VALUES`,
+  `MOST_SESSION_VALUE_LENGTH` and `SESSION_LIFETIME_MS`. A viewer is a
+  `KeptViewer`, their handle and whether they are remembered. The
+  database's migration 2 drops every value kept by a session's number at
+  the first open: they cannot be given to their viewers.
+- **`Tally`'s `vote` and `ballotOf` take a `Voter`** (the connection and
+  its viewer, `services.viewer(connection)`); a `Poll` does this itself.
+- **The bus's `ended` is `gone`,** told when a connection closes for good.
+
+### What is per viewer now
+
+- **A poll's ballot, a component's kept state (`keptAs`) and a viewer's
+  language** are kept under the viewer's handle, so two tabs of one
+  viewer share them, a reconnect keeps them, and a connection number the
+  server gives again after a restart is given no one's (TODO-6463's leak
+  is closed). A vote and its ballot are one transaction.
+- **A connection with no viewer** keeps them for its own life. The library
+  asks for the viewer's state after the input that made them
+  (`requestState`), once; granted, what the connection held becomes the
+  viewer's (a vote cast before in another tab is taken back, so the last
+  is the one vote); refused, it is not asked again.
+- **A viewer's language** is read from the store as each of their
+  connections joins and drawn at once in every tab of theirs when they
+  choose another.
+- **A visit's values** go 24 hours after their last use, a remembered
+  viewer's 180 days after; at most 262,144 viewers' values are kept.
+- **`services.forgetViewer(connection)`** is a channel's "forget me": it
+  ends the viewer's state and deletes what the store keeps for them.
+  `services.viewer(connection)` says whether the connection has a viewer
+  and whether they are remembered; `services.offerRemember(connection)`
+  asks their browser to offer "remember me". A reset of every handle
+  deletes every viewer's values.
+- **Still per connection:** a viewer's own copy of a page and everything
+  in it, what `play`, `stream`, `redirect` and `deny` reach, a page's
+  parameters, and a stream's gain and places.
+- **The rule** (VS-409): a channel may use a viewer's handle only to
+  provide what the viewer asked for on that channel, never for
+  advertising, profiling, analytics beyond aggregate counts or sharing;
+  it deletes what it keeps for a handle when the viewer's state ends and
+  says on its privacy page what it keeps.
+
 ## 22.0.0 (18 November 2026)
 
 ### To take it
