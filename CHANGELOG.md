@@ -3,6 +3,16 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 26.0.1 (19 November 2026)
+
+### To take it
+
+- **Take the protocol kit 18.1.0 with it**, in place of 18.0.0: the
+  library pins the kit exactly as its peer. Vendor both releases under
+  the channel's `vendor/`. Nothing the library offers has changed; the
+  kit's additions (NAPLPS labels, a picture's title and one object
+  redefined) are in its DEPLOYMENT.md.
+
 ## 26.0.0 (19 November 2026)
 
 ### To take it
