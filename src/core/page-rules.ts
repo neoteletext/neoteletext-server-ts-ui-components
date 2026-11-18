@@ -26,6 +26,8 @@ import type { Node } from "./node.ts";
 export interface PageRules {
   readonly key: string;
   readonly table: RuleTable;
+  /** Why the table asks the whole page for the pointer and not each component's cells, when it does: it had more areas or rules than a table holds. Null otherwise. */
+  readonly widened: string | null;
 }
 
 /** What a page's table is written from: its mount's tree as last drawn. */
@@ -271,5 +273,8 @@ export function pageRules(sources: RuleSources): PageRules {
   const table: RuleTable = fits
     ? { ...(byArea.rects.length === 0 ? {} : { rects: byArea.rects }), rules: [...others, ...byArea.rules] }
     : { rules: [...others, ...wholePageRules(everything)] };
-  return { key: JSON.stringify(table), table };
+  const widened = fits
+    ? null
+    : `${byArea.rects.length} pointer areas and ${others.length + byArea.rules.length} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`;
+  return { key: JSON.stringify(table), table, widened };
 }

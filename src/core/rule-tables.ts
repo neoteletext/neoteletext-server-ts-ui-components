@@ -6,8 +6,9 @@
 // page, and again whenever the components on it come to take something
 // else, so that the viewer's receiver sends what they take and no more.
 
-import type { Context, RuleTable } from "../kit.ts";
+import type { Context } from "../kit.ts";
 import type { ConnectionMounts } from "./connection-mounts.ts";
+import type { PageRules } from "./page-rules.ts";
 
 export class RuleTables {
   /** The key of the table last sent, by connection, then page. */
@@ -33,23 +34,32 @@ export class RuleTables {
     this.#sent.clear();
   }
 
-  /** Sends each page's table to the connections that have the page open and have another table of it, or none: one message for those given the same table. */
+  /**
+   * Sends each page's table to the connections that have the page open and
+   * have another table of it, or none: one message for those given the
+   * same table. A table that asks the whole page for the pointer, since
+   * the page has more than a table holds, is said in the channel's log as
+   * it is sent.
+   */
   send(context: Context, mounts: ConnectionMounts): void {
     for (const [page, watching] of mounts.watching) {
-      const owed = new Map<string, { readonly table: RuleTable; readonly connections: number[] }>();
+      const owed = new Map<string, { readonly rules: PageRules; readonly connections: number[] }>();
       for (const connection of watching) {
         const rules = (mounts.of(connection, page) ?? mounts.shared.get(page))?.rules ?? null;
         const sent = this.#sent.get(connection) ?? new Map<number, string>();
         if (rules !== null && sent.get(page) !== rules.key) {
           sent.set(page, rules.key);
           this.#sent.set(connection, sent);
-          const group = owed.get(rules.key) ?? { table: rules.table, connections: [] };
+          const group = owed.get(rules.key) ?? { rules, connections: [] };
           group.connections.push(connection);
           owed.set(rules.key, group);
         }
       }
-      for (const { table, connections } of owed.values()) {
-        context.rules({ connections }, page, table);
+      for (const { rules, connections } of owed.values()) {
+        context.rules({ connections }, page, rules.table);
+        if (rules.widened !== null) {
+          context.log(`page ${page.toString(16)}: ${rules.widened}`);
+        }
       }
     }
   }

@@ -85,12 +85,21 @@ test("RULE-54: a page with more areas than a table has rectangles asks the whole
     ),
   );
   const send = [{ action: "send" }] as const;
+  const many = viewer(...rows(MOST_RECTS + 1));
   assert.deepEqual(
-    tableSent(viewer(...rows(MOST_RECTS + 1))),
+    tableSent(many),
     table([
       { name: "press", on: { event: "press", target: "page", button: "any" }, do: send },
       { name: "wheel", on: { event: "wheel", target: "page" }, do: send },
     ]),
+  );
+  const logged = many.sent.filter((each) => each["type"] === "log").map((each) => String(each["text"]));
+  assert.deepEqual(
+    logged,
+    [
+      `page 150: ${MOST_RECTS + 1} pointer areas and ${MOST_RECTS + 1} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`,
+    ],
+    "the channel's log says, as the table is sent, that the page asks more widely than its components take",
   );
 });
 
