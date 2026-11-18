@@ -39,6 +39,23 @@ test("RULE-54: a button asks for the keys and a press on its cells, and for no r
   assert.deepEqual(pressed, [1], "the press its rule sent presses it");
 });
 
+test("RULE-105: an input that names the row that fired reaches its component as one that names none: the library routes by where it landed, not by the rule or the row", () => {
+  const pressed: number[] = [];
+  const page = viewer(
+    h(Button, {
+      label: "Go",
+      onPress: (connection: number) => {
+        pressed.push(connection);
+      },
+    }),
+  );
+  const button = controlBy(page, "Go");
+  const click = { kind: "mouse", action: "press", button: 0, column: button.column, row: button.row, mods: NO_MODS } as const;
+  page.fire(1, "press_button_1", click, 1, { rect: "button_1" }, 0);
+  page.fire(1, "keys", { kind: "key", action: "press", key: "Enter", mods: NO_MODS }, 2, undefined, 1);
+  assert.deepEqual(pressed, [1, 1], "the press, and Enter on the button that has the keys, each with a row");
+});
+
 test("RULE-54: an action, which never takes the keys, asks for a press on its cells alone, and the pointer on its control for the hint row", () => {
   const pressed: number[] = [];
   const page = viewer(

@@ -20,7 +20,7 @@ import {
   Text,
   TextField,
 } from "../src/index.ts";
-import { checkProgram, COLUMNS, ROWS } from "../src/kit.ts";
+import { checkProgram, COLUMNS, ROWS, type RuleTable } from "../src/kit.ts";
 import { exampleName } from "./catalogue/example.ts";
 import { PARTS } from "./catalogue/index.ts";
 import { frame } from "./components-fixtures.ts";
@@ -190,12 +190,55 @@ test("RULE-48: a fault a receiver reports of a page's table is written to the ch
   );
 });
 
+/** What a rule of the library's has (page-rules.md RULE-54 item 4): its name, its trigger, the condition a move over a canvas has, and the one report. */
+const RULE_MEMBERS = new Set(["name", "on", "when", "do"]);
+
 /** A name of a rule or a rectangle as the server takes it (page-rules.md RULE-36). */
 const NAME = /^[a-z][a-z0-9_]{0,31}$/u;
 
+/** That `rules` is a table the kit's schema takes, in the second form: every rule only reports, within the limits, its names distinct, its rectangles on the page and sharing no dot. */
+function holdsToTheSecondForm(rules: RuleTable): void {
+  assert.ok(taken(rules), "the kit's schema takes it");
+  assert.deepEqual(
+    Object.keys(rules).filter((member) => member !== "rects" && member !== "rules"),
+    [],
+    "no groups, rows or sequences of its own",
+  );
+  for (const rule of rules.rules) {
+    assert.deepEqual(rule.do, REPORT, `${rule.name} runs the one report of the firing`);
+    assert.deepEqual(
+      Object.keys(rule).filter((member) => !RULE_MEMBERS.has(member)),
+      [],
+      `${rule.name} has no run, rows or echo`,
+    );
+  }
+  const rects = rules.rects ?? [];
+  assert.ok(rules.rules.length <= MOST.rules && rects.length <= MOST.rects);
+  for (const names of [rules.rules.map((each) => each.name), rects.map((each) => each.name)]) {
+    assert.deepEqual(
+      names.filter((name, index) => !NAME.test(name) || name === "page" || names.indexOf(name) !== index),
+      [],
+    );
+  }
+  const dots = new Set<number>();
+  for (const rect of rects) {
+    assert.ok(
+      rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0 && rect.x + rect.width <= PAGE_ACROSS && rect.y + rect.height <= PAGE_DOWN,
+      rect.name,
+    );
+    for (let cellRow = rect.y / CELL_DOWN; cellRow < (rect.y + rect.height) / CELL_DOWN; cellRow += 1) {
+      for (let column = rect.x / CELL_ACROSS; column < (rect.x + rect.width) / CELL_ACROSS; column += 1) {
+        assert.ok(!dots.has(cellRow * COLUMNS + column), `${rect.name} shares a cell with another rectangle`);
+        dots.add(cellRow * COLUMNS + column);
+      }
+    }
+  }
+  assert.ok(dots.size <= ROWS * COLUMNS);
+}
+
 for (const part of PARTS) {
   for (const example of part.examples) {
-    test(`RULE-54: ${part.part}: ${exampleName(example)}'s tables, one a sub-page, are each one the server takes: within its limits, its names distinct, its rectangles on the page and sharing no dot`, () => {
+    test(`RULE-54: ${part.part}: ${exampleName(example)}'s tables, one a sub-page, are each one the kit's schema takes, in the second form: every rule only reports, within the limits, its names distinct, its rectangles on the page and sharing no dot`, () => {
       const channel = new ComponentChannel(
         [
           {
@@ -214,28 +257,7 @@ for (const part of PARTS) {
       const tables = channel.viewerMount(1, PAGE)?.subPages.rules ?? [];
       assert.ok(tables.length > 0, "every sub-page has a table");
       for (const { table: rules } of tables) {
-        const rects = rules.rects ?? [];
-        assert.ok(rules.rules.length <= MOST.rules && rects.length <= MOST.rects);
-        for (const names of [rules.rules.map((each) => each.name), rects.map((each) => each.name)]) {
-          assert.deepEqual(
-            names.filter((name, index) => !NAME.test(name) || name === "page" || names.indexOf(name) !== index),
-            [],
-          );
-        }
-        const dots = new Set<number>();
-        for (const rect of rects) {
-          assert.ok(
-            rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0 && rect.x + rect.width <= PAGE_ACROSS && rect.y + rect.height <= PAGE_DOWN,
-            rect.name,
-          );
-          for (let cellRow = rect.y / CELL_DOWN; cellRow < (rect.y + rect.height) / CELL_DOWN; cellRow += 1) {
-            for (let column = rect.x / CELL_ACROSS; column < (rect.x + rect.width) / CELL_ACROSS; column += 1) {
-              assert.ok(!dots.has(cellRow * COLUMNS + column), `${rect.name} shares a cell with another rectangle`);
-              dots.add(cellRow * COLUMNS + column);
-            }
-          }
-        }
-        assert.ok(dots.size <= ROWS * COLUMNS);
+        holdsToTheSecondForm(rules);
       }
       assert.deepEqual(page.errors, []);
     });

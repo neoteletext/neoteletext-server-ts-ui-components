@@ -113,6 +113,8 @@ test("RULE-53: a channel that says ruleTables none is sent no table, so its page
   assert.deepEqual(pressed, [1]);
   page.open(1, INDEX);
   page.typeKeys(1, "150");
-  assert.deepEqual(rulesSent(page), [], "no rules message is written, whatever is opened, typed or pressed");
+  // The one sub-page of a page given whole is 0000 (the kit's numbering), selected by its sub-code.
+  page.open(1, PAGE, 0x0000);
+  assert.deepEqual(rulesSent(page), [], "no rules message is written, whatever is opened, of a page or of a sub-page, typed or pressed");
   assert.deepEqual(page.redirects(1), [PAGE], "and the kit's page selection goes on");
 });
