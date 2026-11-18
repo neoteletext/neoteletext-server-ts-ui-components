@@ -6,16 +6,13 @@
 // server draws with the browser's renderers and fonts and the text parts
 // written by the engine's encoder in the provided sets (PAR-21).
 //
-// The picture is written flat: every cell in the stream, none in a
-// numbered drawing or an object. The server at PICTURE_SERVER draws a
-// public ReGIS picture's screen without composing its numbered drawings,
-// and the NAPLPS renderer it pins clips an object to its rectangle taken
-// as the canvas's pixels where ANIM-11 gives the design picture's (each an
-// rdm to-do of its repository, linked from REQ-6774), so a picture with
-// drawings or objects is not drawn as a receiver must draw it. Flat, it is: what a viewer sees is the
-// base with every drawing over it (regis-v2.md, "Commit and repaint"),
-// which is the flat picture. The drawings and objects themselves are
-// checked by picture-pages.test.ts.
+// The picture is the one the library keeps for the page: every
+// interactive component in a numbered drawing or an object, with its hover
+// and pressed looks, its links and the caret (picture-kept.ts). The server
+// at PICTURE_SERVER draws a public ReGIS picture with its committed
+// drawings composed over the base and a NAPLPS picture with its shown
+// objects clipped by the design picture (ANIM-11), so the golden is what a
+// viewer is shown of the page before the pointer comes onto it.
 //
 // The pictures are the goldens of test/goldens/pictures/;
 // picture-goldens.test.ts compares them, and
@@ -34,11 +31,11 @@ import { numbered } from "../src/kit.ts";
 import { exampleName } from "./catalogue/example.ts";
 import { PARTS } from "./catalogue/index.ts";
 import { EXAMPLE_PAGE, stage } from "./catalogue/stage.ts";
-import { flatMessages } from "./picture-flat.ts";
+import { keptMessages } from "./picture-kept.ts";
 import { drawPictures, pictureServer } from "./picture-server.ts";
 
 /** The goldens' format: raised, with every golden drawn again, whenever what is drawn changes (DEVELOPMENT.md section 8). */
-export const GOLDEN_FORMAT_VERSION = 1;
+export const GOLDEN_FORMAT_VERSION = 2;
 
 const ROOT = join(import.meta.dirname, "..");
 export const GOLDENS = join(ROOT, "test", "goldens", "pictures");
@@ -58,11 +55,11 @@ export interface PictureExample {
   readonly page: string;
   /** The sub-page the example shows, as the protocol writes it. */
   readonly sub: string;
-  /** Its picture's messages, written flat. */
+  /** Its picture's messages, as the library keeps it. */
   readonly messages: readonly Record<string, unknown>[];
 }
 
-/** Every catalogue example staged in each picture language, with its shown sub-page's picture written flat. */
+/** Every catalogue example staged in each picture language, with its shown sub-page's picture as the library keeps it. */
 export function pictureExamples(): PictureExample[] {
   const examples: PictureExample[] = [];
   let next = FIRST_PAGE;
@@ -80,7 +77,7 @@ export function pictureExamples(): PictureExample[] {
           throw new Error(`${exampleName(example)} drew no ${renderer} picture of its sub-page ${at + 1}`);
         }
         const subText = sub.toString(PAGE_RADIX).toUpperCase().padStart(SUB_DIGITS, "0");
-        examples.push({ name: exampleName(example), renderer, page, sub: subText, messages: flatMessages(renderer, scene, page, subText) });
+        examples.push({ name: exampleName(example), renderer, page, sub: subText, messages: keptMessages(renderer, scene, page, subText) });
       }
     }
   }

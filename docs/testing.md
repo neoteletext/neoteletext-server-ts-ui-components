@@ -93,11 +93,12 @@ the viewer does first (`act`). The catalogue serves three ends:
       TELETEXT_SERVER=/path/to/teletext-server node --test test/picture-goldens.test.ts
       TELETEXT_SERVER=/path/to/teletext-server node test/picture-goldens.ts
 
-  The second writes the goldens again. They are written flat, every
-  cell in the stream, until the server composes a public ReGIS picture's
-  numbered drawings and the NAPLPS renderer clips an object in the
-  design picture's pixels; the drawings and objects are tested by
-  `test/picture-pages.test.ts`.
+  The second writes the goldens again. Each is the picture as the
+  library keeps it (`test/picture-kept.ts`), its interactive components
+  in numbered drawings or objects with their looks, links and caret,
+  which the server composes as a viewer is first shown the page.
+  `test/picture-text.test.ts` uses the same server to measure a ReGIS
+  letter's width.
 - **The docs** (`test/docs.ts`): the pages under `docs/components/`,
   made from the catalogue and the source. `test/docs.test.ts` fails when
   they are out of step; `node test/docs.ts` writes them again.
