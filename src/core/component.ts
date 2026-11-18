@@ -22,7 +22,7 @@ import type { Canvas, TextLanguage } from "./canvas.ts";
 import { type ComponentHost, type FocusableAt, type TimerOptions, UNMOUNTED_LANGUAGE } from "./component-host.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { Child, WithChildren } from "./element.ts";
-import type { ComposeEvent, HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
+import type { ComposeEvent, HoverEvent, KeyEvent, PointerEvent, PointerInput, TextEvent, WheelEvent } from "./events.ts";
 import { bindingsText, type KeyHelpEntry } from "./key-bindings.ts";
 import type { PageNeeds } from "./needs.ts";
 import type { Services } from "./services.ts";
@@ -255,6 +255,8 @@ export abstract class Component<P extends object = object, S extends object = ob
   /** The keys came to the page, or left it: the window was focused, or the viewer went to another. */
   onPageFocus?(): void;
   onPageBlur?(): void;
+  /** What it takes of the pointer on its cells, which is all its page's rule table asks a receiver to send for it (events.ts); when absent, what its handlers can take (takenByHandlers). */
+  pointerInput?(): PointerInput;
   /** An event from a component under it (component-events.ts); true stops it going further up. */
   onComponentEvent?(event: ComponentEvent): boolean | void;
 

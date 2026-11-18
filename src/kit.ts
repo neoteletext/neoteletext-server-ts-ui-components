@@ -3,4 +3,14 @@
 
 export * from "neoteletext-server-ts-protocol";
 // The protocol's own types, generated from the server's schema, that the library names.
-export type { StateRefusal, TextLevel, TextRun } from "neoteletext-server-ts-protocol/protocol";
+export type {
+  PageRule,
+  RectDeclaration,
+  RuleCondition,
+  RuleTable,
+  RuleTarget,
+  ServerMessageRulesFault,
+  StateRefusal,
+  TextLevel,
+  TextRun,
+} from "neoteletext-server-ts-protocol/protocol";

@@ -5,11 +5,13 @@
 // - `input`: to the viewer's mount, or the channel's for a shared page; `wake`: the timers that are due run.
 // - `leftPage` and `gone`: the viewer's mounts are unmounted; what their components keep (REQ-1058) stays in the store.
 // - `viewerBegan`: what the connection held with no viewer is kept under the viewer's handle (viewer-state.md VS-407).
-// After each call every mount with something new renders, and a page is published only if its TTI changed. A viewer's copy is published only while it
+// - `rulesFault`: a fault a viewer's receiver found in a page's rule table is logged; the table is the library's (rule-tables.ts).
+// After each call every mount with something new renders, and a page is published only if its TTI changed; each page's rule table, written from its
+// components (page-rules.md RULE-54), is sent to the connections that have the page open when it is not the one they have. A viewer's copy is published only while it
 // differs from the channel's; when it is the same again it is released, so a viewer who only reads costs the server nothing.
 
 // oxlint-disable import/max-dependencies -- the runtime is where the protocol's calls meet the mounts, streams, sounds and publication
-// oxlint-disable max-lines -- the runtime is the kit's Application, a method for each of the protocol's calls, and protocol 13 added five; what is not a call is in its own modules
+// oxlint-disable max-lines -- the runtime is the kit's Application, a method for each of the protocol's calls, and protocol 13 added five, protocol 14 one; what is not a call is in its own modules
 import {
   type Application,
   type Context,
@@ -18,6 +20,7 @@ import {
   type LanguageTag,
   type PageEntry,
   type PageRequest,
+  type ServerMessageRulesFault,
   type ServerStats,
   type StateRefusal,
   type Viewer,
@@ -38,6 +41,7 @@ import { ConnectionMounts } from "./connection-mounts.ts";
 import { type MountParts, newMount } from "./page-mounts.ts";
 import { describedBy, type PageSpec, SpecNeeds } from "./page-spec.ts";
 import { earliestWake, publishChanges } from "./publish.ts";
+import { RuleTables } from "./rule-tables.ts";
 import { SoundObjects } from "./sound-objects.ts";
 import type { KeptComponents } from "./kept-components.ts";
 
@@ -45,6 +49,7 @@ export class ComponentChannel implements Application {
   readonly bus = new EventBus<LibraryEvents>();
   readonly #specs: ReadonlyMap<number, PageSpec>;
   readonly #mounts = new ConnectionMounts();
+  readonly #tables = new RuleTables();
   #context: Context | null = null;
   #timerId = 0;
   readonly #sounds: SoundObjects;
@@ -89,6 +94,7 @@ export class ComponentChannel implements Application {
     this.#run(context, () => {
       // A program the server started again is sent start again: whatever was mounted before goes.
       this.#mounts.clear();
+      this.#tables.clear();
       this.#sounds.forgetAll();
       this.#viewerStates.clear();
       for (const spec of this.#specs.values()) {
@@ -130,6 +136,7 @@ export class ComponentChannel implements Application {
   opened(connection: number, page: number, context: Context): void {
     this.#run(context, () => {
       this.#mounts.watch(connection, page);
+      this.#tables.opened(connection, page);
       const spec = this.#specs.get(page);
       if (spec !== undefined && this.#ownCopy(spec, connection)) {
         this.#viewerMount(spec, connection);
@@ -187,6 +194,7 @@ export class ComponentChannel implements Application {
   gone(connection: number, context: Context): void {
     this.#run(context, () => {
       this.#mounts.forget(connection);
+      this.#tables.forget(connection);
       this.#sounds.forget(connection);
       this.#streams.forget(connection);
       this.#params.forget(connection);
@@ -227,6 +235,11 @@ export class ComponentChannel implements Application {
       this.#viewerStates.reset();
       this.bus.emit("viewerEnded", { handle: null });
     });
+  }
+
+  /** A viewer's receiver found a fault in a page's rule table (page-rules.md RULE-48): the table is the library's, so the channel's log says it. */
+  rulesFault(fault: ServerMessageRulesFault, context: Context): void {
+    context.log(`page ${fault.page}: connection ${fault.connection}'s receiver reported the rule table fault ${fault.fault}, ${fault.count} times`);
   }
 
   stats(stats: ServerStats, context: Context): void {
@@ -305,6 +318,7 @@ export class ComponentChannel implements Application {
     try {
       work();
       publishChanges(context, this.#mounts.shared, this.#mounts.viewers, this.#mounts.own);
+      this.#tables.send(context, this.#mounts);
       if (gesture !== null) {
         this.#viewerStates.afterGesture(context, gesture);
       }

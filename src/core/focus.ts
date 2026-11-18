@@ -8,7 +8,7 @@
 
 import { Key } from "../kit.ts";
 import type { Component } from "./component.ts";
-import { isPress, type KeyEvent, typedText } from "./events.ts";
+import { type ComposeEvent, isPress, type KeyEvent, type TextEvent, typedText } from "./events.ts";
 import type { Box } from "./layout.ts";
 import { bubble, focusables, type Node } from "./node.ts";
 
@@ -135,4 +135,20 @@ export function routeKey(event: KeyEvent, focused: Node | null, root: Node | nul
   }
   // What no component took as a key is typed text for those above the one with the keys.
   return text !== null && bubble(focus?.parent ?? null, (component) => component.onText?.(text));
+}
+
+/** Text that came from no key, as the viewer made it: typed whole, pasted, or an input method's as it stands while they compose. */
+export type Typed =
+  | { readonly kind: "text"; readonly event: TextEvent }
+  | { readonly kind: "paste"; readonly event: TextEvent }
+  | { readonly kind: "compose"; readonly event: ComposeEvent };
+
+/** Gives `typed` to the component at `from`, where typing goes, then to those above it; a paste no component takes as one is text. Answers whether it was taken. */
+export function routeTyped(from: Node | null, typed: Typed): boolean {
+  return bubble(from, (component) => {
+    if (typed.kind === "compose") {
+      return component.onCompose?.(typed.event);
+    }
+    return typed.kind === "paste" ? (component.onPaste?.(typed.event) ?? component.onText?.(typed.event)) : component.onText?.(typed.event);
+  });
 }

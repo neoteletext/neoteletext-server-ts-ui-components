@@ -25,8 +25,8 @@ export { readControls, readDeclarations } from "./read-controls.ts";
 export type { Declarations } from "./read-controls.ts";
 export { h } from "./element.ts";
 export type { AnyComponentClass, Child, ClassProps, ComponentClass, Element, LayoutProps, PropsOf, WithChildren } from "./element.ts";
-export { isPress, NOTCH, typedText } from "./events.ts";
-export type { Cell, ComposeEvent, HoverEvent, KeyEvent, PointerEvent, TextEvent, WheelEvent } from "./events.ts";
+export { isPress, NO_POINTER_INPUT, NOTCH, takenByHandlers, typedText } from "./events.ts";
+export type { Cell, ComposeEvent, HoverEvent, KeyEvent, PointerEvent, PointerInput, PointerMoves, TextEvent, WheelEvent } from "./events.ts";
 export { choosing, COLOUR_KEY_NAMES, COLOUR_KEYS, colourKeyOf, digitOf, FUNCTION_KEYS } from "./keys.ts";
 export { bindingsText } from "./key-bindings.ts";
 export type { KeyHelpEntry } from "./key-bindings.ts";
@@ -52,6 +52,7 @@ export {
 export type { ControlLook, Kind } from "./look.ts";
 export { BOTTOM_ROW, FULL_BLOCK, LEFT_HALF, LOWER_TWO, MIDDLE_ROW, MOSAIC_BASE, RIGHT_HALF, SIXEL, TOP_ROW, UPPER_TWO } from "./mosaics.ts";
 export type { PageNeeds } from "./needs.ts";
+export { MOST_RECTS, MOST_RULES } from "./page-rules.ts";
 export { SubPage } from "./page.ts";
 export type { SubPageLinks, SubPageProps } from "./page.ts";
 export { RawSubPage } from "./raw-sub-page.ts";

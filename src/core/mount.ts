@@ -9,13 +9,15 @@ import type { Box } from "./layout.ts";
 import { draw, type DrawHost, drawHost, type DrawnPage, type Reach, shownSubPages } from "./draw.ts";
 import type { Element } from "./element.ts";
 import { nodeLanguage, type TextLanguage } from "./language.ts";
-import type { ComposeEvent, KeyEvent, TextEvent } from "./events.ts";
+import type { KeyEvent } from "./events.ts";
 import { FocusHistory, routeKey } from "./focus.ts";
 import { emptyGrid } from "./grid.ts";
 import type { KeptComponents } from "./kept-components.ts";
 import type { KeyHelpEntry } from "./key-bindings.ts";
-import { type AnyComponent, bubble, EMPTY, firstFocusable, focusables, nearest, type Node } from "./node.ts";
+import { Hints } from "./hints.ts";
+import { type AnyComponent, bubble, EMPTY, firstFocusable, focusables, type Node } from "./node.ts";
 import type { ColourTable } from "./rollover.ts";
+import { type PageRules, pageRules } from "./page-rules.ts";
 import { Pointer } from "./pointer.ts";
 import type { Services } from "./services.ts";
 import { Timers } from "./timers.ts";
@@ -57,6 +59,10 @@ export class Mount implements ComponentHost {
   readonly pointer: Pointer;
   /** The page as last drawn. */
   lastPage: DrawnPage | null = null;
+  /** The page's rule table, written from its components as last drawn (page-rules.ts); null until it is first drawn. */
+  rules: PageRules | null = null;
+  /** What the hint row says, and whether a component reads what the pointer is over, so that the page's table asks for the pointer coming onto its controls. */
+  readonly #hints: Hints;
 
   constructor(page: number, root: Element, host: MountHost) {
     this.page = page;
@@ -72,6 +78,10 @@ export class Mount implements ComponentHost {
       },
     });
     this.#timers = new Timers({ nextTimerId: host.nextTimerId, now: (): number => this.services.now(), viewed: host.viewed });
+    this.#hints = new Hints({
+      focused: (): AnyComponent | null => this.#focus?.component ?? null,
+      hovered: (): Node | null => (this.services.connection === null ? null : this.pointer.hoveredBy(this.services.connection)),
+    });
     this.pointer = new Pointer({
       reach: (): Reach => this.#reach,
       focusOn: (node): void => {
@@ -113,6 +123,7 @@ export class Mount implements ComponentHost {
   }
 
   isHovered(component: AnyComponent): boolean {
+    this.#hints.read = true;
     return this.pointer.isHovered(component);
   }
 
@@ -135,7 +146,7 @@ export class Mount implements ComponentHost {
   }
 
   focusedHint(): string | null {
-    return this.hoveredHint() ?? this.#focus?.component.hint() ?? null;
+    return this.#hints.focused();
   }
 
   focusedBindings(): readonly KeyHelpEntry[] {
@@ -164,18 +175,11 @@ export class Mount implements ComponentHost {
   }
 
   hoveredHint(): string | null {
-    return this.#hinted()?.hint() ?? null;
+    return this.#hints.hovered();
   }
 
   hintIsKeys(): boolean {
-    const source = this.#hinted() ?? this.#focus?.component ?? null;
-    return source !== null && !source.hintDescribes();
-  }
-
-  /** The component under the viewer's pointer that says what it does, nearest first; on the copy every viewer shares, which follows no one's pointer, none. */
-  #hinted(): AnyComponent | null {
-    const { connection } = this.services;
-    return connection === null ? null : nearest(this.pointer.hoveredBy(connection), (each) => each.hint() !== null);
+    return this.#hints.isKeys();
   }
 
   // Rendering.
@@ -195,6 +199,7 @@ export class Mount implements ComponentHost {
       this.lastPage = drawn.page;
       this.#tree.commit();
     }
+    this.rules = pageRules({ components: this.#tree.components(), root: this.#tree.root, reach: this.#reach, hoverRead: this.#hints.read });
     if (this.#dirty) {
       this.#host.report(`page ${this.page.toString(16)}: still changing after ${MOST_PASSES} renders; a component's update sets state each time`);
       this.#dirty = false;
@@ -249,17 +254,9 @@ export class Mount implements ComponentHost {
     });
   }
 
-  text(event: TextEvent): boolean {
-    return bubble(this.#focus ?? this.#tree.root, (component) => component.onText?.(event));
-  }
-
-  paste(event: TextEvent): boolean {
-    return bubble(this.#focus ?? this.#tree.root, (component) => component.onPaste?.(event) ?? component.onText?.(event));
-  }
-
-  /** An input method's text as it stands goes where typing goes. */
-  compose(event: ComposeEvent): boolean {
-    return bubble(this.#focus ?? this.#tree.root, (component) => component.onCompose?.(event));
+  /** Where text that came from no key goes first, as typing does: the component with the keys, or else the root (focus.ts, routeTyped). */
+  get typedAt(): Node | null {
+    return this.#focus ?? this.#tree.root;
   }
 
   /** The keys came to the page, or left it: every component hears it. */
@@ -277,11 +274,11 @@ export class Mount implements ComponentHost {
 
   /** The pointer entered or left a control (pointer.ts); the hint row is drawn again when what it says changes. */
   hover(connection: number, entered: boolean, row: number, column: number): boolean {
-    const hintBefore = this.focusedHint();
-    const hoveredBefore = this.hoveredHint();
+    const [hintBefore, hoveredBefore] = this.#hints.shown();
     const taken = this.pointer.hover(connection, entered, row, column);
     // A hint row of a page's own words shows the hovered control's alone, so either changing is a change.
-    if (this.focusedHint() !== hintBefore || this.hoveredHint() !== hoveredBefore) {
+    const [hint, hovered] = this.#hints.shown();
+    if (hint !== hintBefore || hovered !== hoveredBefore) {
       this.#dirty = true;
     }
     return taken;

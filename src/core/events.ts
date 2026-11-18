@@ -1,7 +1,10 @@
 // Input as components receive it: the server's events (DOC-1968)
 //, with the connection they came from and, for the pointer, the
 // wheel and a hover, the cell both on the page and inside the component's
-// own box.
+// own box. And what of the pointer a component asks for: a page hears no
+// input but what a rule of its table sends (neoteletext-common's
+// docs/page-rules.md, RULE-50), and the library writes each page's table
+// from what its components take (RULE-54, page-rules.ts).
 
 import { keyText, type Pointed } from "../kit.ts";
 
@@ -83,4 +86,52 @@ export function typedText(event: KeyEvent): string | undefined {
 /** Whether `event` presses (or repeats) `key`. */
 export function isPress(event: KeyEvent, key: string): boolean {
   return event.key === key && event.action !== "release";
+}
+
+/**
+ * Which of the pointer's moves a component takes: `none`; `held`, those
+ * while a button is down, which a drag is made of; or `all`, every move
+ * over its cells, a button held or not, as a brush that follows the
+ * pointer needs.
+ */
+export type PointerMoves = "none" | "held" | "all";
+
+/** What a component takes of the pointer on its own cells and those of the components under it. */
+export interface PointerInput {
+  /** A button or a finger going down: a click, the start of a drag, or the press that gives it the keys. */
+  readonly press: boolean;
+  /** The button coming up again, wherever the pointer then is. */
+  readonly release: boolean;
+  readonly moves: PointerMoves;
+  /** The wheel turning over it. */
+  readonly wheel: boolean;
+}
+
+/** Nothing of the pointer: what a component that only stops it, or only draws, asks for. */
+export const NO_POINTER_INPUT: PointerInput = { press: false, release: false, moves: "none", wheel: false };
+
+/** What a component's handlers show of it, and whether it takes the keys. */
+interface Handlers {
+  readonly onClick?: unknown;
+  readonly onPointer?: unknown;
+  readonly onWheel?: unknown;
+  focusable(): boolean;
+}
+
+/**
+ * What a component can take of the pointer, read from the handlers it has:
+ * a press for `onClick`, `onPointer` or the keys, which a press gives it;
+ * the release and every move over it for `onPointer`, which is offered each
+ * of them; the wheel for `onWheel`. A component that takes less defines
+ * `pointerInput` and says so: one that is only dragged answers `held` for
+ * its moves.
+ */
+export function takenByHandlers(component: Handlers): PointerInput {
+  const pointed = component.onPointer !== undefined;
+  return {
+    press: pointed || component.onClick !== undefined || component.focusable(),
+    release: pointed,
+    moves: pointed ? "all" : "none",
+    wheel: component.onWheel !== undefined,
+  };
 }

@@ -3,6 +3,7 @@
 
 import type { Input, Pointed } from "../kit.ts";
 import type { KeyEvent } from "./events.ts";
+import { routeTyped } from "./focus.ts";
 import type { Mount } from "./mount.ts";
 import type { PointerAt } from "./pointer.ts";
 
@@ -49,13 +50,13 @@ export function dispatchInput(mount: Mount, connection: number, input: Input): b
       return mount.key(keyEvent(connection, input));
     }
     case "text": {
-      return mount.text({ connection, text: input.text });
+      return routeTyped(mount.typedAt, { kind: "text", event: { connection, text: input.text } });
     }
     case "paste": {
-      return mount.paste({ connection, text: input.text });
+      return routeTyped(mount.typedAt, { kind: "paste", event: { connection, text: input.text } });
     }
     case "compose": {
-      return mount.compose({ connection, cursor: input.cursor, text: input.text });
+      return routeTyped(mount.typedAt, { kind: "compose", event: { connection, cursor: input.cursor, text: input.text } });
     }
     case "mouse": {
       return input.action === "gone" ? mount.pointer.gone(connection) : mount.pointer.pointer(connection, pointerAt(input));

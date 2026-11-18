@@ -5,7 +5,7 @@
 import type { Canvas } from "../core/canvas.ts";
 import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
-import type { PointerEvent } from "../core/events.ts";
+import { type PointerEvent, type PointerInput, takenByHandlers } from "../core/events.ts";
 import { FULL_BLOCK, LEFT_HALF } from "../core/mosaics.ts";
 import { Colour, mosaicColour } from "../kit.ts";
 
@@ -81,6 +81,11 @@ export class ScrollBar extends Component<ScrollBarProps> {
     if (this.props.disabled !== true) {
       canvas.control(0, 0, canvas.width, canvas.height);
     }
+  }
+
+  /** Its block is dragged: of the pointer's moves it takes those with a button held (page-rules.md RULE-54). */
+  override pointerInput(): PointerInput {
+    return { ...takenByHandlers(this), moves: "held" };
   }
 
   override onPointer(event: PointerEvent): boolean {

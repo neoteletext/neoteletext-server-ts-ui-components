@@ -12,7 +12,7 @@
 
 import type { Canvas } from "../core/canvas.ts";
 import type { Size } from "../core/layout.ts";
-import { isPress, type KeyEvent, type PointerEvent, type WheelEvent } from "../core/events.ts";
+import { isPress, type KeyEvent, type PointerEvent, type PointerInput, takenByHandlers, type WheelEvent } from "../core/events.ts";
 import { WheelLines } from "../core/list-cursor.ts";
 import { DISABLED } from "../core/look.ts";
 import { BOTTOM_ROW, LEFT_HALF, MIDDLE_ROW, RIGHT_HALF } from "../core/mosaics.ts";
@@ -153,6 +153,11 @@ export class Slider extends ValueControl<number, SliderProps> {
       this.change(this.#clamp(this.value + notches * this.#step), event.connection);
     }
     return true;
+  }
+
+  /** Its knob is dragged: of the pointer's moves it takes those with a button held (page-rules.md RULE-54). */
+  override pointerInput(): PointerInput {
+    return { ...takenByHandlers(this), moves: "held" };
   }
 
   override onPointer(event: PointerEvent): boolean {
