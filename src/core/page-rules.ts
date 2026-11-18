@@ -27,6 +27,7 @@ import type { Reach } from "./draw.ts";
 import { takenByHandlers } from "./events.ts";
 import type { Node } from "./node.ts";
 import { MOST_SELECTION_RULES } from "./page-selection.ts";
+import type { TableLimits } from "./table-limits.ts";
 
 /** A page's table and a key that is the same exactly when the table is. */
 export interface PageRules {
@@ -45,13 +46,9 @@ export interface RuleSources {
   readonly reach: Reach;
   /** Whether a component read what the pointer is over as it rendered: the hint of the control under it, or whether it is on one of its own. */
   readonly hoverRead: boolean;
+  /** What one table may hold (table-limits.ts). */
+  readonly most: TableLimits;
 }
-
-/** The most rectangles a table declares (page-rules.md RULE-13, `MAX_RECTS`). */
-export const MOST_RECTS = 16;
-
-/** The most rules a table holds (page-rules.md RULE-3). */
-export const MOST_RULES = 64;
 
 /** A cell of a teletext page in the dots a rectangle is declared in, 12 across and 20 down of the page's 480 by 500 (page-rules.md RULE-13). */
 const CELL_DOTS_ACROSS = 12;
@@ -283,13 +280,14 @@ export function pageRules(sources: RuleSources): PageRules {
   const { areas, everything } = areasOf(sources);
   const byArea = areaRules(areas, everything);
   // A page that does not ask for every key may be given page selection's rules as well.
-  const room = MOST_RULES - (keyboard.some((rule) => rule.name === "keys") ? 0 : MOST_SELECTION_RULES);
-  const fits = byArea.rects.length <= MOST_RECTS && others.length + byArea.rules.length <= room;
+  const { most } = sources;
+  const room = most.rules - (keyboard.some((rule) => rule.name === "keys") ? 0 : MOST_SELECTION_RULES);
+  const fits = byArea.rects.length <= most.rects && others.length + byArea.rules.length <= room;
   const table: RuleTable = fits
     ? { ...(byArea.rects.length === 0 ? {} : { rects: byArea.rects }), rules: [...others, ...byArea.rules] }
     : { rules: [...others, ...wholePageRules(everything)] };
   const widened = fits
     ? null
-    : `${byArea.rects.length} pointer areas and ${others.length + byArea.rules.length + MOST_RULES - room} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`;
+    : `${byArea.rects.length} pointer areas and ${others.length + byArea.rules.length + most.rules - room} rules, of the ${most.rects} rectangles (MAX_RECTS) and ${most.rules} rules (MAX_RULES) a rule table holds; the pointer is asked for over the whole page`;
   return { key: JSON.stringify(table), table, widened };
 }

@@ -24,7 +24,8 @@ const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
  * on a United States layout (page-rules.md RULE-10): the kit reads a
  * digit from the text a key typed, in any script, and on a layout whose
  * digits are typed with Shift, or in another script, the key's own
- * character is not the digit. A rule's key set is 16 keys at most, so
+ * character is not the digit. A rule's key set holds at most
+ * `MAX_KEYS_PER_TRIGGER` keys (page-rules.md RULE-57), fewer than twenty, so
  * the keypad's are a rule of their own.
  */
 const DIGIT_ROW: readonly RuleKey[] = DIGITS.map((digit) => ({ physical: digit }));

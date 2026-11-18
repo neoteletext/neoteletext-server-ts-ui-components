@@ -5,23 +5,22 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness, SERVER_LIMITS } from "neoteletext-server-ts-protocol/testing";
 import {
   Action,
   Component,
   ComponentChannel,
   type Element,
   h,
-  MOST_RECTS,
-  MOST_RULES,
   NO_POINTER_INPUT,
   type PointerEvent,
   type PointerInput,
   Rows,
+  tableLimits,
   Text,
   TextField,
 } from "../src/index.ts";
-import { COLUMNS, ROWS } from "../src/kit.ts";
+import { checkProgram, COLUMNS, ROWS } from "../src/kit.ts";
 import { exampleName } from "./catalogue/example.ts";
 import { PARTS } from "./catalogue/index.ts";
 import { frame } from "./components-fixtures.ts";
@@ -73,6 +72,29 @@ class Stop extends Spot {
   }
 }
 
+/** What one table may hold, as the library finds it in the kit's schema under the server's limits. */
+const MOST = tableLimits(SERVER_LIMITS);
+
+/** Whether the kit's check takes a rules message whose table is `ruleTable`. */
+function taken(ruleTable: object): boolean {
+  return checkProgram({ type: "rules", connections: [1], page: "150", sub: "0000", table: ruleTable }, SERVER_LIMITS) === null;
+}
+
+/** `count` rectangles of one cell each, each named for its place. */
+function cellRects(count: number): object[] {
+  return Array.from({ length: count }, (_, at) => ({ name: `r${at}`, x: 0, y: 0, width: CELL_ACROSS, height: CELL_DOWN }));
+}
+
+/** `count` rules that report text, each named for its place. */
+function textRules(count: number): object[] {
+  return Array.from({ length: count }, (_, at) => ({ name: `r${at}`, on: { event: "text" }, do: REPORT }));
+}
+
+test("RULE-57: the library's MAX_RECTS and MAX_RULES are the most the kit's schema takes, with no figure of its own", () => {
+  assert.ok(taken({ rules: [], rects: cellRects(MOST.rects) }) && !taken({ rules: [], rects: cellRects(MOST.rects + 1) }), "MAX_RECTS taken, one more refused");
+  assert.ok(taken({ rules: textRules(MOST.rules) }) && !taken({ rules: textRules(MOST.rules + 1) }), "MAX_RULES taken, one more refused");
+});
+
 /** A spot and a row the wheel turns over, by turns: each row an area of its own, since what is taken on it differs from the rows beside it. */
 function rows(count: number): Element[] {
   return Array.from({ length: count }, (_, index) => (index % 2 === 0 ? h(Spot, { key: index }) : h(Turned, { key: index })));
@@ -86,7 +108,7 @@ test("RULE-54: a page with more areas than a table has rectangles asks the whole
       [rowsRect("spot_1", BODY_ROW), rowsRect("turned_2", BODY_ROW + 1), rowsRect("spot_3", BODY_ROW + 2)],
     ),
   );
-  const many = viewer(...rows(MOST_RECTS + 1));
+  const many = viewer(...rows(MOST.rects + 1));
   assert.deepEqual(
     tableSent(many),
     table([
@@ -99,7 +121,7 @@ test("RULE-54: a page with more areas than a table has rectangles asks the whole
   assert.deepEqual(
     logged,
     [
-      `page 150/0000: ${MOST_RECTS + 1} pointer areas and ${MOST_RECTS + 1 + SELECTION.length} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`,
+      `page 150/0000: ${MOST.rects + 1} pointer areas and ${MOST.rects + 1 + SELECTION.length} rules, of the ${MOST.rects} rectangles (MAX_RECTS) and ${MOST.rules} rules (MAX_RULES) a rule table holds; the pointer is asked for over the whole page`,
     ],
     "the channel's log says, as the table is sent, that the page asks more widely than its components take",
   );
@@ -193,7 +215,7 @@ for (const part of PARTS) {
       assert.ok(tables.length > 0, "every sub-page has a table");
       for (const { table: rules } of tables) {
         const rects = rules.rects ?? [];
-        assert.ok(rules.rules.length <= MOST_RULES && rects.length <= MOST_RECTS);
+        assert.ok(rules.rules.length <= MOST.rules && rects.length <= MOST.rects);
         for (const names of [rules.rules.map((each) => each.name), rects.map((each) => each.name)]) {
           assert.deepEqual(
             names.filter((name, index) => !NAME.test(name) || name === "page" || names.indexOf(name) !== index),
