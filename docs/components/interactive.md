@@ -34,7 +34,7 @@ And the props of [`ControlProps`](common.md#controlprops).
 // A channel makes its tally once, beside its pages, so every viewer's copy of the poll counts the same votes.
 const tally = new Tally("Best Christmas film", ["Elf", "Home Alone", "Die Hard", "Love Actually"]);
 [0, 2, 1, 2, 3, 2, 0, 2, 1, 3, 2].forEach((option, viewer) => {
-  tally.vote(100 + viewer, option);
+  tally.vote({ connection: 100 + viewer, viewer: null }, option);
 });
 return h(Poll, { tally });
 ```
@@ -46,7 +46,7 @@ return h(Poll, { tally });
 ```ts
 const tally = new Tally("Best Christmas film", ["Elf", "Home Alone", "Die Hard", "Love Actually"]);
 [0, 2, 1, 2, 3, 2, 0, 2, 1, 3, 2].forEach((option, viewer) => {
-  tally.vote(100 + viewer, option);
+  tally.vote({ connection: 100 + viewer, viewer: null }, option);
 });
 return h(Poll, { tally });
 ```

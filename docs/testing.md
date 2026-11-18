@@ -27,13 +27,15 @@ What a test can do and see:
 
 | | |
 | --- | --- |
-| `join(connection, page)`, `open(connection, page)`, `close(connection)` | A viewer comes, goes to a page, goes. |
+| `join(connection, page)`, `open(connection, page)`, `close(connection)` | A connection with no viewer comes, goes to a page, goes. |
+| `viewer(name)`, `join(viewer, page)`, `privateViewer(name)` | A named viewer with a fixed handle; joined twice, the viewer in two tabs; a private window. |
+| `grantState(connection)`, `refuseState(connection, reason)`, `forget(viewer)`, `restart()` | The server's answers to the library's request for state, a reset, and a restart, which gives connection numbers again. |
 | `press(connection, key)`, `typeKeys(connection, text)`, `typeText(connection, text)`, `paste` | Keys, typing from a keyboard, text from a phone. |
 | `clickLeft(connection, column, row)`, `wheel`, `hover` | The pointer. |
 | `advance(ms)`, `runUntil(ms)` | The clock, waking the channel when it asked to be. |
 | `seen(connection, page).rows`, `text(rows, row)`, `shows(rows, words)` | What the viewer sees. |
 | `redirects(connection)`, `addressRedirects(connection)`, `at(connection)` | The pages and the addresses the viewer was sent to, and where they are. |
-| `sounds(connection)` | The sound lines sent to the viewer. |
+| `sounds(connection)` | The sound members sent to the viewer, bytes as `Uint8Array`. |
 | `errors` | What the channel reported failing. |
 
 ## Snapshots

@@ -1,7 +1,8 @@
-// A poll keeps each viewer's vote while they are on the channel: one who
-// leaves the poll's page and comes back finds their vote, and moving it
-// moves it, never counting it twice; one who goes is forgotten, their vote
-// still counted.
+// A poll keeps the vote of a connection with no viewer for the
+// connection's life: one that leaves the poll's page and comes back finds
+// its vote, and moving it moves it, never counting it twice; one that goes
+// is forgotten, its vote still counted. A viewer's vote is theirs across
+// tabs and reconnects (viewer-state.test.ts).
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -40,12 +41,12 @@ test("a viewer who leaves the poll and comes back moves their vote, never castin
   assert.deepEqual(tally.votes, [0, 1, 0], "the vote moved to the second option, and is still one vote");
 });
 
-test("a viewer who goes is forgotten, and their vote stays counted", () => {
+test("a connection with no viewer that goes is forgotten, and its vote stays counted", () => {
   const { harness, tally } = channel();
   harness.join(2, POLL);
   harness.press(2, Key.Enter);
-  assert.equal(tally.ballotOf(2), 0);
+  assert.equal(tally.ballotOf({ connection: 2, viewer: null }), 0);
   harness.close(2);
-  assert.equal(tally.ballotOf(2), null);
+  assert.equal(tally.ballotOf({ connection: 2, viewer: null }), null);
   assert.deepEqual(tally.votes, [1, 0, 0]);
 });

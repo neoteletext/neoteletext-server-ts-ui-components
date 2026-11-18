@@ -11,7 +11,7 @@ import { Rows } from "../layout/layouts.ts";
 import { Paragraph } from "../text/paragraph.ts";
 import { Action } from "../input/action.ts";
 import { Control, type ControlProps, type KeyHelpEntry } from "../input/control.ts";
-import { Tally } from "./tally.ts";
+import type { Tally, Voter } from "./tally.ts";
 
 export interface PollProps extends ControlProps {
   /** The votes, kept by the page that makes the poll and told to every viewer's copy through the bus. */
@@ -60,10 +60,32 @@ export class Poll extends Control<PollProps, PollState> {
       this.services.bus.on("gone", ({ connection }) => {
         tally.forget(connection);
       }),
+      // A vote cast with no viewer becomes the viewer's when they begin (viewer-state.md VS-407); each poll's copy may hear it, and the first settles it.
+      this.services.bus.on("viewer", ({ connection, viewer }) => {
+        if (viewer !== null) {
+          tally.settle(connection, viewer);
+        }
+        if (connection === this.services.connection) {
+          this.#showMine();
+        }
+      }),
+      this.services.bus.on("viewerEnded", ({ handle }) => {
+        tally.forgetViewer(handle);
+      }),
     );
-    // A viewer back on the page sees the vote they cast before.
+    // A viewer back on the page, in this tab or another, sees the vote they cast before.
+    this.#showMine();
+  }
+
+  /** Who votes on `connection`: it, and its viewer now. */
+  #voter(connection: number): Voter {
+    return { connection, viewer: this.services.viewer(connection) };
+  }
+
+  /** Shows this copy's viewer's vote, if they cast one. */
+  #showMine(): void {
     const { connection } = this.services;
-    const mine = connection === null ? null : tally.ballotOf(connection);
+    const mine = connection === null ? null : this.props.tally.ballotOf(this.#voter(connection));
     if (mine !== null) {
       this.setState({ chosen: mine, mine });
     }
@@ -104,7 +126,12 @@ export class Poll extends Control<PollProps, PollState> {
     if (this.disabled) {
       return;
     }
-    this.props.tally.vote(connection, option);
+    const voter = this.#voter(connection);
+    this.props.tally.vote(voter, option);
+    if (voter.viewer === null) {
+      // The vote counts for this connection's life; the viewer's state is asked for so that it is theirs (VS-407).
+      this.services.wantState(connection);
+    }
     this.setState({ chosen: option, mine: option });
     this.services.bus.emit("poll", { name: this.props.tally.name, votes: this.props.tally.votes.slice() });
     this.activate(option, connection);

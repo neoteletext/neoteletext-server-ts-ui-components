@@ -126,6 +126,12 @@ repositories beside this one.
 - **A connection is one browser tab** (DEC-6443), numbered by the
   server: a viewer who reconnects is a new connection, and the library
   gives every component the connection its input came from.
+- **A viewer** is who a connection presents, by the handle the server
+  gives (viewer-state.md VS-401): two tabs of one browser are two
+  connections of one viewer. What is kept for a viewer (a ballot, kept
+  state, a language) is kept under the handle and shared by their tabs; a
+  connection with no viewer keeps it for its own life until the library's
+  request for state is granted (`src/core/viewer-states.ts`).
 - **The shared copy** of a page is mounted once, as the channel starts, and
   is the same for everyone: what one viewer does to it, all see.
 - **A viewer's own copy** is mounted as they open the page, when the page

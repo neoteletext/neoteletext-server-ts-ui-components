@@ -3,6 +3,7 @@
 // else with them.
 
 import type { LanguageTag, ServerStats } from "../kit.ts";
+import type { KeptViewer } from "./state-store.ts";
 
 /** A notice for a toast (feedback/notice.ts): what it says and how it is meant. Sent to one viewer or page with the bus's audience. */
 export interface ToastEvent {
@@ -27,4 +28,8 @@ export interface LibraryEvents {
   readonly language: { readonly connection: number; readonly language: LanguageTag };
   /** A connection closed for good (the kit's gone): what a component keeps for it, beyond its own copy, can go. */
   readonly gone: { readonly connection: number };
+  /** The connection's viewer began, or it no longer has one (null): what a connection held with no viewer becomes the viewer's (viewer-state.md VS-407). Told to every listener. */
+  readonly viewer: { readonly connection: number; readonly viewer: KeptViewer | null };
+  /** What is kept for the viewer of `handle` is to go (VS-409), or every viewer's when null (VS-306). Told to every listener. */
+  readonly viewerEnded: { readonly handle: string | null };
 }

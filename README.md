@@ -125,7 +125,8 @@ await runChannel([new ComponentChannel(specs, { state: store })]);
 
 A component keeps its state for its viewer by naming a key and the version
 of its state's shape; it gets it back when it is mounted again for the same
-connection, and state of another version is dropped:
+viewer, in another tab, after a reconnect or after a restart, and state of
+another version is dropped:
 
 ```ts
 class Draft extends Component<object, { readonly text: string }> {
@@ -135,6 +136,30 @@ class Draft extends Component<object, { readonly text: string }> {
   }
 }
 ```
+
+**What is kept per viewer** (viewer-state.md VS-405 to VS-409). A poll's
+ballot (`Tally`), a component's kept state (`keptAs`) and the language a
+viewer chooses (`LanguagePicker`) are kept under the viewer's handle, the
+one the server gives the program for the viewer's browser on this channel,
+never under a connection's number, which the server gives again after it
+restarts. Two tabs of one viewer share them. A connection with no viewer
+keeps them for its own life, and the library asks for the viewer's state
+after their input (`requestState`); granted, what the connection held
+becomes the viewer's; refused, it is not asked again. A visit's values go
+24 hours after their last use (`VISIT_VALUE_IDLE_MS`), a remembered
+viewer's 180 days after (`REMEMBERED_VALUE_IDLE_MS`). Every
+read-modify-write of the store is one transaction (`update`,
+`atomically`), so a vote's count and its ballot never disagree. A
+channel's "forget me" calls `services.forgetViewer(connection)`, which ends
+the viewer's state and deletes what the store keeps for them; a reset of
+every handle deletes every viewer's.
+
+A channel may use a viewer's handle only to provide what the viewer asked
+for on that channel (a poll's one vote, choices they made, their language,
+a sign-in they started), never for advertising, profiling, analytics
+beyond aggregate counts or sharing with anyone; it deletes what it keeps
+for a handle at the end of the viewer's state and at the store's limits,
+and says on its privacy page what it keeps (VS-409).
 
 ## Tests
 

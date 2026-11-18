@@ -4,55 +4,74 @@
 // - `opened`: a page with a copy for each viewer is mounted for that viewer (or found, if it was kept while they were away).
 // - `input`: to the viewer's mount, or the channel's for a shared page; `wake`: the timers that are due run.
 // - `leftPage` and `gone`: the viewer's mounts are unmounted; what their components keep (REQ-1058) stays in the store.
+// - `viewerBegan`: what the connection held with no viewer is kept under the viewer's handle (viewer-state.md VS-407).
 // After each call every mount with something new renders, and a page is published only if its TTI changed. A viewer's copy is published only while it
 // differs from the channel's; when it is the same again it is released, so a viewer who only reads costs the server nothing.
 
 // oxlint-disable import/max-dependencies -- the runtime is where the protocol's calls meet the mounts, streams, sounds and publication
-import { type Application, type Context, ffmpegOpus, type Input, type LanguageTag, type PageEntry, type PageRequest, type ServerStats } from "../kit.ts";
+// oxlint-disable max-lines -- the runtime is the kit's Application, a method for each of the protocol's calls, and protocol 13 added five; what is not a call is in its own modules
+import {
+  type Application,
+  type Context,
+  ffmpegOpus,
+  type Input,
+  type LanguageTag,
+  type PageEntry,
+  type PageRequest,
+  type ServerStats,
+  type StateRefusal,
+  type Viewer,
+} from "../kit.ts";
 import { type ComponentChannelOptions } from "./channel-options.ts";
-import { channelServices } from "./channel-services.ts";
 import { EventBus } from "./bus.ts";
 import { ViewerAddresses } from "./viewer-addresses.ts";
 import type { LibraryEvents } from "./library-events.ts";
-import type { PageParams, Services } from "./services.ts";
+import type { PageParams } from "./services.ts";
 import { ViewerParams } from "./viewer-params.ts";
 import { ViewerLanguages } from "./viewer-languages.ts";
+import { ViewerStates } from "./viewer-states.ts";
+import type { StateStore } from "./state-store.ts";
 import { dispatchInput } from "./dispatch-input.ts";
 import { LiveStreams } from "./live-streams.ts";
-import { Mount } from "./mount.ts";
+import type { Mount } from "./mount.ts";
+import { ConnectionMounts } from "./connection-mounts.ts";
+import { type MountParts, newMount } from "./page-mounts.ts";
 import { describedBy, type PageSpec, SpecNeeds } from "./page-spec.ts";
 import { earliestWake, publishChanges } from "./publish.ts";
 import { SoundObjects } from "./sound-objects.ts";
-import { KeptComponents } from "./kept-components.ts";
-import { ROLLOVER_COLOURS } from "./rollover.ts";
+import type { KeptComponents } from "./kept-components.ts";
 
 export class ComponentChannel implements Application {
   readonly bus = new EventBus<LibraryEvents>();
   readonly #specs: ReadonlyMap<number, PageSpec>;
-  readonly #shared = new Map<number, Mount>();
-  /** Each viewer's mounts, by connection, then page. */
-  readonly #viewers = new Map<number, Map<number, Mount>>();
-  /** Whether a viewer's own copy of a page is what they are sent now. */
-  readonly #own = new Map<number, Set<number>>();
+  readonly #mounts = new ConnectionMounts();
   #context: Context | null = null;
   #timerId = 0;
   readonly #sounds: SoundObjects;
-  /** Who has each page open. */
-  readonly #watching = new Map<number, Set<number>>();
   readonly #needs = new SpecNeeds();
   readonly #params = new ViewerParams();
   readonly #streams: LiveStreams;
   readonly #addresses = new ViewerAddresses();
   readonly #languages: ViewerLanguages;
-  readonly #store: ComponentChannelOptions["state"] | null;
+  readonly #store: StateStore | null;
+  readonly #viewerStates: ViewerStates;
+  /** Each viewer's mount's kept components, to write when the viewer begins. */
+  readonly #kept = new WeakMap<Mount, KeptComponents>();
 
   constructor(specs: readonly PageSpec[], options: ComponentChannelOptions = {}) {
     this.#specs = new Map(specs.map((spec) => [spec.page, spec]));
-    this.#languages = new ViewerLanguages(options.language, this.#languageChanged, options.standIn);
+    this.#store = options.state ?? null;
+    this.#viewerStates = new ViewerStates(this.#store);
+    this.#languages = new ViewerLanguages({
+      channel: options.language,
+      changed: this.#languageChanged,
+      standIn: options.standIn,
+      store: this.#store,
+      viewers: this.#viewerStates,
+    });
     const opus = options.opus ?? ffmpegOpus();
     this.#sounds = new SoundObjects(opus);
     this.#streams = new LiveStreams(opus);
-    this.#store = options.state ?? null;
   }
 
   /** Whether the page's spec, or what is on it, keeps a copy for each viewer: for tests. */
@@ -69,17 +88,19 @@ export class ComponentChannel implements Application {
     this.#needs.logUnprobed(context);
     this.#run(context, () => {
       // A program the server started again is sent start again: whatever was mounted before goes.
-      for (const mount of this.#mounts()) {
-        mount.unmount();
-      }
-      this.#shared.clear();
-      this.#viewers.clear();
-      this.#own.clear();
+      this.#mounts.clear();
       this.#sounds.forgetAll();
-      this.#watching.clear();
+      this.#viewerStates.clear();
       for (const spec of this.#specs.values()) {
-        this.#shared.set(spec.page, this.#mount(spec, null));
+        this.#mounts.shared.set(spec.page, this.#mount(spec, null));
       }
+    });
+  }
+
+  joined(connection: number, context: Context): void {
+    this.#run(context, () => {
+      this.#viewerStates.joined(connection);
+      this.#languages.joined(context, connection);
     });
   }
 
@@ -100,7 +121,7 @@ export class ComponentChannel implements Application {
   /** The viewer's page is made again with what it is now made with: one they have mounted shows it at once. */
   #show(connection: number, page: number): void {
     const spec = this.#specs.get(page);
-    const mount = this.#viewers.get(connection)?.get(page);
+    const mount = this.#mounts.of(connection, page);
     if (spec !== undefined && mount !== undefined) {
       mount.setRoot(spec.root(this.#params.of(connection, page)));
     }
@@ -108,30 +129,25 @@ export class ComponentChannel implements Application {
 
   opened(connection: number, page: number, context: Context): void {
     this.#run(context, () => {
-      const watching = this.#watching.get(page) ?? new Set<number>();
-      watching.add(connection);
-      this.#watching.set(page, watching);
+      this.#mounts.watch(connection, page);
       const spec = this.#specs.get(page);
       if (spec !== undefined && this.#ownCopy(spec, connection)) {
         this.#viewerMount(spec, connection);
       }
       // A clock that waited while nobody watched catches up before the page is sent.
-      this.#shared.get(page)?.runTimers(context.now());
+      this.#mounts.shared.get(page)?.runTimers(context.now());
     });
   }
 
   leftPage(connection: number, page: number, context: Context): void {
     this.#run(context, () => {
-      this.#watching.get(page)?.delete(connection);
+      this.#mounts.watching.get(page)?.delete(connection);
       this.#streams.left(context, connection, page);
       const spec = this.#specs.get(page);
-      const mount = this.#viewers.get(connection)?.get(page);
-      if (spec === undefined || mount === undefined || spec.keepWhileAway === true) {
+      if (spec === undefined || this.#mounts.of(connection, page) === undefined || spec.keepWhileAway === true) {
         return;
       }
-      mount.unmount();
-      this.#viewers.get(connection)?.delete(page);
-      if (this.#own.get(connection)?.delete(page) === true) {
+      if (this.#mounts.unmount(connection, page)) {
         context.release(connection, page);
       }
     });
@@ -139,18 +155,22 @@ export class ComponentChannel implements Application {
 
   input(connection: number, page: number, input: Input, context: Context): boolean {
     let taken = false;
-    this.#run(context, () => {
-      const spec = this.#specs.get(page);
-      if (spec === undefined) {
-        return;
-      }
-      const mount =
-        this.#viewers.get(connection)?.get(page) ?? (this.#ownCopy(spec, connection) ? this.#viewerMount(spec, connection) : this.#shared.get(page));
-      if (mount === undefined) {
-        return;
-      }
-      taken = dispatchInput(mount, connection, input);
-    });
+    this.#run(
+      context,
+      () => {
+        const spec = this.#specs.get(page);
+        if (spec === undefined) {
+          return;
+        }
+        const mount =
+          this.#mounts.of(connection, page) ?? (this.#ownCopy(spec, connection) ? this.#viewerMount(spec, connection) : this.#mounts.shared.get(page));
+        if (mount === undefined) {
+          return;
+        }
+        taken = dispatchInput(mount, connection, input);
+      },
+      connection,
+    );
     return taken;
   }
 
@@ -158,7 +178,7 @@ export class ComponentChannel implements Application {
     this.#run(context, () => {
       const now = context.now();
       this.#streams.pump(context, now);
-      for (const mount of this.#mounts()) {
+      for (const mount of this.#mounts.all()) {
         mount.runTimers(now);
       }
     });
@@ -166,20 +186,46 @@ export class ComponentChannel implements Application {
 
   gone(connection: number, context: Context): void {
     this.#run(context, () => {
-      for (const mount of this.#viewers.get(connection)?.values() ?? []) {
-        mount.unmount();
-      }
-      this.#viewers.delete(connection);
-      this.#own.delete(connection);
+      this.#mounts.forget(connection);
       this.#sounds.forget(connection);
       this.#streams.forget(connection);
       this.#params.forget(connection);
       this.#addresses.forget(connection);
       this.#languages.forget(connection);
-      for (const watching of this.#watching.values()) {
-        watching.delete(connection);
-      }
+      this.#viewerStates.gone(connection);
       this.bus.emit("gone", { connection });
+    });
+  }
+
+  /** The connection's viewer began: what it held with no viewer is theirs now (VS-407). */
+  viewerBegan(connection: number, _viewer: Viewer, _remembered: boolean, context: Context): void {
+    this.#run(context, () => {
+      this.#viewerStates.began(connection);
+      this.#languages.began(context, connection);
+      for (const mount of this.#mounts.ofConnection(connection)) {
+        this.#kept.get(mount)?.keepAll();
+      }
+      this.bus.emit("viewer", { connection, viewer: this.#viewerStates.viewer(context, connection) });
+    });
+  }
+
+  viewerLeft(connection: number, context: Context): void {
+    this.#run(context, () => {
+      this.bus.emit("viewer", { connection, viewer: null });
+    });
+  }
+
+  /** Refused, the connection is not asked again, and keeps what it holds for its own life (VS-407). */
+  stateRefused(connection: number, _reason: StateRefusal, context: Context): void {
+    this.#run(context, () => {
+      this.#viewerStates.refused(connection);
+    });
+  }
+
+  viewersReset(context: Context): void {
+    this.#run(context, () => {
+      this.#viewerStates.reset();
+      this.bus.emit("viewerEnded", { handle: null });
     });
   }
 
@@ -203,70 +249,45 @@ export class ComponentChannel implements Application {
   /** A viewer's new language draws every page they have open again in it. */
   readonly #languageChanged = (connection: number, language: LanguageTag): void => {
     this.bus.emit("language", { connection, language }, { connection });
-    for (const [page, watching] of this.#watching) {
+    for (const [page, watching] of this.#mounts.watching) {
       const spec = this.#specs.get(page);
       if (spec !== undefined && watching.has(connection) && this.#ownCopy(spec, connection)) {
         this.#viewerMount(spec, connection);
       }
     }
-    for (const mount of this.#viewers.get(connection)?.values() ?? []) {
+    for (const mount of this.#mounts.ofConnection(connection)) {
       mount.redrawAll();
     }
   };
 
-  *#mounts(): Generator<Mount> {
-    yield* this.#shared.values();
-    for (const pages of this.#viewers.values()) {
-      yield* pages.values();
-    }
-  }
-
   #viewerMount(spec: PageSpec, connection: number): Mount {
-    const pages = this.#viewers.get(connection) ?? new Map<number, Mount>();
-    this.#viewers.set(connection, pages);
-    const found = pages.get(spec.page);
-    if (found !== undefined) {
-      return found;
-    }
-    const mount = this.#mount(spec, connection, this.#params.of(connection, spec.page));
-    pages.set(spec.page, mount);
-    return mount;
+    return this.#mounts.viewerMount(connection, spec.page, () => this.#mount(spec, connection, this.#params.of(connection, spec.page)));
   }
 
   #mount(spec: PageSpec, connection: number | null, params?: PageParams): Mount {
-    return new Mount(spec.page, spec.root(params), {
-      services: this.#services(spec.page, connection),
+    const { mount, kept } = newMount(this.#mountParts, spec, connection, params);
+    this.#kept.set(mount, kept);
+    return mount;
+  }
+
+  /** What a mount is made from: read as each is made. */
+  get #mountParts(): MountParts {
+    return {
+      bus: this.bus,
+      context: () => this.#context,
+      parameters: (connection, page) => this.#addresses.parameters(connection, page),
+      redirect: this.#redirect,
+      streams: this.#streams,
+      sounds: this.#sounds,
+      languages: this.#languages,
+      viewers: this.#viewerStates,
+      store: this.#store,
+      watching: this.#mounts.watching,
       nextTimerId: () => {
         this.#timerId += 1;
         return this.#timerId;
       },
-      report: (text) => this.#context?.log(text),
-      rollover: spec.rollover === undefined ? ROLLOVER_COLOURS : spec.rollover,
-      pageLanguage: spec.language ?? null,
-      level: spec.level ?? null,
-      standIn: (language) => this.#languages.standIn(language),
-      kept: new KeptComponents(this.#store ?? null, connection, (text) => this.#context?.log(`page ${spec.page.toString(16)}: ${text}`)),
-      viewed: () => {
-        const watching = this.#watching.get(spec.page);
-        return connection === null ? (watching?.size ?? 0) > 0 : watching?.has(connection) === true;
-      },
-    });
-  }
-
-  #services(page: number, connection: number | null): Services {
-    return channelServices(
-      {
-        bus: this.bus,
-        context: () => this.#context,
-        parameters: (viewer) => this.#addresses.parameters(viewer, page),
-        redirect: this.#redirect,
-        streams: this.#streams,
-        sounds: this.#sounds,
-        languages: this.#languages,
-      },
-      page,
-      connection,
-    );
+    };
   }
 
   /** Sends a viewer to a page, with what it is to show: a page they already have open shows it at once. */
@@ -278,13 +299,16 @@ export class ComponentChannel implements Application {
     context.redirect(connection, page);
   };
 
-  /** Runs `work` in a server call, then publishes what changed and asks for the next wake. */
-  #run(context: Context, work: () => void): void {
+  /** Runs `work` in a server call, then publishes what changed and asks for the next wake; `gesture`, the connection whose input it is, may then be asked for state (VS-407). */
+  #run(context: Context, work: () => void, gesture: number | null = null): void {
     this.#context = context;
     try {
       work();
-      publishChanges(context, this.#shared, this.#viewers, this.#own);
-      const earliest = earliestWake(this.#mounts(), this.#streams.nextTick(context.now()));
+      publishChanges(context, this.#mounts.shared, this.#mounts.viewers, this.#mounts.own);
+      if (gesture !== null) {
+        this.#viewerStates.afterGesture(context, gesture);
+      }
+      const earliest = earliestWake(this.#mounts.all(), this.#streams.nextTick(context.now()));
       if (earliest !== null) {
         context.wakeAt(earliest);
       }
@@ -295,6 +319,6 @@ export class ComponentChannel implements Application {
 
   /** The page's mount for `connection`, if it has one: for tests. */
   viewerMount(connection: number, page: number): Mount | undefined {
-    return this.#viewers.get(connection)?.get(page);
+    return this.#mounts.of(connection, page);
   }
 }

@@ -7,3 +7,4 @@ export type { Question, QuizProps } from "./quiz.ts";
 export { SoundList } from "./sound-list.ts";
 export type { SoundListProps } from "./sound-list.ts";
 export { Tally } from "./tally.ts";
+export type { Voter } from "./tally.ts";

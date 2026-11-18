@@ -5,6 +5,7 @@
 
 import type { DeniedStatus, Language, LanguageTag, Limits } from "../kit.ts";
 import type { Bus } from "./bus.ts";
+import type { KeptViewer } from "./state-store.ts";
 import type { LibraryEvents } from "./library-events.ts";
 import type { Sound } from "./sound.ts";
 import type { Listening, StreamSource } from "./stream.ts";
@@ -61,6 +62,24 @@ export interface Services {
   language(connection: number | null): LanguageTag;
   /** The viewer chose `language`, one of the server's: every page they have open is drawn again in it. A tag the server does not list is no choice. */
   setLanguage(connection: number, language: LanguageTag): void;
+  /**
+   * The connection's viewer, or null while it has none (viewer-state.md
+   * VS-401): their handle and whether they chose to be remembered. The
+   * handle is for keeping what the viewer asked for on this channel and
+   * nothing else (VS-409): never shown, logged or sent anywhere.
+   */
+  viewer(connection: number): KeptViewer | null;
+  /**
+   * Something the viewer did on a connection with no viewer is to be kept
+   * for them (VS-407): the library asks for their state when this input
+   * is done, or at their next one, and once only on the connection. The
+   * poll, kept components and the language picker call it themselves.
+   */
+  wantState(connection: number): void;
+  /** Asks the viewer's browser to offer "remember me" on this channel (VS-208); a connection with no viewer is refused. */
+  offerRemember(connection: number): void;
+  /** Ends the viewer's state on this channel and deletes all the channel's store keeps for them (VS-409): every connection presenting them has no viewer after. Nothing when the connection has none. */
+  forgetViewer(connection: number): void;
   /** A pseudo-random number below `bound`: for games, never for secrets. */
   below(bound: number): number;
   /** Reports a line in the server's log. */
