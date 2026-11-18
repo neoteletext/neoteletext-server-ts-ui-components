@@ -3,6 +3,26 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 26.2.0 (19 November 2026)
+
+### What it changes
+
+- **ReGIS text is drawn at its width** (DEC-6818): a picture page's
+  ReGIS text is written in a unit cell of 16 by 20 (`T(U[16,20])`) in
+  place of 15 by 20, which the VT340 draws as 8 by 20 since a unit
+  cell's width is a multiple of 8 (the VT330/VT340 manual, volume 2,
+  chapter 7, "Unit Cell Size"). Letters were small and widely spaced;
+  they now fill their cell as the engine's text pages do. Every ReGIS
+  picture's text pixels change; nothing else does.
+
+### To take it
+
+- **Take the protocol kit 18.3.0 with it**, in place of 18.2.0: the
+  library pins the kit exactly as its peer. Nothing the library calls
+  changed; the kit adds the rule commands `regis_links`, `regis_cursor`,
+  `naplps_links` and `naplps_cursor` for a group or a rule.
+- A channel that compares its own ReGIS pictures draws them again.
+
 ## 26.1.0 (19 November 2026)
 
 ### What it adds
