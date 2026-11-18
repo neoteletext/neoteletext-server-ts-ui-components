@@ -1,4 +1,4 @@
-// Which component each cell of the first sub-page reaches, and what its
+// Which component each cell of a sub-page reaches, and what its
 // components declared that a click can reach: a control is kept only where
 // the deepest component drawn on every cell of it is the one that declared
 // it, or one under it, not a dialog or layer drawn over.

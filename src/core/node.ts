@@ -18,7 +18,7 @@ export class Node {
   readonly parent: Node | null;
   children: Node[] = [];
   box: Box = EMPTY;
-  /** The regions it marked as it last painted the first sub-page (canvas.ts). */
+  /** The regions it marked as it last painted its sub-page (canvas.ts). */
   regions: Region[] = [];
 
   constructor(element: Element, component: AnyComponent, parent: Node | null) {

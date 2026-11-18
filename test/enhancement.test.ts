@@ -222,7 +222,7 @@ test("controls and display attributes merge into one list: each row's Set Active
   ]);
 });
 
-test("every sub-page carries the display attributes it paints; controls stay on the first", () => {
+test("every sub-page carries the controls and the display attributes it paints: a sub-page is a page (DEC-6599)", () => {
   const tti = published(() =>
     h(TwoSubPages, {
       first: h(Marks, { controls: [[5, 1, 3]], attributes: [[7, 4, DOUBLE_WIDTH_BIT]] }),
@@ -231,7 +231,7 @@ test("every sub-page carries the display attributes it paints; controls stay on 
   );
   assert.deepEqual(localData(tti), [
     [setActivePosition(5), controlTriplet(1, 3, false), setActivePosition(7), attributes(4, DOUBLE_WIDTH_BIT), TERMINATION],
-    [setActivePosition(9), attributes(6, DOUBLE_WIDTH_BIT), TERMINATION],
+    [setActivePosition(5), controlTriplet(1, 3, false), setActivePosition(9), attributes(6, DOUBLE_WIDTH_BIT), TERMINATION],
   ]);
 });
 

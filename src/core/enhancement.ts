@@ -14,9 +14,8 @@
 // row's triplets in increasing column order, a control before an attribute
 // at the same column; then the Termination
 // Marker (Annex A.3). A screen colour goes first of all (Annex A.5, NOTE 1).
-// Unlike controls, which a click is found on and so
-// only the first sub-page declares (draw.ts), display attributes are how a
-// sub-page looks, so every sub-page carries those it paints.
+// Every sub-page carries the controls and the display attributes it paints
+// (draw.ts).
 
 import { COLUMNS } from "../kit.ts";
 import type { Box } from "./layout.ts";

@@ -99,7 +99,7 @@ test("RULE-54: a page with more areas than a table has rectangles asks the whole
   assert.deepEqual(
     logged,
     [
-      `page 150: ${MOST_RECTS + 1} pointer areas and ${MOST_RECTS + 1 + SELECTION.length} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`,
+      `page 150/0000: ${MOST_RECTS + 1} pointer areas and ${MOST_RECTS + 1 + SELECTION.length} rules, of the ${MOST_RECTS} rectangles and ${MOST_RULES} rules a rule table holds; the pointer is asked for over the whole page`,
     ],
     "the channel's log says, as the table is sent, that the page asks more widely than its components take",
   );
@@ -173,7 +173,7 @@ const NAME = /^[a-z][a-z0-9_]{0,31}$/u;
 
 for (const part of PARTS) {
   for (const example of part.examples) {
-    test(`RULE-54: ${part.part}: ${exampleName(example)}'s table is one the server takes: within its limits, its names distinct, its rectangles on the page and sharing no dot`, () => {
+    test(`RULE-54: ${part.part}: ${exampleName(example)}'s tables, one a sub-page, are each one the server takes: within its limits, its names distinct, its rectangles on the page and sharing no dot`, () => {
       const channel = new ComponentChannel(
         [
           {
@@ -189,30 +189,32 @@ for (const part of PARTS) {
       const page = new Harness([channel]);
       page.join(1, PAGE);
       example.act?.(page);
-      const rules = channel.viewerMount(1, PAGE)?.rules?.table;
-      assert.ok(rules !== undefined, "the page has a table");
-      const rects = rules.rects ?? [];
-      assert.ok(rules.rules.length <= MOST_RULES && rects.length <= MOST_RECTS);
-      for (const names of [rules.rules.map((each) => each.name), rects.map((each) => each.name)]) {
-        assert.deepEqual(
-          names.filter((name, index) => !NAME.test(name) || name === "page" || names.indexOf(name) !== index),
-          [],
-        );
-      }
-      const dots = new Set<number>();
-      for (const rect of rects) {
-        assert.ok(
-          rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0 && rect.x + rect.width <= PAGE_ACROSS && rect.y + rect.height <= PAGE_DOWN,
-          rect.name,
-        );
-        for (let cellRow = rect.y / CELL_DOWN; cellRow < (rect.y + rect.height) / CELL_DOWN; cellRow += 1) {
-          for (let column = rect.x / CELL_ACROSS; column < (rect.x + rect.width) / CELL_ACROSS; column += 1) {
-            assert.ok(!dots.has(cellRow * COLUMNS + column), `${rect.name} shares a cell with another rectangle`);
-            dots.add(cellRow * COLUMNS + column);
+      const tables = channel.viewerMount(1, PAGE)?.subPages.rules ?? [];
+      assert.ok(tables.length > 0, "every sub-page has a table");
+      for (const { table: rules } of tables) {
+        const rects = rules.rects ?? [];
+        assert.ok(rules.rules.length <= MOST_RULES && rects.length <= MOST_RECTS);
+        for (const names of [rules.rules.map((each) => each.name), rects.map((each) => each.name)]) {
+          assert.deepEqual(
+            names.filter((name, index) => !NAME.test(name) || name === "page" || names.indexOf(name) !== index),
+            [],
+          );
+        }
+        const dots = new Set<number>();
+        for (const rect of rects) {
+          assert.ok(
+            rect.x >= 0 && rect.y >= 0 && rect.width > 0 && rect.height > 0 && rect.x + rect.width <= PAGE_ACROSS && rect.y + rect.height <= PAGE_DOWN,
+            rect.name,
+          );
+          for (let cellRow = rect.y / CELL_DOWN; cellRow < (rect.y + rect.height) / CELL_DOWN; cellRow += 1) {
+            for (let column = rect.x / CELL_ACROSS; column < (rect.x + rect.width) / CELL_ACROSS; column += 1) {
+              assert.ok(!dots.has(cellRow * COLUMNS + column), `${rect.name} shares a cell with another rectangle`);
+              dots.add(cellRow * COLUMNS + column);
+            }
           }
         }
+        assert.ok(dots.size <= ROWS * COLUMNS);
       }
-      assert.ok(dots.size <= ROWS * COLUMNS);
       assert.deepEqual(page.errors, []);
     });
   }

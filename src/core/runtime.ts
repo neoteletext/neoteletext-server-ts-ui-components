@@ -13,6 +13,7 @@
 // oxlint-disable import/max-dependencies -- the runtime is where the protocol's calls meet the mounts, streams, sounds and publication
 // oxlint-disable max-lines -- the runtime is the kit's Application, a method for each of the protocol's calls, and protocol 13 added five, protocol 14 one; what is not a call is in its own modules
 import {
+  ANY_SUB,
   type Application,
   type Context,
   ffmpegOpus,
@@ -43,6 +44,7 @@ import { describedBy, type PageSpec, SpecNeeds } from "./page-spec.ts";
 import { earliestWake, publishChanges } from "./publish.ts";
 import type { PageSelectionKeys } from "./page-selection.ts";
 import { RuleTables } from "./rule-tables.ts";
+import { Selections } from "./selections.ts";
 import { SoundObjects } from "./sound-objects.ts";
 import type { KeptComponents } from "./kept-components.ts";
 
@@ -51,6 +53,8 @@ export class ComponentChannel implements Application {
   readonly #specs: ReadonlyMap<number, PageSpec>;
   readonly #mounts = new ConnectionMounts();
   readonly #tables: RuleTables;
+  /** The sub-page each connection's selection shows: a sub-page is a page (DEC-6599). */
+  readonly #selections = new Selections();
   #context: Context | null = null;
   #timerId = 0;
   readonly #sounds: SoundObjects;
@@ -67,7 +71,7 @@ export class ComponentChannel implements Application {
   constructor(specs: readonly PageSpec[], options: ComponentChannelOptions = {}) {
     this.#specs = new Map(specs.map((spec) => [spec.page, spec]));
     this.#store = options.state ?? null;
-    this.#tables = new RuleTables({ written: options.ruleTables !== "none", selection: this.#selection });
+    this.#tables = new RuleTables({ written: options.ruleTables !== "none", selection: this.#selection, selections: this.#selections });
     this.#viewerStates = new ViewerStates(this.#store);
     this.#languages = new ViewerLanguages({
       channel: options.language,
@@ -103,6 +107,7 @@ export class ComponentChannel implements Application {
       // A program the server started again is sent start again: whatever was mounted before goes.
       this.#mounts.clear();
       this.#tables.clear();
+      this.#selections.clear();
       this.#sounds.forgetAll();
       this.#viewerStates.clear();
       for (const spec of this.#specs.values()) {
@@ -121,6 +126,11 @@ export class ComponentChannel implements Application {
   request(connection: number, page: number, request: PageRequest | null, context: Context): void {
     const parameters = request === null || request.queryText === "" ? null : request.queryText;
     this.#run(context, () => {
+      // Every selection, of a page or of another of its sub-pages, is the opening of a page, whose table is sent afresh.
+      this.#selections.selected(connection, page, request);
+      if (request !== null) {
+        this.#tables.selected(connection);
+      }
       if (this.#addresses.parameters(connection, page) === parameters) {
         return;
       }
@@ -144,7 +154,6 @@ export class ComponentChannel implements Application {
   opened(connection: number, page: number, context: Context): void {
     this.#run(context, () => {
       this.#mounts.watch(connection, page);
-      this.#tables.opened(connection, page);
       const spec = this.#specs.get(page);
       if (spec !== undefined && this.#ownCopy(spec, connection)) {
         this.#viewerMount(spec, connection);
@@ -168,7 +177,7 @@ export class ComponentChannel implements Application {
     });
   }
 
-  input(connection: number, page: number, input: Input, context: Context): boolean {
+  input(connection: number, page: number, input: Input, context: Context, sub: number): boolean {
     let taken = false;
     this.#run(
       context,
@@ -182,6 +191,8 @@ export class ComponentChannel implements Application {
         if (mount === undefined) {
           return;
         }
+        // The input is the sub-page's it came from: 3F7F, which names none, is the one the connection selected.
+        mount.subPages.routeOn(sub === ANY_SUB ? this.#selections.subOf(connection, page) : sub);
         taken = dispatchInput(mount, connection, input);
       },
       connection,
@@ -203,6 +214,7 @@ export class ComponentChannel implements Application {
     this.#run(context, () => {
       this.#mounts.forget(connection);
       this.#tables.forget(connection);
+      this.#selections.forget(connection);
       this.#sounds.forget(connection);
       this.#streams.forget(connection);
       this.#params.forget(connection);

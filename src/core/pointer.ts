@@ -12,7 +12,7 @@ import { type AnyComponent, bubble, type Node } from "./node.ts";
 
 /** What the pointer needs of its mount. */
 export interface PointerHost {
-  /** What the first sub-page's cells reach, as last drawn. */
+  /** What the cells of the sub-page the input being routed came from reach, as last drawn. */
   readonly reach: () => Reach;
   /** A press gives the keys to the component pressed, or the nearest one round it that takes them. */
   readonly focusOn: (node: Node) => void;

@@ -1,5 +1,7 @@
 // A page's rule table, written from the components on it
-// (neoteletext-common's docs/page-rules.md, RULE-54). A viewer's receiver
+// (neoteletext-common's docs/page-rules.md, RULE-54). A page is a page
+// number and a sub-code together (DEC-6599, RULE-112): each sub-page has a
+// table of its own, from its own components and cells. A viewer's receiver
 // sends a page's channel nothing the page's table does not ask for
 // (RULE-50, REQ-6523), so the table asks for exactly what the components
 // mounted on the page can take, and a page of text asks for nothing:
@@ -16,8 +18,8 @@
 // Every rule only reports: the receiver does nothing locally for it, so
 // the components behave as they did when every input was sent. An input that
 // comes back is given to its component by where it landed and who has the
-// keys, as it always was (dispatch-input.ts); its rule says which need
-// asked for it.
+// keys, as it always was, on the sub-page it came from (dispatch-input.ts,
+// mount.ts); its rule says which need asked for it.
 
 import { COLUMNS, type PageRule, type RectDeclaration, ROWS, type RuleCondition, type RuleTable, type RuleTarget } from "../kit.ts";
 import type { Component } from "./component.ts";
@@ -34,11 +36,12 @@ export interface PageRules {
   readonly widened: string | null;
 }
 
-/** What a page's table is written from: its mount's tree as last drawn. */
+/** What a sub-page's table is written from: its mount's tree as last drawn. A sub-page is a page (DEC-6599): nothing of another sub-page counts. */
 export interface RuleSources {
+  /** The components drawn on the sub-page and those it is drawn within. */
   readonly components: Iterable<Component>;
   readonly root: Node | null;
-  /** What the first sub-page's cells reach: the pointer is found on those alone (draw.ts). */
+  /** What the sub-page's own cells reach: an input from it is found on those alone (draw.ts). */
   readonly reach: Reach;
   /** Whether a component read what the pointer is over as it rendered: the hint of the control under it, or whether it is on one of its own. */
   readonly hoverRead: boolean;
@@ -273,7 +276,7 @@ function hoverRules(sources: RuleSources): PageRule[] {
   ];
 }
 
-/** The table of a page whose tree is `sources` (page-rules.md RULE-54), before the kit's page selection: with no rules when nothing on it takes input. */
+/** The table of a sub-page whose tree is `sources` (page-rules.md RULE-54), before the kit's page selection: with no rules when nothing on it takes input. */
 export function pageRules(sources: RuleSources): PageRules {
   const keyboard = keyboardRules([...sources.components]);
   const others = [...keyboard, ...hoverRules(sources)];

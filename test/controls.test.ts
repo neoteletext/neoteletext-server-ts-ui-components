@@ -29,6 +29,9 @@ import {
 import { Colour, COLUMNS, Key } from "../src/kit.ts";
 import { PAGE, PROMPTS, BODY_ROW, frame, latestTti, controlsOf, inOrder, harness, viewer, Watcher } from "./controls-fixtures.ts";
 
+/** The sub-code the kit gives the second of a page's sub-pages, numbering a page given whole by place (its README: 2 to 79 are 0001 to 0079). */
+const SECOND_SUB_PAGE = 0x0002;
+
 test("a button's band is a control: from its New Background cell to the cell before its Black Background; a disabled one declares none", () => {
   const width = Button.widthOf("press");
   const seen = harness([
@@ -105,12 +108,31 @@ test("a move with no button held goes, as a click does, to the component drawn i
   assert.deepEqual(seen, ["move 0 0,3", "move 0 2,10"], "over the text inside it, up to it; over its own cells; not over the text below it");
 });
 
-test("only the first sub-page declares controls: a click is found on its cells alone, so a hand on another would point at the first's component", () => {
+test("every sub-page declares its own controls, and a click is found on the cells of the sub-page it came from: a sub-page is a page (DEC-6599)", () => {
+  const pressed: string[] = [];
   class Two extends Component {
     override render(): Child {
       return [
-        h(Frame, { key: "one", title: "One", background: Colour.Blue, prompts: PROMPTS }, h(Button, { label: "one", onPress: () => {} })),
-        h(Frame, { key: "two", title: "Two", background: Colour.Blue, prompts: PROMPTS }, h(Button, { label: "two", onPress: () => {} })),
+        h(
+          Frame,
+          { key: "one", title: "One", background: Colour.Blue, prompts: PROMPTS },
+          h(Button, {
+            label: "one",
+            onPress: () => {
+              pressed.push("one");
+            },
+          }),
+        ),
+        h(
+          Frame,
+          { key: "two", title: "Two", background: Colour.Blue, prompts: PROMPTS },
+          h(Button, {
+            label: "two",
+            onPress: () => {
+              pressed.push("two");
+            },
+          }),
+        ),
       ];
     }
   }
@@ -119,7 +141,11 @@ test("only the first sub-page declares controls: a click is found on its cells a
   const [first, second, ...more] = readControls(latestTti(seen, PAGE));
   assert.deepEqual(more, []);
   assert.deepEqual(first, [{ row: BODY_ROW, column: 1, width: Button.widthOf("one") - 2, height: 1 }]);
-  assert.deepEqual(second, []);
+  assert.deepEqual(second, [{ row: BODY_ROW, column: 1, width: Button.widthOf("two") - 2, height: 1 }]);
+  seen.clickLeft(1, 1, BODY_ROW);
+  seen.open(1, PAGE, SECOND_SUB_PAGE);
+  seen.clickLeft(1, 1, BODY_ROW);
+  assert.deepEqual(pressed, ["one", "two"], "the first sub-page's button on the first, the second's on the second");
 });
 
 test("a click acts only on a control's cells: past a button's band, on a switch's label, past a box's text, past a link's label, nothing", () => {

@@ -11,14 +11,13 @@ import type { Element } from "./element.ts";
 import { nodeLanguage, type TextLanguage } from "./language.ts";
 import type { KeyEvent } from "./events.ts";
 import { FocusHistory, routeKey } from "./focus.ts";
-import { emptyGrid } from "./grid.ts";
 import type { KeptComponents } from "./kept-components.ts";
 import type { KeyHelpEntry } from "./key-bindings.ts";
 import { Hints } from "./hints.ts";
 import { type AnyComponent, bubble, EMPTY, firstFocusable, focusables, type Node } from "./node.ts";
 import type { ColourTable } from "./rollover.ts";
-import { type PageRules, pageRules } from "./page-rules.ts";
 import { Pointer } from "./pointer.ts";
+import { SubPages } from "./sub-pages.ts";
 import type { Services } from "./services.ts";
 import { Timers } from "./timers.ts";
 import { Tree } from "./tree.ts";
@@ -54,13 +53,12 @@ export class Mount implements ComponentHost {
   #dirty = true;
   #focus: Node | null = null;
   readonly #history = new FocusHistory();
-  #reach: Reach = { grid: emptyGrid(), controls: [] };
   /** Presses, moves and the wheel go straight to it; a hover goes through {@link hover}, which draws the hint row again. */
   readonly pointer: Pointer;
   /** The page as last drawn. */
   lastPage: DrawnPage | null = null;
-  /** The page's rule table, written from its components as last drawn (page-rules.ts); null until it is first drawn. */
-  rules: PageRules | null = null;
+  /** The sub-pages as last drawn, each a page of its own: what its cells reach, its rule table, and which one the input being routed came from. */
+  readonly subPages: SubPages;
   /** What the hint row says, and whether a component reads what the pointer is over, so that the page's table asks for the pointer coming onto its controls. */
   readonly #hints: Hints;
 
@@ -69,6 +67,7 @@ export class Mount implements ComponentHost {
     this.#rootElement = root;
     this.#host = host;
     this.services = host.services;
+    this.subPages = new SubPages(() => this.services.limits());
     this.#draw = drawHost(page, host, (node): TextLanguage => this.#languageOfNode(node));
     this.#tree = new Tree({
       components: this,
@@ -83,7 +82,7 @@ export class Mount implements ComponentHost {
       hovered: (): Node | null => (this.services.connection === null ? null : this.pointer.hoveredBy(this.services.connection)),
     });
     this.pointer = new Pointer({
-      reach: (): Reach => this.#reach,
+      reach: (): Reach => this.subPages.routedReach(),
       focusOn: (node): void => {
         this.#focusOn(node);
       },
@@ -195,11 +194,12 @@ export class Mount implements ComponentHost {
         this.#focusOn(this.#history.back() ?? firstFocusable(this.#tree.root));
       }
       const drawn = draw(shown, this.#draw);
-      this.#reach = drawn.reach;
+      this.subPages.drawn(shown, drawn.reaches);
       this.lastPage = drawn.page;
       this.#tree.commit();
     }
-    this.rules = pageRules({ components: this.#tree.components(), root: this.#tree.root, reach: this.#reach, hoverRead: this.#hints.read });
+    // A sub-page is a page (DEC-6599): each one's table is written from its own components alone.
+    this.subPages.writeRules(this.#tree.root, this.#hints.read);
     if (this.#dirty) {
       this.#host.report(`page ${this.page.toString(16)}: still changing after ${MOST_PASSES} renders; a component's update sets state each time`);
       this.#dirty = false;
