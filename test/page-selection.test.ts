@@ -1,15 +1,16 @@
-// REQ-6539, page-rules.md RULE-54: a page whose components take no keys
-// still asks for the keys the protocol kit selects pages by, so that a
-// typed page number and the coloured keys go on working.
+// REQ-6539, page-rules.md RULE-54 and RULE-53: a page whose components
+// take no keys still asks for the keys the protocol kit selects pages by,
+// so that a typed page number and the coloured keys go on working; and a
+// channel that says `ruleTables: "none"` is sent no table at all.
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import type { InputEvent } from "neoteletext-server-ts-protocol/protocol";
 import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
-import { ComponentChannel, type ComponentChannelOptions, type Element, h, type PageSpec, Text } from "../src/index.ts";
+import { Action, ComponentChannel, type ComponentChannelOptions, type Element, h, type PageSpec, Text, TextField } from "../src/index.ts";
 import { frame } from "./components-fixtures.ts";
-import { PAGE } from "./mouse-fixtures.ts";
+import { BODY_ROW, controlBy, PAGE, row } from "./mouse-fixtures.ts";
 import { FASTEXT_KEYS, rulesSent, SELECT_DIGITS, SELECTION, tableSent } from "./page-rules-fixtures.ts";
 
 /** No modifier key held, as an input event of the wire says it. */
@@ -76,4 +77,42 @@ test("RULE-54: a page asks for the digits and the coloured keys only where the k
   const bothOwned = words({ ownsDigits: true, ownsColourKeys: true });
   bothOwned.join(1, PAGE);
   assert.deepEqual(tableSent(bothOwned), { rules: [] });
+});
+
+test("RULE-53: a channel that says ruleTables none is sent no table, so its pages keep the server's default table, under whose rule names every input reaches its component as before", () => {
+  const pressed: number[] = [];
+  const page = new Harness([
+    new ComponentChannel(
+      [
+        {
+          page: PAGE,
+          title: "Test",
+          perViewer: true,
+          root: (): Element =>
+            frame(
+              "Test",
+              h(TextField, { label: "Name", longest: 10 }),
+              h(Action, {
+                text: "Do it",
+                onPress: (connection: number) => {
+                  pressed.push(connection);
+                },
+              }),
+            ),
+        },
+        { page: INDEX, title: "Index", root: (): Element => frame("Index", h(Text, { text: "Contents" })) },
+      ],
+      { opus: fakeOpus(), ruleTables: "none" },
+    ),
+  ]);
+  page.join(1, PAGE);
+  page.typeKeys(1, "ab");
+  assert.match(row(page, BODY_ROW), /ab/u, "the keys were typed into the field");
+  const action = controlBy(page, "Do it");
+  page.clickLeft(1, action.column, action.row);
+  assert.deepEqual(pressed, [1]);
+  page.open(1, INDEX);
+  page.typeKeys(1, "150");
+  assert.deepEqual(rulesSent(page), [], "no rules message is written, whatever is opened, typed or pressed");
+  assert.deepEqual(page.redirects(1), [PAGE], "and the kit's page selection goes on");
 });

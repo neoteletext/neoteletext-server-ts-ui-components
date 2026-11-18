@@ -6,7 +6,9 @@
 // page, and again whenever the components on it come to take something
 // else, so that the viewer's receiver sends what they take and no more.
 // With it go the rules for the keys the protocol kit selects pages by
-// (page-selection.ts).
+// (page-selection.ts). A channel that says `ruleTables: "none"` is sent no
+// table at all: its pages are left to the table the server's
+// configuration gives the channel (RULE-53).
 
 import type { Context } from "../kit.ts";
 import type { ConnectionMounts } from "./connection-mounts.ts";
@@ -15,6 +17,8 @@ import { type PageSelectionKeys, withPageSelection } from "./page-selection.ts";
 
 /** What the tables are sent by. */
 export interface RuleTablesOptions {
+  /** Whether the library writes tables at all (ComponentChannelOptions.ruleTables). */
+  readonly written: boolean;
   /** Which keys the kit's page selection takes of `page`. */
   readonly selection: (page: number) => PageSelectionKeys;
 }
@@ -67,6 +71,9 @@ export class RuleTables {
    * it is sent.
    */
   send(context: Context, mounts: ConnectionMounts): void {
+    if (!this.#options.written) {
+      return;
+    }
     for (const [page, watching] of mounts.watching) {
       const owed = new Map<string, { readonly rules: PageRules; readonly connections: number[] }>();
       for (const connection of watching) {

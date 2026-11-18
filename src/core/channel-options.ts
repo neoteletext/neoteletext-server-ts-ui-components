@@ -25,4 +25,15 @@ export interface ComponentChannelOptions {
    * such as a poll's Tally. Nothing is kept when absent.
    */
   readonly state?: StateStore;
+  /**
+   * Who says what input each page asks of a viewer's receiver
+   * (neoteletext-common's docs/page-rules.md, RULE-54). `"components"`,
+   * when absent: the library sends every page a rule table written from
+   * the components on it, with the keys the protocol kit selects pages
+   * by. `"none"`: the library sends no table, so every page is left to
+   * the channel's `default_rules` in the server's configuration (RULE-53);
+   * with `send_all` there, every input is sent, as it was before pages
+   * had tables.
+   */
+  readonly ruleTables?: "components" | "none";
 }

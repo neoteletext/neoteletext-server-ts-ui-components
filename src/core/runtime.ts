@@ -67,7 +67,7 @@ export class ComponentChannel implements Application {
   constructor(specs: readonly PageSpec[], options: ComponentChannelOptions = {}) {
     this.#specs = new Map(specs.map((spec) => [spec.page, spec]));
     this.#store = options.state ?? null;
-    this.#tables = new RuleTables({ selection: this.#selection });
+    this.#tables = new RuleTables({ written: options.ruleTables !== "none", selection: this.#selection });
     this.#viewerStates = new ViewerStates(this.#store);
     this.#languages = new ViewerLanguages({
       channel: options.language,
