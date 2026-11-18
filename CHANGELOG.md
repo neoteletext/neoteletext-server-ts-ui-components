@@ -3,6 +3,32 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 26.1.0 (19 November 2026)
+
+### What it adds
+
+- **Pages drawn as pictures** (renderer parity PAR-42, REQ-6774): a
+  `PageSpec`'s `renderer`, `"teletext"` when absent as before, `"regis"`
+  or `"naplps"`, draws the same components as a ReGIS or NAPLPS picture
+  on the page's cell grid, with the same props, state, events and focus.
+  Each interactive component is a numbered drawing or an object with its
+  hover and pressed looks, named by the page's rule table; a `PageLink`
+  is the picture's link and the focused field's caret its cursor; a
+  change sends only the drawings or objects that changed. The channel's
+  copy is kept by the server (`{ kept: true }`), and a picture page's
+  public picture is its kept first sub-page. New exports: `RegisCanvas`,
+  `NaplpsCanvas` (each a `Canvas` with its `renderer`), the `Renderer`
+  type and the `PictureLinked` interface, which a component that is a
+  link implements (`pictureLink()`).
+
+### To take it
+
+- **Take the protocol kit 18.2.0 with it**, in place of 18.1.0: the
+  library pins the kit exactly as its peer, and its pictures are the
+  kit's `Regis` and `Naplps` builders and its `{ kept: true }` audience.
+  A picture page needs a server with the kit's schema (the server's
+  renderer parity, program protocol 15). A teletext page is unchanged.
+
 ## 26.0.1 (19 November 2026)
 
 ### To take it
