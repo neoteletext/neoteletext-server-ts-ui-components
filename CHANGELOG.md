@@ -3,6 +3,59 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 25.0.0 (19 November 2026)
+
+### To take it
+
+- **Take the protocol kit 17.0.0 with it**, which speaks program protocol
+  15, the second form of the page rule table (DEC-6587, DEC-6599,
+  DEC-6635): the library pins the kit exactly, and a program on an older
+  kit stops at the server's `start`. Vendor both releases under the
+  channel's `vendor/`, as DEPLOYMENT.md says. The kit's own changes (every
+  call that concerns a page takes its sub-code: `rules`, `queryState`,
+  `spriteSheet`, `stopTimeline` and the rest; groups of commands; rows of
+  one parameter; modes) are in its README; a channel calls them itself
+  only where its own code, beside the library's, sends a page a table or
+  animation.
+- **A channel that says `ruleTables: "none"` changes nothing else**: the
+  library sends no rule table, of any page or sub-page, exactly as on
+  24.0.0, and with `"default_rules": "send_all"` the channel is sent every
+  input.
+- **A test that compares what the channel sent** now finds each `rules`
+  message with its `sub`, and every rule's `do` as
+  `[{ "type": "report" }]` in place of `[{ "action": "send" }]`. A test
+  that read a mount's `rules` reads `subPages.rules`, one table a
+  sub-page. `MOST_RECTS` and `MOST_RULES` are gone: `tableLimits(limits)`
+  gives both, as the kit's schema has them.
+- **A page of several sub-pages** now declares the controls of every
+  sub-page, with their rollover colours, where 24.0.0 declared the first
+  sub-page's alone: a snapshot of such a page's later sub-pages changes,
+  and their buttons and list rows now work for the pointer there.
+
+### A sub-page is a page
+
+- **Each sub-page has its own rule table**, written from the components
+  drawn on it and those it is drawn within, and its own cells (REQ-6539
+  item 9; neoteletext-common's `docs/page-rules.md`, RULE-54 and
+  RULE-112). It is sent for that sub-page's sub-code at every selection
+  of it, a selection of another sub-page of the same page included, since
+  the server keeps no table and the viewer's browser drops everything of
+  a page it leaves; and again only when it changes. The library reads
+  which sub-page a selection shows from the kit's `request`; a selection
+  of the page with none in particular shows its first.
+- **An input is found on the cells of the sub-page it names**, so a click
+  on a later sub-page reaches the component drawn there, not the one in
+  the same cell of the first (REQ-3776).
+- **Every rule only reports**: its one command is a `report` of the
+  firing, which the server makes one group every rule shares. The
+  browser draws a control's hover and pressed looks itself, so no rule
+  forces one (DEC-6670 item 9). Input is still routed by where it landed
+  and who has the keys, not by the rule's name or row.
+- **`MAX_RECTS` and `MAX_RULES`** are read from the kit's schema, not
+  written as figures (REQ-6608), and the channel's log names them, with
+  the page and sub-code, when a sub-page asks the whole page for the
+  pointer.
+
 ## 24.0.0 (18 November 2026)
 
 ### To take it
