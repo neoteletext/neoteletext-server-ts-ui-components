@@ -9,8 +9,9 @@
 // from, is found on that sub-page's cells alone. Display attributes are
 // how a sub-page looks, so each sub-page carries those it paints.
 
-import { Colour, COLUMNS, type Limits, mostNumbered, ROWS, Screen, type Subpage, type TextLevel } from "../kit.ts";
-import { Canvas, nothingDeclared, ownCodesOf, type PageRequests, type Region, type TextLanguage } from "./canvas.ts";
+// oxlint-disable import/max-dependencies -- drawing is where a sub-page's layout, painting, controls, enhancement data and picture meet
+import { Colour, COLUMNS, type Limits, mostNumbered, ROWS, type Screen, type Subpage, type TextLevel } from "../kit.ts";
+import { nothingDeclared, ownCodesOf, type PageRequests, type Region, type TextLanguage } from "./canvas.ts";
 import type { Box, LayoutChild, Size } from "./layout.ts";
 import { type LocalEnhancement, localEnhancement } from "./enhancement.ts";
 import { type DeclaredControl, emptyGrid, type Grid, type Owned, reachedControls } from "./grid.ts";
@@ -19,6 +20,7 @@ import { isSubPage, SCREEN, type SubPage, type SubPageLinks } from "./page.ts";
 import { RawSubPage } from "./raw-sub-page.ts";
 import { rawContent } from "./raw-tti.ts";
 import { type ColourTable, rolloverLine } from "./rollover.ts";
+import { canvasFor, type PaintedComponent, paintedOf, type PictureScene, type Renderer, sceneOf, screenFor } from "../picture/draw-picture.ts";
 
 /** What drawing needs of the mount. */
 export interface DrawHost {
@@ -32,6 +34,10 @@ export interface DrawHost {
   readonly languageOf: (node: Node) => TextLanguage;
   /** The level the page's text is written for, or null for NeoTeletext's own (REQ-2151). */
   readonly level: TextLevel | null;
+  /** What the page is drawn in (renderer parity PAR-42). */
+  readonly renderer: Renderer;
+  /** An interactive component's drawing or object number on a picture page, kept while it is mounted (picture/numbers.ts); 0 when none is left. */
+  readonly numberOf: (node: Node) => number;
 }
 
 /** What drawing page `page` needs, from its mount's `host` and `languageOf` its nodes. */
@@ -42,8 +48,10 @@ export function drawHost(
     readonly report: (text: string) => void;
     readonly services: { limits(): Limits };
     readonly level: TextLevel | null;
+    readonly renderer: Renderer;
   },
   languageOf: (node: Node) => TextLanguage,
+  numberOf: (node: Node) => number,
 ): DrawHost {
   return {
     page,
@@ -52,19 +60,23 @@ export function drawHost(
     mostSubPages: (): number => mostNumbered(host.services.limits()),
     languageOf,
     level: host.level,
+    renderer: host.renderer,
+    numberOf,
   };
 }
 
-/** A page drawn: its sub-pages as the protocol carries them, and a key that is the same exactly when they are. */
+/** A page drawn: its sub-pages as the protocol carries them, and a key that is the same exactly when they are; on a picture page, each sub-page's picture too, in the same order (null for one given whole, which has none). */
 export interface DrawnPage {
   readonly key: string;
   readonly subpages: readonly Subpage[];
+  readonly pictures: readonly (PictureScene | null)[];
 }
 
-/** What a sub-page's cells reach, for the pointer and for its rule table. */
+/** What a sub-page's cells reach, for the pointer and for its rule table; on a picture page, which drawing or object each cell is drawn in (picture/scene.ts). */
 export interface Reach {
   readonly grid: Grid;
   readonly controls: readonly DeclaredControl[];
+  readonly owners?: readonly (readonly number[])[];
 }
 
 /** A sub-page found in the tree, with its component as a sub-page. */
@@ -134,21 +146,36 @@ function markPointerCells(node: Node, grid: Grid): void {
   }
 }
 
-/** Paints `node` and what is under it on `screen`, collecting what each declares and keeping each one's regions for the pointer. */
-function paint(node: Node, screen: Screen, requests: PageRequests, grid: Grid, owned: Owned[], host: DrawHost, surround: Colour = Colour.Black): void {
+/** Where a sub-page's components are painted: its screen, what they ask of it, the cells each reaches, and on a picture page what each painted. */
+interface PaintTarget {
+  readonly screen: Screen;
+  readonly requests: PageRequests;
+  readonly grid: Grid;
+  readonly owned: Owned[];
+  readonly painted: PaintedComponent[] | null;
+}
+
+/** Paints `node` and what is under it on `target`'s screen, collecting what each declares and keeping each one's regions for the pointer; `within` is the number of the interactive component it is drawn within on a picture page. */
+function paint(node: Node, target: PaintTarget, host: DrawHost, surround: Colour = Colour.Black, within = 0): void {
   const regions: Region[] = [];
   const declared = nothingDeclared();
   const language = host.languageOf(node);
-  const canvas = new Canvas(screen, node.box, requests, regions, declared, surround, language);
+  const canvas = canvasFor(host.renderer, target.screen, node.box, target.requests, regions, declared, surround, language);
   node.component.paint(canvas);
   canvas.finish();
-  owned.push({ node, declared });
+  target.owned.push({ node, declared });
   node.regions = regions;
-  markPointerCells(node, grid);
+  markPointerCells(node, target.grid);
+  let inside = within;
+  if (target.painted !== null) {
+    const painted = paintedOf(node, declared, host.numberOf, within);
+    target.painted.push(painted);
+    inside = painted.number === 0 ? within : painted.number;
+  }
   // A component that lays a band under its children (a dialog, a band panel) is their surround: a band of theirs ends back to its colour.
-  const within = node.component.innerBackground() ?? surround;
+  const surrounding = node.component.innerBackground() ?? surround;
   for (const child of node.children) {
-    paint(child, screen, requests, grid, owned, host, within);
+    paint(child, target, host, surrounding, inside);
   }
 }
 
@@ -161,8 +188,13 @@ function keptControls(declared: readonly DeclaredControl[], { kept }: LocalEnhan
 }
 
 /** A sub-page drawn from its components: its screen, and what its cells reach. */
-function drawScreen(node: Node, links: SubPageLinks, screenColour: number | null, host: DrawHost): { readonly screen: Screen; readonly reach: Reach } {
-  const screen = new Screen();
+function drawScreen(
+  node: Node,
+  links: SubPageLinks,
+  screenColour: number | null,
+  host: DrawHost,
+): { readonly screen: Screen; readonly reach: Reach; readonly picture: PictureScene | null } {
+  const screen = screenFor(host.renderer);
   // The page names its language, so the server writes its designation, in the header and in the rollover's X/28/0 (REQ-2214 item 7).
   const { tag } = host.languageOf(node);
   screen.language(tag);
@@ -172,8 +204,9 @@ function drawScreen(node: Node, links: SubPageLinks, screenColour: number | null
   const requests: PageRequests = { cursor: null, displayAttributes: [] };
   const grid = emptyGrid();
   const owned: Owned[] = [];
+  const painted: PaintedComponent[] | null = host.renderer === "teletext" ? null : [];
   layoutChild(node).place(SCREEN);
-  paint(node, screen, requests, grid, owned, host);
+  paint(node, { screen, requests, grid, owned, painted }, host);
   screen.fastext(links.fastext);
   if (links.index !== null) {
     screen.indexLink(links.index);
@@ -193,12 +226,14 @@ function drawScreen(node: Node, links: SubPageLinks, screenColour: number | null
   for (const line of [...rollover, ...enhancement.lines]) {
     screen.packed(line);
   }
-  return { screen, reach: { grid, controls } };
+  const scene = painted === null ? null : sceneOf(screen, painted, requests.cursor, tag);
+  return { screen, reach: scene === null ? { grid, controls } : { grid, controls, owners: scene.owners }, picture: scene };
 }
 
 /** The sub-pages in their order, which the server numbers (DOC-1971), and what each one's cells reach, in the same order. */
 export function draw(shown: readonly FoundSubPage[], host: DrawHost): { readonly page: DrawnPage; readonly reaches: readonly Reach[] } {
   const reaches: Reach[] = [];
+  const pictures: (PictureScene | null)[] = [];
   const subpages = shown.map(({ node, subPage }): Subpage => {
     const links = subPage.links();
     const listed = subPage.listTitle();
@@ -207,11 +242,13 @@ export function draw(shown: readonly FoundSubPage[], host: DrawHost): { readonly
       const { tti: text, title, background, foreground } = subPage.props;
       const band = title === undefined ? null : { title, background: background ?? Colour.Blue, foreground: foreground ?? Colour.White };
       reaches.push(NO_REACH);
+      pictures.push(null);
       return { content: rawContent(text, links.fastext, band, host.languageOf(node).tag), ...named };
     }
     const drawn = drawScreen(node, links, subPage.props.screenColour ?? null, host);
     reaches.push(drawn.reach);
+    pictures.push(drawn.picture);
     return { content: drawn.screen.content(), ...named };
   });
-  return { page: { key: JSON.stringify(subpages), subpages }, reaches };
+  return { page: { key: JSON.stringify(subpages), subpages, pictures }, reaches };
 }

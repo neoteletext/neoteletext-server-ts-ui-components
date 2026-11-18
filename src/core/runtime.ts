@@ -36,7 +36,7 @@ import { ViewerParams } from "./viewer-params.ts";
 import { ViewerLanguages } from "./viewer-languages.ts";
 import { ViewerStates } from "./viewer-states.ts";
 import type { StateStore } from "./state-store.ts";
-import { dispatchInput } from "./dispatch-input.ts";
+import { dispatchPictureInput } from "./dispatch-input.ts";
 import { LiveStreams } from "./live-streams.ts";
 import type { Mount } from "./mount.ts";
 import { ConnectionMounts } from "./connection-mounts.ts";
@@ -151,6 +151,7 @@ export class ComponentChannel implements Application {
       this.#selections.selected(connection, page, request);
       if (request !== null) {
         this.#tables.selected(connection);
+        this.#mounts.unmirror(connection, page);
       }
       if (this.#addresses.parameters(connection, page) === parameters) {
         return;
@@ -187,6 +188,7 @@ export class ComponentChannel implements Application {
   leftPage(connection: number, page: number, context: Context): void {
     this.#run(context, () => {
       this.#mounts.watching.get(page)?.delete(connection);
+      this.#mounts.unmirror(connection, page);
       this.#streams.left(context, connection, page);
       const spec = this.#specs.get(page);
       if (spec === undefined || this.#mounts.of(connection, page) === undefined || spec.keepWhileAway === true) {
@@ -214,7 +216,7 @@ export class ComponentChannel implements Application {
         }
         // The input is the sub-page's it came from: 3F7F, which names none, is the one the connection selected.
         mount.subPages.routeOn(sub === ANY_SUB ? this.#selections.subOf(connection, page) : sub);
-        taken = dispatchInput(mount, connection, input);
+        taken = dispatchPictureInput(mount, connection, input);
       },
       connection,
     );
@@ -291,8 +293,21 @@ export class ComponentChannel implements Application {
     });
   }
 
+  /** What the page shows on the web (REQ-1728); a picture page's picture is the channel's kept copy of its first sub-page (renderer parity PAR-26, PAR-42), unless its description names one. */
   describe(page: number): ReturnType<typeof describedBy> {
-    return describedBy(this.#specs.get(page));
+    const spec = this.#specs.get(page);
+    const description = describedBy(spec);
+    const first = this.#mounts.shared.get(page)?.subPages.firstSub ?? undefined;
+    if (
+      description === null ||
+      spec === undefined ||
+      (spec.renderer ?? "teletext") === "teletext" ||
+      description.picture !== undefined ||
+      first === undefined
+    ) {
+      return description;
+    }
+    return { ...description, picture: { kept: first } };
   }
 
   // The mounts.
@@ -360,7 +375,7 @@ export class ComponentChannel implements Application {
     this.#context = context;
     try {
       work();
-      publishChanges(context, this.#mounts.shared, this.#mounts.viewers, this.#mounts.own);
+      publishChanges(context, this.#mounts.shared, this.#mounts.viewers, this.#mounts.own, this.#mounts.pictureMirrors);
       this.#tables.send(context, this.#mounts);
       if (gesture !== null) {
         this.#viewerStates.afterGesture(context, gesture);

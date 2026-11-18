@@ -5,7 +5,7 @@ import { Component } from "../core/component.ts";
 import { type Size } from "../core/layout.ts";
 import type { PointerEvent } from "../core/events.ts";
 import { cells, fit } from "../core/text.ts";
-import { Colour } from "../kit.ts";
+import { Colour, pageText } from "../kit.ts";
 import { LINK, NUMBER_CELLS, pageNumber } from "./news.ts";
 
 export interface PageLinkProps {
@@ -29,6 +29,11 @@ export class PageLink extends Component<PageLinkProps> {
     canvas.coloured(0, NUMBER_CELLS, this.props.foreground ?? Colour.White, label);
     // From its number to the end of its label, after their colours' cells.
     canvas.control(0, 1, NUMBER_CELLS + cells(label), 1, LINK);
+  }
+
+  /** On a picture page, its drawing or object is a link to its page (picture/picture-link.ts, renderer parity PAR-42). */
+  pictureLink(): string {
+    return pageText(this.props.page);
   }
 
   override onClick(event: PointerEvent): boolean {

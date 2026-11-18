@@ -7,7 +7,8 @@
 // components take no keys asks for these, and page selection goes on.
 
 import { Key, type PageRule, type RuleKey, type RuleTable } from "../kit.ts";
-import { type PageRules, REPORT } from "./page-rules.ts";
+import type { PageRules } from "./page-rules.ts";
+import { REPORT } from "./pointer-rules.ts";
 
 /** Which of a page's keys the protocol kit's page selection takes: those the page has no use of its own for (the kit's navigation; PageSpec.ownsDigits, ownsColourKeys). */
 export interface PageSelectionKeys {

@@ -28,6 +28,7 @@
 //   interactive/  quizzes, polls, sound lists
 //   composition/  wizards
 //   games/        roulette, snake
+//   picture/      pages drawn in ReGIS or NAPLPS from the same components
 
 export * from "./charts/index.ts";
 export * from "./composition/index.ts";
@@ -42,6 +43,7 @@ export * from "./interactive/index.ts";
 export * from "./layout/index.ts";
 export * from "./lists/index.ts";
 export * from "./navigation/index.ts";
+export * from "./picture/index.ts";
 export * from "./overlay/index.ts";
 export * from "./text/index.ts";
 export * from "./time/index.ts";

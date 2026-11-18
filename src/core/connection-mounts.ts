@@ -13,6 +13,13 @@ export class ConnectionMounts {
   readonly own = new Map<number, Set<number>>();
   /** Who has each page open. */
   readonly watching = new Map<number, Set<number>>();
+  /** The viewers of each picture page shown the channel's copy on a stream of their own, its changes sent to them too (publish.ts). */
+  readonly pictureMirrors = new Map<number, Set<number>>();
+
+  /** The connection selected `page` again, or left it: the server's kept picture reaches it again, so it mirrors nothing. */
+  unmirror(connection: number, page: number): void {
+    this.pictureMirrors.get(page)?.delete(connection);
+  }
 
   /** The connection's mount of `page`, if it has one. */
   of(connection: number, page: number): Mount | undefined {
@@ -69,6 +76,9 @@ export class ConnectionMounts {
     for (const watching of this.watching.values()) {
       watching.delete(connection);
     }
+    for (const mirrors of this.pictureMirrors.values()) {
+      mirrors.delete(connection);
+    }
   }
 
   /** The program started again: every mount goes. */
@@ -80,5 +90,6 @@ export class ConnectionMounts {
     this.viewers.clear();
     this.own.clear();
     this.watching.clear();
+    this.pictureMirrors.clear();
   }
 }

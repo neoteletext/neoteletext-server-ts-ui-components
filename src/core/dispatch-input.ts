@@ -1,7 +1,22 @@
 // A viewer's input, as the protocol gives it, handed to the mount of the
 // page they have open as the events its components take.
+//
+// On a page drawn as a picture (renderer parity PAR-42) the same
+// components take the same events. A NAPLPS picture lies on the teletext
+// raster, so an input's cell is the cell of the grid the components are
+// laid out on. A ReGIS picture is placed in the page's image by the
+// receiver's fit, so its input's cell is not; the PICK that follows every
+// pointer event on a ReGIS page (page-rules.md RULE-46) gives the pixel of
+// the picture, whose cell on the grid of PAR-42 is the one the event is
+// taken on. The pointer coming onto a drawing or an object, and leaving
+// it, is carried as the move that made it, named by the rule that sent it.
 
 import type { Input, Pointed } from "../kit.ts";
+import { FIRST_TEXT_ROW, LAST_TEXT_ROW, REGIS_CELL, REGIS_MARGIN } from "../picture/grid.ts";
+import { HOVER_IN, HOVER_OUT } from "./pointer-rules.ts";
+
+/** A pointer input on a ReGIS page, waiting for the PICK that says where on the picture it was. */
+export type Pointing = Extract<Input, { kind: "mouse" | "wheel" }>;
 import type { KeyEvent } from "./events.ts";
 import { routeTyped } from "./focus.ts";
 import type { Mount } from "./mount.ts";
@@ -44,7 +59,7 @@ function pointerAt(input: Exclude<Extract<Input, { kind: "mouse" }>, { action: "
 
 /** Gives `input` to `mount`: answers whether a component took it. */
 // oxlint-disable-next-line typescript/consistent-return -- the switch is over every kind of Input, as switch-exhaustiveness-check holds it to
-export function dispatchInput(mount: Mount, connection: number, input: Input): boolean {
+function dispatchInput(mount: Mount, connection: number, input: Input): boolean {
   switch (input.kind) {
     case "key": {
       return mount.key(keyEvent(connection, input));
@@ -89,4 +104,44 @@ export function dispatchInput(mount: Mount, connection: number, input: Input): b
       return false;
     }
   }
+}
+
+/** The cell of the grid a ReGIS picture's pixel lies in. */
+function regisCell(pictureX: number, pictureY: number): { readonly row: number; readonly column: number } {
+  const row = FIRST_TEXT_ROW + Math.floor((pictureY - REGIS_MARGIN) / REGIS_CELL);
+  return { row: Math.min(Math.max(row, FIRST_TEXT_ROW), LAST_TEXT_ROW), column: Math.max(0, Math.floor(pictureX / REGIS_CELL)) };
+}
+
+/**
+ * Gives `input` to `mount`, on a picture page as on a teletext page:
+ * answers whether a component took it. A pointer input on a ReGIS page
+ * waits for its PICK; one whose PICK does not come is given at its own
+ * cell before the next input.
+ */
+export function dispatchPictureInput(mount: Mount, connection: number, input: Input): boolean {
+  const { picture } = mount;
+  if (picture === null) {
+    return dispatchInput(mount, connection, input);
+  }
+  let taken = false;
+  const waiting = picture.waitingPointer;
+  if (picture.renderer === "regis") {
+    picture.waitingPointer = null;
+    if (input.kind === "pick") {
+      return waiting !== null && waiting.connection === connection
+        ? dispatchInput(mount, connection, { ...waiting.input, ...regisCell(input.pictureX, input.pictureY) })
+        : false;
+    }
+    if (waiting !== null) {
+      taken = dispatchInput(mount, waiting.connection, waiting.input);
+    }
+    if (input.kind === "wheel" || (input.kind === "mouse" && input.action !== "gone")) {
+      picture.waitingPointer = { connection, input };
+      return taken;
+    }
+  }
+  if (input.kind === "mouse" && input.action === "move" && (input.rule === HOVER_IN || input.rule === HOVER_OUT)) {
+    return mount.hover(connection, input.rule === HOVER_IN, input.row, input.column) || taken;
+  }
+  return dispatchInput(mount, connection, input) || taken;
 }

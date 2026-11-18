@@ -1,8 +1,10 @@
 // A mount: one tree of component instances (tree.ts) behind one copy of a page, the channel's or one viewer's, reconciled with each render. It draws every
 // sub-page (draw.ts), routes keys through focus and the pointer, wheel and hovers to the components drawn there (pointer.ts), and runs timers (timers.ts).
 
-// oxlint-disable import/max-dependencies -- the mount is where a page's tree, drawing, keys, pointer and timers meet
+// oxlint-disable import/max-dependencies, max-lines -- the mount is where a page's tree, drawing, keys, pointer, timers and pictures meet; what is not theirs is in its own modules
 import type { LanguageTag, TextLevel } from "../kit.ts";
+import { MountPicture } from "../picture/mount-picture.ts";
+import type { Renderer } from "../picture/renderer.ts";
 import type { ComponentEvent, ComponentEventInit } from "./component-events.ts";
 import type { ComponentHost, FocusableAt } from "./component-host.ts";
 import type { Box } from "./layout.ts";
@@ -39,6 +41,8 @@ export interface MountHost {
   /** The page's own language and level (PageSpec), or null for the viewer's language and NeoTeletext's own level. */
   readonly pageLanguage: LanguageTag | null;
   readonly level: TextLevel | null;
+  /** What the page is drawn in (PageSpec.renderer, renderer parity PAR-42). */
+  readonly renderer: Renderer;
   /** The stand-in for the channel's words in `language`, the viewer's, or undefined where they are drawn as written (ComponentChannelOptions.standIn). */
   readonly standIn: (language: LanguageTag) => TextLanguage["standIn"];
 }
@@ -62,6 +66,8 @@ export class Mount implements ComponentHost {
   readonly subPages: SubPages;
   /** What the hint row says, and whether a component reads what the pointer is over, so that the page's table asks for the pointer coming onto its controls. */
   readonly #hints: Hints;
+  /** On a picture page, what it keeps of its pictures (renderer parity PAR-42); null on a teletext page. */
+  readonly picture: MountPicture | null;
 
   constructor(page: number, root: Element, host: MountHost) {
     this.page = page;
@@ -75,7 +81,13 @@ export class Mount implements ComponentHost {
         this.#moved(before, node);
       },
     );
-    this.#draw = drawHost(page, host, (node): TextLanguage => this.#languageOfNode(node));
+    this.picture = host.renderer === "teletext" ? null : new MountPicture(host.renderer, host.rollover);
+    this.#draw = drawHost(
+      page,
+      host,
+      (node): TextLanguage => this.#languageOfNode(node),
+      (node): number => this.picture?.numberOf(node) ?? 0,
+    );
     this.#tree = new Tree({
       components: this,
       kept: host.kept,
@@ -226,6 +238,7 @@ export class Mount implements ComponentHost {
     this.#timers.clearOwner(node.component);
     this.pointer.forget(node);
     this.#keys.forget(node);
+    this.picture?.forget(node);
   }
 
   // The keys.

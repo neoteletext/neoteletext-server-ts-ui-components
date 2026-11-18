@@ -50,6 +50,7 @@ export function newMount(
     rollover: spec.rollover === undefined ? ROLLOVER_COLOURS : spec.rollover,
     pageLanguage: spec.language ?? null,
     level: spec.level ?? null,
+    renderer: spec.renderer ?? "teletext",
     standIn: (language): ReturnType<MountParts["languages"]["standIn"]> => parts.languages.standIn(language),
     kept,
     viewed: (): boolean => {

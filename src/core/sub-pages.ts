@@ -94,6 +94,16 @@ export class SubPages {
     return this.#reaches[this.#routed] ?? NO_REACH;
   }
 
+  /** The first sub-page's sub-code as last numbered, which needs no call to read: null before one is drawn. */
+  get firstSub(): number | null {
+    return this.#firstSub;
+  }
+
+  /** The sub-code of each sub-page drawn, in the order drawn, as the kit numbers a page given whole. */
+  subCodes(): number[] {
+    return this.#shown.length === 0 ? [] : numbered(this.#shown.length, this.#limits());
+  }
+
   /** The place of sub-page `sub` among those drawn, or -1 when the page has none of that sub-code. 3F7F, the page with no sub-page in particular, is the first, as the kit shows it for a selection of the page. */
   #placeOf(sub: number): number {
     return sub === ANY_SUB ? 0 : numbered(this.#shown.length, this.#limits()).indexOf(sub);

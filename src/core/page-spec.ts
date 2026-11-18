@@ -7,6 +7,7 @@ import type { ColourTable } from "./rollover.ts";
 import type { Element } from "./element.ts";
 import { type PageNeeds, probeNeeds } from "./needs.ts";
 import type { PageParams } from "./services.ts";
+import type { Renderer } from "../picture/renderer.ts";
 
 /** One page of the channel. */
 export interface PageSpec {
@@ -31,6 +32,15 @@ export interface PageSpec {
   readonly language?: LanguageTag;
   /** The presentation level its text is written for (REQ-2151): `"3.5"` keeps it within the standard's own means, which the server checks; NeoTeletext's own level when absent. */
   readonly level?: TextLevel;
+  /**
+   * What the page is drawn in (renderer parity PAR-42): `"teletext"`, the
+   * default, or a picture, `"regis"` or `"naplps"`, drawn from the same
+   * components on the same cell grid, with the same props, state, events and
+   * focus. A picture page is still a teletext page beneath, its rows 0 and 24
+   * shown above and below the picture, and the whole page for a receiver
+   * that does not draw the picture's language.
+   */
+  readonly renderer?: Renderer;
   /** Its controls' colours under the pointer (rollover.ts): the library's ROLLOVER_COLOURS when absent, null for the receiver's own hover look. */
   readonly rollover?: ColourTable | null;
   /**

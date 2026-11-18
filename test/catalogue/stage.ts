@@ -7,16 +7,18 @@
 
 import assert from "node:assert/strict";
 
-import type { Harness } from "neoteletext-server-ts-protocol/testing";
+import { fakeOpus, Harness } from "neoteletext-server-ts-protocol/testing";
 import type { Rows } from "neoteletext-server-ts-protocol";
-import { type Element, h, Rows as RowsLayout } from "../../src/index.ts";
-import { frame, harness, PAGE } from "../components-fixtures.ts";
+import { ComponentChannel, type Element, h, type Renderer, Rows as RowsLayout } from "../../src/index.ts";
+import { frame, PAGE } from "../components-fixtures.ts";
 import { latestTti } from "../controls-fixtures.ts";
 import type { Example } from "./example.ts";
 
 /** What an example shows once staged. */
 export interface Staged {
   readonly page: Harness;
+  /** The channel itself, whose mounts hold what was drawn. */
+  readonly channel: ComponentChannel;
   /** The sub-page the example shows. */
   readonly rows: Rows;
   /** Every sub-page, in order: the gate checks each. */
@@ -29,20 +31,26 @@ export interface Staged {
 /** Every example's page number. */
 export const EXAMPLE_PAGE = PAGE;
 
-export function stage(example: Example): Staged {
-  const page = harness([
-    {
-      page: EXAMPLE_PAGE,
-      title: example.component,
-      perViewer: true,
-      root: (): Element => (example.whole === true ? h(RowsLayout, {}, example.build()) : frame(example.component, example.build())),
-    },
-    ...(example.pages ?? []),
-  ]);
+/** `example` staged on a page drawn in `renderer`: teletext, or a picture (renderer parity PAR-42). */
+export function stage(example: Example, renderer: Renderer = "teletext"): Staged {
+  const channel = new ComponentChannel(
+    [
+      {
+        page: EXAMPLE_PAGE,
+        title: example.component,
+        renderer,
+        perViewer: true,
+        root: (): Element => (example.whole === true ? h(RowsLayout, {}, example.build()) : frame(example.component, example.build())),
+      },
+      ...(example.pages ?? []),
+    ],
+    { opus: fakeOpus() },
+  );
+  const page = new Harness([channel]);
   page.join(1, EXAMPLE_PAGE);
   example.act?.(page);
   const subPages = (page.ownPages(1, EXAMPLE_PAGE) ?? page.sharedPages(EXAMPLE_PAGE)).map((each) => each.rows);
   const shown = subPages[(example.subPage ?? 1) - 1];
   assert.ok(shown !== undefined, `${example.component} has sub-page ${String(example.subPage)}`);
-  return { page, rows: shown, subPages, tti: latestTti(page, EXAMPLE_PAGE), failures: page.errors };
+  return { page, channel, rows: shown, subPages, tti: latestTti(page, EXAMPLE_PAGE), failures: page.errors };
 }

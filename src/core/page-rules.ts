@@ -21,10 +21,24 @@
 // keys, as it always was, on the sub-page it came from (dispatch-input.ts,
 // mount.ts); its rule says which need asked for it.
 
-import { COLUMNS, MAX_RECTS, MAX_RULES, type PageRule, type RectDeclaration, ROWS, type RuleCondition, type RuleTable, type RuleTarget } from "../kit.ts";
+import { COLUMNS, MAX_RECTS, MAX_RULES, type PageRule, type RectDeclaration, ROWS, type RuleTable, type RuleTarget } from "../kit.ts";
 import type { Component } from "./component.ts";
 import type { Reach } from "./draw.ts";
-import { takenByHandlers } from "./events.ts";
+import {
+  CELL_BITS,
+  DRAG,
+  EVERY_MOVE,
+  HELD_MOVES,
+  HOVER_IN,
+  HOVER_OUT,
+  NO_BUTTON_HELD,
+  objectRules,
+  ownBits,
+  pointerRules,
+  type PointerArea,
+  rectName,
+  REPORT,
+} from "./pointer-rules.ts";
 import type { Node } from "./node.ts";
 import { MOST_SELECTION_RULES } from "./page-selection.ts";
 
@@ -52,44 +66,6 @@ const CELL_DOTS_ACROSS = 12;
 
 const CELL_DOTS_DOWN = 20;
 
-/** The most of a component's class name that names a rectangle: with the longest rule's prefix and the rectangle's number, within the 32 characters a name may have (page-rules.md RULE-36). */
-const MOST_CLASS_NAME = 16;
-
-/** What a cell's components take of the pointer there, a bit each. */
-const PRESS = 1;
-
-const RELEASE = 2;
-
-const EVERY_MOVE = 4;
-
-const WHEEL = 8;
-
-/** A drag's moves, taken wherever on the page the pointer then is: asked of the page, so no part of a cell's rectangle. */
-const HELD_MOVES = 16;
-
-/** The bits a rectangle's rules are written from. */
-const CELL_BITS = PRESS | RELEASE | EVERY_MOVE | WHEEL;
-
-/**
- * What every rule of the library's runs: one `report` of the firing, which
- * sends the channel the viewer's event as they made it (page-rules.md
- * RULE-22, RULE-54 item 4). Every rule's `do` is this same list, so the
- * server makes one group of it and every rule shares it (RULE-35).
- */
-export const REPORT: NonNullable<PageRule["do"]> = [{ type: "report" }];
-
-/** No button down: with it a rule on every move leaves a drag's moves to the page's rule, so no move is sent twice (page-rules.md RULE-24). */
-const NO_BUTTON_HELD: RuleCondition = {
-  and: [0, 1, 2].map((button): RuleCondition => ({ read: { of: "button", button }, op: "==", value: 0 })),
-};
-
-/** What a component takes of the pointer on its own cells, as bits. */
-function ownBits(component: Component): number {
-  const { press, release, moves, wheel } = component.pointerInput?.() ?? takenByHandlers(component);
-  const moved = moves === "all" ? EVERY_MOVE | HELD_MOVES : HELD_MOVES;
-  return (press ? PRESS : 0) | (release ? RELEASE : 0) | (moves === "none" ? 0 : moved) | (wheel ? WHEEL : 0);
-}
-
 /** A cell's part of the pointer: what the component drawn there and those above it take, since each is offered it in turn (pointer.ts), and the nearest of them that takes any, which names its rectangle. */
 interface Taken {
   readonly bits: number;
@@ -114,14 +90,9 @@ function takenAt(node: Node | null, known: Map<Node, Taken>): Taken {
   return taken;
 }
 
-/** A rectangle of cells of which the same is taken, by the component that names it. */
-interface Area {
-  readonly row: number;
-  readonly column: number;
-  readonly width: number;
+/** A rectangle of cells of which the same is taken, by the component that names it, grown a row at a time as it is found. */
+interface Area extends PointerArea {
   height: number;
-  readonly bits: number;
-  readonly by: Component | null;
 }
 
 /**
@@ -162,31 +133,6 @@ function areasOf(sources: RuleSources): { readonly areas: Area[]; readonly every
   }
   return { areas, everything };
 }
-
-/** A name for a rectangle from its component's class, in the letters a name may have (page-rules.md RULE-36), with its number so that no two are the same. */
-function rectName(by: Component | null, number: number): string {
-  const letters = (by?.constructor.name ?? "").toLowerCase().replaceAll(/[^a-z0-9]/gu, "");
-  const named = /^[a-z]/u.test(letters) ? letters : `component${letters}`;
-  return `${named.slice(0, MOST_CLASS_NAME)}_${number}`;
-}
-
-/** The rules that send what `bits` take of the pointer inside `target`, each named with `suffix`. */
-function pointerRules(bits: number, target: RuleTarget, suffix: string): PageRule[] {
-  const rules: PageRule[] = [];
-  if ((bits & PRESS) !== 0) {
-    rules.push({ name: `press${suffix}`, on: { event: "press", target, button: "any" }, do: REPORT });
-  }
-  if ((bits & RELEASE) !== 0) {
-    rules.push({ name: `release${suffix}`, on: { event: "release", target, button: "any" }, do: REPORT });
-  }
-  if ((bits & WHEEL) !== 0) {
-    rules.push({ name: `wheel${suffix}`, on: { event: "wheel", target }, do: REPORT });
-  }
-  return rules;
-}
-
-/** The rule for a drag's moves, wherever on the page the pointer goes while a button is down: the component that took the press hears them all (pointer.ts). */
-const DRAG: PageRule = { name: "drag", on: { event: "move", target: "page", held: true }, do: REPORT };
 
 /** The pointer's rules with a rectangle for each area, and the rectangles. */
 function areaRules(areas: readonly Area[], everything: number): { readonly rects: RectDeclaration[]; readonly rules: PageRule[] } {
@@ -264,9 +210,11 @@ function hoverRules(sources: RuleSources): PageRule[] {
   if (controls.length === 0 || !(heard || sources.hoverRead)) {
     return [];
   }
+  // On a picture page the controls are in drawings or objects (renderer parity PAR-42), whose coming and going is carried as the move that made it.
+  const target: RuleTarget = sources.reach.owners === undefined ? { control: "any" } : { object: "any" };
   return [
-    { name: "hover_in", on: { event: "enter", target: { control: "any" } }, do: REPORT },
-    { name: "hover_out", on: { event: "leave", target: { control: "any" } }, do: REPORT },
+    { name: HOVER_IN, on: { event: "enter", target }, do: REPORT },
+    { name: HOVER_OUT, on: { event: "leave", target }, do: REPORT },
   ];
 }
 
@@ -275,7 +223,8 @@ export function pageRules(sources: RuleSources): PageRules {
   const keyboard = keyboardRules([...sources.components]);
   const others = [...keyboard, ...hoverRules(sources)];
   const { areas, everything } = areasOf(sources);
-  const byArea = areaRules(areas, everything);
+  const { owners } = sources.reach;
+  const byArea = owners === undefined ? areaRules(areas, everything) : { rects: [], rules: objectRules(areas, everything, owners) };
   // A page that does not ask for every key may be given page selection's rules as well.
   // The table's limits are the engine's, by name (page-rules.md RULE-57, REQ-6608), as the kit exports them.
   const room = MAX_RULES - (keyboard.some((rule) => rule.name === "keys") ? 0 : MOST_SELECTION_RULES);
