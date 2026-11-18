@@ -9,7 +9,7 @@ import { test } from "node:test";
 import { Action, BarChart, Button, h, type LogEntry, LogView, PaintCanvas, Slider, TextField } from "../src/index.ts";
 import { COLUMNS, type RuleCondition } from "../src/kit.ts";
 import { BODY_ROW, controlBy, controls, HINT_ROW, NOTCH, row, viewer } from "./mouse-fixtures.ts";
-import { cellsRect, DRAG, HOVER, KEYS, press, release, rowsRect, SELECTION, table, tableSent, TEXT, wheel } from "./page-rules-fixtures.ts";
+import { cellsRect, DRAG, REPORT, HOVER, KEYS, press, release, rowsRect, SELECTION, table, tableSent, TEXT, wheel } from "./page-rules-fixtures.ts";
 
 /** No modifier key held, as an input event of the wire says it. */
 const NO_MODS = 0;
@@ -142,7 +142,7 @@ test("RULE-54: a canvas that follows the pointer asks for every move over its ce
         ...KEYS,
         press("paintcanvas_1"),
         release("paintcanvas_1"),
-        { name: "move_paintcanvas_1", on: { event: "move", target: { rect: "paintcanvas_1" }, held: false }, when: noButton, do: [{ action: "send" }] },
+        { name: "move_paintcanvas_1", on: { event: "move", target: { rect: "paintcanvas_1" }, held: false }, when: noButton, do: REPORT },
         DRAG,
       ],
       [rowsRect("paintcanvas_1", BODY_ROW, 8)],

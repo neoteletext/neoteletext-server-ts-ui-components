@@ -13,8 +13,8 @@
 // - the keys the protocol kit selects pages by, which it takes of every
 //   page that has no use of its own for them: the digits and the coloured
 //   keys (page-selection.ts).
-// Every rule only sends: the receiver does nothing locally for it, so the
-// components behave as they did when every input was sent. An input that
+// Every rule only reports: the receiver does nothing locally for it, so
+// the components behave as they did when every input was sent. An input that
 // comes back is given to its component by where it landed and who has the
 // keys, as it always was (dispatch-input.ts); its rule says which need
 // asked for it.
@@ -73,8 +73,13 @@ const HELD_MOVES = 16;
 /** The bits a rectangle's rules are written from. */
 const CELL_BITS = PRESS | RELEASE | EVERY_MOVE | WHEEL;
 
-/** The one action of every rule: the receiver sends the trigger's own event (page-rules.md RULE-22). */
-const SEND: PageRule["do"] = [{ action: "send" }];
+/**
+ * What every rule of the library's runs: one `report` of the firing, which
+ * sends the channel the viewer's event as they made it (page-rules.md
+ * RULE-22, RULE-54 item 4). Every rule's `do` is this same list, so the
+ * server makes one group of it and every rule shares it (RULE-35).
+ */
+export const REPORT: NonNullable<PageRule["do"]> = [{ type: "report" }];
 
 /** No button down: with it a rule on every move leaves a drag's moves to the page's rule, so no move is sent twice (page-rules.md RULE-24). */
 const NO_BUTTON_HELD: RuleCondition = {
@@ -172,19 +177,19 @@ function rectName(by: Component | null, number: number): string {
 function pointerRules(bits: number, target: RuleTarget, suffix: string): PageRule[] {
   const rules: PageRule[] = [];
   if ((bits & PRESS) !== 0) {
-    rules.push({ name: `press${suffix}`, on: { event: "press", target, button: "any" }, do: SEND });
+    rules.push({ name: `press${suffix}`, on: { event: "press", target, button: "any" }, do: REPORT });
   }
   if ((bits & RELEASE) !== 0) {
-    rules.push({ name: `release${suffix}`, on: { event: "release", target, button: "any" }, do: SEND });
+    rules.push({ name: `release${suffix}`, on: { event: "release", target, button: "any" }, do: REPORT });
   }
   if ((bits & WHEEL) !== 0) {
-    rules.push({ name: `wheel${suffix}`, on: { event: "wheel", target }, do: SEND });
+    rules.push({ name: `wheel${suffix}`, on: { event: "wheel", target }, do: REPORT });
   }
   return rules;
 }
 
 /** The rule for a drag's moves, wherever on the page the pointer goes while a button is down: the component that took the press hears them all (pointer.ts). */
-const DRAG: PageRule = { name: "drag", on: { event: "move", target: "page", held: true }, do: SEND };
+const DRAG: PageRule = { name: "drag", on: { event: "move", target: "page", held: true }, do: REPORT };
 
 /** The pointer's rules with a rectangle for each area, and the rectangles. */
 function areaRules(areas: readonly Area[], everything: number): { readonly rects: RectDeclaration[]; readonly rules: PageRule[] } {
@@ -202,7 +207,7 @@ function areaRules(areas: readonly Area[], everything: number): { readonly rects
     });
     rules.push(...pointerRules(area.bits, target, `_${name}`));
     if ((area.bits & EVERY_MOVE) !== 0) {
-      rules.push({ name: `move_${name}`, on: { event: "move", target, held: false }, when: NO_BUTTON_HELD, do: SEND });
+      rules.push({ name: `move_${name}`, on: { event: "move", target, held: false }, when: NO_BUTTON_HELD, do: REPORT });
     }
   }
   if ((everything & HELD_MOVES) !== 0) {
@@ -215,7 +220,7 @@ function areaRules(areas: readonly Area[], everything: number): { readonly rects
 function wholePageRules(everything: number): PageRule[] {
   const rules = pointerRules(everything, "page", "");
   if ((everything & EVERY_MOVE) !== 0) {
-    rules.push({ name: "move", on: { event: "move", target: "page", held: false }, do: SEND });
+    rules.push({ name: "move", on: { event: "move", target: "page", held: false }, do: REPORT });
   } else if ((everything & HELD_MOVES) !== 0) {
     rules.push(DRAG);
   }
@@ -232,18 +237,18 @@ function keyboardRules(components: readonly Component[]): PageRule[] {
   );
   if (keys) {
     rules.push(
-      { name: "keys", on: { event: "key", keys: "any", repeat: true }, do: SEND },
-      { name: "keys_up", on: { event: "key_up", keys: "any" }, do: SEND },
+      { name: "keys", on: { event: "key", keys: "any", repeat: true }, do: REPORT },
+      { name: "keys_up", on: { event: "key_up", keys: "any" }, do: REPORT },
     );
   }
   if (texts) {
-    rules.push({ name: "text", on: { event: "text" }, do: SEND });
+    rules.push({ name: "text", on: { event: "text" }, do: REPORT });
   }
   if (components.some((each) => each.onPageFocus !== undefined)) {
-    rules.push({ name: "focus", on: { event: "focus" }, do: SEND });
+    rules.push({ name: "focus", on: { event: "focus" }, do: REPORT });
   }
   if (components.some((each) => each.onPageBlur !== undefined)) {
-    rules.push({ name: "blur", on: { event: "blur" }, do: SEND });
+    rules.push({ name: "blur", on: { event: "blur" }, do: REPORT });
   }
   return rules;
 }
@@ -263,8 +268,8 @@ function hoverRules(sources: RuleSources): PageRule[] {
     return [];
   }
   return [
-    { name: "hover_in", on: { event: "enter", target: { control: "any" } }, do: SEND },
-    { name: "hover_out", on: { event: "leave", target: { control: "any" } }, do: SEND },
+    { name: "hover_in", on: { event: "enter", target: { control: "any" } }, do: REPORT },
+    { name: "hover_out", on: { event: "leave", target: { control: "any" } }, do: REPORT },
   ];
 }
 

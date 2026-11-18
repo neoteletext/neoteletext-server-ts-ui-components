@@ -247,7 +247,9 @@ export class ComponentChannel implements Application {
 
   /** A viewer's receiver found a fault in a page's rule table (page-rules.md RULE-48): the table is the library's, so the channel's log says it. */
   rulesFault(fault: ServerMessageRulesFault, context: Context): void {
-    context.log(`page ${fault.page}: connection ${fault.connection}'s receiver reported the rule table fault ${fault.fault}, ${fault.count} times`);
+    context.log(
+      `page ${fault.page}/${fault.sub}: connection ${fault.connection}'s receiver reported the rule table fault ${fault.fault}, ${fault.count} times`,
+    );
   }
 
   stats(stats: ServerStats, context: Context): void {

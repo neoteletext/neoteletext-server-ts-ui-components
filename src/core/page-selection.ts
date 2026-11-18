@@ -7,10 +7,7 @@
 // components take no keys asks for these, and page selection goes on.
 
 import { Key, type PageRule, type RuleKey, type RuleTable } from "../kit.ts";
-import type { PageRules } from "./page-rules.ts";
-
-/** The one action of every rule: the receiver sends the trigger's own event (page-rules.md RULE-22). */
-const SEND: PageRule["do"] = [{ action: "send" }];
+import { type PageRules, REPORT } from "./page-rules.ts";
 
 /** Which of a page's keys the protocol kit's page selection takes: those the page has no use of its own for (the kit's navigation; PageSpec.ownsDigits, ownsColourKeys). */
 export interface PageSelectionKeys {
@@ -42,7 +39,7 @@ export const MOST_SELECTION_RULES = 3;
 
 /** Whether `table` asks for every key already. */
 function asksEveryKey(table: RuleTable): boolean {
-  return table.rules.some((rule) => rule.on.event === "key" && rule.on.keys === "any");
+  return table.rules.some((rule) => [rule.on].flat().some((trigger) => trigger.event === "key" && trigger.keys === "any"));
 }
 
 /**
@@ -62,12 +59,12 @@ export function withPageSelection(rules: PageRules, takes: PageSelectionKeys): P
   const selection: PageRule[] = [];
   if (takes.digits) {
     selection.push(
-      { name: "select_digits", on: { event: "key", keys: [...DIGIT_ROW] }, do: SEND },
-      { name: "select_keypad", on: { event: "key", keys: [...KEYPAD] }, do: SEND },
+      { name: "select_digits", on: { event: "key", keys: [...DIGIT_ROW] }, do: REPORT },
+      { name: "select_keypad", on: { event: "key", keys: [...KEYPAD] }, do: REPORT },
     );
   }
   if (takes.colourKeys) {
-    selection.push({ name: "fastext_keys", on: { event: "key", keys: [...COLOUR_KEYS] }, do: SEND });
+    selection.push({ name: "fastext_keys", on: { event: "key", keys: [...COLOUR_KEYS] }, do: REPORT });
   }
   const table: RuleTable = { ...rules.table, rules: [...selection, ...rules.table.rules] };
   return { key: JSON.stringify(table), table, widened: rules.widened };

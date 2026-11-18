@@ -34,6 +34,7 @@ import {
   PAGE_ACROSS,
   PAGE_DOWN,
   press,
+  REPORT,
   rowsRect,
   rulesSent,
   SELECTION,
@@ -85,14 +86,13 @@ test("RULE-54: a page with more areas than a table has rectangles asks the whole
       [rowsRect("spot_1", BODY_ROW), rowsRect("turned_2", BODY_ROW + 1), rowsRect("spot_3", BODY_ROW + 2)],
     ),
   );
-  const send = [{ action: "send" }] as const;
   const many = viewer(...rows(MOST_RECTS + 1));
   assert.deepEqual(
     tableSent(many),
     table([
       ...SELECTION,
-      { name: "press", on: { event: "press", target: "page", button: "any" }, do: send },
-      { name: "wheel", on: { event: "wheel", target: "page" }, do: send },
+      { name: "press", on: { event: "press", target: "page", button: "any" }, do: REPORT },
+      { name: "wheel", on: { event: "wheel", target: "page" }, do: REPORT },
     ]),
   );
   const logged = many.sent.filter((each) => each["type"] === "log").map((each) => String(each["text"]));
@@ -150,15 +150,20 @@ test("RULE-54: connections given the same table of a shared page are named in on
     type: "rules",
     connections: [1, 2],
     page: "150",
+    sub: "0000",
     table: table([...KEYS, TEXT, ...HOVER, press("textfield_1")], [rowsRect("textfield_1", BODY_ROW)]),
   });
 });
 
 test("RULE-48: a fault a receiver reports of a page's table is written to the channel's log", () => {
   const page = viewer(h(Text, { text: "words" }));
-  page.channel.rulesFault({ type: "rules_fault", connection: 1, page: "150", generation: 1, fault: "sends_dropped", count: 4 });
+  page.channel.rulesFault({ type: "rules_fault", connection: 1, page: "150", sub: "0000", generation: 1, fault: "reports_dropped", count: 4 });
   assert.ok(
-    page.sent.some((each) => each["type"] === "log" && String(each["text"]).includes("rule table fault sends_dropped, 4 times")),
+    page.sent.some(
+      (each) =>
+        each["type"] === "log" &&
+        String(each["text"]).includes("page 150/0000: connection 1's receiver reported the rule table fault reports_dropped, 4 times"),
+    ),
     "the log says which fault, and how often",
   );
 });

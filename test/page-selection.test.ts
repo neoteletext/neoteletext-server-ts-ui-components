@@ -40,11 +40,11 @@ function digit(key: string): InputEvent {
 test("RULE-54: a page of static text asks for the keys the kit selects pages by and nothing else, of each connection as it opens the page", () => {
   const page = words();
   page.join(1, PAGE);
-  assert.deepEqual(rulesSent(page), [{ type: "rules", connections: [1], page: "150", table: { rules: SELECTION } }]);
+  assert.deepEqual(rulesSent(page), [{ type: "rules", connections: [1], page: "150", sub: "0000", table: { rules: SELECTION } }]);
   page.join(2, PAGE);
   assert.deepEqual(
     rulesSent(page).at(-1),
-    { type: "rules", connections: [2], page: "150", table: { rules: SELECTION } },
+    { type: "rules", connections: [2], page: "150", sub: "0000", table: { rules: SELECTION } },
     "the page every viewer shares gives each its table",
   );
   assert.equal(rulesSent(page).length, 2, "and the first viewer is not sent theirs again");

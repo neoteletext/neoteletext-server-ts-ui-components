@@ -10,7 +10,7 @@
 // table at all: its pages are left to the table the server's
 // configuration gives the channel (RULE-53).
 
-import type { Context } from "../kit.ts";
+import { type Context, numbered } from "../kit.ts";
 import type { ConnectionMounts } from "./connection-mounts.ts";
 import type { PageRules } from "./page-rules.ts";
 import { type PageSelectionKeys, withPageSelection } from "./page-selection.ts";
@@ -75,21 +75,23 @@ export class RuleTables {
       return;
     }
     for (const [page, watching] of mounts.watching) {
-      const owed = new Map<string, { readonly rules: PageRules; readonly connections: number[] }>();
+      const owed = new Map<string, { readonly rules: PageRules; readonly sub: number; readonly connections: number[] }>();
       for (const connection of watching) {
-        const components = (mounts.of(connection, page) ?? mounts.shared.get(page))?.rules ?? null;
+        const mount = mounts.of(connection, page) ?? mounts.shared.get(page);
+        const components = mount?.rules ?? null;
         const rules = components === null ? null : this.#wholeOf(page, components);
         const sent = this.#sent.get(connection) ?? new Map<number, string>();
         if (rules !== null && sent.get(page) !== rules.key) {
           sent.set(page, rules.key);
           this.#sent.set(connection, sent);
-          const group = owed.get(rules.key) ?? { rules, connections: [] };
+          const [sub = 0] = numbered(mount?.lastPage?.subpages.length ?? 1, context.limits());
+          const group = owed.get(rules.key) ?? { rules, sub, connections: [] };
           group.connections.push(connection);
           owed.set(rules.key, group);
         }
       }
-      for (const { rules, connections } of owed.values()) {
-        context.rules({ connections }, page, rules.table);
+      for (const { rules, sub, connections } of owed.values()) {
+        context.rules({ connections }, page, sub, rules.table);
         if (rules.widened !== null) {
           context.log(`page ${page.toString(16)}: ${rules.widened}`);
         }

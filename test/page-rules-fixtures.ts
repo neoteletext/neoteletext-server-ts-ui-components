@@ -16,20 +16,21 @@ export const PAGE_ACROSS = 480;
 /** The page's height in dots, 25 rows. */
 export const PAGE_DOWN = 500;
 
-const SEND = [{ action: "send" }] as const;
+/** What every rule of the library's runs: one report of the firing (page-rules.md RULE-54 item 4). */
+export const REPORT = [{ type: "report" }] as const;
 
 /** The rules that ask for the keys and their releases. */
 export const KEYS: readonly PageRule[] = [
-  { name: "keys", on: { event: "key", keys: "any", repeat: true }, do: SEND },
-  { name: "keys_up", on: { event: "key_up", keys: "any" }, do: SEND },
+  { name: "keys", on: { event: "key", keys: "any", repeat: true }, do: REPORT },
+  { name: "keys_up", on: { event: "key_up", keys: "any" }, do: REPORT },
 ];
 
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
 
 /** The rules that ask for the digits the protocol kit selects a page by: the digit row's keys by their place, and the keypad's. */
 export const SELECT_DIGITS: readonly PageRule[] = [
-  { name: "select_digits", on: { event: "key", keys: DIGITS.map((digit) => ({ physical: digit })) }, do: SEND },
-  { name: "select_keypad", on: { event: "key", keys: DIGITS.map((digit) => ({ name: `Numpad${digit}` })) }, do: SEND },
+  { name: "select_digits", on: { event: "key", keys: DIGITS.map((digit) => ({ physical: digit })) }, do: REPORT },
+  { name: "select_keypad", on: { event: "key", keys: DIGITS.map((digit) => ({ name: `Numpad${digit}` })) }, do: REPORT },
 ];
 
 /** The rule that asks for the keys the kit follows a Fastext link by. */
@@ -48,34 +49,34 @@ export const FASTEXT_KEYS: PageRule = {
       { name: "ColorF3Blue" },
     ],
   },
-  do: SEND,
+  do: REPORT,
 };
 
 /** What a page whose components take no keys asks for, so that the kit's page selection goes on. */
 export const SELECTION: readonly PageRule[] = [...SELECT_DIGITS, FASTEXT_KEYS];
 
 /** The rule that asks for text that came from no key. */
-export const TEXT: PageRule = { name: "text", on: { event: "text" }, do: SEND };
+export const TEXT: PageRule = { name: "text", on: { event: "text" }, do: REPORT };
 
 /** The rules that ask for the pointer coming onto a control and leaving it. */
 export const HOVER: readonly PageRule[] = [
-  { name: "hover_in", on: { event: "enter", target: { control: "any" } }, do: SEND },
-  { name: "hover_out", on: { event: "leave", target: { control: "any" } }, do: SEND },
+  { name: "hover_in", on: { event: "enter", target: { control: "any" } }, do: REPORT },
+  { name: "hover_out", on: { event: "leave", target: { control: "any" } }, do: REPORT },
 ];
 
 /** The rule that asks for a drag's moves. */
-export const DRAG: PageRule = { name: "drag", on: { event: "move", target: "page", held: true }, do: SEND };
+export const DRAG: PageRule = { name: "drag", on: { event: "move", target: "page", held: true }, do: REPORT };
 
 export function press(rect: string): PageRule {
-  return { name: `press_${rect}`, on: { event: "press", target: { rect }, button: "any" }, do: SEND };
+  return { name: `press_${rect}`, on: { event: "press", target: { rect }, button: "any" }, do: REPORT };
 }
 
 export function release(rect: string): PageRule {
-  return { name: `release_${rect}`, on: { event: "release", target: { rect }, button: "any" }, do: SEND };
+  return { name: `release_${rect}`, on: { event: "release", target: { rect }, button: "any" }, do: REPORT };
 }
 
 export function wheel(rect: string): PageRule {
-  return { name: `wheel_${rect}`, on: { event: "wheel", target: { rect } }, do: SEND };
+  return { name: `wheel_${rect}`, on: { event: "wheel", target: { rect } }, do: REPORT };
 }
 
 /** A rectangle of whole cells, in dots. */
