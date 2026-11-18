@@ -3,6 +3,76 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 24.0.0 (18 November 2026)
+
+### To take it
+
+- **Take the protocol kit 16.0.0 with it**, which speaks program protocol
+  14 (DEC-6522, DEC-6524): the library pins the kit exactly, and a program
+  on an older kit stops at the server's `start`. The kit's own changes
+  (a page's rule table, animation, an input's `rule`, `tick` and `target`)
+  are in its README.
+- **A channel that is to behave exactly as on 23.0.0 says
+  `ruleTables: "none"`** in its `ComponentChannel` options and keeps
+  `"default_rules": "send_all"` in its entry of the server's
+  `channels.json`: the library then sends no rule table, every page has
+  the server's default table, and every input is sent as before. Nothing
+  else in the channel's code changes.
+- **A channel that says nothing, or `ruleTables: "components"`**, has
+  each page ask for its own input, as below. Its entry may say
+  `"default_rules": "none"`, or leave it out; `"send_all"` changes nothing
+  for it, since the default table is only for a page given no table. A
+  component, a page and a test written for 23.0.0 work as they are,
+  except a test that compares everything the channel sent with a list,
+  which now also holds the `rules` messages.
+
+### Each page asks for its own input
+
+- **The library writes each page's rule table from the components on it**
+  (REQ-6539; neoteletext-common's `docs/page-rules.md`, RULE-54) and sends
+  it to each connection as it opens the page, and again when the
+  components come to take something else. A viewer's browser then sends
+  the page only what its components take: the keys where one takes them,
+  a press on a button's cells, the release and a drag's moves for a
+  slider, the wheel over a list that scrolls, the pointer on a control
+  where the hint row says what it is. `docs/how-it-works.md` lists every
+  rule and when it is asked.
+- **Page selection goes on everywhere.** A page whose components take no
+  keys asks for the press of the digits (the digit row's keys and the
+  keypad's) and of the coloured keys (F1 to F4 and the remote's four),
+  which the protocol kit selects pages by, unless the page owns them
+  (`ownsDigits`, `ownsColourKeys`). So a page of text is sent those keys
+  and nothing else, and a typed page number selects the page as before.
+  Only a page that owns both and has no component that takes input sends
+  a table with no rules.
+- **Three things the kit did are not asked for** on a page whose
+  components do not take them: a paste of digits as a page number, a
+  click on a page number in a page's text (the browser follows the links
+  a page declares itself), and a digit from a key that is neither on the
+  digit row nor the keypad.
+- **What a channel's own application took of a library page's input
+  beside the library** (a second finger, a ReGIS pick) is no longer sent,
+  since no rule of the library's asks for it.
+- **Input reaches components as before**: by the cell it landed on and by
+  who has the keys. `input.rule` says which rule asked for it and is not
+  what routes it.
+
+### New
+
+- **`ruleTables`** in `ComponentChannelOptions`: `"components"` (the
+  default) or `"none"`, which has the library send no rule table.
+- **`pointerInput()`** on a component says what it takes of the pointer on
+  its cells (`PointerInput`: `press`, `release`, `moves` of `none`, `held`
+  or `all`, `wheel`), where that is less than its handlers could take;
+  absent, it is read from the handlers (`takenByHandlers`). `Slider` and
+  `ScrollBar` take a drag's moves only; a modal's `Shield` takes nothing
+  (`NO_POINTER_INPUT`).
+- **`MOST_RECTS` and `MOST_RULES`**, the table's limits, past which a
+  page asks the whole page for the pointer, and the channel's log says
+  so.
+- **A fault a viewer's browser reports of a page's table** is written to
+  the channel's log.
+
 ## 23.0.0 (18 November 2026)
 
 ### To take it
