@@ -26,8 +26,20 @@ export const LAST_TEXT_ROW = ROWS - 2;
 export const REGIS_CELL = 20;
 /** The ReGIS picture's top and bottom margins, in the page's background. */
 export const REGIS_MARGIN = 10;
-/** The ReGIS character cell the text is written in (`T(S[20,20])`) and its unit cell (`T(U[15,20])`): 15 is the teletext cell's 12 dots at their 16/13 shape on a 20-pixel row (PAR-10, DEC-2049). */
-export const REGIS_TEXT_WIDTH = 15;
+/** The unit cell width PAR-10 shapes the text to: the teletext cell's 12 dots at their 16/13 shape on a 20-pixel row (DEC-2049). */
+const REGIS_SHAPED_WIDTH = 15;
+/**
+ * A unit cell's width is a multiple of the 8-pixel character cell, and a
+ * width between two is drawn at "the next smaller size" (VT330/VT340
+ * Programmer Reference Manual, volume 2, chapter 7, "Unit Cell Size"), so
+ * 15 would draw each glyph 8 pixels wide.
+ */
+const REGIS_UNIT_WIDTH_STEP = 8;
+/** The unit cell text is written in (`T(U[16,20])` in the display cell `T(S[20,20])`): the multiple of the step no narrower than the shaped width (DEC-6818). */
+export const REGIS_TEXT_WIDTH = Math.ceil(REGIS_SHAPED_WIDTH / REGIS_UNIT_WIDTH_STEP) * REGIS_UNIT_WIDTH_STEP;
+if (REGIS_TEXT_WIDTH > REGIS_CELL) {
+  throw new Error("the ReGIS unit cell does not fit its display cell");
+}
 
 // The grid is the whole ReGIS screen, by the renderer's own limits.
 const REGIS_ROWS_SHOWN = LAST_TEXT_ROW - FIRST_TEXT_ROW + 1;
