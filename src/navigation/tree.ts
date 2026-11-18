@@ -42,9 +42,9 @@ export interface TreeProps extends ControlProps {
   /** What an empty tree says; "nothing here" when absent. */
   readonly empty?: string;
   /** An item without children chosen, by Enter, Space or a click; one with a page then goes there. */
-  readonly onChoose?: (node: TreeNode, session: number) => void;
+  readonly onChoose?: (node: TreeNode, connection: number) => void;
   /** The pointer came onto an item, or left it (null): for showing what it is before it is chosen. Moving from one item to the next is a leave, then an enter. */
-  readonly onHover?: (node: TreeNode | null, session: number) => void;
+  readonly onHover?: (node: TreeNode | null, connection: number) => void;
 }
 
 interface TreeState {
@@ -189,12 +189,12 @@ export class Tree extends Control<TreeProps, TreeState> {
         text: (item: Visible) => `${markOf(item, this.state.open)} ${item.node.label}`,
         foreground: (item: Visible) => (hasChildren(item.node) ? Colour.Cyan : Colour.White),
         disabled: () => this.disabled,
-        onPick: (index: number, session: number) => {
-          this.#activate(index, session);
+        onPick: (index: number, connection: number) => {
+          this.#activate(index, connection);
         },
         ...(this.props.onHover === undefined
           ? {}
-          : { onHover: (index: number | null, session: number) => this.props.onHover?.(index === null ? null : (rows[index]?.node ?? null), session) }),
+          : { onHover: (index: number | null, connection: number) => this.props.onHover?.(index === null ? null : (rows[index]?.node ?? null), connection) }),
       }),
       h(ScrollBar, {
         top,
@@ -218,7 +218,7 @@ export class Tree extends Control<TreeProps, TreeState> {
     this.setState({ open: next });
   }
 
-  #activate(index: number, session: number): void {
+  #activate(index: number, connection: number): void {
     const item = this.#rows()[index];
     if (item === undefined || this.disabled) {
       return;
@@ -228,10 +228,10 @@ export class Tree extends Control<TreeProps, TreeState> {
       this.#toggle(item, !this.state.open.has(item.id));
       return;
     }
-    this.activate(item.node.label, session);
-    this.props.onChoose?.(item.node, session);
+    this.activate(item.node.label, connection);
+    this.props.onChoose?.(item.node, connection);
     if (item.node.page !== undefined) {
-      this.services.redirect(session, item.node.page);
+      this.services.redirect(connection, item.node.page);
     }
   }
 
@@ -243,7 +243,7 @@ export class Tree extends Control<TreeProps, TreeState> {
       return false;
     }
     if (choosing(event)) {
-      this.#activate(current, event.session);
+      this.#activate(current, event.connection);
       return true;
     }
     if (isPress(event, Key.Right) && hasChildren(item.node)) {
@@ -264,7 +264,7 @@ export class Tree extends Control<TreeProps, TreeState> {
     }
     const chosen = moveChoice(current, step, rows.length);
     this.setState({ chosen, top: keepInView(this.state.top, chosen, this.props.shown, rows.length) });
-    this.play("move", event.session);
+    this.play("move", event.connection);
     return true;
   }
 

@@ -47,18 +47,18 @@ export interface WheelAt extends Pointed {
 
 export class Pointer {
   readonly #host: PointerHost;
-  /** The control under each session's pointer, from its HOVER enter until the leave. */
+  /** The control under each connection's pointer, from its HOVER enter until the leave. */
   readonly #hovered = new Map<number, { readonly node: Node; readonly control: Box }>();
-  /** The component holding the pointer, by session, from a press it took until the release. */
+  /** The component holding the pointer, by connection, from a press it took until the release. */
   readonly #captured = new Map<number, Node>();
 
   constructor(host: PointerHost) {
     this.#host = host;
   }
 
-  /** The component that declared the control `session`'s pointer is on. */
-  hoveredBy(session: number): Node | null {
-    return this.#hovered.get(session)?.node ?? null;
+  /** The component that declared the control `connection`'s pointer is on. */
+  hoveredBy(connection: number): Node | null {
+    return this.#hovered.get(connection)?.node ?? null;
   }
 
   isHovered(component: AnyComponent): boolean {
@@ -67,25 +67,25 @@ export class Pointer {
 
   /** `node` unmounted: no pointer is held by it or over its controls. */
   forget(node: Node): void {
-    for (const [session, held] of this.#captured) {
+    for (const [connection, held] of this.#captured) {
       if (held === node) {
-        this.#captured.delete(session);
+        this.#captured.delete(connection);
       }
     }
-    for (const [session, hovered] of this.#hovered) {
+    for (const [connection, hovered] of this.#hovered) {
       if (hovered.node === node) {
-        this.#hovered.delete(session);
+        this.#hovered.delete(connection);
       }
     }
   }
 
-  pointer(session: number, at: PointerAt): boolean {
+  pointer(connection: number, at: PointerAt): boolean {
     const { action, row, column, button } = at;
-    const event = (node: Node): PointerEvent => ({ session, ...at, ...placed(node, row, column) });
-    const held = this.#captured.get(session);
+    const event = (node: Node): PointerEvent => ({ connection, ...at, ...placed(node, row, column) });
+    const held = this.#captured.get(connection);
     if (held !== undefined && action !== "press") {
       if (action === "release") {
-        this.#captured.delete(session);
+        this.#captured.delete(connection);
       }
       held.component.onPointer?.(event(held));
       return true;
@@ -104,17 +104,17 @@ export class Pointer {
       const sent = event(node);
       const taken = component.onPointer?.(sent) === true;
       if (taken && action === "press") {
-        this.#captured.set(session, node);
+        this.#captured.set(connection, node);
         return true;
       }
       return taken || (action === "press" && button === 0 && component.onClick?.(sent) === true);
     });
   }
 
-  wheel(session: number, at: WheelAt): boolean {
+  wheel(connection: number, at: WheelAt): boolean {
     const { row, column } = at;
     return bubble(this.#reached(row, column), (component, node) => {
-      const event: WheelEvent = { session, ...at, ...placed(node, row, column) };
+      const event: WheelEvent = { connection, ...at, ...placed(node, row, column) };
       return component.onWheel?.(event);
     });
   }
@@ -139,44 +139,44 @@ export class Pointer {
    * page begins now, as the page changed under the pointer, and a leave
    * with no enter before it, are dropped.
    */
-  hover(session: number, entered: boolean, row: number, column: number): boolean {
-    const before = this.#hovered.get(session);
+  hover(connection: number, entered: boolean, row: number, column: number): boolean {
+    const before = this.#hovered.get(connection);
     // An enter of the control already entered says nothing new.
     const again = entered && before !== undefined && before.control.row === row && before.control.column === column;
     let taken = false;
     if (before !== undefined && !again) {
-      this.#hovered.delete(session);
-      taken = this.#hoverOn(before.node, session, false, before.control.row, before.control.column);
+      this.#hovered.delete(connection);
+      taken = this.#hoverOn(before.node, connection, false, before.control.row, before.control.column);
     }
     if (entered && !again) {
       const found = this.#host.reach().controls.find(({ control }) => control.row === row && control.column === column);
       if (found !== undefined) {
-        this.#hovered.set(session, found);
-        taken = this.#hoverOn(found.node, session, true, row, column) || taken;
+        this.#hovered.set(connection, found);
+        taken = this.#hoverOn(found.node, connection, true, row, column) || taken;
       }
     }
     return taken;
   }
 
   /**
-   * `session`'s pointer left the page, or its receiver lost it (protocol
+   * `connection`'s pointer left the page, or its receiver lost it (protocol
    * 11's mouse `gone`, REQ-1355): the control it was over is left, as a
    * HOVER leave leaves it, and no component holds the pointer any longer.
    * A button held has come first as a release marked lost.
    */
-  gone(session: number): boolean {
-    this.#captured.delete(session);
-    const before = this.#hovered.get(session);
+  gone(connection: number): boolean {
+    this.#captured.delete(connection);
+    const before = this.#hovered.get(connection);
     if (before === undefined) {
       return false;
     }
-    this.#hovered.delete(session);
-    return this.#hoverOn(before.node, session, false, before.control.row, before.control.column);
+    this.#hovered.delete(connection);
+    return this.#hoverOn(before.node, connection, false, before.control.row, before.control.column);
   }
 
-  #hoverOn(from: Node, session: number, entered: boolean, row: number, column: number): boolean {
+  #hoverOn(from: Node, connection: number, entered: boolean, row: number, column: number): boolean {
     return bubble(from, (component, node) => {
-      const event: HoverEvent = { session, entered, row, column, ...placed(node, row, column) };
+      const event: HoverEvent = { connection, entered, row, column, ...placed(node, row, column) };
       return component.onHover?.(event);
     });
   }

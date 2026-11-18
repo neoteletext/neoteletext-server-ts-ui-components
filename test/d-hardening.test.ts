@@ -216,9 +216,9 @@ class RaiseToasts extends Component<{ readonly count: number }> {
   override render(): Child {
     return h(Action, {
       text: "raise",
-      onPress: (session: number) => {
+      onPress: (connection: number) => {
         for (let index = 0; index < this.props.count; index += 1) {
-          this.services.bus.emit("toast", { kind: "info", text: `toast ${index}` }, { session });
+          this.services.bus.emit("toast", { kind: "info", text: `toast ${index}` }, { connection });
         }
       },
     });

@@ -11,7 +11,7 @@ export interface ToastEvent {
   /** How it is meant: its mark and its colour (core/look.ts). */
   readonly kind: "info" | "success" | "warning" | "error";
   /** What undoes what the toast tells of, for the viewer who asks: the shelf says so, and its key or a click on the toast runs it, once. */
-  readonly undo?: (session: number) => void;
+  readonly undo?: (connection: number) => void;
 }
 
 export interface LibraryEvents {
@@ -22,9 +22,9 @@ export interface LibraryEvents {
   /** A toast to show on every page with a toast shelf. */
   readonly toast: ToastEvent;
   /** The parameters of a viewer's selection of this page changed, null once another selection has left them behind: untrusted text, undecoded. */
-  readonly parameters: { readonly session: number; readonly parameters: string | null };
+  readonly parameters: { readonly connection: number; readonly parameters: string | null };
   /** A viewer chose another language (REQ-2217 item 2): their pages are drawn again in it. */
-  readonly language: { readonly session: number; readonly language: LanguageTag };
+  readonly language: { readonly connection: number; readonly language: LanguageTag };
   /** A viewer went: what a component keeps for them, beyond its own copy, can go. */
-  readonly ended: { readonly session: number };
+  readonly ended: { readonly connection: number };
 }

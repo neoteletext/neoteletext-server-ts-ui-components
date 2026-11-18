@@ -19,7 +19,7 @@ export interface ActionProps {
   /** What it says, cut to its box. */
   readonly text: string;
   /** Called as the text is clicked; never while disabled. */
-  readonly onPress: (session: number) => void;
+  readonly onPress: (connection: number) => void;
   /** The text's colour; white when absent. */
   readonly foreground?: Colour;
   /** Dim, and a click on it does nothing. */
@@ -61,7 +61,7 @@ export class Action extends Component<ActionProps> {
     if (this.props.disabled === true || event.region !== TEXT) {
       return false;
     }
-    this.props.onPress(event.session);
+    this.props.onPress(event.connection);
     return true;
   }
 }

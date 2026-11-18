@@ -29,19 +29,19 @@ export interface TransportProps {
   /** Whether there are tracks to go back and on through. */
   readonly canStep: boolean;
   /** The prev button pressed; never while canStep is false. */
-  readonly onPrevious: (session: number) => void;
+  readonly onPrevious: (connection: number) => void;
   /** The play or pause button pressed; never while canPlay is false. */
-  readonly onPlayPause: (session: number) => void;
+  readonly onPlayPause: (connection: number) => void;
   /** The stop button pressed; never while canStop is false. */
-  readonly onStop: (session: number) => void;
+  readonly onStop: (connection: number) => void;
   /** The next button pressed; never while canStep is false. */
-  readonly onNext: (session: number) => void;
+  readonly onNext: (connection: number) => void;
   /** What the keys do while a button has them, for the hint row: the player's (player-view.ts), which takes keys the buttons do not; the buttons' own when absent. */
   readonly hint?: string;
 }
 
 export class Transport extends Component<TransportProps> {
-  #button(label: string, disabled: boolean, onPress: (session: number) => void): Child {
+  #button(label: string, disabled: boolean, onPress: (connection: number) => void): Child {
     const { hint } = this.props;
     return h(Button, { key: label === PAUSE ? PLAY : label, label, width: BUTTON_WIDTH, disabled, ...(hint === undefined ? {} : { hint }), onPress });
   }

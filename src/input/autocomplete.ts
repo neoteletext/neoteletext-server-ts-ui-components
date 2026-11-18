@@ -58,10 +58,10 @@ export class Autocomplete extends ValueControl<string, AutocompleteProps, Autoco
     return this.props.items.filter((item) => (this.props.anywhere === true ? item.toLowerCase().includes(wanted) : item.toLowerCase().startsWith(wanted)));
   }
 
-  #take(item: string, session: number): void {
+  #take(item: string, connection: number): void {
     this.setState({ typed: item, chosen: 0 });
-    this.change(item, session);
-    this.activate(item, session);
+    this.change(item, connection);
+    this.activate(item, connection);
   }
 
   override render(): Child {
@@ -90,10 +90,10 @@ export class Autocomplete extends ValueControl<string, AutocompleteProps, Autoco
             indent: () => this.labelCells,
             disabled: () => this.disabled,
             empty: this.props.empty ?? "no suggestions",
-            onPick: (index: number, session: number) => {
+            onPick: (index: number, connection: number) => {
               const item = matches[index];
               if (item !== undefined) {
-                this.#take(item, session);
+                this.#take(item, connection);
               }
             },
           }),
@@ -104,7 +104,7 @@ export class Autocomplete extends ValueControl<string, AutocompleteProps, Autoco
     const matches = this.#matches().slice(0, this.props.shown);
     const chosen = matches[this.state.chosen];
     if (isPress(event, Key.Enter) && chosen !== undefined) {
-      this.#take(chosen, event.session);
+      this.#take(chosen, event.connection);
       return true;
     }
     if (isPress(event, Key.Tab) && chosen !== undefined) {
@@ -116,7 +116,7 @@ export class Autocomplete extends ValueControl<string, AutocompleteProps, Autoco
       return false;
     }
     this.setState({ chosen: moveChoice(this.state.chosen, step, matches.length) });
-    this.play("move", event.session);
+    this.play("move", event.connection);
     return true;
   }
 }

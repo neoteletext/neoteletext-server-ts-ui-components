@@ -111,20 +111,20 @@ export class NumberInput extends ValueControl<number, NumberInputProps, NumberIn
     return Number.isInteger(step) && step > 0 ? step : 1;
   }
 
-  #typed(text: string, session: number): void {
+  #typed(text: string, connection: number): void {
     this.setState({ typing: text });
     const value = readNumber(text);
     if (this.#inRange(value)) {
-      this.change(value, session);
+      this.change(value, connection);
     } else if (text !== "") {
-      this.emit({ type: "invalid", value, reason: `${this.props.min} to ${this.props.max}`, session, origin: "viewer" });
-      this.play("error", session);
+      this.emit({ type: "invalid", value, reason: `${this.props.min} to ${this.props.max}`, connection, origin: "viewer" });
+      this.play("error", connection);
     }
   }
 
-  #stepBy(steps: number, session: number): void {
+  #stepBy(steps: number, connection: number): void {
     this.setState({ typing: null });
-    this.change(Math.max(this.props.min, Math.min(this.props.max, this.value + steps * this.#step)), session);
+    this.change(Math.max(this.props.min, Math.min(this.props.max, this.value + steps * this.#step)), connection);
   }
 
   override componentDidBlur(): void {
@@ -136,21 +136,21 @@ export class NumberInput extends ValueControl<number, NumberInputProps, NumberIn
       return false;
     }
     if (isPress(event, Key.Up) || isPress(event, Key.Right)) {
-      this.#stepBy(1, event.session);
+      this.#stepBy(1, event.connection);
       return true;
     }
     if (isPress(event, Key.Down) || isPress(event, Key.Left)) {
-      this.#stepBy(-1, event.session);
+      this.#stepBy(-1, event.connection);
       return true;
     }
     if (isPress(event, Key.Backspace)) {
-      this.#typed((this.state.typing ?? String(this.value)).slice(0, -1), event.session);
+      this.#typed((this.state.typing ?? String(this.value)).slice(0, -1), event.connection);
       return true;
     }
     const digit = digitOf(event);
     if (digit !== null) {
       // The first digit after a step starts a new number.
-      this.#typed(`${this.state.typing ?? ""}${digit}`.slice(-(NUMBER_CELLS - 2)), event.session);
+      this.#typed(`${this.state.typing ?? ""}${digit}`.slice(-(NUMBER_CELLS - 2)), event.connection);
       return true;
     }
     return false;
@@ -158,9 +158,9 @@ export class NumberInput extends ValueControl<number, NumberInputProps, NumberIn
 
   override onClick(event: PointerEvent): boolean {
     if (event.region === "minus") {
-      this.#stepBy(-1, event.session);
+      this.#stepBy(-1, event.connection);
     } else if (event.region === "plus") {
-      this.#stepBy(1, event.session);
+      this.#stepBy(1, event.connection);
     }
     return true;
   }
@@ -172,7 +172,7 @@ export class NumberInput extends ValueControl<number, NumberInputProps, NumberIn
     }
     const notches = -this.#wheel.lines(event.dy);
     if (notches !== 0) {
-      this.#stepBy(notches, event.session);
+      this.#stepBy(notches, event.connection);
     }
     return true;
   }

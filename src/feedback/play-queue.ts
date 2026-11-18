@@ -32,9 +32,9 @@ export interface PlayQueueProps {
   /** The rows the list shows. */
   readonly shown: number;
   /** A track chosen, by its place in `tracks`. */
-  readonly onChoose: (track: number, session: number) => void;
+  readonly onChoose: (track: number, connection: number) => void;
   /** The list's choice moved to `place` in the queue. */
-  readonly onMove?: (place: number, session: number) => void;
+  readonly onMove?: (place: number, connection: number) => void;
   /** What the keys do while the list has them, for the hint row: the player's (player-view.ts), which takes keys the list does not; the list's own when absent. */
   readonly hint?: string;
 }
@@ -50,10 +50,10 @@ export class PlayQueue extends Component<PlayQueueProps> {
       shown: this.props.shown,
       ...(this.props.hint === undefined ? {} : { hint: this.props.hint }),
       empty: "no tracks",
-      onChoose: (place: number, session: number) => {
+      onChoose: (place: number, connection: number) => {
         const track = queue[place];
         if (track !== undefined) {
-          this.props.onChoose(track, session);
+          this.props.onChoose(track, connection);
         }
       },
       ...(this.props.onMove === undefined ? {} : { onMove: this.props.onMove }),

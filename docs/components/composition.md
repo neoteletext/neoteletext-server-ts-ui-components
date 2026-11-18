@@ -22,8 +22,8 @@ import { Wizard } from "neoteletext-server-ts-ui-components";
 | --- | --- | --- |
 | `steps` (needed) | `readonly string[]` | The steps' names; the children are their contents, in order. |
 | `ready` | `(step: number) => string \| null` | Whether the step may be left forward: a step with something missing says what. |
-| `onFinish` | `(session: number) => void` | Next on the last step, once it is ready: the wizard is done. |
-| `onStep` | `(step: number, session: number) => void` | The step changed, by Back, Next or a click on a step done: the step now shown. |
+| `onFinish` | `(connection: number) => void` | Next on the last step, once it is ready: the wizard is done. |
+| `onStep` | `(step: number, connection: number) => void` | The step changed, by Back, Next or a click on a step done: the step now shown. |
 
 And the props of [`ControlProps`](common.md#controlprops).
 

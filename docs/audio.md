@@ -31,7 +31,7 @@ import { sequence, sound, tone } from "neoteletext-server-ts-ui-components";
 const chime = sound("chime", sequence(tone(660, 120), tone(880, 200)));
 
 // in a component, for one viewer, or for everyone with the page open:
-this.services.play(chime, session);
+this.services.play(chime, connection);
 this.services.play(chime);
 ```
 
@@ -64,13 +64,13 @@ A component works the viewer's stream through its services:
 
 | Service | What it does |
 | --- | --- |
-| `stream(source, session, fromMs?)` | Plays `source` to the viewer, from `fromMs` in; a new stream replaces theirs. |
-| `pauseStream(session)`, `resumeStream(session)` | Pauses where they have heard to; resumes from there. |
-| `seekStream(session, ms)` | Moves to `ms` in; a paused stream stays paused there. |
-| `streamGain(session, gain)` | How loud, 0 to 100, for this stream and the next. |
-| `stopStream(session)` | Stops it. |
-| `listening(session)` | What plays: its name, how far, how long, its state and gain. |
-| `streamPlace(session, name)` | Where their stream of `name` last stopped short of its end, for taking it up again. |
+| `stream(source, connection, fromMs?)` | Plays `source` to the viewer, from `fromMs` in; a new stream replaces theirs. |
+| `pauseStream(connection)`, `resumeStream(connection)` | Pauses where they have heard to; resumes from there. |
+| `seekStream(connection, ms)` | Moves to `ms` in; a paused stream stays paused there. |
+| `streamGain(connection, gain)` | How loud, 0 to 100, for this stream and the next. |
+| `stopStream(connection)` | Stops it. |
+| `listening(connection)` | What plays: its name, how far, how long, its state and gain. |
+| `streamPlace(connection, name)` | Where their stream of `name` last stopped short of its end, for taking it up again. |
 
 The places are kept in the channel's memory for each viewer, the 64
 most recent, and go when the viewer goes.

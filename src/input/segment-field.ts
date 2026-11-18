@@ -35,7 +35,7 @@ export interface SegmentFieldProps extends ValueProps<string> {
   /** Its band's colour; blue when absent, black while disabled. */
   readonly background?: Colour;
   /** Enter with every slot filled and nothing wrong: the template filled in. */
-  readonly onSubmit?: (filled: string, session: number) => void;
+  readonly onSubmit?: (filled: string, connection: number) => void;
 }
 
 interface SegmentFieldState extends ValueState<string> {
@@ -146,41 +146,41 @@ export class SegmentField extends ValueControl<string, SegmentFieldProps, Segmen
   }
 
   /** Puts `typed` digits in from the cursor on; one past the last slot is refused. */
-  #fill(typed: readonly string[], session: number): void {
+  #fill(typed: readonly string[], connection: number): void {
     const digits = this.#digits;
     let at = this.#at;
     for (const digit of typed) {
       if (at >= digits.length) {
-        this.play("error", session);
+        this.play("error", connection);
         break;
       }
       digits[at] = digit;
       at += 1;
     }
     this.setState({ at });
-    this.change(valueOf(digits), session);
+    this.change(valueOf(digits), connection);
   }
 
-  #clear(session: number): void {
+  #clear(connection: number): void {
     this.setState({ at: 0 });
-    this.change("", session);
+    this.change("", connection);
   }
 
-  #submit(session: number): void {
+  #submit(connection: number): void {
     if (!this.#complete || this.#shownComplaint !== null) {
-      this.play("error", session);
+      this.play("error", connection);
       return;
     }
     const filled = filledText(this.#template, this.#digits);
-    this.activate(filled, session);
-    this.props.onSubmit?.(filled, session);
+    this.activate(filled, connection);
+    this.props.onSubmit?.(filled, connection);
   }
 
   override onText(event: TextEvent): boolean {
     if (this.disabled) {
       return false;
     }
-    this.#fill(digitsTyped(event.text), event.session);
+    this.#fill(digitsTyped(event.text), event.connection);
     return true;
   }
 
@@ -190,7 +190,7 @@ export class SegmentField extends ValueControl<string, SegmentFieldProps, Segmen
     }
     const digit = digitOf(event);
     if (digit !== null) {
-      this.#fill([String(digit)], event.session);
+      this.#fill([String(digit)], event.connection);
       return true;
     }
     if (isPress(event, Key.Left)) {
@@ -207,20 +207,20 @@ export class SegmentField extends ValueControl<string, SegmentFieldProps, Segmen
         const digits = this.#digits;
         digits[back] = null;
         this.setState({ at: back });
-        this.change(valueOf(digits), event.session);
+        this.change(valueOf(digits), event.connection);
       }
       return true;
     }
     if (isPress(event, Key.Escape)) {
       if (this.value === "") {
-        this.cancel(event.session);
+        this.cancel(event.connection);
         return false;
       }
-      this.#clear(event.session);
+      this.#clear(event.connection);
       return true;
     }
     if (isPress(event, Key.Enter)) {
-      this.#submit(event.session);
+      this.#submit(event.connection);
       return true;
     }
     return false;

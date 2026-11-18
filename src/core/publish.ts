@@ -26,11 +26,11 @@ export function publishChanges(
       }
     }
   }
-  for (const [session, pages] of viewers) {
+  for (const [connection, pages] of viewers) {
     for (const mount of pages.values()) {
       const sharedKey = shared.get(mount.page)?.lastPage?.key ?? null;
-      const ownPages = own.get(session) ?? new Set<number>();
-      own.set(session, ownPages);
+      const ownPages = own.get(connection) ?? new Set<number>();
+      own.set(connection, ownPages);
       const before = mount.lastPage?.key;
       const drawn = mount.dirty ? mount.render() : mount.lastPage;
       if (drawn === null) {
@@ -38,10 +38,10 @@ export function publishChanges(
       }
       if (drawn.key === sharedKey) {
         if (ownPages.delete(mount.page)) {
-          context.release(session, mount.page);
+          context.release(connection, mount.page);
         }
       } else if (drawn.key !== before || !ownPages.has(mount.page)) {
-        context.publishSubpages(session, mount.page, drawn.subpages);
+        context.publishSubpages(connection, mount.page, drawn.subpages);
         ownPages.add(mount.page);
       }
     }

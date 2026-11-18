@@ -160,11 +160,11 @@ class Deleter extends Component<{ readonly undone: number[] }> {
       {
         kind: "warning",
         text: "Deleted",
-        undo: (session: number) => {
-          this.props.undone.push(session);
+        undo: (connection: number) => {
+          this.props.undone.push(connection);
         },
       },
-      { session: event.session },
+      { connection: event.connection },
     );
     return true;
   }

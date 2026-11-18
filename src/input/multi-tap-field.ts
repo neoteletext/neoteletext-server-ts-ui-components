@@ -26,7 +26,7 @@ export interface MultiTapFieldProps extends ValueProps<string> {
   /** The most characters it takes; LONGEST when absent. */
   readonly longest?: number;
   /** Called with the text, trimmed, as Enter sends it: never when it is blank or fails validate. */
-  readonly onSubmit?: (text: string, session: number) => void;
+  readonly onSubmit?: (text: string, connection: number) => void;
   /** Its band's colour; blue when absent, black while disabled. */
   readonly background?: Colour;
   /** Enter leaves the text there rather than clearing it. */
@@ -37,7 +37,7 @@ export interface MultiTapFieldProps extends ValueProps<string> {
 interface Tapping {
   readonly digit: number;
   readonly letter: number;
-  readonly session: number;
+  readonly connection: number;
 }
 
 interface MultiTapFieldState extends ValueState<string> {
@@ -173,33 +173,33 @@ export class MultiTapField extends ValueControl<string, MultiTapFieldProps, Mult
     }
     const text = `${this.value}${letterOf(tapping, this.state.capitals)}`;
     this.setState({ tapping: null });
-    this.change(text, tapping.session);
+    this.change(text, tapping.connection);
     return text;
   }
 
   /** Key `digit` pressed: its next letter if it was the key pressed last, or else its first. */
-  #tap(digit: number, session: number): void {
+  #tap(digit: number, connection: number): void {
     const { tapping, capitals } = this.state;
     const letters = lettersOf(digit, capitals);
     this.#stopTaking();
     if (tapping?.digit === digit && letters.length > 1) {
-      this.setState({ tapping: { digit, letter: (tapping.letter + 1) % letters.length, session } });
+      this.setState({ tapping: { digit, letter: (tapping.letter + 1) % letters.length, connection } });
       this.#waitToTake();
-      this.play("move", session);
+      this.play("move", connection);
       return;
     }
     const text = this.#take();
     if (characters(text).length >= this.#longest) {
-      this.play("error", session);
+      this.play("error", connection);
       return;
     }
     if (letters.length === 1) {
-      this.change(`${text}${letters[0] ?? ""}`, session);
+      this.change(`${text}${letters[0] ?? ""}`, connection);
       return;
     }
-    this.setState({ tapping: { digit, letter: 0, session } });
+    this.setState({ tapping: { digit, letter: 0, connection } });
     this.#waitToTake();
-    this.play("move", session);
+    this.play("move", connection);
   }
 
   #waitToTake(): void {
@@ -220,7 +220,7 @@ export class MultiTapField extends ValueControl<string, MultiTapFieldProps, Mult
     }
     const text = this.#take();
     const room = this.#longest - characters(text).length;
-    this.change(`${text}${typedCharacters(event.text, room)}`, event.session);
+    this.change(`${text}${typedCharacters(event.text, room)}`, event.connection);
     return true;
   }
 
@@ -230,7 +230,7 @@ export class MultiTapField extends ValueControl<string, MultiTapFieldProps, Mult
     }
     const digit = digitOf(event);
     if (digit !== null) {
-      this.#tap(digit, event.session);
+      this.#tap(digit, event.connection);
       return true;
     }
     if (colourKeyOf(event) === CASE_COLOUR_KEY || isPress(event, CASE_KEY)) {
@@ -239,7 +239,7 @@ export class MultiTapField extends ValueControl<string, MultiTapFieldProps, Mult
     }
     if (isPress(event, Key.Backspace)) {
       if (this.state.tapping === null) {
-        this.change(characters(this.value).slice(0, -1).join(""), event.session);
+        this.change(characters(this.value).slice(0, -1).join(""), event.connection);
       } else {
         this.#stopTaking();
         this.setState({ tapping: null });
@@ -248,38 +248,38 @@ export class MultiTapField extends ValueControl<string, MultiTapFieldProps, Mult
     }
     if (isPress(event, Key.Escape)) {
       if (this.state.tapping === null && this.value === "") {
-        this.cancel(event.session);
+        this.cancel(event.connection);
         return false;
       }
       this.#stopTaking();
       this.setState({ tapping: null });
-      this.change("", event.session);
+      this.change("", event.connection);
       return true;
     }
     if (isPress(event, Key.Enter)) {
-      return this.#submit(event.session);
+      return this.#submit(event.connection);
     }
     return false;
   }
 
   /** Enter: the letter being chosen taken, and the text, when there is some and nothing is wrong with it, sent. */
-  #submit(session: number): boolean {
+  #submit(connection: number): boolean {
     const shown = this.#shown;
     const text = shown.trim();
     if (text === "" || (this.props.validate?.(shown) ?? null) !== null) {
       this.#take();
       return false;
     }
-    this.emit({ type: "submit", value: text, session, origin: "viewer" });
-    this.play("choose", session);
-    this.props.onSubmit?.(text, session);
+    this.emit({ type: "submit", value: text, connection, origin: "viewer" });
+    this.play("choose", connection);
+    this.props.onSubmit?.(text, connection);
     if (this.props.keep === true) {
       this.#take();
     } else {
       // The value is cleared from what it was: a change to the letter and then to nothing, in one event, would compare the nothing with the value before the letter.
       this.#stopTaking();
       this.setState({ tapping: null });
-      this.change("", session);
+      this.change("", connection);
     }
     return this.props.onSubmit !== undefined;
   }

@@ -67,8 +67,8 @@ test("a badge with onPress is a control over its chip; a log's PAUSED badge foll
         { text: "PLAIN" },
         {
           text: "PRESS",
-          onPress: (session: number): void => {
-            pressed.push(session);
+          onPress: (connection: number): void => {
+            pressed.push(connection);
           },
         },
       ],

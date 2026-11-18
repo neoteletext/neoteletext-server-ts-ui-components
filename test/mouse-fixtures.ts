@@ -77,8 +77,8 @@ export class RaiseToast extends Component {
   override render(): Child {
     return h(Action, {
       text: "raise",
-      onPress: (session: number) => {
-        this.services.bus.emit("toast", { kind: "info", text: "Saved" }, { session });
+      onPress: (connection: number) => {
+        this.services.bus.emit("toast", { kind: "info", text: "Saved" }, { connection });
       },
     });
   }

@@ -33,11 +33,11 @@ export interface ChoiceListProps<T = string> extends ControlProps {
   /** Rows each item takes: 1, or 2 for headlines. */
   readonly itemRows?: number;
   /** Enter on an item, or a click on it. */
-  readonly onChoose: (index: number, session: number) => void;
+  readonly onChoose: (index: number, connection: number) => void;
   /** The chosen item moved: for showing what it is beside the list. */
-  readonly onMove?: (index: number, session: number) => void;
+  readonly onMove?: (index: number, connection: number) => void;
   /** The pointer came onto an item's row, or left it (null): for showing what it is before it is chosen. Moving from one row to the next is a leave, then an enter. */
-  readonly onHover?: (index: number | null, session: number) => void;
+  readonly onHover?: (index: number | null, connection: number) => void;
   /** What the hint row says of an item while the pointer is on its row, such as who wrote it; null for the list's own hint. */
   readonly itemHint?: (item: T, index: number) => string | null;
   /** The item chosen to begin with. */
@@ -101,20 +101,20 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
   }
 
   /** Moves the band to `index`, telling the list's user, as the keys do. */
-  #moveTo(index: number, session: number): void {
+  #moveTo(index: number, connection: number): void {
     const previous = this.#chosen;
     this.setState({ chosen: index, top: keepInView(this.state.top, index, this.#fit, this.props.items.length) });
     if (index !== previous) {
-      this.emit({ type: "change", value: index, previous, session, origin: "viewer" });
-      this.props.onMove?.(index, session);
+      this.emit({ type: "change", value: index, previous, connection, origin: "viewer" });
+      this.props.onMove?.(index, connection);
     }
   }
 
   /** A choice, by a key or a click, moves the band there first: what shows beside the list is then the item chosen. */
-  #choose(index: number, session: number): void {
-    this.#moveTo(index, session);
-    this.activate(index, session);
-    this.props.onChoose(index, session);
+  #choose(index: number, connection: number): void {
+    this.#moveTo(index, connection);
+    this.activate(index, connection);
+    this.props.onChoose(index, connection);
   }
 
   override render(): Child {
@@ -135,8 +135,8 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
           ? {}
           : { text: (item: T, index: number) => `${digitMark(this.props.pick, index - this.state.top)}${this.props.text?.(item, index) ?? String(item)}` }),
         disabled: () => this.disabled,
-        onPick: (index: number, session: number) => {
-          this.#choose(index, session);
+        onPick: (index: number, connection: number) => {
+          this.#choose(index, connection);
         },
         ...(this.props.onHover === undefined ? {} : { onHover: this.props.onHover }),
         ...(this.props.itemHint === undefined ? {} : { itemHint: this.props.itemHint }),
@@ -159,20 +159,20 @@ export class ChoiceList<T = string> extends Control<ChoiceListProps<T>, ChoiceLi
       return false;
     }
     if (choosing(event)) {
-      this.#choose(this.#chosen, event.session);
+      this.#choose(this.#chosen, event.connection);
       return true;
     }
     const picked = this.#picked(event);
     if (picked !== null) {
-      this.#choose(picked, event.session);
+      this.#choose(picked, event.connection);
       return true;
     }
     const step = listStep(event, this.#fit);
     if (step === null) {
       return false;
     }
-    this.#moveTo(moveChoice(this.#chosen, step, count), event.session);
-    this.play("move", event.session);
+    this.#moveTo(moveChoice(this.#chosen, step, count), event.connection);
+    this.play("move", event.connection);
     return true;
   }
 

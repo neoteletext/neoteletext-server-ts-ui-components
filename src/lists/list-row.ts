@@ -51,9 +51,9 @@ export interface ListRowProps {
   /** What it holds, drawn to its look. */
   readonly content: (look: RowLook) => Child;
   /** A click on its band; without it, the band is no control. */
-  readonly onPress?: (session: number) => void;
+  readonly onPress?: (connection: number) => void;
   /** The pointer came onto its band, or left it (`entered` false). */
-  readonly onHover?: (entered: boolean, session: number) => void;
+  readonly onHover?: (entered: boolean, connection: number) => void;
   /** What the hint row says while the pointer is on it: what the row is. */
   readonly hint?: string;
 }
@@ -126,7 +126,7 @@ export class ListRow extends Component<ListRowProps> {
     if (this.props.disabled === true || this.props.onPress === undefined || event.region !== BAND) {
       return false;
     }
-    this.props.onPress(event.session);
+    this.props.onPress(event.connection);
     return true;
   }
 
@@ -142,7 +142,7 @@ export class ListRow extends Component<ListRowProps> {
     if (this.props.onHover === undefined || event.region !== BAND) {
       return false;
     }
-    this.props.onHover(event.entered, event.session);
+    this.props.onHover(event.entered, event.connection);
     return true;
   }
 }

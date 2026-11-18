@@ -44,15 +44,15 @@ export interface PlayerViewProps {
   /** The modes, as the status rows say them. */
   readonly status: PlayerStatusProps;
   /** The prev button pressed. */
-  readonly onPrevious: (session: number) => void;
+  readonly onPrevious: (connection: number) => void;
   /** The play or pause button pressed. */
-  readonly onPlayPause: (session: number) => void;
+  readonly onPlayPause: (connection: number) => void;
   /** The stop button pressed. */
-  readonly onStop: (session: number) => void;
+  readonly onStop: (connection: number) => void;
   /** The next button pressed. */
-  readonly onNext: (session: number) => void;
+  readonly onNext: (connection: number) => void;
   /** A click on the bar: how far along it, 0 to 1. */
-  readonly onSeek: (fraction: number, session: number) => void;
+  readonly onSeek: (fraction: number, connection: number) => void;
   /** A track chosen in the queue, by its place in `tracks`. */
   readonly onChoose: PlayQueueProps["onChoose"];
   /** The queue's choice moved to `place` in the queue. */

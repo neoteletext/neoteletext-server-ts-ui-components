@@ -139,7 +139,7 @@ export class Slider extends ValueControl<number, SliderProps> {
     if (to === undefined || !Object.keys(moves).some((key) => isPress(event, key))) {
       return false;
     }
-    this.change(this.#clamp(to), event.session);
+    this.change(this.#clamp(to), event.connection);
     return true;
   }
 
@@ -150,7 +150,7 @@ export class Slider extends ValueControl<number, SliderProps> {
     }
     const notches = -this.#wheel.lines(event.dy);
     if (notches !== 0) {
-      this.change(this.#clamp(this.value + notches * this.#step), event.session);
+      this.change(this.#clamp(this.value + notches * this.#step), event.connection);
     }
     return true;
   }
@@ -168,7 +168,7 @@ export class Slider extends ValueControl<number, SliderProps> {
       return false;
     }
     const fraction = track <= 1 ? 0 : cell / (track - 1);
-    this.change(this.#clamp(this.props.min + fraction * (this.props.max - this.props.min)), event.session);
+    this.change(this.#clamp(this.props.min + fraction * (this.props.max - this.props.min)), event.connection);
     return true;
   }
 }

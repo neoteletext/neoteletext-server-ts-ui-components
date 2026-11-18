@@ -37,7 +37,7 @@ The props interfaces that components' props extend: what every control, every co
 | --- | --- | --- |
 | `value` | `T` | The value, kept by the parent: the control shows it and reports changes, and the parent sets it again. |
 | `initial` | `T` | The value to begin with, when the control keeps its own. |
-| `onChange` | `(value: T, session: number) => void` | Called with each value the viewer gives it, whether or not it passes validate. |
+| `onChange` | `(value: T, connection: number) => void` | Called with each value the viewer gives it, whether or not it passes validate. |
 | `validate` | `(value: T) => string \| null` | What is wrong with a value, or null. |
 
 And the props of [`ControlProps`](common.md#controlprops).

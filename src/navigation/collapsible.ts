@@ -58,9 +58,9 @@ export class Collapsible extends ValueControl<readonly number[], CollapsibleProp
     return this.props.accordion === true ? [index] : [...this.value, index].toSorted((a, b) => a - b);
   }
 
-  #toggle(index: number, session: number): void {
+  #toggle(index: number, connection: number): void {
     this.setState({ chosen: index });
-    this.change(this.#toggled(index), session);
+    this.change(this.#toggled(index), connection);
   }
 
   override render(): Child {
@@ -76,8 +76,8 @@ export class Collapsible extends ValueControl<readonly number[], CollapsibleProp
           chosen: index === this.#chosen && this.focused,
           background: this.props.background ?? Colour.Blue,
           disabled: this.disabled,
-          onToggle: (session: number) => {
-            this.#toggle(index, session);
+          onToggle: (connection: number) => {
+            this.#toggle(index, connection);
           },
         }),
         this.value.includes(index) ? h(At, { key: `content-${index}`, row: 0, column: CONTENT_AT }, contents[index] ?? null) : null,
@@ -90,7 +90,7 @@ export class Collapsible extends ValueControl<readonly number[], CollapsibleProp
       return false;
     }
     if (choosing(event)) {
-      this.#toggle(this.#chosen, event.session);
+      this.#toggle(this.#chosen, event.connection);
       return true;
     }
     const step = listStep(event, this.props.titles.length);
@@ -98,7 +98,7 @@ export class Collapsible extends ValueControl<readonly number[], CollapsibleProp
       return false;
     }
     this.setState({ chosen: moveChoice(this.#chosen, step, this.props.titles.length) });
-    this.play("move", event.session);
+    this.play("move", event.connection);
     return true;
   }
 }

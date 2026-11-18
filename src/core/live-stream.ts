@@ -56,7 +56,7 @@ export class LiveStream {
   }
 
   /** Feeds the encoder, takes what it gave out, and sends the viewer what is due by `now`. */
-  pump(context: Context, session: number, now: number): void {
+  pump(context: Context, connection: number, now: number): void {
     if (this.#encoder === null || this.state === "ended") {
       return;
     }
@@ -75,7 +75,7 @@ export class LiveStream {
       this.#startedAt = now;
       this.state = "playing";
     }
-    this.#send(context, session, this.#encoder.packetBytes, now);
+    this.#send(context, connection, this.#encoder.packetBytes, now);
     if (this.#ended && this.#held.length === 0 && ((now - this.#startedAt) * this.source.rate) / SECOND_MS >= samples.length) {
       this.state = "ended";
       this.close();
@@ -111,7 +111,7 @@ export class LiveStream {
   }
 
   /** The packets due by `now` and the lead, at most the ring's. */
-  #send(context: Context, session: number, packetBytes: number, now: number): void {
+  #send(context: Context, connection: number, packetBytes: number, now: number): void {
     const due = Math.floor((now - (this.#startedAt ?? now) + SEND_LEAD_MS) / OPUS_FRAME_MS);
     const count = Math.min(RING_BLOCKS, this.#held.length, due - this.#sent);
     if (count <= 0) {
@@ -121,7 +121,10 @@ export class LiveStream {
     this.#held.splice(0, count).forEach((packet, index) => {
       packets.set(packet, index * packetBytes);
     });
-    context.sound({ session }, { opusPackets: { handle: STREAM_HANDLE, generation: this.generation, packetBytes, first: this.#sent % WRAP, packets } });
+    context.sound(
+      { session: connection },
+      { opusPackets: { handle: STREAM_HANDLE, generation: this.generation, packetBytes, first: this.#sent % WRAP, packets } },
+    );
     this.#sent += count;
   }
 }

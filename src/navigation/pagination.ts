@@ -123,8 +123,8 @@ export class Pagination extends ValueControl<number, PaginationProps> {
     }
   }
 
-  #go(page: number, session: number): void {
-    this.change(Math.max(0, Math.min(this.props.count - 1, page)), session);
+  #go(page: number, connection: number): void {
+    this.change(Math.max(0, Math.min(this.props.count - 1, page)), connection);
   }
 
   override onKey(event: KeyEvent): boolean {
@@ -132,13 +132,13 @@ export class Pagination extends ValueControl<number, PaginationProps> {
     if (to === null || this.disabled) {
       return false;
     }
-    this.#go(to, event.session);
+    this.#go(to, event.connection);
     return true;
   }
 
   override onClick(event: PointerEvent): boolean {
     if (event.region !== undefined) {
-      this.#go(Number(event.region), event.session);
+      this.#go(Number(event.region), event.connection);
     }
     return true;
   }

@@ -18,7 +18,7 @@ export interface ToggleListProps extends ValueProps<readonly number[]> {
   /** What an empty list says; "nothing to star" when absent. */
   readonly empty?: string;
   /** The pointer came onto an item's row, or left it (null): for showing what it is before it is chosen. Moving from one row to the next is a leave, then an enter. */
-  readonly onHover?: (index: number | null, session: number) => void;
+  readonly onHover?: (index: number | null, connection: number) => void;
 }
 
 interface ToggleListState extends ValueState<readonly number[]> {
@@ -48,9 +48,9 @@ export class ToggleList extends ValueControl<readonly number[], ToggleListProps,
     return within(this.state.chosen, this.props.items.length);
   }
 
-  #toggle(index: number, session: number): void {
+  #toggle(index: number, connection: number): void {
     this.setState({ chosen: index });
-    this.change(this.value.includes(index) ? this.value.filter((item) => item !== index) : [...this.value, index].toSorted((a, b) => a - b), session);
+    this.change(this.value.includes(index) ? this.value.filter((item) => item !== index) : [...this.value, index].toSorted((a, b) => a - b), connection);
   }
 
   override render(): Child {
@@ -62,8 +62,8 @@ export class ToggleList extends ValueControl<readonly number[], ToggleListProps,
       empty: this.props.empty ?? "nothing to star",
       text: (item: string, index: number) => `${this.value.includes(index) ? "*" : " "} ${item}`,
       disabled: () => this.disabled,
-      onPick: (index: number, session: number) => {
-        this.#toggle(index, session);
+      onPick: (index: number, connection: number) => {
+        this.#toggle(index, connection);
       },
       ...(this.props.onHover === undefined ? {} : { onHover: this.props.onHover }),
     });
@@ -74,7 +74,7 @@ export class ToggleList extends ValueControl<readonly number[], ToggleListProps,
       return false;
     }
     if (choosing(event)) {
-      this.#toggle(this.#chosen, event.session);
+      this.#toggle(this.#chosen, event.connection);
       return true;
     }
     const step = listStep(event, this.props.items.length);
@@ -82,7 +82,7 @@ export class ToggleList extends ValueControl<readonly number[], ToggleListProps,
       return false;
     }
     this.setState({ chosen: moveChoice(this.#chosen, step, this.props.items.length) });
-    this.play("move", event.session);
+    this.play("move", event.connection);
     return true;
   }
 }

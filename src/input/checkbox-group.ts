@@ -57,12 +57,12 @@ export class CheckboxGroup extends ValueControl<readonly number[], CheckboxGroup
     });
   }
 
-  #toggle(index: number, session: number): void {
+  #toggle(index: number, connection: number): void {
     if (this.props.disabledItems?.includes(index) === true || index < 0 || index >= this.props.items.length) {
       return;
     }
     this.setState({ chosen: index });
-    this.change(this.value.includes(index) ? this.value.filter((item) => item !== index) : [...this.value, index].toSorted((a, b) => a - b), session);
+    this.change(this.value.includes(index) ? this.value.filter((item) => item !== index) : [...this.value, index].toSorted((a, b) => a - b), connection);
   }
 
   /** Up and Down a row, Left and Right a box across two columns. */
@@ -80,7 +80,7 @@ export class CheckboxGroup extends ValueControl<readonly number[], CheckboxGroup
       return false;
     }
     if (choosing(event)) {
-      this.#toggle(this.state.chosen, event.session);
+      this.#toggle(this.state.chosen, event.connection);
       return true;
     }
     const step = this.#step(event);
@@ -88,13 +88,13 @@ export class CheckboxGroup extends ValueControl<readonly number[], CheckboxGroup
       return false;
     }
     this.setState({ chosen: Math.max(0, Math.min(this.props.items.length - 1, this.state.chosen + step)) });
-    this.play("move", event.session);
+    this.play("move", event.connection);
     return true;
   }
 
   override onClick(event: PointerEvent): boolean {
     if (event.region !== undefined && !this.disabled) {
-      this.#toggle(Number(event.region), event.session);
+      this.#toggle(Number(event.region), event.connection);
     }
     return true;
   }

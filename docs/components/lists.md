@@ -37,9 +37,9 @@ import { ChoiceList } from "neoteletext-server-ts-ui-components";
 | `text` | `(item: T, index: number) => string` | An item's text, for the default row: the item itself when it is text. |
 | `shown` (needed) | `number` | The rows it shows. |
 | `itemRows` | `number` | Rows each item takes: 1, or 2 for headlines. |
-| `onChoose` (needed) | `(index: number, session: number) => void` | Enter on an item, or a click on it. |
-| `onMove` | `(index: number, session: number) => void` | The chosen item moved: for showing what it is beside the list. |
-| `onHover` | `(index: number \| null, session: number) => void` | The pointer came onto an item's row, or left it (null): for showing what it is before it is chosen. Moving from one row to the next is a leave, then an enter. |
+| `onChoose` (needed) | `(index: number, connection: number) => void` | Enter on an item, or a click on it. |
+| `onMove` | `(index: number, connection: number) => void` | The chosen item moved: for showing what it is beside the list. |
+| `onHover` | `(index: number \| null, connection: number) => void` | The pointer came onto an item's row, or left it (null): for showing what it is before it is chosen. Moving from one row to the next is a leave, then an enter. |
 | `itemHint` | `(item: T, index: number) => string \| null` | What the hint row says of an item while the pointer is on its row, such as who wrote it; null for the list's own hint. |
 | `initial` | `number` | The item chosen to begin with. |
 | `empty` | `string` | What an empty list says; "nothing to choose" when absent. |
@@ -115,7 +115,7 @@ import { FilterList } from "neoteletext-server-ts-ui-components";
 | `shown` (needed) | `number` | The rows of items shown, under the typed line. |
 | `prompt` | `string` | What the typed line says while nothing is typed. |
 | `empty` | `string` | What it says when nothing matches; "nothing matches" when absent. |
-| `onChoose` (needed) | `(index: number, session: number) => void` | An item chosen: its place in `items`. |
+| `onChoose` (needed) | `(index: number, connection: number) => void` | An item chosen: its place in `items`. |
 | `autoFocus` | `boolean` | Its list takes the keys when it arrives. |
 
 ### Before anything is typed
@@ -176,8 +176,8 @@ import { DataTable } from "neoteletext-server-ts-ui-components";
 | `striped` | `boolean` | Rows alternate white and cyan. |
 | `headingBackground` | `Colour` | The heading's band colour; cyan when absent, apart from the frame's blue title band directly above it. A page whose title band is cyan gives it another, so the heading does not run into the title. |
 | `empty` | `string` | What an empty table says; "no rows" when absent. |
-| `onChoose` | `(row: readonly string[], session: number) => void` | A row chosen by Enter, Space or a click, only while selectable. |
-| `onHover` | `(row: readonly string[] \| null, session: number) => void` | The pointer came onto a row that can be chosen, or left it (null). Moving from one row to the next is a leave, then an enter. |
+| `onChoose` | `(row: readonly string[], connection: number) => void` | A row chosen by Enter, Space or a click, only while selectable. |
+| `onHover` | `(row: readonly string[] \| null, connection: number) => void` | The pointer came onto a row that can be chosen, or left it (null). Moving from one row to the next is a leave, then an enter. |
 | `rowKey` | `(row: readonly string[]) => string` | What tells one row from another, so the chosen row stays chosen as rows come and go: a live table. |
 
 And the props of [`ControlProps`](common.md#controlprops).
@@ -292,8 +292,8 @@ import { ListRow } from "neoteletext-server-ts-ui-components";
 | `indent` | `number` | Cells before the row's band and mark: a tree's depth, a control's label column. |
 | `before` | `Child` | What those cells hold: a tree's guide lines. |
 | `content` (needed) | `(look: RowLook) => Child` | What it holds, drawn to its look. |
-| `onPress` | `(session: number) => void` | A click on its band; without it, the band is no control. |
-| `onHover` | `(entered: boolean, session: number) => void` | The pointer came onto its band, or left it (`entered` false). |
+| `onPress` | `(connection: number) => void` | A click on its band; without it, the band is no control. |
+| `onHover` | `(entered: boolean, connection: number) => void` | The pointer came onto its band, or left it (`entered` false). |
 | `hint` | `string` | What the hint row says while the pointer is on it: what the row is. |
 
 #### RowLook
@@ -347,8 +347,8 @@ import { ListRows } from "neoteletext-server-ts-ui-components";
 | `text` | `(item: T, index: number) => string` | An item's text, for the default row: the item itself when it is text. |
 | `disabled` | `(item: T, index: number) => boolean` | Whether an item cannot be picked: drawn dimmed, and a click on it does nothing. |
 | `foreground` | `(item: T, index: number) => Colour \| undefined` | An item's foreground off the band. |
-| `onPick` (needed) | `(index: number, session: number) => void` | A click on an item's band: its place in `items`. |
-| `onHover` | `(index: number \| null, session: number) => void` | The pointer came onto an item's row, or left it (null). Moving from one row to the next is a leave, then an enter. |
+| `onPick` (needed) | `(index: number, connection: number) => void` | A click on an item's band: its place in `items`. |
+| `onHover` | `(index: number \| null, connection: number) => void` | The pointer came onto an item's row, or left it (null). Moving from one row to the next is a leave, then an enter. |
 | `itemHint` | `(item: T, index: number) => string \| null` | What the hint row says of an item while the pointer is on its row, or null for the list's own hint. |
 
 #### RowLook
@@ -662,7 +662,7 @@ import { ToggleList } from "neoteletext-server-ts-ui-components";
 | --- | --- | --- |
 | `items` (needed) | `readonly string[]` | The items, all shown, each starred while it is on. |
 | `empty` | `string` | What an empty list says; "nothing to star" when absent. |
-| `onHover` | `(index: number \| null, session: number) => void` | The pointer came onto an item's row, or left it (null): for showing what it is before it is chosen. Moving from one row to the next is a leave, then an enter. |
+| `onHover` | `(index: number \| null, connection: number) => void` | The pointer came onto an item's row, or left it (null): for showing what it is before it is chosen. Moving from one row to the next is a leave, then an enter. |
 
 And the props of [`ValueProps`](common.md#valueprops).
 

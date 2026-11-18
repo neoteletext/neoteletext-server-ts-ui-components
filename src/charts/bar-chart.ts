@@ -34,7 +34,7 @@ export interface BarChartProps {
   /** Every bar's colour, each label taking its row's own; green when absent. */
   readonly foreground?: Colour;
   /** A click on a bar chooses it: each bar is then a control, and while the pointer is on one the hint row gives its label and figure. */
-  readonly onChoose?: (index: number, session: number) => void;
+  readonly onChoose?: (index: number, connection: number) => void;
 }
 
 /** The bar under the pointer, for the hint row. */
@@ -98,7 +98,7 @@ export class BarChart extends Component<BarChartProps, ChartState> {
     if (this.props.onChoose === undefined || event.region === undefined) {
       return false;
     }
-    this.props.onChoose(Number(event.region), event.session);
+    this.props.onChoose(Number(event.region), event.connection);
     return true;
   }
 

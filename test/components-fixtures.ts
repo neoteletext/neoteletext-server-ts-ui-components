@@ -74,14 +74,14 @@ export class Player extends Component<object, { readonly shown: string }> {
     if (event.key === Key.Enter) {
       this.services.stream(
         { name: "three seconds", rate: 16_000, samples: () => samples, complete: true, failure: null, expected: samples.length },
-        event.session,
+        event.connection,
       );
     } else if (event.key === "p") {
-      this.services.pauseStream(event.session);
+      this.services.pauseStream(event.connection);
     } else if (event.key === "r") {
-      this.services.resumeStream(event.session);
+      this.services.resumeStream(event.connection);
     }
-    const listening = this.services.listening(event.session);
+    const listening = this.services.listening(event.connection);
     this.setState({ shown: `${listening?.state ?? "none"} ${listening?.heardMs ?? 0}` });
     return true;
   }

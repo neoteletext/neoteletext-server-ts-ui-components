@@ -125,7 +125,7 @@ await runChannel([new ComponentChannel(specs, { state: store })]);
 
 A component keeps its state for its viewer by naming a key and the version
 of its state's shape; it gets it back when it is mounted again for the same
-session, and state of another version is dropped:
+connection, and state of another version is dropped:
 
 ```ts
 class Draft extends Component<object, { readonly text: string }> {

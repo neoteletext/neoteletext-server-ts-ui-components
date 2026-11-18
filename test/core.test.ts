@@ -140,7 +140,7 @@ test("an event on the bus reaches only its audience: a toast for one viewer show
     }
 
     override onKey(): boolean {
-      this.services.bus.emit("toast", { kind: "info", text: "For you" }, { session: 6 });
+      this.services.bus.emit("toast", { kind: "info", text: "For you" }, { connection: 6 });
       return true;
     }
   }
@@ -194,8 +194,8 @@ class SendsAway extends Component {
     return true;
   }
 
-  override onKey(event: { readonly session: number }): boolean {
-    this.services.redirect(event.session, ELSEWHERE);
+  override onKey(event: { readonly connection: number }): boolean {
+    this.services.redirect(event.connection, ELSEWHERE);
     return true;
   }
 }
@@ -206,8 +206,8 @@ class Sends extends Component {
     return true;
   }
 
-  override onKey(event: { readonly session: number }): boolean {
-    this.services.redirect(event.session, OTHER, { what: "article 42" });
+  override onKey(event: { readonly connection: number }): boolean {
+    this.services.redirect(event.connection, OTHER, { what: "article 42" });
     return true;
   }
 }
@@ -237,11 +237,11 @@ class Plays extends Component {
     return true;
   }
 
-  override onKey(event: { readonly session: number }): boolean {
+  override onKey(event: { readonly connection: number }): boolean {
     const samples = new Int16Array(48_000).fill(1);
     this.services.stream(
       { name: "three seconds", rate: 16_000, samples: () => samples, complete: true, failure: null, expected: samples.length },
-      event.session,
+      event.connection,
     );
     return true;
   }

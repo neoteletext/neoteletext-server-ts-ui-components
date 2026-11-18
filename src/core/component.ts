@@ -53,7 +53,7 @@ export abstract class Component<P extends object = object, S extends object = ob
     return this.#host !== undefined;
   }
 
-  /** The channel's services: the session, the clock, going to pages, sounds, the event bus. */
+  /** The channel's services: the connection, the clock, going to pages, sounds, the event bus. */
   protected get services(): Services {
     if (this.#host === undefined) {
       throw new Error(`${this.constructor.name}: services are reached once mounted`);
@@ -199,7 +199,7 @@ export abstract class Component<P extends object = object, S extends object = ob
     return false;
   }
 
-  /** Where its state is kept for its viewer's session (REQ-1058), as JSON, written as it changes and given back when mounted again; null, the default, for none. */
+  /** Where its state is kept for its viewer's connection (REQ-1058), as JSON, written as it changes and given back when mounted again; null, the default, for none. */
   keptAs(): { readonly key: string; readonly version: number } | null {
     return null;
   }

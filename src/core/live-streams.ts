@@ -15,7 +15,7 @@ import { FIRST_PACKETS_MS, type Listening, SECOND_MS, STREAM_CHANNEL, STREAM_HAN
 /** What a page's components reach the viewer's stream by. */
 type StreamServices = Pick<Services, "stream" | "stopStream" | "pauseStream" | "resumeStream" | "seekStream" | "streamGain" | "listening" | "streamPlace">;
 
-/** The places kept for each viewer: a long listening session's worth of tracks. */
+/** The places kept for each viewer: a long sitting's worth of tracks. */
 const MOST_PLACES = 64;
 
 export class LiveStreams {
@@ -58,69 +58,69 @@ export class LiveStreams {
     };
   }
 
-  start(context: Context, session: number, page: number, source: StreamSource, from = 0): void {
-    this.#keepPlace(session, context.now());
-    this.#streams.get(session)?.close();
-    const generation = ((this.#generations.get(session) ?? 0) + 1) % WRAP;
-    this.#generations.set(session, generation);
+  start(context: Context, connection: number, page: number, source: StreamSource, from = 0): void {
+    this.#keepPlace(connection, context.now());
+    this.#streams.get(connection)?.close();
+    const generation = ((this.#generations.get(connection) ?? 0) + 1) % WRAP;
+    this.#generations.set(connection, generation);
     const encoder = this.#encoder.stream(source.rate);
-    context.sound({ session }, { opusLive: { handle: STREAM_HANDLE, generation, packetBytes: encoder.packetBytes } });
+    context.sound({ session: connection }, { opusLive: { handle: STREAM_HANDLE, generation, packetBytes: encoder.packetBytes } });
     // Bound to the page: the receiver fades it out when the viewer leaves, before the server hears (the engine's audio.md 7.3).
-    context.sound({ session }, { play: { channel: STREAM_CHANNEL, handle: STREAM_HANDLE, generation, page, gain: this.#gain(session) } });
-    this.#streams.set(session, new LiveStream(source, page, generation, from, encoder));
+    context.sound({ session: connection }, { play: { channel: STREAM_CHANNEL, handle: STREAM_HANDLE, generation, page, gain: this.#gain(connection) } });
+    this.#streams.set(connection, new LiveStream(source, page, generation, from, encoder));
     this.pump(context, context.now());
   }
 
-  #gain(session: number): number {
-    return this.#gains.get(session) ?? FULL_GAIN;
+  #gain(connection: number): number {
+    return this.#gains.get(connection) ?? FULL_GAIN;
   }
 
   /** Sets how loud the viewer's streams play, `gain` brought to a whole 0 to FULL_GAIN; the one playing changes now. */
-  setGain(context: Context, session: number, gain: number): void {
+  setGain(context: Context, connection: number, gain: number): void {
     const kept = Number.isFinite(gain) ? Math.min(FULL_GAIN, Math.max(0, Math.round(gain))) : FULL_GAIN;
-    this.#gains.set(session, kept);
-    if (this.#streams.has(session)) {
-      context.sound({ session }, { gain: { channel: STREAM_CHANNEL, gain: kept } });
+    this.#gains.set(connection, kept);
+    if (this.#streams.has(connection)) {
+      context.sound({ session: connection }, { gain: { channel: STREAM_CHANNEL, gain: kept } });
     }
   }
 
   /** Moves the viewer's stream to `ms` from its start, within what is known of it: paused, it stays paused there; else it plays from there as a new generation. */
-  seek(context: Context, session: number, ms: number): void {
-    const stream = this.#streams.get(session);
+  seek(context: Context, connection: number, ms: number): void {
+    const stream = this.#streams.get(connection);
     if (stream === undefined || stream.state === "failed") {
       return;
     }
     const known = stream.source.samples().length;
     const at = Math.min(known, LiveStreams.sampleAt(stream.source, ms));
     if (stream.state === "paused") {
-      this.#streams.set(session, LiveStream.paused(stream.source, stream.page, stream.generation, at));
+      this.#streams.set(connection, LiveStream.paused(stream.source, stream.page, stream.generation, at));
       return;
     }
-    this.start(context, session, stream.page, stream.source, at);
+    this.start(context, connection, stream.page, stream.source, at);
   }
 
-  stop(context: Context, session: number): void {
-    this.#keepPlace(session, context.now());
-    this.#streams.get(session)?.close();
-    if (this.#streams.delete(session)) {
-      context.sound({ session }, { stop: { channel: STREAM_CHANNEL } });
+  stop(context: Context, connection: number): void {
+    this.#keepPlace(connection, context.now());
+    this.#streams.get(connection)?.close();
+    if (this.#streams.delete(connection)) {
+      context.sound({ session: connection }, { stop: { channel: STREAM_CHANNEL } });
     }
   }
 
   /** The viewer left `page`: a stream bound to it stops. */
-  left(context: Context, session: number, page: number): void {
-    if (this.#streams.get(session)?.page === page) {
-      this.stop(context, session);
+  left(context: Context, connection: number, page: number): void {
+    if (this.#streams.get(connection)?.page === page) {
+      this.stop(context, connection);
     }
   }
 
   /** The viewer went: everything kept for them goes. */
-  forget(session: number): void {
-    this.#streams.get(session)?.close();
-    this.#streams.delete(session);
-    this.#generations.delete(session);
-    this.#gains.delete(session);
-    this.#places.delete(session);
+  forget(connection: number): void {
+    this.#streams.get(connection)?.close();
+    this.#streams.delete(connection);
+    this.#generations.delete(connection);
+    this.#gains.delete(connection);
+    this.#places.delete(connection);
   }
 
   /** The sample `ms` into `source`: whole, and not before its start. */
@@ -129,18 +129,18 @@ export class LiveStreams {
   }
 
   /** Where the viewer's stream of `name` stopped short of its end, in milliseconds of what it holds, or null. */
-  place(session: number, name: string): number | null {
-    return this.#places.get(session)?.get(name) ?? null;
+  place(connection: number, name: string): number | null {
+    return this.#places.get(connection)?.get(name) ?? null;
   }
 
   /** Keeps where the viewer's stream is, as it is stopped or replaced: forgotten once it played to its end. */
-  #keepPlace(session: number, now: number): void {
-    const listening = this.listening(session, now);
-    const speed = this.#streams.get(session)?.source.speed ?? 1;
+  #keepPlace(connection: number, now: number): void {
+    const listening = this.listening(connection, now);
+    const speed = this.#streams.get(connection)?.source.speed ?? 1;
     if (listening === null) {
       return;
     }
-    const places = this.#places.get(session) ?? new Map<string, number>();
+    const places = this.#places.get(connection) ?? new Map<string, number>();
     places.delete(listening.name);
     if (listening.state !== "ended") {
       places.set(listening.name, listening.heardMs * speed);
@@ -149,31 +149,31 @@ export class LiveStreams {
     for (const name of [...places.keys()].slice(0, Math.max(0, places.size - MOST_PLACES))) {
       places.delete(name);
     }
-    this.#places.set(session, places);
+    this.#places.set(connection, places);
   }
 
   /** The receiver stops the sound; the stream is kept, paused at what was heard, sending nothing. */
-  pause(context: Context, session: number): void {
-    const stream = this.#streams.get(session);
+  pause(context: Context, connection: number): void {
+    const stream = this.#streams.get(connection);
     if (stream === undefined || (stream.state !== "playing" && stream.state !== "waiting")) {
       return;
     }
     const at = stream.from + stream.heard(context.now());
-    context.sound({ session }, { stop: { channel: STREAM_CHANNEL } });
+    context.sound({ session: connection }, { stop: { channel: STREAM_CHANNEL } });
     stream.close();
-    this.#streams.set(session, LiveStream.paused(stream.source, stream.page, stream.generation, at));
+    this.#streams.set(connection, LiveStream.paused(stream.source, stream.page, stream.generation, at));
   }
 
   /** A new stream, of a new generation, from where the paused one was. */
-  resume(context: Context, session: number): void {
-    const stream = this.#streams.get(session);
+  resume(context: Context, connection: number): void {
+    const stream = this.#streams.get(connection);
     if (stream?.state === "paused") {
-      this.start(context, session, stream.page, stream.source, stream.from);
+      this.start(context, connection, stream.page, stream.source, stream.from);
     }
   }
 
-  listening(session: number, now: number): Listening | null {
-    const stream = this.#streams.get(session);
+  listening(connection: number, now: number): Listening | null {
+    const stream = this.#streams.get(connection);
     if (stream === undefined) {
       return null;
     }
@@ -187,7 +187,7 @@ export class LiveStreams {
       lengthMs: length === null ? null : Math.floor((length * SECOND_MS) / source.rate),
       state: failure === null ? stream.state : "failed",
       failure,
-      gain: this.#gain(session),
+      gain: this.#gain(connection),
     };
   }
 
@@ -202,8 +202,8 @@ export class LiveStreams {
 
   /** Feeds and sends each stream what is due by `now`. */
   pump(context: Context, now: number): void {
-    for (const [session, stream] of this.#streams) {
-      stream.pump(context, session, now);
+    for (const [connection, stream] of this.#streams) {
+      stream.pump(context, connection, now);
     }
   }
 }

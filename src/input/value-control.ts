@@ -14,7 +14,7 @@ export interface ValueProps<T> extends ControlProps {
   /** The value to begin with, when the control keeps its own. */
   readonly initial?: T;
   /** Called with each value the viewer gives it, whether or not it passes validate. */
-  readonly onChange?: (value: T, session: number) => void;
+  readonly onChange?: (value: T, connection: number) => void;
   /** What is wrong with a value, or null. */
   readonly validate?: (value: T) => string | null;
 }
@@ -46,7 +46,7 @@ export abstract class ValueControl<T, P extends ValueProps<T> = ValueProps<T>, S
   }
 
   /** The viewer changed the value: kept (unless the parent keeps it), checked, reported. */
-  protected change(value: T, session: number): void {
+  protected change(value: T, connection: number): void {
     const previous = this.value;
     if (this.disabled || same(previous, value)) {
       return;
@@ -57,19 +57,19 @@ export abstract class ValueControl<T, P extends ValueProps<T> = ValueProps<T>, S
     }
     const reason = this.props.validate?.(value) ?? null;
     if (reason === null) {
-      this.play("change", session);
+      this.play("change", connection);
     } else {
-      this.emit({ type: "invalid", value, reason, session, origin: "viewer" });
-      this.play("error", session);
+      this.emit({ type: "invalid", value, reason, connection, origin: "viewer" });
+      this.play("error", connection);
     }
-    this.emit({ type: "change", value, previous, session, origin: "viewer" });
-    this.props.onChange?.(value, session);
+    this.emit({ type: "change", value, previous, connection, origin: "viewer" });
+    this.props.onChange?.(value, connection);
   }
 
   /** A parent that keeps the value set it: the change is reported as the program's. */
   override componentDidUpdate(previousProps: Readonly<P>, _previousState: Readonly<S>): void {
     if (previousProps.value !== undefined && this.props.value !== undefined && !same(previousProps.value, this.props.value)) {
-      this.emit({ type: "change", value: this.props.value, previous: previousProps.value, session: this.services.session, origin: "program" });
+      this.emit({ type: "change", value: this.props.value, previous: previousProps.value, connection: this.services.connection, origin: "program" });
     }
   }
 }

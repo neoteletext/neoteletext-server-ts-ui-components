@@ -42,7 +42,7 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
   override state: RouletteState = { step: null, lit: 0, article: null };
 
   /** The viewer who spun it, who hears its sounds. */
-  #session = 0;
+  #connection = 0;
 
   override keyBindings(): readonly KeyHelpEntry[] {
     return [
@@ -57,13 +57,13 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
     if (wait === undefined) {
       this.setState({ step: null, article });
       if (this.props.done !== undefined) {
-        this.services.play(this.props.done, this.#session);
+        this.services.play(this.props.done, this.#connection);
       }
       return;
     }
     this.setState({ step, lit: this.state.lit + 1, article });
     if (this.props.tick !== undefined) {
-      this.services.play(this.props.tick, this.#session);
+      this.services.play(this.props.tick, this.#connection);
     }
     this.setTimeout(() => {
       this.#spin(step + 1);
@@ -83,8 +83,8 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
           article,
           spinning: this.state.step !== null,
           disabled: this.disabled,
-          onSpin: (session: number) => {
-            this.#start(session);
+          onSpin: (connection: number) => {
+            this.#start(connection);
           },
         }),
       ),
@@ -97,21 +97,21 @@ export class Roulette extends Control<RouletteProps, RouletteState> {
     }
     const article = this.state.article === null ? undefined : this.props.articles[this.state.article];
     if (isPress(event, Key.Enter) && article !== undefined) {
-      this.services.redirect(event.session, article.page);
+      this.services.redirect(event.connection, article.page);
       return true;
     }
     if (isPress(event, Key.Enter) || isPress(event, " ")) {
-      this.#start(event.session);
+      this.#start(event.connection);
       return true;
     }
     return false;
   }
 
-  #start(session: number): void {
+  #start(connection: number): void {
     if (this.state.step !== null || this.disabled) {
       return;
     }
-    this.#session = session;
+    this.#connection = connection;
     this.#spin(0);
   }
 }

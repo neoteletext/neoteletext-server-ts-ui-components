@@ -25,9 +25,9 @@ export interface WizardProps extends ControlProps {
   /** Whether the step may be left forward: a step with something missing says what. */
   readonly ready?: (step: number) => string | null;
   /** Next on the last step, once it is ready: the wizard is done. */
-  readonly onFinish?: (session: number) => void;
+  readonly onFinish?: (connection: number) => void;
   /** The step changed, by Back, Next or a click on a step done: the step now shown. */
-  readonly onStep?: (step: number, session: number) => void;
+  readonly onStep?: (step: number, connection: number) => void;
 }
 
 interface WizardState {
@@ -67,8 +67,8 @@ export class Wizard extends Control<WizardProps, WizardState> {
     const place: WizardPlace = { steps: this.props.steps, step, finished };
     const go = this.disabled
       ? null
-      : (to: number, session: number): void => {
-          this.#go(to, session);
+      : (to: number, connection: number): void => {
+          this.#go(to, connection);
         };
     return h(
       Rows,
@@ -84,29 +84,29 @@ export class Wizard extends Control<WizardProps, WizardState> {
         : stepMoves(
             place,
             this.disabled,
-            (session) => {
-              this.#back(session);
+            (connection) => {
+              this.#back(connection);
             },
-            (session) => {
-              this.#next(session);
+            (connection) => {
+              this.#next(connection);
             },
           ),
     );
   }
 
-  #go(step: number, session: number): void {
+  #go(step: number, connection: number): void {
     this.setState({ step, complaint: null });
-    this.props.onStep?.(step, session);
+    this.props.onStep?.(step, connection);
   }
 
-  #back(session: number): void {
+  #back(connection: number): void {
     if (this.state.step > 0 && !this.state.finished) {
-      this.#go(this.state.step - 1, session);
+      this.#go(this.state.step - 1, connection);
     }
   }
 
   /** Next, or Finish on the last step, unless the step says what it is missing. */
-  #next(session: number): void {
+  #next(connection: number): void {
     const { step, finished } = this.state;
     if (finished) {
       return;
@@ -116,10 +116,10 @@ export class Wizard extends Control<WizardProps, WizardState> {
       this.setState({ complaint });
     } else if (step === this.props.steps.length - 1) {
       this.setState({ finished: true, complaint: null });
-      this.emit({ type: "submit", value: step, session, origin: "viewer" });
-      this.props.onFinish?.(session);
+      this.emit({ type: "submit", value: step, connection, origin: "viewer" });
+      this.props.onFinish?.(connection);
     } else {
-      this.#go(step + 1, session);
+      this.#go(step + 1, connection);
     }
   }
 
@@ -129,11 +129,11 @@ export class Wizard extends Control<WizardProps, WizardState> {
     }
     const key = colourKeyOf(event);
     if (key === BACK) {
-      this.#back(event.session);
+      this.#back(event.connection);
       return true;
     }
     if (key === NEXT) {
-      this.#next(event.session);
+      this.#next(event.connection);
       return true;
     }
     return false;

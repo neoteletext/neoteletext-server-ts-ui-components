@@ -23,9 +23,9 @@ interface ConfirmEntryProps extends ControlProps {
   readonly ready: boolean;
   /** Why Confirm was refused, or null. */
   readonly complaint: string | null;
-  readonly onType: (typed: string, session: number) => void;
+  readonly onType: (typed: string, connection: number) => void;
   /** Enter: whether it confirmed or was refused, or else goes to the dialog's chosen button. */
-  readonly onEnter: (session: number) => boolean;
+  readonly onEnter: (connection: number) => boolean;
 }
 
 /** What the row under the line says, in words as well as colour (core/look.ts). */
@@ -59,17 +59,17 @@ export class ConfirmEntry extends Control<ConfirmEntryProps> {
     }
   }
 
-  #type(text: string, session: number): void {
+  #type(text: string, connection: number): void {
     const { typed, longest } = this.props;
     const room = longest - characters(typed).length;
-    this.props.onType(`${typed}${typedCharacters(text, Math.max(0, room))}`, session);
+    this.props.onType(`${typed}${typedCharacters(text, Math.max(0, room))}`, connection);
   }
 
   override onText(event: TextEvent): boolean {
     if (this.disabled) {
       return false;
     }
-    this.#type(event.text, event.session);
+    this.#type(event.text, event.connection);
     return true;
   }
 
@@ -78,18 +78,18 @@ export class ConfirmEntry extends Control<ConfirmEntryProps> {
       return false;
     }
     if (isPress(event, Key.Backspace)) {
-      this.props.onType(characters(this.props.typed).slice(0, -1).join(""), event.session);
+      this.props.onType(characters(this.props.typed).slice(0, -1).join(""), event.connection);
       return true;
     }
     if (isPress(event, Key.Enter)) {
-      return this.props.onEnter(event.session);
+      return this.props.onEnter(event.connection);
     }
     // A key's typing is taken here, as a key: the dialog round it keeps every key it is given, so none would come back as text.
     const typed = typedText(event);
     if (typed === undefined) {
       return false;
     }
-    this.#type(typed, event.session);
+    this.#type(typed, event.connection);
     return true;
   }
 }

@@ -17,12 +17,12 @@ export function ascii(text: string): number[] {
 }
 
 /**
- * Row `row` of the copy of `page` `session` sees, as its codes with the
+ * Row `row` of the copy of `page` `connection` sees, as its codes with the
  * text the server is sent laid over them, a character a cell, left to
  * right: what a test reads of text that is not ASCII.
  */
-export function shown(harness: Harness, session: number, page: number, row: number): string {
-  const copy = harness.channel.copy(session, page) ?? harness.channel.copy("channel", page) ?? [];
+export function shown(harness: Harness, connection: number, page: number, row: number): string {
+  const copy = harness.channel.copy(connection, page) ?? harness.channel.copy("channel", page) ?? [];
   const content = copy.at(-1)?.content;
   const cells = Array.from(decodeRow(content?.rows[row]), (code) => String.fromCodePoint(code));
   for (const run of content?.text ?? []) {

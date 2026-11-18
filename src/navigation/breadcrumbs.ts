@@ -18,7 +18,7 @@ export interface Crumb {
   /** The page a click on it goes to, when it has no onPress. */
   readonly page?: number;
   /** What a click on it does, in place of going to its page. */
-  readonly onPress?: (session: number) => void;
+  readonly onPress?: (connection: number) => void;
 }
 
 export interface BreadcrumbsProps {
@@ -73,13 +73,13 @@ export class Breadcrumbs extends Component<BreadcrumbsProps> {
   override onClick(event: PointerEvent): boolean {
     const crumb = event.region === undefined ? undefined : this.props.trail[Number(event.region)];
     if (crumb?.onPress !== undefined) {
-      crumb.onPress(event.session);
+      crumb.onPress(event.connection);
       return true;
     }
     if (crumb?.page === undefined) {
       return false;
     }
-    this.services.redirect(event.session, crumb.page);
+    this.services.redirect(event.connection, crumb.page);
     return true;
   }
 }

@@ -14,7 +14,7 @@ export type PageParams = Readonly<Record<string, string | number>>;
 
 export interface Services {
   /** The viewer this copy of the page is drawn for, or null for the copy every viewer shares. */
-  readonly session: number | null;
+  readonly connection: number | null;
   /** The page it is on. */
   readonly page: number;
   /** Milliseconds since the program started. */
@@ -22,32 +22,32 @@ export interface Services {
   /** The real time, in milliseconds since the Unix epoch, UTC. */
   epochMs(): number;
   /** The parameters of the viewer's selection of this page, the query of its address, or null: untrusted text from the viewer, undecoded (DEC-1730). The bus's `parameters` says when they change. */
-  parameters(session: number): string | null;
+  parameters(connection: number): string | null;
   /** Sends a viewer to a page (DOC-1970), opened with `params` when given: a page whose root takes them shows that one of many. */
-  redirect(session: number, page: number, params?: PageParams): void;
+  redirect(connection: number, page: number, params?: PageParams): void;
   /** Sends a viewer to another channel's address: their receiver shows a notice, and then opens it by its own rules. */
-  redirect(session: number, address: string): void;
+  redirect(connection: number, address: string): void;
   /** Ends a viewer's selection with no page, the kit's `Context.deny` (DOC-1961): 403 forbidden, 404 not found, 429 too many, 503 unavailable. Called while their selection is being answered (from a page's render or mount), the status is the answer in place of the page; at any other time it ends the selection they have. */
-  deny(session: number, status: WireDeniedStatus): void;
+  deny(connection: number, status: WireDeniedStatus): void;
   /** Gives this page a new title in the channel's contents (section 3.5). */
   title(text: string): void;
   /** Plays a sound to one viewer, or to everyone with this page open. */
-  play(sound: Sound, session?: number): void;
+  play(sound: Sound, connection?: number): void;
   /** Plays a long sound to one viewer as a live stream (stream.ts), bound to this page: it stops when they leave. A new one replaces theirs. It starts `fromMs` in, or at its start. */
-  stream(source: StreamSource, session: number, fromMs?: number): void;
+  stream(source: StreamSource, connection: number, fromMs?: number): void;
   /** Stops the viewer's stream. */
-  stopStream(session: number): void;
+  stopStream(connection: number): void;
   /** Pauses the viewer's stream where they have heard to; resumeStream goes on from there. */
-  pauseStream(session: number): void;
-  resumeStream(session: number): void;
+  pauseStream(connection: number): void;
+  resumeStream(connection: number): void;
   /** Moves the viewer's stream to `ms` from its start: paused, it stays paused there. */
-  seekStream(session: number, ms: number): void;
+  seekStream(connection: number, ms: number): void;
   /** How loud the viewer's streams play, 0 to FULL_GAIN; it lasts until they go. */
-  streamGain(session: number, gain: number): void;
+  streamGain(connection: number, gain: number): void;
   /** The viewer's stream, or null. */
-  listening(session: number): Listening | null;
+  listening(connection: number): Listening | null;
   /** Where the viewer's stream of `name` last stopped short of its end, in milliseconds, or null: for taking it up again. */
-  streamPlace(session: number, name: string): number | null;
+  streamPlace(connection: number, name: string): number | null;
   /** The standard's maxima and the server's budgets, as the server's `start` gave them: a page holds up to `standard.subpages` sub-pages. */
   limits(): Limits;
   /** The languages a page or its text may name, as the server's `start` listed them, each with its direction (REQ-2215). */
@@ -58,16 +58,16 @@ export interface Services {
    * of the server's languages, else the channel's own; the channel's for
    * the copy every viewer shares (null).
    */
-  language(session: number | null): LanguageTag;
+  language(connection: number | null): LanguageTag;
   /** The viewer's cookies (REQ-2217 item 1): as the server last gave them, with what setCookie set since; the program's own, untrusted, from the viewer. */
-  cookies(session: number): Readonly<Record<string, string>>;
+  cookies(connection: number): Readonly<Record<string, string>>;
   /**
    * Sets one of the viewer's cookies through the kit, with its checks, for
-   * every connection they have open; cookies(session) has it at once.
+   * every connection they have open; cookies(connection) has it at once.
    * `maxAge: 0` removes it. Names starting `_` are the server's. Setting
    * `language` to one of the server's languages draws their pages again in it.
    */
-  setCookie(session: number, name: string, value: string, options?: CookieOptions): void;
+  setCookie(connection: number, name: string, value: string, options?: CookieOptions): void;
   /** A pseudo-random number below `bound`: for games, never for secrets. */
   below(bound: number): number;
   /** Reports a line in the server's log. */

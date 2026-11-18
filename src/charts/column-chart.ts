@@ -33,7 +33,7 @@ export interface ColumnChartProps {
   /** The figures over the columns. */
   readonly figures?: boolean;
   /** A click on a column chooses it: each column is then a control, and while the pointer is on one the hint row gives its label and figure. */
-  readonly onChoose?: (index: number, session: number) => void;
+  readonly onChoose?: (index: number, connection: number) => void;
 }
 
 /** A column's top cell, by how many of its three sixel rows are filled from the bottom. */
@@ -128,7 +128,7 @@ export class ColumnChart extends Component<ColumnChartProps, ColumnState> {
     if (this.props.onChoose === undefined || event.region === undefined) {
       return false;
     }
-    this.props.onChoose(Number(event.region), event.session);
+    this.props.onChoose(Number(event.region), event.connection);
     return true;
   }
 

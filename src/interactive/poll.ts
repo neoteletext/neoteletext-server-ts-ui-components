@@ -57,13 +57,13 @@ export class Poll extends Control<PollProps, PollState> {
           this.setState({ votes });
         }
       }),
-      this.services.bus.on("ended", ({ session }) => {
-        tally.forget(session);
+      this.services.bus.on("ended", ({ connection }) => {
+        tally.forget(connection);
       }),
     );
     // A viewer back on the page sees the vote they cast before.
-    const { session } = this.services;
-    const mine = session === null ? null : tally.ballotOf(session);
+    const { connection } = this.services;
+    const mine = connection === null ? null : tally.ballotOf(connection);
     if (mine !== null) {
       this.setState({ chosen: mine, mine });
     }
@@ -89,8 +89,8 @@ export class Poll extends Control<PollProps, PollState> {
           foreground: index === this.state.chosen ? Colour.Yellow : Colour.White,
           disabled: this.disabled,
           hint: `A click votes for ${option}`,
-          onPress: (session: number) => {
-            this.#vote(index, session);
+          onPress: (connection: number) => {
+            this.#vote(index, connection);
           },
         }),
         h(Bar, { key: `bar-${index}`, value: this.state.votes[index] ?? 0, max: most, foreground: Colour.Magenta }),
@@ -100,14 +100,14 @@ export class Poll extends Control<PollProps, PollState> {
   }
 
   /** Votes for `option`, moving this viewer's vote there if they had one, and tells every copy. */
-  #vote(option: number, session: number): void {
+  #vote(option: number, connection: number): void {
     if (this.disabled) {
       return;
     }
-    this.props.tally.vote(session, option);
+    this.props.tally.vote(connection, option);
     this.setState({ chosen: option, mine: option });
     this.services.bus.emit("poll", { name: this.props.tally.name, votes: this.props.tally.votes.slice() });
-    this.activate(option, session);
+    this.activate(option, connection);
   }
 
   override onKey(event: KeyEvent): boolean {
@@ -120,7 +120,7 @@ export class Poll extends Control<PollProps, PollState> {
       return false;
     }
     if (isPress(event, Key.Enter)) {
-      this.#vote(this.state.chosen, event.session);
+      this.#vote(this.state.chosen, event.connection);
       return true;
     }
     const step = stepOf(event);

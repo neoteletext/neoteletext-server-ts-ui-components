@@ -31,7 +31,7 @@ import { Dialog } from "neoteletext-server-ts-ui-components";
 | `inset` | `number` | The cells of margin either side. |
 | `shadow` | `boolean` | A drop shadow (drop-shadow.ts): a stipple to its right and a row beneath, so it stands off the page. |
 | `childFirst` | `boolean` | Its children have the keys first: a field to type in. |
-| `onAnswer` | `(button: number \| null, session: number) => void` | The button pressed, or null for Escape. |
+| `onAnswer` | `(button: number \| null, connection: number) => void` | The button pressed, or null for Escape. |
 
 And the props of [`ControlProps`](common.md#controlprops).
 
@@ -123,8 +123,8 @@ import { TypeToConfirm } from "neoteletext-server-ts-ui-components";
 | `name` (needed) | `string` | The name of what is destroyed, which the viewer types to confirm; cut to NAME_LONGEST. |
 | `destroys` (needed) | `string` | What is destroyed, in words: "the page and its 12 sub-pages". |
 | `title` | `string` | The dialog's title; "Destroy" and the name when absent. |
-| `onConfirm` (needed) | `(session: number) => void` | Called as Confirm, or Enter on the line, is taken: only once what is typed is the name or the code. |
-| `onCancel` | `(session: number) => void` | Called as Cancel or Escape answers it, and nothing is destroyed. |
+| `onConfirm` (needed) | `(connection: number) => void` | Called as Confirm, or Enter on the line, is taken: only once what is typed is the name or the code. |
+| `onCancel` | `(connection: number) => void` | Called as Cancel or Escape answers it, and nothing is destroyed. |
 
 And the props of [`ControlProps`](common.md#controlprops).
 

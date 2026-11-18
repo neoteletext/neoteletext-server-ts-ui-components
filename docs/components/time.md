@@ -221,7 +221,7 @@ import { Calendar } from "neoteletext-server-ts-ui-components";
 | `today` | `number` | Today, UTC, in milliseconds since the Unix epoch. |
 | `marked` | `readonly CalendarDate[]` | Days with something on, in any month. |
 | `selectable` | `boolean` | A day can be chosen. |
-| `onChoose` | `(date: CalendarDate, session: number) => void` | A day chosen, with Enter or a click, while it is selectable. |
+| `onChoose` | `(date: CalendarDate, connection: number) => void` | A day chosen, with Enter or a click, while it is selectable. |
 
 And the props of [`ControlProps`](common.md#controlprops).
 

@@ -44,7 +44,7 @@ export interface TabStripProps {
   /** Its tabs cannot be chosen: they declare no controls. */
   readonly disabled?: boolean;
   /** A click on a tab: its place in `tabs`. */
-  readonly onChange: (index: number, session: number) => void;
+  readonly onChange: (index: number, connection: number) => void;
 }
 
 /** The tabs' names in a row, the chosen one marked; a click chooses one. It keeps nothing: its parent says which is chosen. */
@@ -117,7 +117,7 @@ export class TabStrip extends Component<TabStripProps> {
     if (event.region === undefined) {
       return false;
     }
-    this.props.onChange(Number(event.region), event.session);
+    this.props.onChange(Number(event.region), event.connection);
     return true;
   }
 }

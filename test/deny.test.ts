@@ -19,9 +19,9 @@ class MembersOnly extends Component {
   }
 
   override componentDidMount(): void {
-    const { session } = this.services;
-    if (session !== null) {
-      this.services.deny(session, FORBIDDEN);
+    const { connection } = this.services;
+    if (connection !== null) {
+      this.services.deny(connection, FORBIDDEN);
     }
   }
 }

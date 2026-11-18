@@ -16,7 +16,7 @@ interface HeadingProps {
   readonly chosen: boolean;
   readonly background: Colour;
   readonly disabled: boolean;
-  readonly onToggle: (session: number) => void;
+  readonly onToggle: (connection: number) => void;
 }
 
 /** The region a heading's band is. */
@@ -51,7 +51,7 @@ export class Heading extends Component<HeadingProps> {
     if (event.region !== BAND) {
       return false;
     }
-    this.props.onToggle(event.session);
+    this.props.onToggle(event.connection);
     return true;
   }
 }

@@ -16,7 +16,7 @@ export class ViewerLanguages {
   readonly #channel: LanguageTag;
 
   /** What hears a viewer's language change. */
-  readonly #changed: (session: number, language: LanguageTag) => void;
+  readonly #changed: (connection: number, language: LanguageTag) => void;
 
   /** The stand-in for the channel's words in each language (ComponentChannelOptions.standIn). */
   readonly #standIns: StandIns;
@@ -24,7 +24,7 @@ export class ViewerLanguages {
   /** The channel's language, English when undefined; `changed` hears each viewer's change of language; `standIn` gives text in a language for the channel's words. */
   constructor(
     channel: LanguageTag | undefined,
-    changed: (session: number, language: LanguageTag) => void,
+    changed: (connection: number, language: LanguageTag) => void,
     standIn?: (language: LanguageTag) => string | undefined,
   ) {
     this.#channel = channel ?? ENGLISH;
@@ -56,39 +56,39 @@ export class ViewerLanguages {
   }
 
   /** The viewer's cookies, as the server gave them with what was set since. */
-  cookies(context: Context, session: number): Readonly<Record<string, string>> {
-    return this.#cookies.of(session, context.cookies(session));
+  cookies(context: Context, connection: number): Readonly<Record<string, string>> {
+    return this.#cookies.of(connection, context.cookies(connection));
   }
 
   /** The viewer's language: their `language` cookie when it names one of the server's languages, else the channel's; the channel's for the shared copy (null) and outside a call. */
-  of(context: Context | null, session: number | null): LanguageTag {
-    if (context === null || session === null) {
+  of(context: Context | null, connection: number | null): LanguageTag {
+    if (context === null || connection === null) {
       return this.#channel;
     }
-    const chosen = this.cookies(context, session)[LANGUAGE_COOKIE];
+    const chosen = this.cookies(context, connection)[LANGUAGE_COOKIE];
     return isListed(chosen, context.languages()) ? chosen : this.#channel;
   }
 
   /** Whether the viewer's language is not the channel's. */
-  differs(context: Context | null, session: number): boolean {
-    return this.of(context, session) !== this.#channel;
+  differs(context: Context | null, connection: number): boolean {
+    return this.of(context, connection) !== this.#channel;
   }
 
   /** Sets a cookie on each connection the viewer has open; a change of their language is heard. */
-  set(context: Context, session: number, name: string, value: string, options: CookieOptions): void {
-    const before = this.of(context, session);
-    for (const connection of context.connectionsOf(session)) {
-      context.cookie(connection, name, value, options);
+  set(context: Context, connection: number, name: string, value: string, options: CookieOptions): void {
+    const before = this.of(context, connection);
+    for (const open of context.connectionsOf(connection)) {
+      context.cookie(open, name, value, options);
     }
-    this.#cookies.set(session, name, value, options);
-    const after = this.of(context, session);
+    this.#cookies.set(connection, name, value, options);
+    const after = this.of(context, connection);
     if (after !== before) {
-      this.#changed(session, after);
+      this.#changed(connection, after);
     }
   }
 
   /** The viewer went. */
-  forget(session: number): void {
-    this.#cookies.forget(session);
+  forget(connection: number): void {
+    this.#cookies.forget(connection);
   }
 }

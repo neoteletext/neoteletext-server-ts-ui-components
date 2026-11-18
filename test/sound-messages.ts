@@ -4,9 +4,9 @@
 
 import type { Harness, Sent } from "neoteletext-server-ts-protocol/testing";
 
-/** The sound lines for `session`'s connection, each as `{ [kind]: its fields }`. */
-export function soundsOf(harness: Harness, session: number): Sent[] {
-  return harness.sounds(session).map((message) => {
+/** The sound lines for `connection`'s connection, each as `{ [kind]: its fields }`. */
+export function soundsOf(harness: Harness, connection: number): Sent[] {
+  return harness.sounds(connection).map((message) => {
     const { kind, type: _type, connections: _connections, ...fields } = message;
     return { [String(kind)]: fields };
   });

@@ -25,10 +25,10 @@ import { frame, PAGE } from "./components-fixtures.ts";
 /** What a component reads of the services, and a key that sets a cookie. */
 class CookieShow extends Component {
   override render(): Child {
-    const { session } = this.services;
-    const cookies = session === null ? {} : this.services.cookies(session);
+    const { connection } = this.services;
+    const cookies = connection === null ? {} : this.services.cookies(connection);
     const pairs = Object.entries(cookies).map(([name, value]) => `${name}=${value}`);
-    return h(Text, { text: `${pairs.join(" ")}; ${this.services.language(session)}` });
+    return h(Text, { text: `${pairs.join(" ")}; ${this.services.language(connection)}` });
   }
 
   override focusable(): boolean {
@@ -41,9 +41,9 @@ class CookieShow extends Component {
 
   override onKey(event: KeyEvent): boolean {
     if (isPress(event, "s")) {
-      this.services.setCookie(event.session, "seen", "yes", { maxAge: 60 });
+      this.services.setCookie(event.connection, "seen", "yes", { maxAge: 60 });
     } else if (isPress(event, "r")) {
-      this.services.setCookie(event.session, "seen", "", { maxAge: 0 });
+      this.services.setCookie(event.connection, "seen", "", { maxAge: 0 });
     } else {
       return false;
     }
@@ -80,8 +80,8 @@ test("REQ-2217 item 2: the viewer's language is their language cookie when the s
   page.join(1, PAGE, [{ name: "language", value: "ru" }]);
   page.join(2, PAGE, [{ name: "language", value: "xx" }]);
   page.join(3, PAGE);
-  const language = (session: number): string | undefined =>
-    (page.channel.copy(session, PAGE) ?? page.channel.copy("channel", PAGE))?.at(-1)?.content.language ?? undefined;
+  const language = (connection: number): string | undefined =>
+    (page.channel.copy(connection, PAGE) ?? page.channel.copy("channel", PAGE))?.at(-1)?.content.language ?? undefined;
   assert.equal(language(1), "ru");
   assert.equal(language(2), "de", "a tag the server does not list is no language");
   assert.equal(language(3), "de");

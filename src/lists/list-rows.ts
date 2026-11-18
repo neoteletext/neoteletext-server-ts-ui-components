@@ -42,9 +42,9 @@ export interface ListRowsProps<T> {
   /** An item's foreground off the band. */
   readonly foreground?: (item: T, index: number) => Colour | undefined;
   /** A click on an item's band: its place in `items`. */
-  readonly onPick: (index: number, session: number) => void;
+  readonly onPick: (index: number, connection: number) => void;
   /** The pointer came onto an item's row, or left it (null). Moving from one row to the next is a leave, then an enter. */
-  readonly onHover?: (index: number | null, session: number) => void;
+  readonly onHover?: (index: number | null, connection: number) => void;
   /** What the hint row says of an item while the pointer is on its row, or null for the list's own hint. */
   readonly itemHint?: (item: T, index: number) => string | null;
 }
@@ -89,10 +89,12 @@ export class ListRows<T> extends Component<ListRowsProps<T>> {
         ...(hint === null ? {} : { hint }),
         ...(foreground === undefined ? {} : { foreground }),
         content: (look: RowLook) => this.props.render?.(item, look, index) ?? h(ItemText, { text: textOf(item, index), foreground: look.foreground, rows }),
-        onPress: (session: number) => {
-          this.props.onPick(index, session);
+        onPress: (connection: number) => {
+          this.props.onPick(index, connection);
         },
-        ...(this.props.onHover === undefined ? {} : { onHover: (entered: boolean, session: number) => this.props.onHover?.(entered ? index : null, session) }),
+        ...(this.props.onHover === undefined
+          ? {}
+          : { onHover: (entered: boolean, connection: number) => this.props.onHover?.(entered ? index : null, connection) }),
       });
     });
   }

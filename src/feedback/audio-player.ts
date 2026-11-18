@@ -66,39 +66,39 @@ export class AudioPlayer extends Component<AudioPlayerProps, AudioPlayerState> {
   }
 
   override componentDidMount(): void {
-    const session = this.services.session;
-    if (session === null) {
+    const connection = this.services.connection;
+    if (connection === null) {
       return;
     }
-    this.#actions.look(session);
+    this.#actions.look(connection);
     this.setInterval(
       () => {
-        this.#actions.look(session);
+        this.#actions.look(connection);
       },
       LOOK_MS,
       { whileViewed: true },
     );
   }
 
-  /** What `session`'s keys ask of the player. */
-  #commands(session: number): PlayerCommands {
+  /** What `connection`'s keys ask of the player. */
+  #commands(connection: number): PlayerCommands {
     const actions = this.#actions;
     return {
-      seek: (direction) => actions.seekBy(direction, session),
-      jump: (digit) => actions.jump(digit, session),
-      volume: (step) => actions.volume(step, session),
-      mute: () => actions.mute(session),
+      seek: (direction) => actions.seekBy(direction, connection),
+      jump: (digit) => actions.jump(digit, connection),
+      volume: (step) => actions.volume(step, connection),
+      mute: () => actions.mute(connection),
       playPause: done(() => {
-        actions.playPause(session);
+        actions.playPause(connection);
       }),
       stop: done(() => {
-        actions.stop(session);
+        actions.stop(connection);
       }),
       previous: done(() => {
-        actions.previous(session);
+        actions.previous(connection);
       }),
       next: done(() => {
-        actions.next(session);
+        actions.next(connection);
       }),
       repeat: done(() => {
         actions.repeat();
@@ -106,7 +106,7 @@ export class AudioPlayer extends Component<AudioPlayerProps, AudioPlayerState> {
       shuffle: done(() => {
         actions.shuffle();
       }),
-      speed: (step) => actions.speed(step, session),
+      speed: (step) => actions.speed(step, connection),
       loop: () => actions.loop(),
       sleep: done(() => {
         actions.sleep();
@@ -119,7 +119,7 @@ export class AudioPlayer extends Component<AudioPlayerProps, AudioPlayerState> {
 
   /** The arrows, the digits and a keyboard's letters; Enter and Space are the buttons' and the list's. */
   override onKey(event: KeyEvent): boolean {
-    return playerKey(event, this.#commands(event.session), { hasTracks: (this.props.tracks ?? []).length > 0, digits: this.props.digits === true });
+    return playerKey(event, this.#commands(event.connection), { hasTracks: (this.props.tracks ?? []).length > 0, digits: this.props.digits === true });
   }
 
   #status(): PlayerViewProps["status"] {
@@ -131,7 +131,7 @@ export class AudioPlayer extends Component<AudioPlayerProps, AudioPlayerState> {
       speed,
       loopFrom,
       loopTo,
-      sleepMinutes: sleepAt === null || this.services.session === null ? null : sleepMinutes(sleepAt, this.services.now()),
+      sleepMinutes: sleepAt === null || this.services.connection === null ? null : sleepMinutes(sleepAt, this.services.now()),
     };
   }
 
@@ -152,23 +152,23 @@ export class AudioPlayer extends Component<AudioPlayerProps, AudioPlayerState> {
       levels: this.props.spectrum === undefined ? null : actions.levels(SPECTRUM_BANDS),
       spectrumRows: this.props.spectrum ?? 0,
       status: this.#status(),
-      onPrevious: (session: number) => {
-        actions.previous(session);
+      onPrevious: (connection: number) => {
+        actions.previous(connection);
       },
-      onPlayPause: (session: number) => {
-        actions.playPause(session);
+      onPlayPause: (connection: number) => {
+        actions.playPause(connection);
       },
-      onStop: (session: number) => {
-        actions.stop(session);
+      onStop: (connection: number) => {
+        actions.stop(connection);
       },
-      onNext: (session: number) => {
-        actions.next(session);
+      onNext: (connection: number) => {
+        actions.next(connection);
       },
-      onSeek: (fraction: number, session: number) => {
-        actions.seekFraction(fraction, session);
+      onSeek: (fraction: number, connection: number) => {
+        actions.seekFraction(fraction, connection);
       },
-      onChoose: (track: number, session: number) => {
-        actions.play(track, session);
+      onChoose: (track: number, connection: number) => {
+        actions.play(track, connection);
       },
       onMove: (place: number) => {
         actions.select(place);

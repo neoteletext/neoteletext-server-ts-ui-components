@@ -21,7 +21,7 @@ export interface ComponentChannelOptions {
   /**
    * Where what outlasts the program is kept (REQ-1057): the components'
    * kept state (Component.keptAs, REQ-1058), each viewer's under their
-   * session's number. The channel opens it, usually a SqliteStateStore on
+   * connection's number. The channel opens it, usually a SqliteStateStore on
    * a file of its own, and gives the same store to what it keeps itself,
    * such as a poll's Tally. Nothing is kept when absent.
    */

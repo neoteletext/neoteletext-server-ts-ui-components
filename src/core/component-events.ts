@@ -13,7 +13,7 @@ export type Origin = "viewer" | "program";
 interface Sent {
   readonly source: Component;
   /** The viewer it came from; null when the program did it on the copy every viewer shares. */
-  readonly session: number | null;
+  readonly connection: number | null;
   readonly origin: Origin;
 }
 

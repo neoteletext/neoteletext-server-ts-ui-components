@@ -22,7 +22,7 @@ export interface BadgeSpec {
   /** Flashing, as LIVE and NEWSFLASH are. */
   readonly flash?: boolean;
   /** What a click on it does: it is a control when given. */
-  readonly onPress?: (session: number) => void;
+  readonly onPress?: (connection: number) => void;
 }
 
 export interface BadgesProps {
@@ -77,7 +77,7 @@ export class Badges extends Component<BadgesProps> {
     if (badge?.onPress === undefined) {
       return false;
     }
-    badge.onPress(event.session);
+    badge.onPress(event.connection);
     return true;
   }
 

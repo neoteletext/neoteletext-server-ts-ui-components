@@ -107,7 +107,7 @@ import { TextField } from "neoteletext-server-ts-ui-components";
 | Prop | Type | What it is |
 | --- | --- | --- |
 | `longest` (needed) | `number` | The most characters it takes. |
-| `onSubmit` | `(text: string, session: number) => void` | Called with the text, trimmed, as Enter sends it: never when it is blank or fails validate. |
+| `onSubmit` | `(text: string, connection: number) => void` | Called with the text, trimmed, as Enter sends it: never when it is blank or fails validate. |
 | `background` | `Colour` | Its band's colour; blue when absent, black while disabled. |
 | `placeholder` | `string` | What the empty field shows while it does not have the keys. |
 | `masked` | `boolean` | Each character shows as `*`: a password. |
@@ -160,7 +160,7 @@ import { SegmentField } from "neoteletext-server-ts-ui-components";
 | `check` | `(segment: number, digits: string) => string \| null` | What is wrong with segment `segment` (from 0, left to right) now that its slots are all filled with `digits`, or null. |
 | `conceal` | `boolean` | A filled slot shows `*`, not its digit: a PIN. |
 | `background` | `Colour` | Its band's colour; blue when absent, black while disabled. |
-| `onSubmit` | `(filled: string, session: number) => void` | Enter with every slot filled and nothing wrong: the template filled in. |
+| `onSubmit` | `(filled: string, connection: number) => void` | Enter with every slot filled and nothing wrong: the template filled in. |
 
 And the props of [`ValueProps`](common.md#valueprops).
 
@@ -223,7 +223,7 @@ import { MultiTapField } from "neoteletext-server-ts-ui-components";
 | Prop | Type | What it is |
 | --- | --- | --- |
 | `longest` | `number` | The most characters it takes; LONGEST when absent. |
-| `onSubmit` | `(text: string, session: number) => void` | Called with the text, trimmed, as Enter sends it: never when it is blank or fails validate. |
+| `onSubmit` | `(text: string, connection: number) => void` | Called with the text, trimmed, as Enter sends it: never when it is blank or fails validate. |
 | `background` | `Colour` | Its band's colour; blue when absent, black while disabled. |
 | `keep` | `boolean` | Enter leaves the text there rather than clearing it. |
 
@@ -322,7 +322,7 @@ import { Button } from "neoteletext-server-ts-ui-components";
 | Prop | Type | What it is |
 | --- | --- | --- |
 | `label` (needed) | `string` | What it says on its band, cut to the band. |
-| `onPress` (needed) | `(session: number) => void` | Called as it is pressed: Enter, Space or a click on its band, and never while disabled. |
+| `onPress` (needed) | `(connection: number) => void` | Called as it is pressed: Enter, Space or a click on its band, and never while disabled. |
 | `background` | `Colour` | Its band's colour while it does not have the keys, its label inked to read on it; cyan when absent. |
 | `width` | `number` | Its whole width in cells, the label centred in it; fitted to the label and its padding when absent. |
 | `paddingLeft` | `number` | Spaces before the label inside the band, when it fits its label: one when absent. |
@@ -355,7 +355,7 @@ import { Action } from "neoteletext-server-ts-ui-components";
 | Prop | Type | What it is |
 | --- | --- | --- |
 | `text` (needed) | `string` | What it says, cut to its box. |
-| `onPress` (needed) | `(session: number) => void` | Called as the text is clicked; never while disabled. |
+| `onPress` (needed) | `(connection: number) => void` | Called as the text is clicked; never while disabled. |
 | `foreground` | `Colour` | The text's colour; white when absent. |
 | `disabled` | `boolean` | Dim, and a click on it does nothing. |
 | `centre` | `boolean` | Centred in its box. |
@@ -630,7 +630,7 @@ import { LanguagePicker } from "neoteletext-server-ts-ui-components";
 | `shown` (needed) | `number` | The rows it shows; the rest scroll. |
 | `names` | `Readonly<Partial<Record<LanguageTag, string>>>` | Each language's name in its own language, where the channel has it; its English name, from the server, otherwise. |
 | `languages` | `readonly LanguageTag[]` | The languages it offers, in this order; every one the server lists when absent. |
-| `onChoose` | `(language: LanguageTag, session: number) => void` | A viewer chose a language: after their cookie is set. |
+| `onChoose` | `(language: LanguageTag, connection: number) => void` | A viewer chose a language: after their cookie is set. |
 
 And the props of [`ControlProps`](common.md#controlprops).
 

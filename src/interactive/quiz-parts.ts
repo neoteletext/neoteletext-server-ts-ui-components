@@ -19,15 +19,15 @@ export type Verdict = "none" | "right" | "wrong";
 const KEY_NAME_CELLS = 7;
 
 /** An action for each answer, which `onAnswer` is told the place of. */
-export function answerActions(answers: readonly string[], disabled: boolean, onAnswer: (answer: number, session: number) => void): Element[] {
+export function answerActions(answers: readonly string[], disabled: boolean, onAnswer: (answer: number, connection: number) => void): Element[] {
   return answers.map((answer, index) =>
     h(Action, {
       key: `answer-${index}`,
       text: `${pad(COLOUR_KEY_NAMES[index] ?? "", KEY_NAME_CELLS)} ${answer}`,
       foreground: KEY_COLOURS[index] ?? Colour.White,
       disabled,
-      onPress: (session: number) => {
-        onAnswer(index, session);
+      onPress: (connection: number) => {
+        onAnswer(index, connection);
       },
     }),
   );

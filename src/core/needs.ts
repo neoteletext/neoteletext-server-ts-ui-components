@@ -22,7 +22,7 @@ const MOST_DEPTH = 64;
 
 /**
  * What the components under `root` need, together. A render that cannot
- * run unmounted, because it reaches the channel (services, the session),
+ * run unmounted, because it reaches the channel (services, the connection),
  * hides what is under it: `unprobed` is told the component's name, so the
  * page's needs are never lost without a word (TODO-2229 item 7 in rdm).
  */
@@ -41,7 +41,7 @@ export function probeNeeds(root: Element, unprobed: (component: string) => void 
     try {
       children = flatten(component.render());
     } catch {
-      // A render that reaches the channel (services, the session) cannot run unmounted: what is under it is not known.
+      // A render that reaches the channel (services, the connection) cannot run unmounted: what is under it is not known.
       unprobed(component.constructor.name);
       return;
     }

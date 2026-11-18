@@ -27,13 +27,13 @@ What a test can do and see:
 
 | | |
 | --- | --- |
-| `join(session, page)`, `open(session, page)`, `close(session)` | A viewer comes, goes to a page, goes. |
-| `press(session, key)`, `typeKeys(session, text)`, `typeText(session, text)`, `paste` | Keys, typing from a keyboard, text from a phone. |
-| `clickLeft(session, column, row)`, `wheel`, `hover` | The pointer. |
+| `join(connection, page)`, `open(connection, page)`, `close(connection)` | A viewer comes, goes to a page, goes. |
+| `press(connection, key)`, `typeKeys(connection, text)`, `typeText(connection, text)`, `paste` | Keys, typing from a keyboard, text from a phone. |
+| `clickLeft(connection, column, row)`, `wheel`, `hover` | The pointer. |
 | `advance(ms)`, `runUntil(ms)` | The clock, waking the channel when it asked to be. |
-| `seen(session, page).rows`, `text(rows, row)`, `shows(rows, words)` | What the viewer sees. |
-| `redirects(session)`, `addressRedirects(session)`, `at(session)` | The pages and the addresses the viewer was sent to, and where they are. |
-| `sounds(session)` | The sound lines sent to the viewer. |
+| `seen(connection, page).rows`, `text(rows, row)`, `shows(rows, words)` | What the viewer sees. |
+| `redirects(connection)`, `addressRedirects(connection)`, `at(connection)` | The pages and the addresses the viewer was sent to, and where they are. |
+| `sounds(connection)` | The sound lines sent to the viewer. |
 | `errors` | What the channel reported failing. |
 
 ## Snapshots

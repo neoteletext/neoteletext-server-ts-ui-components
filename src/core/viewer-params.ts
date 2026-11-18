@@ -10,20 +10,20 @@ export class ViewerParams {
   readonly #queried = new Map<number, Set<number>>();
 
   /** What the viewer's copy of `page` is made with. */
-  of(session: number, page: number): PageParams | undefined {
-    return this.#params.get(session)?.get(page);
+  of(connection: number, page: number): PageParams | undefined {
+    return this.#params.get(connection)?.get(page);
   }
 
-  #set(session: number, page: number, params: PageParams): void {
-    const pages = this.#params.get(session) ?? new Map<number, PageParams>();
+  #set(connection: number, page: number, params: PageParams): void {
+    const pages = this.#params.get(connection) ?? new Map<number, PageParams>();
     pages.set(page, params);
-    this.#params.set(session, pages);
+    this.#params.set(connection, pages);
   }
 
   /** A redirect gave these: they stand until a query replaces them. */
-  redirected(session: number, page: number, params: PageParams): void {
-    this.#queried.get(session)?.delete(page);
-    this.#set(session, page, params);
+  redirected(connection: number, page: number, params: PageParams): void {
+    this.#queried.get(connection)?.delete(page);
+    this.#set(connection, page, params);
   }
 
   /**
@@ -31,24 +31,24 @@ export class ViewerParams {
    * none leaves behind what a query gave, and never what a redirect gave.
    * Answers whether what the page is made with changed.
    */
-  queried(session: number, page: number, query: PageParams | null): boolean {
-    const pages = this.#queried.get(session) ?? new Set<number>();
-    this.#queried.set(session, pages);
+  queried(connection: number, page: number, query: PageParams | null): boolean {
+    const pages = this.#queried.get(connection) ?? new Set<number>();
+    this.#queried.set(connection, pages);
     if (query !== null) {
       pages.add(page);
-      this.#set(session, page, query);
+      this.#set(connection, page, query);
       return true;
     }
     if (pages.delete(page)) {
-      this.#params.get(session)?.delete(page);
+      this.#params.get(connection)?.delete(page);
       return true;
     }
     return false;
   }
 
   /** The viewer went. */
-  forget(session: number): void {
-    this.#params.delete(session);
-    this.#queried.delete(session);
+  forget(connection: number): void {
+    this.#params.delete(connection);
+    this.#queried.delete(connection);
   }
 }

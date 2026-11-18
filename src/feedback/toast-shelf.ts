@@ -117,8 +117,8 @@ export class ToastShelf extends Component<ToastShelfProps, ToastShelfState> {
   }
 
   /** Puts toast `id` away, undoing what it told of when it can be undone. */
-  #dismiss(id: number, session: number): void {
-    this.state.shown.find((each) => each.id === id)?.toast.undo?.(session);
+  #dismiss(id: number, connection: number): void {
+    this.state.shown.find((each) => each.id === id)?.toast.undo?.(connection);
     this.#remove(id);
   }
 
@@ -126,7 +126,7 @@ export class ToastShelf extends Component<ToastShelfProps, ToastShelfState> {
     if (event.region === undefined) {
       return false;
     }
-    this.#dismiss(Number(event.region), event.session);
+    this.#dismiss(Number(event.region), event.connection);
     return true;
   }
 
@@ -135,7 +135,7 @@ export class ToastShelf extends Component<ToastShelfProps, ToastShelfState> {
     if (newest === undefined || !isPress(event, UNDO_KEY)) {
       return false;
     }
-    this.#dismiss(newest.id, event.session);
+    this.#dismiss(newest.id, event.connection);
     return true;
   }
 }

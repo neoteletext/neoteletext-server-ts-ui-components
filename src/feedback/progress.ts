@@ -37,7 +37,7 @@ export interface ProgressProps {
   /** The share after the bar, as a percentage; shown unless false. */
   readonly percent?: boolean;
   /** A click on the track: how far along it, 0 to 1. */
-  readonly onSeek?: (fraction: number, session: number) => void;
+  readonly onSeek?: (fraction: number, connection: number) => void;
 }
 
 /** The label's column when there is a label and no width is given. */
@@ -126,7 +126,7 @@ export class ProgressBar extends Component<ProgressProps> {
       return false;
     }
     // The middle of the cell clicked: a click on the first cell is a little way in, not the very start.
-    onSeek(Math.max(0, Math.min(1, (event.local.column - this.#track.start + HALF_CELL) / this.#track.cells)), event.session);
+    onSeek(Math.max(0, Math.min(1, (event.local.column - this.#track.start + HALF_CELL) / this.#track.cells)), event.connection);
     return true;
   }
 }

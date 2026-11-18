@@ -1,5 +1,5 @@
 // Input as components receive it: the server's events (DOC-1968)
-//, with the session they came from and, for the pointer, the
+//, with the connection they came from and, for the pointer, the
 // wheel and a hover, the cell both on the page and inside the component's
 // own box.
 
@@ -7,7 +7,7 @@ import { keyText, type Pointed } from "../kit.ts";
 
 /** A key pressed, repeating or released. */
 export interface KeyEvent {
-  readonly session: number;
+  readonly connection: number;
   readonly key: string;
   readonly action: "press" | "repeat" | "release";
   /** The modifier keys held, as the kit's `Mods` bits, when any is (DOC-1935): Control-C is the key `c` with `Mods.Control`. */
@@ -20,13 +20,13 @@ export interface KeyEvent {
 
 /** Text typed or pasted. */
 export interface TextEvent {
-  readonly session: number;
+  readonly connection: number;
   readonly text: string;
 }
 
 /** An input method's text as it stands while the viewer composes, `cursor` code points in; empty when composing ended (DOC-1969). What it commits comes as text, so nothing here is yet typed. */
 export interface ComposeEvent {
-  readonly session: number;
+  readonly connection: number;
   readonly cursor: number;
   readonly text: string;
 }
@@ -43,7 +43,7 @@ export interface Cell {
 
 /** The pointer pressed, moved or released on a cell, with the modifier keys held and the dot under it when the receiver sends them (the kit's `Pointed`, DOC-1946). */
 export interface PointerEvent extends Cell, Pointed {
-  readonly session: number;
+  readonly connection: number;
   readonly action: "press" | "release" | "move";
   /** The button pressed or released, 0 left; on a move, the buttons held, a bit each. */
   readonly button: number;
@@ -54,7 +54,7 @@ export interface PointerEvent extends Cell, Pointed {
 
 /** The wheel turned over a cell, in 1/120ths of a line, down positive, with what comes with the pointer. */
 export interface WheelEvent extends Cell, Pointed {
-  readonly session: number;
+  readonly connection: number;
   readonly dx: number;
   readonly dy: number;
 }
@@ -67,7 +67,7 @@ export interface WheelEvent extends Cell, Pointed {
  * a hover changes, such as what the hint row says.
  */
 export interface HoverEvent extends Cell {
-  readonly session: number;
+  readonly connection: number;
   /** True as the pointer comes onto the control, false as it leaves. */
   readonly entered: boolean;
 }

@@ -32,7 +32,7 @@ import { Breadcrumbs } from "neoteletext-server-ts-ui-components";
 | --- | --- | --- |
 | `label` (needed) | `string` | What the step is, cut to the room left on the row. |
 | `page` | `number` | The page a click on it goes to, when it has no onPress. |
-| `onPress` | `(session: number) => void` | What a click on it does, in place of going to its page. |
+| `onPress` | `(connection: number) => void` | What a click on it does, in place of going to its page. |
 
 ### The way down
 
@@ -133,8 +133,8 @@ import { Menu } from "neoteletext-server-ts-ui-components";
 | `numbered` | `boolean` | Each choice has its number, which chooses it. |
 | `shown` | `number` | The choices shown at once. |
 | `empty` | `string` | What an empty menu says; "no choices" when absent. |
-| `onChoose` (needed) | `(path: readonly string[], session: number) => void` | A choice made: the labels from the top menu down to it. |
-| `onHover` | `(path: readonly string[] \| null, session: number) => void` | The pointer came onto a choice, or left it (null): the labels from the top menu down to it. Moving from one choice to the next is a leave, then an enter. |
+| `onChoose` (needed) | `(path: readonly string[], connection: number) => void` | A choice made: the labels from the top menu down to it. |
+| `onHover` | `(path: readonly string[] \| null, connection: number) => void` | The pointer came onto a choice, or left it (null): the labels from the top menu down to it. Moving from one choice to the next is a leave, then an enter. |
 | `itemKey` | `(item: MenuItem) => string` | What tells one choice from another, so the chosen one stays chosen as the open menu's choices come and go. |
 
 And the props of [`ControlProps`](common.md#controlprops).
@@ -342,7 +342,7 @@ import { TabStrip } from "neoteletext-server-ts-ui-components";
 | `style` | `TabStyle` | Its look; chips when absent. |
 | `focused` | `boolean` | The strip is the one with the keys: the chosen tab on the band. |
 | `disabled` | `boolean` | Its tabs cannot be chosen: they declare no controls. |
-| `onChange` (needed) | `(index: number, session: number) => void` | A click on a tab: its place in `tabs`. |
+| `onChange` (needed) | `(index: number, connection: number) => void` | A click on a tab: its place in `tabs`. |
 
 ### Each style
 
@@ -459,8 +459,8 @@ import { Tree } from "neoteletext-server-ts-ui-components";
 | `shown` (needed) | `number` | The rows it shows. |
 | `open` | `readonly string[]` | Items opened to begin with, by label. |
 | `empty` | `string` | What an empty tree says; "nothing here" when absent. |
-| `onChoose` | `(node: TreeNode, session: number) => void` | An item without children chosen, by Enter, Space or a click; one with a page then goes there. |
-| `onHover` | `(node: TreeNode \| null, session: number) => void` | The pointer came onto an item, or left it (null): for showing what it is before it is chosen. Moving from one item to the next is a leave, then an enter. |
+| `onChoose` | `(node: TreeNode, connection: number) => void` | An item without children chosen, by Enter, Space or a click; one with a page then goes there. |
+| `onHover` | `(node: TreeNode \| null, connection: number) => void` | The pointer came onto an item, or left it (null): for showing what it is before it is chosen. Moving from one item to the next is a leave, then an enter. |
 
 And the props of [`ControlProps`](common.md#controlprops).
 

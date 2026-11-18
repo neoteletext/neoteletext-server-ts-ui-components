@@ -36,7 +36,7 @@ export interface ListeningViewProps {
   /** The bar's colour; magenta when absent. */
   readonly foreground?: Colour;
   /** A click on the bar: how far along it, 0 to 1, to seek there. */
-  readonly onSeek?: (fraction: number, session: number) => void;
+  readonly onSeek?: (fraction: number, connection: number) => void;
 }
 
 /** The colour of what a stream is doing: red when it cannot play, yellow paused, else green. */

@@ -58,7 +58,7 @@ export interface TextFieldProps extends ValueProps<string> {
   /** The most characters it takes. */
   readonly longest: number;
   /** Called with the text, trimmed, as Enter sends it: never when it is blank or fails validate. */
-  readonly onSubmit?: (text: string, session: number) => void;
+  readonly onSubmit?: (text: string, connection: number) => void;
   /** Its band's colour; blue when absent, black while disabled. */
   readonly background?: Colour;
   /** What the empty field shows while it does not have the keys. */
@@ -129,7 +129,7 @@ export class TextField extends ValueControl<string, TextFieldProps> {
       return false;
     }
     const { longest } = this.props;
-    this.change(firstCharacters(`${this.value}${firstCharacters(event.text, longest, isText)}`, longest), event.session);
+    this.change(firstCharacters(`${this.value}${firstCharacters(event.text, longest, isText)}`, longest), event.connection);
     return true;
   }
 
@@ -138,24 +138,24 @@ export class TextField extends ValueControl<string, TextFieldProps> {
       return false;
     }
     if (isPress(event, Key.Backspace)) {
-      this.change(this.value.slice(0, -1), event.session);
+      this.change(this.value.slice(0, -1), event.connection);
       return true;
     }
     if (isPress(event, Key.Escape)) {
       if (this.value === "") {
-        this.cancel(event.session);
+        this.cancel(event.connection);
         return false;
       }
-      this.change("", event.session);
+      this.change("", event.connection);
       return true;
     }
     if (isPress(event, Key.Enter) && this.value.trim() !== "" && this.complaint === null) {
       const text = this.value.trim();
-      this.emit({ type: "submit", value: text, session: event.session, origin: "viewer" });
-      this.play("choose", event.session);
-      this.props.onSubmit?.(text, event.session);
+      this.emit({ type: "submit", value: text, connection: event.connection, origin: "viewer" });
+      this.play("choose", event.connection);
+      this.props.onSubmit?.(text, event.connection);
       if (this.props.keep !== true) {
-        this.change("", event.session);
+        this.change("", event.connection);
       }
       return this.props.onSubmit !== undefined;
     }

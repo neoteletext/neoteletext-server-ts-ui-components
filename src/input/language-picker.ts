@@ -22,7 +22,7 @@ export interface LanguagePickerProps extends ControlProps {
   /** The languages it offers, in this order; every one the server lists when absent. */
   readonly languages?: readonly LanguageTag[];
   /** A viewer chose a language: after their cookie is set. */
-  readonly onChoose?: (language: LanguageTag, session: number) => void;
+  readonly onChoose?: (language: LanguageTag, connection: number) => void;
 }
 
 /** The server's languages as a list; a choice sets the viewer's language. */
@@ -43,8 +43,8 @@ export class LanguagePicker extends Component<LanguagePickerProps> {
 
   override render(): Child {
     const offered = this.#offered;
-    const session = this.mounted ? this.services.session : null;
-    const current = session === null ? -1 : offered.findIndex((language) => language.tag === this.services.language(session));
+    const connection = this.mounted ? this.services.connection : null;
+    const current = connection === null ? -1 : offered.findIndex((language) => language.tag === this.services.language(connection));
     const { shown, names: _names, languages: _languages, onChoose, ...control } = this.props;
     return h(ChoiceList<Language>, {
       ...control,

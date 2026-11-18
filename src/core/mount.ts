@@ -154,7 +154,7 @@ export class Mount implements ComponentHost {
   /** The nearest `language` prop from `node` up, else the page's, else the viewer's, with the channel's stand-in for it when it has one; from outside the program when the nearest `outside` prop says so. */
   #languageOfNode(node: Node | null): TextLanguage {
     const { services } = this;
-    return nodeLanguage(node, this.#host.pageLanguage, () => services.language(services.session), services.languages(), this.#host.standIn);
+    return nodeLanguage(node, this.#host.pageLanguage, () => services.language(services.connection), services.languages(), this.#host.standIn);
   }
 
   /** Draws every component again: what they all read changed (the viewer's language). */
@@ -174,8 +174,8 @@ export class Mount implements ComponentHost {
 
   /** The component under the viewer's pointer that says what it does, nearest first; on the copy every viewer shares, which follows no one's pointer, none. */
   #hinted(): AnyComponent | null {
-    const { session } = this.services;
-    return session === null ? null : nearest(this.pointer.hoveredBy(session), (each) => each.hint() !== null);
+    const { connection } = this.services;
+    return connection === null ? null : nearest(this.pointer.hoveredBy(connection), (each) => each.hint() !== null);
   }
 
   // Rendering.
@@ -276,10 +276,10 @@ export class Mount implements ComponentHost {
   // The pointer.
 
   /** The pointer entered or left a control (pointer.ts); the hint row is drawn again when what it says changes. */
-  hover(session: number, entered: boolean, row: number, column: number): boolean {
+  hover(connection: number, entered: boolean, row: number, column: number): boolean {
     const hintBefore = this.focusedHint();
     const hoveredBefore = this.hoveredHint();
-    const taken = this.pointer.hover(session, entered, row, column);
+    const taken = this.pointer.hover(connection, entered, row, column);
     // A hint row of a page's own words shows the hovered control's alone, so either changing is a change.
     if (this.focusedHint() !== hintBefore || this.hoveredHint() !== hoveredBefore) {
       this.#dirty = true;

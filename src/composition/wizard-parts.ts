@@ -31,7 +31,7 @@ function badgeLook(index: number, place: WizardPlace): { readonly background: Co
 }
 
 /** The steps' names, those done ticked; `go`, while there is one, goes back to a step done before the one shown. */
-export function stepBadges(place: WizardPlace, go: ((step: number, session: number) => void) | null): Element {
+export function stepBadges(place: WizardPlace, go: ((step: number, connection: number) => void) | null): Element {
   const { steps, step, finished } = place;
   const badges = steps.map((name, index): BadgeSpec => {
     const { background, foreground } = badgeLook(index, place);
@@ -42,8 +42,8 @@ export function stepBadges(place: WizardPlace, go: ((step: number, session: numb
         text,
         background,
         foreground,
-        onPress: (session: number): void => {
-          go(index, session);
+        onPress: (connection: number): void => {
+          go(index, connection);
         },
       };
     }
@@ -62,7 +62,7 @@ export function stepProgress({ steps, step, finished }: WizardPlace): Element {
 }
 
 /** Next, or Finish on the last step, after Back on every step but the first. */
-export function stepMoves(place: WizardPlace, disabled: boolean, back: (session: number) => void, next: (session: number) => void): Element {
+export function stepMoves(place: WizardPlace, disabled: boolean, back: (connection: number) => void, next: (connection: number) => void): Element {
   const last = place.step === place.steps.length - 1;
   const nextAction = h(Action, { text: `green ${last ? "Finish" : "Next"}`, foreground: Colour.Green, disabled, onPress: next });
   if (place.step === 0) {

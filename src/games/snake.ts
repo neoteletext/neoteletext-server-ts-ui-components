@@ -72,7 +72,7 @@ export class Snake extends Control<SnakeProps, SnakeState> {
 
   override componentDidMount(): void {
     // The copy every viewer shares is the title screen; a viewer's own copy plays.
-    if (this.services.session !== null) {
+    if (this.services.connection !== null) {
       this.#timer = this.setInterval(() => {
         this.#frame();
       }, this.props.everyMs);
@@ -85,9 +85,9 @@ export class Snake extends Control<SnakeProps, SnakeState> {
 
   /** Plays `sound` to the viewer this copy is for, alone: each viewer has a game of their own, and another's is none of theirs. */
   #play(sound: Sound | undefined): void {
-    const { session } = this.services;
-    if (sound !== undefined && session !== null) {
-      this.services.play(sound, session);
+    const { connection } = this.services;
+    if (sound !== undefined && connection !== null) {
+      this.services.play(sound, connection);
     }
   }
 

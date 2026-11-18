@@ -35,7 +35,7 @@ export interface PageSpec {
   readonly rollover?: ColourTable | null;
   /**
    * What the page shows on the web; when absent, or when it gives nothing, the page is not public, which is every page's default (REQ-1728).
-   * It takes nothing: no session and no parameters, because the answer goes to everyone, so it cannot hold one viewer's data. The picture is of the channel's copy.
+   * It takes nothing: no connection and no parameters, because the answer goes to everyone, so it cannot hold one viewer's data. The picture is of the channel's copy.
    * All it gives, and all the page shows, is readable by anyone.
    */
   readonly describe?: () => PageDescription | null;

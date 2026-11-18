@@ -92,13 +92,13 @@ export class Checkbox extends ValueControl<Ticked, CheckboxProps> {
     if (!choosing(event) || this.disabled) {
       return false;
     }
-    this.change(this.value !== true, event.session);
+    this.change(this.value !== true, event.connection);
     return true;
   }
 
   override onClick(event: PointerEvent): boolean {
     if (event.region === BOX) {
-      this.change(this.value !== true, event.session);
+      this.change(this.value !== true, event.connection);
     }
     return true;
   }

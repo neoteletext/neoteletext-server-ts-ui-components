@@ -40,7 +40,7 @@ import { ProgressBar } from "neoteletext-server-ts-ui-components";
 | `thresholds` | `readonly Threshold[]` | Colours by share, the highest whose `from` the share reaches. |
 | `labelCells` | `number` | The label's column. |
 | `percent` | `boolean` | The share after the bar, as a percentage; shown unless false. |
-| `onSeek` | `(fraction: number, session: number) => void` | A click on the track: how far along it, 0 to 1. |
+| `onSeek` | `(fraction: number, connection: number) => void` | A click on the track: how far along it, 0 to 1. |
 
 ### Labelled, in segments, coloured by how full
 
@@ -360,8 +360,8 @@ class DeleteButton extends Component {
            render()        {
     return h(Button, {
       label: "Delete the draft",
-      onPress: (session) => {
-        this.services.bus.emit("toast", { text: "Draft deleted", kind: "success", undo: () => {} }, { session });
+      onPress: (connection) => {
+        this.services.bus.emit("toast", { text: "Draft deleted", kind: "success", undo: () => {} }, { connection });
       },
     });
   }
@@ -515,7 +515,7 @@ import { ListeningView } from "neoteletext-server-ts-ui-components";
 | --- | --- | --- |
 | `listening` (needed) | `Listening \| null` | What plays, or null for nothing. |
 | `foreground` | `Colour` | The bar's colour; magenta when absent. |
-| `onSeek` | `(fraction: number, session: number) => void` | A click on the bar: how far along it, 0 to 1, to seek there. |
+| `onSeek` | `(fraction: number, connection: number) => void` | A click on the bar: how far along it, 0 to 1, to seek there. |
 
 #### Listening
 
@@ -555,8 +555,8 @@ import { PlayQueue } from "neoteletext-server-ts-ui-components";
 | `queue` (needed) | `readonly number[]` | The tracks' places in `tracks`, in the order queued. |
 | `current` (needed) | `number \| null` | The track the player plays, by its place in `tracks`, or null. |
 | `shown` (needed) | `number` | The rows the list shows. |
-| `onChoose` (needed) | `(track: number, session: number) => void` | A track chosen, by its place in `tracks`. |
-| `onMove` | `(place: number, session: number) => void` | The list's choice moved to `place` in the queue. |
+| `onChoose` (needed) | `(track: number, connection: number) => void` | A track chosen, by its place in `tracks`. |
+| `onMove` | `(place: number, connection: number) => void` | The list's choice moved to `place` in the queue. |
 | `hint` | `string` | What the keys do while the list has them, for the hint row: the player's (player-view.ts), which takes keys the list does not; the list's own when absent. |
 
 #### Track
@@ -639,10 +639,10 @@ import { Transport } from "neoteletext-server-ts-ui-components";
 | `canPlay` (needed) | `boolean` | Whether there is anything to play or pause. |
 | `canStop` (needed) | `boolean` | Whether there is anything to stop; the stop button is disabled when not. |
 | `canStep` (needed) | `boolean` | Whether there are tracks to go back and on through. |
-| `onPrevious` (needed) | `(session: number) => void` | The prev button pressed; never while canStep is false. |
-| `onPlayPause` (needed) | `(session: number) => void` | The play or pause button pressed; never while canPlay is false. |
-| `onStop` (needed) | `(session: number) => void` | The stop button pressed; never while canStop is false. |
-| `onNext` (needed) | `(session: number) => void` | The next button pressed; never while canStep is false. |
+| `onPrevious` (needed) | `(connection: number) => void` | The prev button pressed; never while canStep is false. |
+| `onPlayPause` (needed) | `(connection: number) => void` | The play or pause button pressed; never while canPlay is false. |
+| `onStop` (needed) | `(connection: number) => void` | The stop button pressed; never while canStop is false. |
+| `onNext` (needed) | `(connection: number) => void` | The next button pressed; never while canStep is false. |
 | `hint` | `string` | What the keys do while a button has them, for the hint row: the player's (player-view.ts), which takes keys the buttons do not; the buttons' own when absent. |
 
 ### Playing, with no tracks to step through
@@ -683,11 +683,11 @@ import { PlayerView } from "neoteletext-server-ts-ui-components";
 | `levels` (needed) | `readonly number[] \| null` | The levels of what is heard, for a spectrum of `spectrumRows` rows; none for no spectrum. |
 | `spectrumRows` (needed) | `number` | The spectrum's rows, while there are levels. |
 | `status` (needed) | `PlayerStatusProps` | The modes, as the status rows say them. |
-| `onPrevious` (needed) | `(session: number) => void` | The prev button pressed. |
-| `onPlayPause` (needed) | `(session: number) => void` | The play or pause button pressed. |
-| `onStop` (needed) | `(session: number) => void` | The stop button pressed. |
-| `onNext` (needed) | `(session: number) => void` | The next button pressed. |
-| `onSeek` (needed) | `(fraction: number, session: number) => void` | A click on the bar: how far along it, 0 to 1. |
+| `onPrevious` (needed) | `(connection: number) => void` | The prev button pressed. |
+| `onPlayPause` (needed) | `(connection: number) => void` | The play or pause button pressed. |
+| `onStop` (needed) | `(connection: number) => void` | The stop button pressed. |
+| `onNext` (needed) | `(connection: number) => void` | The next button pressed. |
+| `onSeek` (needed) | `(fraction: number, connection: number) => void` | A click on the bar: how far along it, 0 to 1. |
 | `onChoose` (needed) | `PlayQueueProps["onChoose"]` | A track chosen in the queue, by its place in `tracks`. |
 | `onMove` (needed) | `NonNullable<PlayQueueProps["onMove"]>` | The queue's choice moved to `place` in the queue. |
 

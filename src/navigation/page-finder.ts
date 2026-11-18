@@ -37,10 +37,10 @@ export class PageFinder extends Component<PageFinderProps> {
       prompt: "Type a page's name",
       empty: "no page by that name",
       ...(this.props.autoFocus === undefined ? {} : { autoFocus: this.props.autoFocus }),
-      onChoose: (index: number, session: number) => {
+      onChoose: (index: number, connection: number) => {
         const found = pages[index];
         if (found !== undefined) {
-          this.services.redirect(session, found.page);
+          this.services.redirect(connection, found.page);
         }
       },
     });

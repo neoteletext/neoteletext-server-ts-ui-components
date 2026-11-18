@@ -11,9 +11,9 @@ import { Colour, type WireTextRun } from "../src/kit.ts";
 
 const PAGE = 0x150;
 
-/** The text runs of the latest sub-page `session` was sent of `page`. */
-function lastRuns(harness: Harness, session: number, page: number): readonly WireTextRun[] {
-  return (harness.channel.copy(session, page) ?? harness.channel.copy("channel", page))?.at(-1)?.content.text ?? [];
+/** The text runs of the latest sub-page `connection` was sent of `page`. */
+function lastRuns(harness: Harness, connection: number, page: number): readonly WireTextRun[] {
+  return (harness.channel.copy(connection, page) ?? harness.channel.copy("channel", page))?.at(-1)?.content.text ?? [];
 }
 
 test("DEC-2326: what a viewer typed into a text field is sent as a run from outside, the page's own words are not", () => {

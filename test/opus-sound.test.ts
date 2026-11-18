@@ -22,7 +22,7 @@ class Chimes extends Component {
 
   override onKey(event: KeyEvent): boolean {
     if (event.action !== "release") {
-      this.services.play(CHIME, event.session);
+      this.services.play(CHIME, event.connection);
     }
     return true;
   }
@@ -42,9 +42,12 @@ class Streams extends Component<object, { readonly shown: string }> {
     }
     if (event.key === Key.Enter) {
       const samples = new Int16Array(16_000);
-      this.services.stream({ name: "a second", rate: 16_000, samples: () => samples, complete: true, failure: null, expected: samples.length }, event.session);
+      this.services.stream(
+        { name: "a second", rate: 16_000, samples: () => samples, complete: true, failure: null, expected: samples.length },
+        event.connection,
+      );
     }
-    const listening = this.services.listening(event.session);
+    const listening = this.services.listening(event.connection);
     this.setState({ shown: `${listening?.state ?? "none"}: ${listening?.failure ?? ""}` });
     return true;
   }
@@ -58,8 +61,8 @@ function channel(root: () => Element, opus: OpusEncoder): Harness {
   return new Harness([new ComponentChannel([{ page: PAGE, title: "Test", perViewer: true, root }], { opus })]);
 }
 
-function members(harness: Harness, session: number): string[] {
-  return soundsOf(harness, session).map((message) => Object.keys(message).find((key) => key !== "type") ?? "");
+function members(harness: Harness, connection: number): string[] {
+  return soundsOf(harness, connection).map((message) => Object.keys(message).find((key) => key !== "type") ?? "");
 }
 
 test("a stored sound is encoded once, sent once to each viewer as Opus, and played after by its handle", () => {

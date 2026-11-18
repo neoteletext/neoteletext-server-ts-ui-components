@@ -16,9 +16,9 @@ function pointed(input: Pointed): Pointed {
 }
 
 /** A key as a component hears it, each optional field only when the input has it. */
-function keyEvent(session: number, input: Extract<Input, { kind: "key" }>): KeyEvent {
+function keyEvent(connection: number, input: Extract<Input, { kind: "key" }>): KeyEvent {
   return {
-    session,
+    connection,
     key: input.key,
     action: input.action,
     ...(input.mods === undefined ? {} : { mods: input.mods }),
@@ -43,22 +43,22 @@ function pointerAt(input: Exclude<Extract<Input, { kind: "mouse" }>, { action: "
 
 /** Gives `input` to `mount`: answers whether a component took it. */
 // oxlint-disable-next-line typescript/consistent-return -- the switch is over every kind of Input, as switch-exhaustiveness-check holds it to
-export function dispatchInput(mount: Mount, session: number, input: Input): boolean {
+export function dispatchInput(mount: Mount, connection: number, input: Input): boolean {
   switch (input.kind) {
     case "key": {
-      return mount.key(keyEvent(session, input));
+      return mount.key(keyEvent(connection, input));
     }
     case "text": {
-      return mount.text({ session, text: input.text });
+      return mount.text({ connection, text: input.text });
     }
     case "paste": {
-      return mount.paste({ session, text: input.text });
+      return mount.paste({ connection, text: input.text });
     }
     case "compose": {
-      return mount.compose({ session, cursor: input.cursor, text: input.text });
+      return mount.compose({ connection, cursor: input.cursor, text: input.text });
     }
     case "mouse": {
-      return input.action === "gone" ? mount.pointer.gone(session) : mount.pointer.pointer(session, pointerAt(input));
+      return input.action === "gone" ? mount.pointer.gone(connection) : mount.pointer.pointer(connection, pointerAt(input));
     }
     case "touch": {
       // The library follows one pointer: the first finger, which comes as
@@ -67,10 +67,10 @@ export function dispatchInput(mount: Mount, session: number, input: Input): bool
       return false;
     }
     case "wheel": {
-      return mount.pointer.wheel(session, { row: input.row, column: input.column, dx: input.dx, dy: input.dy, ...pointed(input) });
+      return mount.pointer.wheel(connection, { row: input.row, column: input.column, dx: input.dx, dy: input.dy, ...pointed(input) });
     }
     case "hover": {
-      return mount.hover(session, input.action === "enter", input.row, input.column);
+      return mount.hover(connection, input.action === "enter", input.row, input.column);
     }
     case "pick":
     case "drawingHover": {

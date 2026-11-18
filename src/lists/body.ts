@@ -49,8 +49,8 @@ interface BodyProps {
   /** A click on a row chooses it: each row is a control. */
   readonly selectable: boolean;
   readonly empty: string;
-  readonly onPick: (index: number, session: number) => void;
-  readonly onHover?: (index: number | null, session: number) => void;
+  readonly onPick: (index: number, connection: number) => void;
+  readonly onHover?: (index: number | null, connection: number) => void;
 }
 
 export class Body extends Component<BodyProps> {
@@ -88,7 +88,7 @@ export class Body extends Component<BodyProps> {
     if (event.region === undefined) {
       return false;
     }
-    this.props.onPick(Number(event.region), event.session);
+    this.props.onPick(Number(event.region), event.connection);
     return true;
   }
 
@@ -96,7 +96,7 @@ export class Body extends Component<BodyProps> {
     if (this.props.onHover === undefined || event.region === undefined) {
       return false;
     }
-    this.props.onHover(event.entered ? Number(event.region) : null, event.session);
+    this.props.onHover(event.entered ? Number(event.region) : null, event.connection);
     return true;
   }
 }

@@ -32,7 +32,7 @@ export interface FilterListProps<T> {
   /** What it says when nothing matches; "nothing matches" when absent. */
   readonly empty?: string;
   /** An item chosen: its place in `items`. */
-  readonly onChoose: (index: number, session: number) => void;
+  readonly onChoose: (index: number, connection: number) => void;
   /** Its list takes the keys when it arrives. */
   readonly autoFocus?: boolean;
 }
@@ -121,10 +121,10 @@ export class FilterList<T> extends Component<FilterListProps<T>, FilterListState
         empty: this.props.empty ?? "nothing matches",
         // What is typed reaches this list from its own list, which had the keys: the new one takes them.
         autoFocus: typings > 0 || this.props.autoFocus === true,
-        onChoose: (place: number, session: number) => {
+        onChoose: (place: number, connection: number) => {
           const index = matches[place];
           if (index !== undefined) {
-            this.props.onChoose(index, session);
+            this.props.onChoose(index, connection);
           }
         },
       }),

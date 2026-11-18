@@ -76,7 +76,7 @@ repositories beside this one.
    DOC-1945, DOC-1940). Pointer areas, which once limited the moves sent,
    are withdrawn (DEC-657, 28 October 2026).
 2. **The server forwards it** to the program as an `input` line naming
-   the session and the page; a viewer's PAGE message, sent as keys start
+   the connection and the page; a viewer's PAGE message, sent as keys start
    to go to a page, becomes `open` and `leave` (`teletext-server`,
    DOC-1968).
 3. **Page selection comes first**, in the protocol kit: three digits go to
@@ -121,11 +121,11 @@ repositories beside this one.
 
 [Sound](audio.md) says how a page uses them.
 
-## Viewers, sessions and copies
+## Viewers, connections and copies
 
-- **A session is one connection**: a viewer who reconnects is a new
-  session, and nothing identifies them across sessions
-  (`teletext-server`, crates/teletext-runtime/src/session.rs).
+- **A connection is one browser tab** (DEC-6443), numbered by the
+  server: a viewer who reconnects is a new connection, and the library
+  gives every component the connection its input came from.
 - **The shared copy** of a page is mounted once, as the channel starts, and
   is the same for everyone: what one viewer does to it, all see.
 - **A viewer's own copy** is mounted as they open the page, when the page
@@ -134,7 +134,7 @@ repositories beside this one.
   `keepWhileAway`. It is published only while it differs from the shared
   copy (`src/core/runtime.ts`).
 - **The web** is told of a page only by its spec's `describe()`, which takes no
-  session and no parameters, and gives a title and text anyone may read, with a
+  connection and no parameters, and gives a title and text anyone may read, with a
   picture of the shared copy. A page without it shows nothing of itself
   (`neoteletext-common`'s REQ-1728).
 - **When the program restarts**, the server drops the viewers' copies and

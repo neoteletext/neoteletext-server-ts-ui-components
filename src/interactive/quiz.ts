@@ -65,8 +65,8 @@ export class Quiz extends Control<QuizProps, QuizState> {
       h(Paragraph, { text: "" }),
       h(Paragraph, { text: question.question, foreground: Colour.White }),
       h(Paragraph, { text: "" }),
-      ...answerActions(question.answers, this.disabled, (answer, session) => {
-        this.#answer(answer, session);
+      ...answerActions(question.answers, this.disabled, (answer, connection) => {
+        this.#answer(answer, connection);
       }),
       h(Paragraph, { text: "" }),
       ...verdictRows(question.right, this.state.last),
@@ -74,7 +74,7 @@ export class Quiz extends Control<QuizProps, QuizState> {
   }
 
   /** Answers the question asked with answer `answer`, 0 to 3; false when there is no question. */
-  #answer(answer: number, session: number): boolean {
+  #answer(answer: number, connection: number): boolean {
     const question = this.props.questions[this.state.asked % this.props.questions.length];
     if (question === undefined || this.disabled) {
       return false;
@@ -82,7 +82,7 @@ export class Quiz extends Control<QuizProps, QuizState> {
     const right = answer === question.right;
     const sound = right ? this.props.right : this.props.wrong;
     if (sound !== undefined) {
-      this.services.play(sound, session);
+      this.services.play(sound, connection);
     }
     this.setState({ asked: this.state.asked + 1, score: this.state.score + (right ? 1 : 0), last: right ? "right" : "wrong" });
     return true;
@@ -90,6 +90,6 @@ export class Quiz extends Control<QuizProps, QuizState> {
 
   override onKey(event: KeyEvent): boolean {
     const answer = colourKeyOf(event);
-    return answer !== null && this.#answer(answer, event.session);
+    return answer !== null && this.#answer(answer, event.connection);
   }
 }

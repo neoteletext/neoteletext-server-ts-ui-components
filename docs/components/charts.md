@@ -30,7 +30,7 @@ import { BarChart } from "neoteletext-server-ts-ui-components";
 | `empty` | `string` | What it says when there are no bars; "no data" when absent. |
 | `labelCells` | `number` | The labels' column, its colour's cell included, nought or more; 14 when absent. |
 | `foreground` | `Colour` | Every bar's colour, each label taking its row's own; green when absent. |
-| `onChoose` | `(index: number, session: number) => void` | A click on a bar chooses it: each bar is then a control, and while the pointer is on one the hint row gives its label and figure. |
+| `onChoose` | `(index: number, connection: number) => void` | A click on a bar chooses it: each bar is then a control, and while the pointer is on one the hint row gives its label and figure. |
 
 #### ChartRow
 
@@ -129,7 +129,7 @@ import { ColumnChart } from "neoteletext-server-ts-ui-components";
 | `columnCells` | `number` | The cells each column is wide, after its colour's cell. |
 | `foreground` | `Colour` | A column's colour when it has none of its own; green when absent. |
 | `figures` | `boolean` | The figures over the columns. |
-| `onChoose` | `(index: number, session: number) => void` | A click on a column chooses it: each column is then a control, and while the pointer is on one the hint row gives its label and figure. |
+| `onChoose` | `(index: number, connection: number) => void` | A click on a column chooses it: each column is then a control, and while the pointer is on one the hint row gives its label and figure. |
 
 #### ChartRow
 

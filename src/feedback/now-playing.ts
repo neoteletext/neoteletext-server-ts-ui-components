@@ -45,12 +45,12 @@ export class NowPlaying extends Component<NowPlayingProps, PlayerState> {
   override state: PlayerState = { listening: null };
 
   override componentDidMount(): void {
-    const session = this.services.session;
-    if (session === null) {
+    const connection = this.services.connection;
+    if (connection === null) {
       return;
     }
     const look = (): void => {
-      this.setState({ listening: this.services.listening(session) });
+      this.setState({ listening: this.services.listening(connection) });
     };
     look();
     this.setInterval(look, LOOK_MS, { whileViewed: true });

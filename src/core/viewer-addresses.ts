@@ -7,14 +7,14 @@ export class ViewerAddresses {
   readonly #parameters = new Map<number, Map<number, string>>();
 
   /** The parameters of the viewer's selection of `page`, or null. */
-  parameters(session: number, page: number): string | null {
-    return this.#parameters.get(session)?.get(page) ?? null;
+  parameters(connection: number, page: number): string | null {
+    return this.#parameters.get(connection)?.get(page) ?? null;
   }
 
   /** The viewer's selection of `page` has these parameters; null leaves them behind. */
-  setParameters(session: number, page: number, parameters: string | null): void {
-    const pages = this.#parameters.get(session) ?? new Map<number, string>();
-    this.#parameters.set(session, pages);
+  setParameters(connection: number, page: number, parameters: string | null): void {
+    const pages = this.#parameters.get(connection) ?? new Map<number, string>();
+    this.#parameters.set(connection, pages);
     if (parameters === null) {
       pages.delete(page);
     } else {
@@ -23,7 +23,7 @@ export class ViewerAddresses {
   }
 
   /** The viewer went. */
-  forget(session: number): void {
-    this.#parameters.delete(session);
+  forget(connection: number): void {
+    this.#parameters.delete(connection);
   }
 }

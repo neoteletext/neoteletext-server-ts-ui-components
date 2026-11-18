@@ -61,13 +61,13 @@ export class Switch extends ValueControl<boolean, SwitchProps> {
     if (!choosing(event) || this.disabled) {
       return false;
     }
-    this.change(!this.value, event.session);
+    this.change(!this.value, event.connection);
     return true;
   }
 
   override onClick(event: PointerEvent): boolean {
     if (event.region === CHIP) {
-      this.change(!this.value, event.session);
+      this.change(!this.value, event.connection);
     }
     return true;
   }

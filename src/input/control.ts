@@ -87,21 +87,21 @@ export abstract class Control<P extends ControlProps = ControlProps, S extends o
     return this.labelCells;
   }
 
-  protected play(kind: keyof ControlSounds, session: number | null): void {
+  protected play(kind: keyof ControlSounds, connection: number | null): void {
     const sound = this.props.sounds?.[kind];
-    if (sound !== undefined && session !== null) {
-      this.services.play(sound, session);
+    if (sound !== undefined && connection !== null) {
+      this.services.play(sound, connection);
     }
   }
 
   /** Something was chosen or pressed: the activate event, and the choose sound. */
-  protected activate(value: unknown, session: number, origin: Origin = "viewer"): void {
-    this.emit({ type: "activate", value, session, origin });
-    this.play("choose", session);
+  protected activate(value: unknown, connection: number, origin: Origin = "viewer"): void {
+    this.emit({ type: "activate", value, connection, origin });
+    this.play("choose", connection);
   }
 
   /** Escape: the cancel event. */
-  protected cancel(session: number): void {
-    this.emit({ type: "cancel", session, origin: "viewer" });
+  protected cancel(connection: number): void {
+    this.emit({ type: "cancel", connection, origin: "viewer" });
   }
 }

@@ -214,7 +214,7 @@ import { Badges } from "neoteletext-server-ts-ui-components";
 | `background` | `Colour` | Its colour; red when absent. |
 | `foreground` | `Colour` | Its text's colour; white when absent. |
 | `flash` | `boolean` | Flashing, as LIVE and NEWSFLASH are. |
-| `onPress` | `(session: number) => void` | What a click on it does: it is a control when given. |
+| `onPress` | `(connection: number) => void` | What a click on it does: it is a control when given. |
 
 ### Before a line of text
 

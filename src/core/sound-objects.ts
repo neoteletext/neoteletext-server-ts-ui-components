@@ -69,8 +69,8 @@ export class SoundObjects {
     }
   }
 
-  /** Plays `sound` to `session`, or to everyone with `page` open when it is null. */
-  play(context: Context, sound: Sound, session: number | null, page: number): void {
+  /** Plays `sound` to `connection`, or to everyone with `page` open when it is null. */
+  play(context: Context, sound: Sound, connection: number | null, page: number): void {
     const handle = this.#handleOf(sound.name);
     const encoded = this.#encode(context, sound);
     if (encoded === null) {
@@ -78,24 +78,24 @@ export class SoundObjects {
     }
     const object = { opus: { handle, generation: GENERATION, ...encoded } };
     const play = { play: { channel: SOUND_CHANNEL, handle, generation: GENERATION, page } };
-    if (session === null) {
+    if (connection === null) {
       // Everyone on the page: whoever arrived since may not have it, so it goes with each play.
       context.sound({ page }, object);
       context.sound({ page }, play);
       return;
     }
-    const sent = this.#sent.get(session) ?? new Set<string>();
+    const sent = this.#sent.get(connection) ?? new Set<string>();
     if (!sent.has(sound.name)) {
-      context.sound({ session }, object);
+      context.sound({ session: connection }, object);
       sent.add(sound.name);
-      this.#sent.set(session, sent);
+      this.#sent.set(connection, sent);
     }
-    context.sound({ session }, play);
+    context.sound({ session: connection }, play);
   }
 
   /** The viewer went. */
-  forget(session: number): void {
-    this.#sent.delete(session);
+  forget(connection: number): void {
+    this.#sent.delete(connection);
   }
 
   /** The program was started again: no viewer holds what it sent before. */

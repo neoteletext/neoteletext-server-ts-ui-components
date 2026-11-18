@@ -38,7 +38,7 @@ export interface DialogProps extends ControlProps {
   /** Its children have the keys first: a field to type in. */
   readonly childFirst?: boolean;
   /** The button pressed, or null for Escape. */
-  readonly onAnswer?: (button: number | null, session: number) => void;
+  readonly onAnswer?: (button: number | null, connection: number) => void;
 }
 
 interface DialogState {
@@ -204,29 +204,29 @@ export class Dialog extends Control<DialogProps, DialogState> {
     return this.props.disabledButtons?.includes(button) === true;
   }
 
-  #answer(button: number | null, session: number): void {
+  #answer(button: number | null, connection: number): void {
     if (button !== null && this.#off(button)) {
       return;
     }
     if (button === null) {
-      this.cancel(session);
+      this.cancel(connection);
     } else {
-      this.activate(this.#buttons[button] ?? "", session);
+      this.activate(this.#buttons[button] ?? "", connection);
     }
-    this.props.onAnswer?.(button, session);
+    this.props.onAnswer?.(button, connection);
   }
 
   override onKey(event: KeyEvent): boolean {
     const count = this.#buttons.length;
     if (isPress(event, Key.Escape)) {
-      this.#answer(null, event.session);
+      this.#answer(null, event.connection);
       return true;
     }
     if (count === 0) {
       return true;
     }
     if (isPress(event, Key.Enter)) {
-      this.#answer(this.state.chosen, event.session);
+      this.#answer(this.state.chosen, event.connection);
       return true;
     }
     const step = isPress(event, Key.Tab) ? 1 : keyStep(event, Key.Right, Key.Left);
@@ -241,7 +241,7 @@ export class Dialog extends Control<DialogProps, DialogState> {
   /** A click on a button's band answers with it; anywhere else on the dialog, nothing. */
   override onClick(event: PointerEvent): boolean {
     if (event.region?.startsWith(BUTTON_REGION) === true) {
-      this.#answer(Number(event.region.slice(BUTTON_REGION.length)), event.session);
+      this.#answer(Number(event.region.slice(BUTTON_REGION.length)), event.connection);
     }
     return true;
   }

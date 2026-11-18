@@ -75,8 +75,8 @@ export class TabView extends ValueControl<number, TabViewProps> {
         style: this.props.style ?? "chips",
         focused: this.focused,
         disabled: this.disabled,
-        onChange: (index: number, session: number) => {
-          this.change(index, session);
+        onChange: (index: number, connection: number) => {
+          this.change(index, connection);
         },
       }),
       views[this.value] ?? null,
@@ -88,7 +88,7 @@ export class TabView extends ValueControl<number, TabViewProps> {
     if (index === null) {
       return false;
     }
-    this.change(index, event.session);
+    this.change(index, event.connection);
     return true;
   }
 }

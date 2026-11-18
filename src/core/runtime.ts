@@ -1,6 +1,5 @@
 // Pages of components as one of the kit's applications: the protocol's
 // events become mounts, renders and publications (DOC-1964).
-//
 // - `start`: every page is mounted once as the channel's copy, and published.
 // - `opened`: a page with a copy for each viewer is mounted for that viewer (or found, if it was kept while they were away).
 // - `input`: to the viewer's mount, or the channel's for a shared page; `wake`: the timers that are due run.
@@ -31,7 +30,7 @@ export class ComponentChannel implements Application {
   readonly bus = new EventBus<LibraryEvents>();
   readonly #specs: ReadonlyMap<number, PageSpec>;
   readonly #shared = new Map<number, Mount>();
-  /** Each viewer's mounts, by session, then page. */
+  /** Each viewer's mounts, by connection, then page. */
   readonly #viewers = new Map<number, Map<number, Mount>>();
   /** Whether a viewer's own copy of a page is what they are sent now. */
   readonly #own = new Map<number, Set<number>>();
@@ -84,72 +83,73 @@ export class ComponentChannel implements Application {
     });
   }
 
-  request(session: number, page: number, request: PageRequest | null, context: Context): void {
+  request(connection: number, page: number, request: PageRequest | null, context: Context): void {
     const parameters = request === null || request.queryText === "" ? null : request.queryText;
     this.#run(context, () => {
-      if (this.#addresses.parameters(session, page) === parameters) {
+      if (this.#addresses.parameters(connection, page) === parameters) {
         return;
       }
-      this.#addresses.setParameters(session, page, parameters);
-      this.bus.emit("parameters", { session, parameters }, { page, session });
-      if (request !== null && this.#params.queried(session, page, parameters === null ? null : request.query)) {
-        this.#show(session, page);
+      this.#addresses.setParameters(connection, page, parameters);
+      this.bus.emit("parameters", { connection, parameters }, { page, connection });
+      if (request !== null && this.#params.queried(connection, page, parameters === null ? null : request.query)) {
+        this.#show(connection, page);
       }
     });
   }
 
   /** The viewer's page is made again with what it is now made with: one they have mounted shows it at once. */
-  #show(session: number, page: number): void {
+  #show(connection: number, page: number): void {
     const spec = this.#specs.get(page);
-    const mount = this.#viewers.get(session)?.get(page);
+    const mount = this.#viewers.get(connection)?.get(page);
     if (spec !== undefined && mount !== undefined) {
-      mount.setRoot(spec.root(this.#params.of(session, page)));
+      mount.setRoot(spec.root(this.#params.of(connection, page)));
     }
   }
 
-  opened(session: number, page: number, context: Context): void {
+  opened(connection: number, page: number, context: Context): void {
     this.#run(context, () => {
       const watching = this.#watching.get(page) ?? new Set<number>();
-      watching.add(session);
+      watching.add(connection);
       this.#watching.set(page, watching);
       const spec = this.#specs.get(page);
-      if (spec !== undefined && this.#ownCopy(spec, session)) {
-        this.#viewerMount(spec, session);
+      if (spec !== undefined && this.#ownCopy(spec, connection)) {
+        this.#viewerMount(spec, connection);
       }
       // A clock that waited while nobody watched catches up before the page is sent.
       this.#shared.get(page)?.runTimers(context.now());
     });
   }
 
-  leftPage(session: number, page: number, context: Context): void {
+  leftPage(connection: number, page: number, context: Context): void {
     this.#run(context, () => {
-      this.#watching.get(page)?.delete(session);
-      this.#streams.left(context, session, page);
+      this.#watching.get(page)?.delete(connection);
+      this.#streams.left(context, connection, page);
       const spec = this.#specs.get(page);
-      const mount = this.#viewers.get(session)?.get(page);
+      const mount = this.#viewers.get(connection)?.get(page);
       if (spec === undefined || mount === undefined || spec.keepWhileAway === true) {
         return;
       }
       mount.unmount();
-      this.#viewers.get(session)?.delete(page);
-      if (this.#own.get(session)?.delete(page) === true) {
-        context.release(session, page);
+      this.#viewers.get(connection)?.delete(page);
+      if (this.#own.get(connection)?.delete(page) === true) {
+        context.release(connection, page);
       }
     });
   }
 
-  input(session: number, page: number, input: Input, context: Context): boolean {
+  input(connection: number, page: number, input: Input, context: Context): boolean {
     let taken = false;
     this.#run(context, () => {
       const spec = this.#specs.get(page);
       if (spec === undefined) {
         return;
       }
-      const mount = this.#viewers.get(session)?.get(page) ?? (this.#ownCopy(spec, session) ? this.#viewerMount(spec, session) : this.#shared.get(page));
+      const mount =
+        this.#viewers.get(connection)?.get(page) ?? (this.#ownCopy(spec, connection) ? this.#viewerMount(spec, connection) : this.#shared.get(page));
       if (mount === undefined) {
         return;
       }
-      taken = dispatchInput(mount, session, input);
+      taken = dispatchInput(mount, connection, input);
     });
     return taken;
   }
@@ -164,22 +164,22 @@ export class ComponentChannel implements Application {
     });
   }
 
-  ended(session: number, context: Context): void {
+  ended(connection: number, context: Context): void {
     this.#run(context, () => {
-      for (const mount of this.#viewers.get(session)?.values() ?? []) {
+      for (const mount of this.#viewers.get(connection)?.values() ?? []) {
         mount.unmount();
       }
-      this.#viewers.delete(session);
-      this.#own.delete(session);
-      this.#sounds.forget(session);
-      this.#streams.forget(session);
-      this.#params.forget(session);
-      this.#addresses.forget(session);
-      this.#languages.forget(session);
+      this.#viewers.delete(connection);
+      this.#own.delete(connection);
+      this.#sounds.forget(connection);
+      this.#streams.forget(connection);
+      this.#params.forget(connection);
+      this.#addresses.forget(connection);
+      this.#languages.forget(connection);
       for (const watching of this.#watching.values()) {
-        watching.delete(session);
+        watching.delete(connection);
       }
-      this.bus.emit("ended", { session });
+      this.bus.emit("ended", { connection });
     });
   }
 
@@ -196,20 +196,20 @@ export class ComponentChannel implements Application {
   // The mounts.
 
   /** Whether the viewer is to see a copy of the page of their own: its components need one, or the page is in the viewer's language and that is not the channel's. */
-  #ownCopy(spec: PageSpec, session: number): boolean {
-    return this.#needs.perViewer(spec) || (spec.language === undefined && this.#languages.differs(this.#context, session));
+  #ownCopy(spec: PageSpec, connection: number): boolean {
+    return this.#needs.perViewer(spec) || (spec.language === undefined && this.#languages.differs(this.#context, connection));
   }
 
   /** A viewer's new language draws every page they have open again in it. */
-  readonly #languageChanged = (session: number, language: LanguageTag): void => {
-    this.bus.emit("language", { session, language }, { session });
+  readonly #languageChanged = (connection: number, language: LanguageTag): void => {
+    this.bus.emit("language", { connection, language }, { connection });
     for (const [page, watching] of this.#watching) {
       const spec = this.#specs.get(page);
-      if (spec !== undefined && watching.has(session) && this.#ownCopy(spec, session)) {
-        this.#viewerMount(spec, session);
+      if (spec !== undefined && watching.has(connection) && this.#ownCopy(spec, connection)) {
+        this.#viewerMount(spec, connection);
       }
     }
-    for (const mount of this.#viewers.get(session)?.values() ?? []) {
+    for (const mount of this.#viewers.get(connection)?.values() ?? []) {
       mount.redrawAll();
     }
   };
@@ -221,21 +221,21 @@ export class ComponentChannel implements Application {
     }
   }
 
-  #viewerMount(spec: PageSpec, session: number): Mount {
-    const pages = this.#viewers.get(session) ?? new Map<number, Mount>();
-    this.#viewers.set(session, pages);
+  #viewerMount(spec: PageSpec, connection: number): Mount {
+    const pages = this.#viewers.get(connection) ?? new Map<number, Mount>();
+    this.#viewers.set(connection, pages);
     const found = pages.get(spec.page);
     if (found !== undefined) {
       return found;
     }
-    const mount = this.#mount(spec, session, this.#params.of(session, spec.page));
+    const mount = this.#mount(spec, connection, this.#params.of(connection, spec.page));
     pages.set(spec.page, mount);
     return mount;
   }
 
-  #mount(spec: PageSpec, session: number | null, params?: PageParams): Mount {
+  #mount(spec: PageSpec, connection: number | null, params?: PageParams): Mount {
     return new Mount(spec.page, spec.root(params), {
-      services: this.#services(spec.page, session),
+      services: this.#services(spec.page, connection),
       nextTimerId: () => {
         this.#timerId += 1;
         return this.#timerId;
@@ -245,15 +245,15 @@ export class ComponentChannel implements Application {
       pageLanguage: spec.language ?? null,
       level: spec.level ?? null,
       standIn: (language) => this.#languages.standIn(language),
-      kept: new KeptComponents(this.#store ?? null, session, (text) => this.#context?.log(`page ${spec.page.toString(16)}: ${text}`)),
+      kept: new KeptComponents(this.#store ?? null, connection, (text) => this.#context?.log(`page ${spec.page.toString(16)}: ${text}`)),
       viewed: () => {
         const watching = this.#watching.get(spec.page);
-        return session === null ? (watching?.size ?? 0) > 0 : watching?.has(session) === true;
+        return connection === null ? (watching?.size ?? 0) > 0 : watching?.has(connection) === true;
       },
     });
   }
 
-  #services(page: number, session: number | null): Services {
+  #services(page: number, connection: number | null): Services {
     return channelServices(
       {
         bus: this.bus,
@@ -265,17 +265,17 @@ export class ComponentChannel implements Application {
         languages: this.#languages,
       },
       page,
-      session,
+      connection,
     );
   }
 
   /** Sends a viewer to a page, with what it is to show: a page they already have open shows it at once. */
-  readonly #redirect = (context: Context, session: number, page: number, params: PageParams | undefined): void => {
+  readonly #redirect = (context: Context, connection: number, page: number, params: PageParams | undefined): void => {
     if (params !== undefined) {
-      this.#params.redirected(session, page, params);
-      this.#show(session, page);
+      this.#params.redirected(connection, page, params);
+      this.#show(connection, page);
     }
-    context.redirect(session, page);
+    context.redirect(connection, page);
   };
 
   /** Runs `work` in a server call, then publishes what changed and asks for the next wake. */
@@ -293,8 +293,8 @@ export class ComponentChannel implements Application {
     }
   }
 
-  /** The page's mount for `session`, if it has one: for tests. */
-  viewerMount(session: number, page: number): Mount | undefined {
-    return this.#viewers.get(session)?.get(page);
+  /** The page's mount for `connection`, if it has one: for tests. */
+  viewerMount(connection: number, page: number): Mount | undefined {
+    return this.#viewers.get(connection)?.get(page);
   }
 }

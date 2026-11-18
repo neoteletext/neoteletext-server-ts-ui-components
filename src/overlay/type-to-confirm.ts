@@ -24,9 +24,9 @@ export interface TypeToConfirmProps extends ControlProps {
   /** The dialog's title; "Destroy" and the name when absent. */
   readonly title?: string;
   /** Called as Confirm, or Enter on the line, is taken: only once what is typed is the name or the code. */
-  readonly onConfirm: (session: number) => void;
+  readonly onConfirm: (connection: number) => void;
   /** Called as Cancel or Escape answers it, and nothing is destroyed. */
-  readonly onCancel?: (session: number) => void;
+  readonly onCancel?: (connection: number) => void;
 }
 
 interface TypeToConfirmState {
@@ -90,44 +90,44 @@ export class TypeToConfirm extends Control<TypeToConfirmProps, TypeToConfirmStat
   }
 
   /** Confirm: done when what is typed matches, refused otherwise. */
-  #confirm(session: number): void {
+  #confirm(connection: number): void {
     if (!this.#ready) {
       this.setState({ refused: true });
-      this.play("error", session);
+      this.play("error", connection);
       return;
     }
-    this.activate(this.#name, session);
-    this.props.onConfirm(session);
+    this.activate(this.#name, connection);
+    this.props.onConfirm(connection);
   }
 
-  #cancel(session: number): void {
-    this.cancel(session);
-    this.props.onCancel?.(session);
+  #cancel(connection: number): void {
+    this.cancel(connection);
+    this.props.onCancel?.(connection);
   }
 
-  #answer(button: number | null, session: number): void {
+  #answer(button: number | null, connection: number): void {
     if (button === CONFIRM_BUTTON) {
-      this.#confirm(session);
+      this.#confirm(connection);
     } else {
-      this.#cancel(session);
+      this.#cancel(connection);
     }
   }
 
   /** Enter on the line: it confirms or is refused once something is typed; with nothing typed it is the dialog's chosen button's. */
-  #enter(session: number): boolean {
+  #enter(connection: number): boolean {
     if (this.state.typed.trim() === "") {
       return false;
     }
-    this.#confirm(session);
+    this.#confirm(connection);
     return true;
   }
 
-  #type(typed: string, session: number): void {
+  #type(typed: string, connection: number): void {
     if (typed === this.state.typed) {
       return;
     }
     this.setState({ typed, refused: false });
-    this.play("change", session);
+    this.play("change", connection);
   }
 
   /** The dialog's answers are this dialog's to send, and only as it decides them. */
@@ -149,8 +149,8 @@ export class TypeToConfirm extends Control<TypeToConfirmProps, TypeToConfirmStat
         disabledButtons: this.#ready ? [] : [CONFIRM_BUTTON],
         childFirst: !this.disabled,
         ...(this.props.hint === undefined ? {} : { hint: this.props.hint }),
-        onAnswer: (button: number | null, session: number) => {
-          this.#answer(button, session);
+        onAnswer: (button: number | null, connection: number) => {
+          this.#answer(button, connection);
         },
       },
       h(ConfirmEntry, {
@@ -161,10 +161,10 @@ export class TypeToConfirm extends Control<TypeToConfirmProps, TypeToConfirmStat
         disabled: this.disabled,
         autoFocus: !this.disabled,
         ...(this.props.hint === undefined ? {} : { hint: this.props.hint }),
-        onType: (typed: string, session: number) => {
-          this.#type(typed, session);
+        onType: (typed: string, connection: number) => {
+          this.#type(typed, connection);
         },
-        onEnter: (session: number) => this.#enter(session),
+        onEnter: (connection: number) => this.#enter(connection),
       }),
     );
   }

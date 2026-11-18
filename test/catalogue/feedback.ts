@@ -145,8 +145,8 @@ export const feedback: Part = {
           override render(): Child {
             return h(Button, {
               label: "Delete the draft",
-              onPress: (session) => {
-                this.services.bus.emit("toast", { text: "Draft deleted", kind: "success", undo: () => {} }, { session });
+              onPress: (connection) => {
+                this.services.bus.emit("toast", { text: "Draft deleted", kind: "success", undo: () => {} }, { connection });
               },
             });
           }

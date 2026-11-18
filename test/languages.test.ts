@@ -14,7 +14,7 @@ import { SERVER_LANGUAGES } from "neoteletext-server-ts-protocol/testing";
 import { BODY_ROW, frame, harness, PAGE } from "./components-fixtures.ts";
 import type { LanguageTag, SubPageContent } from "../src/kit.ts";
 
-/** The page `session` sees, with `body` in a frame, in `language`. */
+/** The page `connection` sees, with `body` in a frame, in `language`. */
 function seen(language: LanguageTag | undefined, ...body: Parameters<typeof frame>[1][]): { readonly page: Harness; readonly content: SubPageContent } {
   const page = harness([
     { page: PAGE, title: "Languages", perViewer: true, ...(language === undefined ? {} : { language }), root: (): Element => frame("Title", ...body) },

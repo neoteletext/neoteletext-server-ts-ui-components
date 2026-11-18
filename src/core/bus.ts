@@ -11,18 +11,18 @@ export interface Audience {
   /** Only listeners on this page; every page when absent. */
   readonly page?: number;
   /** Only this viewer's listeners; every viewer's when absent. */
-  readonly session?: number;
+  readonly connection?: number;
 }
 
 /** Where a listener is: its page, and its viewer or null for the copy every viewer shares. */
 export interface Place {
   readonly page: number;
-  readonly session: number | null;
+  readonly connection: number | null;
 }
 
 /** Whether an event for `audience` reaches a listener at `place`. */
 function reaches(audience: Audience, place: Place): boolean {
-  return (audience.page === undefined || audience.page === place.page) && (audience.session === undefined || audience.session === place.session);
+  return (audience.page === undefined || audience.page === place.page) && (audience.connection === undefined || audience.connection === place.connection);
 }
 
 /** The bus as a component reaches it: what it hears is what is for its page and its viewer. */

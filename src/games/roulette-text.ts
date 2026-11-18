@@ -16,7 +16,7 @@ export interface RouletteText {
   readonly article: Article | undefined;
   readonly spinning: boolean;
   readonly disabled: boolean;
-  readonly onSpin: (session: number) => void;
+  readonly onSpin: (connection: number) => void;
 }
 
 export function rouletteText({ article, spinning, disabled, onSpin }: RouletteText): Child {

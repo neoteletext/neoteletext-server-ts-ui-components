@@ -73,18 +73,18 @@ export class PlayerActions {
   }
 
   /** Looks at what plays: plays what comes next when its track ended, loops, and sleeps when it is time. */
-  look(session: number): void {
-    const listening = this.#services.listening(session);
+  look(connection: number): void {
+    const listening = this.#services.listening(connection);
     this.#host.set({ listening });
     const { current, started, repeat, loopFrom, loopTo, sleepAt } = this.#state;
     if (sleepAt !== null && this.#services.now() >= sleepAt) {
       this.#host.set({ sleepAt: null });
-      this.#services.pauseStream(session);
+      this.#services.pauseStream(connection);
       return;
     }
     const heard = this.#heard();
     if (loopFrom !== null && loopTo !== null && heard !== null && playing(heard) && heard.heardMs >= loopTo) {
-      this.seekTo(loopFrom, session);
+      this.seekTo(loopFrom, connection);
       return;
     }
     if (current === null || listening?.state !== "ended" || listening.name !== started) {
@@ -92,117 +92,117 @@ export class PlayerActions {
     }
     const next = repeat === "one" ? current : following(this.#order(), current, repeat);
     if (next !== null) {
-      this.play(next, session);
+      this.play(next, connection);
     }
   }
 
   /** Plays track `index` at the speed set, from where the viewer left it when it resumes. */
-  play(index: number, session: number): void {
+  play(index: number, connection: number): void {
     const track = this.#host.tracks()[index];
     if (track === undefined) {
       return;
     }
     this.#base = track.source();
     const { speed } = this.#state;
-    const place = this.#host.resume() ? (this.#services.streamPlace(session, this.#base.name) ?? 0) : 0;
+    const place = this.#host.resume() ? (this.#services.streamPlace(connection, this.#base.name) ?? 0) : 0;
     const source = stretched(this.#base, speed);
-    this.#services.stream(source, session, place / speed);
+    this.#services.stream(source, connection, place / speed);
     this.#host.set({ current: index, started: source.name, loopFrom: null, loopTo: null });
-    this.look(session);
+    this.look(connection);
   }
 
-  playPause(session: number): void {
+  playPause(connection: number): void {
     const { listening, current } = this.#state;
     const state = listening?.state;
     if (state === "playing" || state === "waiting") {
-      this.#services.pauseStream(session);
+      this.#services.pauseStream(connection);
     } else if (state === "paused") {
-      this.#services.resumeStream(session);
+      this.#services.resumeStream(connection);
     } else {
       const first = current ?? this.#order()[0];
       if (first !== undefined) {
-        this.play(first, session);
+        this.play(first, connection);
       }
     }
-    this.look(session);
+    this.look(connection);
   }
 
-  stop(session: number): void {
-    this.#services.stopStream(session);
-    this.look(session);
+  stop(connection: number): void {
+    this.#services.stopStream(connection);
+    this.look(connection);
   }
 
   /** Next, past a repeated track: repeat one holds a track only as it ends. */
-  next(session: number): void {
+  next(connection: number): void {
     const { current, repeat } = this.#state;
     const next = current === null ? this.#order()[0] : following(this.#order(), current, repeat === "all" ? "all" : "off");
     if (next !== undefined && next !== null) {
-      this.play(next, session);
+      this.play(next, connection);
     }
   }
 
   /** Previous: the track again from its start once it is well under way, or when there is none before it. */
-  previous(session: number): void {
+  previous(connection: number): void {
     const { current, repeat } = this.#state;
     const before = current === null ? null : preceding(this.#order(), current, repeat === "all" ? "all" : "off");
     const heard = this.#heard();
     if (before === null || (heard !== null && heard.heardMs > RESTART_MS)) {
-      this.seekTo(0, session);
+      this.seekTo(0, connection);
     } else {
-      this.play(before, session);
+      this.play(before, connection);
     }
   }
 
   /** Seeks to `ms` into the track, in its own time. */
-  seekTo(ms: number, session: number): void {
-    this.#services.seekStream(session, ms / this.#state.speed);
-    this.look(session);
+  seekTo(ms: number, connection: number): void {
+    this.#services.seekStream(connection, ms / this.#state.speed);
+    this.look(connection);
   }
 
-  seekBy(direction: 1 | -1, session: number): boolean {
+  seekBy(direction: 1 | -1, connection: number): boolean {
     const heard = this.#heard();
     if (!playing(heard)) {
       return false;
     }
-    this.seekTo(heard.heardMs + direction * seekStep(heard.lengthMs), session);
+    this.seekTo(heard.heardMs + direction * seekStep(heard.lengthMs), connection);
     return true;
   }
 
   /** Seeks to `fraction` of the way through the track. */
-  seekFraction(fraction: number, session: number): boolean {
+  seekFraction(fraction: number, connection: number): boolean {
     const length = this.#heard()?.lengthMs ?? null;
     if (length === null) {
       return false;
     }
-    this.seekTo(length * fraction, session);
+    this.seekTo(length * fraction, connection);
     return true;
   }
 
-  jump(digit: number, session: number): boolean {
-    return this.seekFraction(digit / DIGIT_PARTS, session);
+  jump(digit: number, connection: number): boolean {
+    return this.seekFraction(digit / DIGIT_PARTS, connection);
   }
 
   /** Moves the volume by `step`, unmuting from where it was muted. */
-  volume(step: number, session: number): boolean {
+  volume(step: number, connection: number): boolean {
     const { listening, unmuted } = this.#state;
     if (listening === null) {
       return false;
     }
     // The runtime keeps the gain to 0 to FULL_GAIN.
-    this.#services.streamGain(session, (unmuted ?? listening.gain) + step);
+    this.#services.streamGain(connection, (unmuted ?? listening.gain) + step);
     this.#host.set({ unmuted: null });
-    this.look(session);
+    this.look(connection);
     return true;
   }
 
-  mute(session: number): boolean {
+  mute(connection: number): boolean {
     const { listening, unmuted } = this.#state;
     if (listening === null) {
       return false;
     }
-    this.#services.streamGain(session, unmuted ?? 0);
+    this.#services.streamGain(connection, unmuted ?? 0);
     this.#host.set({ unmuted: unmuted === null ? listening.gain : null });
-    this.look(session);
+    this.look(connection);
     return true;
   }
 
@@ -220,7 +220,7 @@ export class PlayerActions {
   }
 
   /** One speed faster (`step` 1) or slower (-1): what plays goes on from the same place in its track. */
-  speed(step: 1 | -1, session: number): boolean {
+  speed(step: 1 | -1, connection: number): boolean {
     const { speed: was, listening } = this.#state;
     const speed = SPEEDS[Math.max(0, Math.min(SPEEDS.length - 1, SPEEDS.indexOf(was) + step))] ?? was;
     if (speed === was) {
@@ -231,11 +231,11 @@ export class PlayerActions {
     if (this.#base === null || heard === null || !playing(heard)) {
       return true;
     }
-    this.#services.stream(stretched(this.#base, speed), session, heard.heardMs / speed);
+    this.#services.stream(stretched(this.#base, speed), connection, heard.heardMs / speed);
     if (heard.state === "paused") {
-      this.#services.pauseStream(session);
+      this.#services.pauseStream(connection);
     }
-    this.look(session);
+    this.look(connection);
     return true;
   }
 

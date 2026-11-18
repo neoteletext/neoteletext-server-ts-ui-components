@@ -121,7 +121,7 @@ export function routeKey(event: KeyEvent, focused: Node | null, root: Node | nul
   }
   // Typing comes as each key's press and repeat with its text (DOC-1935): the component with the keys has it as text before any above it has it as a key, so a field types the letter a page's shortcut would take.
   const typed = typedText(event);
-  const text = typed === undefined ? null : { session: event.session, text: typed };
+  const text = typed === undefined ? null : { connection: event.connection, text: typed };
   if (text !== null && focus?.component.onText?.(text) === true) {
     return true;
   }

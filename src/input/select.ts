@@ -119,8 +119,8 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
       indent: () => this.labelCells + ARROW_CELLS,
       foreground: (_item: string, index: number) => (index === this.value ? Colour.Cyan : Colour.White),
       disabled: () => this.disabled,
-      onPick: (index: number, session: number) => {
-        this.#take(index, session);
+      onPick: (index: number, connection: number) => {
+        this.#take(index, connection);
       },
     });
   }
@@ -132,10 +132,10 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
     }
   }
 
-  #take(index: number, session: number): void {
+  #take(index: number, connection: number): void {
     this.setState({ chosen: index, open: false });
-    this.change(index, session);
-    this.activate(index, session);
+    this.change(index, connection);
+    this.activate(index, connection);
   }
 
   override onKey(event: KeyEvent): boolean {
@@ -145,12 +145,12 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
     }
     if (this.state.open) {
       if (isPress(event, Key.Enter) || isPress(event, " ")) {
-        this.#take(this.state.chosen, event.session);
+        this.#take(this.state.chosen, event.connection);
         return true;
       }
       if (isPress(event, Key.Escape)) {
         this.setState({ open: false, chosen: this.value });
-        this.cancel(event.session);
+        this.cancel(event.connection);
         return true;
       }
       const step = listStep(event, this.#shown);
@@ -158,7 +158,7 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
         return false;
       }
       this.setState({ chosen: moveChoice(this.state.chosen, step, count) });
-      this.play("move", event.session);
+      this.play("move", event.connection);
       return true;
     }
     if (isPress(event, Key.Enter) || isPress(event, " ")) {
@@ -169,7 +169,7 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
     if (turn === 0) {
       return false;
     }
-    this.change((this.value + turn + count) % count, event.session);
+    this.change((this.value + turn + count) % count, event.connection);
     return true;
   }
 
@@ -177,9 +177,9 @@ export class Select extends ValueControl<number, SelectProps, SelectState> {
     const count = this.props.items.length;
     const region = event.region ?? "";
     if (region === "back") {
-      this.change((this.value + count - 1) % count, event.session);
+      this.change((this.value + count - 1) % count, event.connection);
     } else if (region === "on") {
-      this.change((this.value + 1) % count, event.session);
+      this.change((this.value + 1) % count, event.connection);
     } else if (region === "field") {
       this.setState({ open: !this.state.open, chosen: this.value });
     }

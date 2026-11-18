@@ -23,8 +23,8 @@ export interface ServiceParts {
   readonly languages: ViewerLanguages;
 }
 
-/** The services of the copy of `page` for `session`, or the channel's (null). */
-export function channelServices(parts: ServiceParts, page: number, session: number | null): Services {
+/** The services of the copy of `page` for `connection`, or the channel's (null). */
+export function channelServices(parts: ServiceParts, page: number, connection: number | null): Services {
   const context = (): Context => {
     const now = parts.context();
     if (now === null) {
@@ -33,9 +33,9 @@ export function channelServices(parts: ServiceParts, page: number, session: numb
     return now;
   };
   return {
-    session,
+    connection,
     page,
-    bus: parts.bus.at({ page, session }),
+    bus: parts.bus.at({ page, connection }),
     now: () => context().now(),
     epochMs: () => context().epochMs(),
     parameters: (viewer) => parts.parameters(viewer),
@@ -61,7 +61,7 @@ export function channelServices(parts: ServiceParts, page: number, session: numb
       context().log(text);
     },
     play: (sound, to) => {
-      parts.sounds.play(context(), sound, to ?? session, page);
+      parts.sounds.play(context(), sound, to ?? connection, page);
     },
   };
 }

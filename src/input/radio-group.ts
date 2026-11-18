@@ -107,13 +107,13 @@ export class RadioGroup extends ValueControl<number, RadioGroupProps> {
     if (step === 0) {
       return false;
     }
-    this.change(Math.max(0, Math.min(this.props.items.length - 1, this.value + step)), event.session);
+    this.change(Math.max(0, Math.min(this.props.items.length - 1, this.value + step)), event.connection);
     return true;
   }
 
   override onClick(event: PointerEvent): boolean {
     if (event.region !== undefined) {
-      this.change(Number(event.region), event.session);
+      this.change(Number(event.region), event.connection);
     }
     return true;
   }

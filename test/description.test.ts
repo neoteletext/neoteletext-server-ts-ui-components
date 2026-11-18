@@ -1,5 +1,5 @@
 // A page's description for the web (REQ-1728): a page shows nothing unless its
-// spec says so, and what it says is built with no session in scope.
+// spec says so, and what it says is built with no connection in scope.
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -9,14 +9,14 @@ import { Component, ComponentChannel, type Element, Frame, h, type PageSpec, Tex
 import { Colour } from "../src/kit.ts";
 
 const PAGE = 0x150;
-const SESSION = 1;
+const CONNECTION = 1;
 const NOT_PUBLIC = { type: "description", page: "150", public: false };
 
 /** A page that shows every viewer who they are, through a component with a copy for each. */
 class Greeting extends Component {
   override render(): Element {
-    const { session } = this.services;
-    return h(Text, { text: session === null ? "everyone" : `private to ${session}` });
+    const { connection } = this.services;
+    return h(Text, { text: connection === null ? "everyone" : `private to ${connection}` });
   }
 }
 
@@ -43,11 +43,11 @@ test("a description is called with nothing, and shows the channel's copy with a 
       return { public: true, title: "A title", text: "Its words." };
     },
   });
-  harness.join(SESSION, PAGE);
+  harness.join(CONNECTION, PAGE);
   const answer = harness.describe(PAGE);
-  assert.deepEqual(given, [[]], "no session, no parameters");
+  assert.deepEqual(given, [[]], "no connection, no parameters");
   assert.equal(answer["title"], "A title");
-  assert.notDeepEqual(harness.seen(SESSION, PAGE).rows, harness.shared(PAGE), "the viewer has a copy of their own");
+  assert.notDeepEqual(harness.seen(CONNECTION, PAGE).rows, harness.shared(PAGE), "the viewer has a copy of their own");
   assert.match(JSON.stringify(answer["content"]), /^\{"page":"150"/u);
   assert.ok(!JSON.stringify(answer).includes(Buffer.from("private").toString("base64").slice(0, 6)), "and no answer holds it");
 });

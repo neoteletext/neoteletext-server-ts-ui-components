@@ -38,7 +38,7 @@ function player(props: AudioPlayerProps, perViewer: boolean | null = true): Harn
   return seen;
 }
 
-const row = (seen: Harness, at: number, session = 1): string => text(seen.seen(session, PAGE).rows, at);
+const row = (seen: Harness, at: number, connection = 1): string => text(seen.seen(connection, PAGE).rows, at);
 
 /** The gains the receiver was told for the viewer's streams, in order: on each play, and each change. */
 function gains(seen: Harness): number[] {

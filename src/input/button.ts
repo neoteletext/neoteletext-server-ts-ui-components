@@ -20,7 +20,7 @@ export interface ButtonProps extends ControlProps {
   /** What it says on its band, cut to the band. */
   readonly label: string;
   /** Called as it is pressed: Enter, Space or a click on its band, and never while disabled. */
-  readonly onPress: (session: number) => void;
+  readonly onPress: (connection: number) => void;
   /** Its band's colour while it does not have the keys, its label inked to read on it; cyan when absent. */
   readonly background?: Colour;
   /** Its whole width in cells, the label centred in it; fitted to the label and its padding when absent. */
@@ -92,20 +92,20 @@ export class Button extends Control<ButtonProps> {
     canvas.coloured(0, LEAD_CELLS - 1, look.foreground, fit(`${spaces}${label}`, room).padEnd(room));
   }
 
-  #press(session: number): boolean {
+  #press(connection: number): boolean {
     if (this.disabled) {
       return false;
     }
-    this.activate(this.props.label, session);
-    this.props.onPress(session);
+    this.activate(this.props.label, connection);
+    this.props.onPress(connection);
     return true;
   }
 
   override onClick(event: PointerEvent): boolean {
-    return event.region === BAND && this.#press(event.session);
+    return event.region === BAND && this.#press(event.connection);
   }
 
   override onKey(event: KeyEvent): boolean {
-    return choosing(event) && this.#press(event.session);
+    return choosing(event) && this.#press(event.connection);
   }
 }

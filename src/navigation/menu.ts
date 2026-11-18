@@ -50,9 +50,9 @@ export interface MenuProps extends ControlProps {
   /** What an empty menu says; "no choices" when absent. */
   readonly empty?: string;
   /** A choice made: the labels from the top menu down to it. */
-  readonly onChoose: (path: readonly string[], session: number) => void;
+  readonly onChoose: (path: readonly string[], connection: number) => void;
   /** The pointer came onto a choice, or left it (null): the labels from the top menu down to it. Moving from one choice to the next is a leave, then an enter. */
-  readonly onHover?: (path: readonly string[] | null, session: number) => void;
+  readonly onHover?: (path: readonly string[] | null, connection: number) => void;
   /** What tells one choice from another, so the chosen one stays chosen as the open menu's choices come and go. */
   readonly itemKey?: (item: MenuItem) => string;
 }
@@ -147,14 +147,14 @@ export class Menu extends Control<MenuProps, MenuState> {
           empty: this.props.empty ?? "no choices",
           disabled: (item: MenuItem) => this.disabled || !choosable(item),
           render: (item, look, index) => menuRow(item, this.props.numbered === true ? (numbers[index] ?? null) : null, look),
-          onPick: (index: number, session: number) => {
-            this.#choose(index, session);
+          onPick: (index: number, connection: number) => {
+            this.#choose(index, connection);
           },
           ...(this.props.onHover === undefined
             ? {}
             : {
-                onHover: (index: number | null, session: number) =>
-                  this.props.onHover?.(index === null || items[index] === undefined ? null : [...labels, items[index].label], session),
+                onHover: (index: number | null, connection: number) =>
+                  this.props.onHover?.(index === null || items[index] === undefined ? null : [...labels, items[index].label], connection),
               }),
         }),
         h(ScrollBar, {
@@ -197,7 +197,7 @@ export class Menu extends Control<MenuProps, MenuState> {
     this.setState({ path: this.state.path.slice(0, depth), chosen, top: 0 });
   }
 
-  #choose(index: number, session: number): void {
+  #choose(index: number, connection: number): void {
     const { items, labels } = this.#open();
     const item = items[index];
     if (!choosable(item) || item === undefined || this.disabled) {
@@ -205,18 +205,18 @@ export class Menu extends Control<MenuProps, MenuState> {
     }
     if (item.items !== undefined) {
       this.setState({ path: [...this.state.path, index], chosen: Math.max(0, item.items.findIndex(choosable)), top: 0 });
-      this.play("move", session);
+      this.play("move", connection);
       return;
     }
     const path = [...labels, item.label];
     this.setState({ chosen: index });
-    this.activate(path, session);
-    this.props.onChoose(path, session);
+    this.activate(path, connection);
+    this.props.onChoose(path, connection);
   }
 
-  #back(session: number): boolean {
+  #back(connection: number): boolean {
     if (this.state.path.length === 0) {
-      this.cancel(session);
+      this.cancel(connection);
       return false;
     }
     this.#backTo(this.state.path.length - 1);
@@ -229,24 +229,24 @@ export class Menu extends Control<MenuProps, MenuState> {
     }
     const { items } = this.#open();
     if (choosing(event) || isPress(event, Key.Right)) {
-      this.#choose(this.state.chosen, event.session);
+      this.#choose(this.state.chosen, event.connection);
       return true;
     }
     if (isPress(event, Key.Left) || isPress(event, Key.Escape)) {
-      return this.#back(event.session);
+      return this.#back(event.connection);
     }
     const step = listStep(event, this.#shown);
     if (step !== null) {
       const chosen = moveChoice(this.state.chosen, step, items.length, (index) => choosable(items[index]));
       this.setState({ chosen, top: keepInView(this.state.top, chosen, this.#shown, items.length) });
-      this.play("move", event.session);
+      this.play("move", event.connection);
       return true;
     }
     const digit = this.props.numbered === true ? digitOf(event) : null;
     if (digit !== null) {
       const index = items.map((item, place) => ({ item, place })).filter(({ item }) => item.rule !== true)[digit - 1]?.place;
       if (index !== undefined) {
-        this.#choose(index, event.session);
+        this.#choose(index, event.connection);
         return true;
       }
     }

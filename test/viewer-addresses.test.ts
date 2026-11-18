@@ -25,9 +25,9 @@ test("a component reads the query of the viewer's selection as its parameters, a
   const read: unknown[] = [];
   class Reader extends Component {
     override componentDidMount(): void {
-      const { session } = this.services;
-      if (session !== null) {
-        read.push(this.services.parameters(session));
+      const { connection } = this.services;
+      if (connection !== null) {
+        read.push(this.services.parameters(connection));
         this.services.bus.on("parameters", ({ parameters }) => {
           read.push(parameters);
         });
@@ -49,9 +49,9 @@ test("a program that starts again gives a component the parameters of the connec
   const read: unknown[] = [];
   class Reader extends Component {
     override componentDidMount(): void {
-      const { session } = this.services;
-      if (session !== null) {
-        read.push(this.services.parameters(session));
+      const { connection } = this.services;
+      if (connection !== null) {
+        read.push(this.services.parameters(connection));
       }
     }
   }
@@ -78,9 +78,9 @@ test("a viewer's own query, coming after a redirect's params, is what the page s
   const roots: unknown[] = [];
   class Sender extends Component {
     override componentDidMount(): void {
-      const { session } = this.services;
-      if (session !== null) {
-        this.services.redirect(session, PAGE, { article: 7 });
+      const { connection } = this.services;
+      if (connection !== null) {
+        this.services.redirect(connection, PAGE, { article: 7 });
       }
     }
   }
@@ -107,9 +107,9 @@ test("the parameters of a page a viewer has left are gone when they come back wi
   const read: unknown[] = [];
   class Reader extends Component {
     override componentDidMount(): void {
-      const { session } = this.services;
-      if (session !== null) {
-        read.push(this.services.parameters(session));
+      const { connection } = this.services;
+      if (connection !== null) {
+        read.push(this.services.parameters(connection));
       }
     }
   }
@@ -157,9 +157,9 @@ test("TODO-1731 item 6: a selection with no query keeps what a redirect's params
   const made: unknown[] = [];
   class Sender extends Component {
     override componentDidMount(): void {
-      const { session } = this.services;
-      if (session !== null) {
-        this.services.redirect(session, PAGE, { article: 7 });
+      const { connection } = this.services;
+      if (connection !== null) {
+        this.services.redirect(connection, PAGE, { article: 7 });
       }
     }
   }

@@ -30,10 +30,10 @@ export class SoundList extends Component<SoundListProps, SoundListState> {
       h(ChoiceList, {
         items: this.props.sounds.map((sound) => `${sound.name} (${(sound.samples.length / RATE).toFixed(1)}s)`),
         shown: this.props.shown,
-        onChoose: (index: number, session: number) => {
+        onChoose: (index: number, connection: number) => {
           const sound = this.props.sounds[index];
           if (sound !== undefined) {
-            this.services.play(sound, session);
+            this.services.play(sound, connection);
             this.setState({ playing: sound.name });
           }
         },

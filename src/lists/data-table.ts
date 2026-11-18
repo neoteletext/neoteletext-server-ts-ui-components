@@ -51,9 +51,9 @@ export interface DataTableProps extends ControlProps {
   /** What an empty table says; "no rows" when absent. */
   readonly empty?: string;
   /** A row chosen by Enter, Space or a click, only while selectable. */
-  readonly onChoose?: (row: readonly string[], session: number) => void;
+  readonly onChoose?: (row: readonly string[], connection: number) => void;
   /** The pointer came onto a row that can be chosen, or left it (null). Moving from one row to the next is a leave, then an enter. */
-  readonly onHover?: (row: readonly string[] | null, session: number) => void;
+  readonly onHover?: (row: readonly string[] | null, connection: number) => void;
   /** What tells one row from another, so the chosen row stays chosen as rows come and go: a live table. */
   readonly rowKey?: (row: readonly string[]) => string;
 }
@@ -165,12 +165,12 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
     this.setState({ sortBy: column, descending: this.state.sortBy === column && !this.state.descending, top: 0, chosen: 0 });
   }
 
-  #choose(index: number, session: number): void {
+  #choose(index: number, connection: number): void {
     this.setState({ chosen: index });
     const row = this.#sorted()[index];
     if (row !== undefined && this.props.selectable === true) {
-      this.activate(row, session);
-      this.props.onChoose?.(row, session);
+      this.activate(row, connection);
+      this.props.onChoose?.(row, connection);
     }
   }
 
@@ -200,12 +200,15 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
           striped: this.props.striped === true,
           selectable: this.props.selectable === true && !this.disabled,
           empty: this.props.empty ?? "no rows",
-          onPick: (index: number, session: number) => {
-            this.#choose(index, session);
+          onPick: (index: number, connection: number) => {
+            this.#choose(index, connection);
           },
           ...(this.props.onHover === undefined
             ? {}
-            : { onHover: (index: number | null, session: number) => this.props.onHover?.(index === null ? null : (this.#sorted()[index] ?? null), session) }),
+            : {
+                onHover: (index: number | null, connection: number) =>
+                  this.props.onHover?.(index === null ? null : (this.#sorted()[index] ?? null), connection),
+              }),
         }),
         h(ScrollBar, {
           top: this.#top,
@@ -231,7 +234,7 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
       return true;
     }
     if (choosing(event) && this.props.selectable === true) {
-      this.#choose(this.#chosen, event.session);
+      this.#choose(this.#chosen, event.connection);
       return true;
     }
     const step = listStep(event, this.props.shown);
@@ -241,7 +244,7 @@ export class DataTable extends Control<DataTableProps, DataTableState> {
     if (this.props.selectable === true) {
       const chosen = moveChoice(this.#chosen, step, count);
       this.setState({ chosen, top: keepInView(this.#top, chosen, this.props.shown, count) });
-      this.play("move", event.session);
+      this.play("move", event.connection);
     } else {
       const last = Math.max(0, count - this.props.shown);
       this.setState({ top: scrolled(this.#top, step, last) });

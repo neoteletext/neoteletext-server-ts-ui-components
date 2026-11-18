@@ -36,7 +36,7 @@ export interface CalendarProps extends ControlProps {
   /** A day can be chosen. */
   readonly selectable?: boolean;
   /** A day chosen, with Enter or a click, while it is selectable. */
-  readonly onChoose?: (date: CalendarDate, session: number) => void;
+  readonly onChoose?: (date: CalendarDate, connection: number) => void;
 }
 
 /** The month shown, and the day chosen in it. */
@@ -203,8 +203,8 @@ export class Calendar extends Control<CalendarProps, CalendarState> {
       },
     };
     if (isPress(event, Key.Enter)) {
-      this.activate({ ...this.state }, event.session);
-      this.props.onChoose?.({ ...this.state }, event.session);
+      this.activate({ ...this.state }, event.connection);
+      this.props.onChoose?.({ ...this.state }, event.connection);
       return true;
     }
     const move = event.action === "release" ? undefined : moves[event.key];
@@ -226,8 +226,8 @@ export class Calendar extends Control<CalendarProps, CalendarState> {
     }
     const day = Number(region.slice(DAY.length));
     this.setState({ day });
-    this.activate({ year: this.state.year, month: this.state.month, day }, event.session);
-    this.props.onChoose?.({ year: this.state.year, month: this.state.month, day }, event.session);
+    this.activate({ year: this.state.year, month: this.state.month, day }, event.connection);
+    this.props.onChoose?.({ year: this.state.year, month: this.state.month, day }, event.connection);
     return true;
   }
 }
