@@ -71,7 +71,8 @@ repositories beside this one.
 1. **The browser sends it, if the page's rule table asks for it.** A page
    hears no input but what a rule of its table sends (program protocol 14;
    `neoteletext-common/docs/page-rules.md`, RULE-50): a page with no table,
-   or a table with no rules, is sent nothing. The library writes each
+   or a table with no rules, is sent nothing. Unless the channel says
+   `ruleTables: "none"`, the library writes each
    page's table from the components on it, as
    [The rule table](#the-rule-table-what-a-page-asks-for) says, so a key's
    press, repeat and release go where a component takes the keys, a click
@@ -112,6 +113,13 @@ again whenever it changes (`src/core/rule-tables.ts`). A channel writes no
 table and names no rule, and its server entry can say
 `"default_rules": "none"`.
 
+A channel that says `ruleTables: "none"` in its `ComponentChannel` options
+is sent no table by the library at all. Its pages are then left to the
+`default_rules` of its server entry: with `"send_all"` the server gives
+every page its default table and the channel is sent every input, exactly
+as on release 23.0.0 (RULE-53). The rest of this section is the default,
+`ruleTables: "components"`.
+
 Every rule of the library's only sends its own event; the browser does
 nothing else for it. What is asked, and of which components:
 
@@ -126,6 +134,8 @@ nothing else for it. What is asked, and of which components:
 | `drag` | every move anywhere on the page while a button is down | a component on the page has `onPointer`: it holds the pointer from its press to the release |
 | `hover_in`, `hover_out` | the pointer coming onto any control, and leaving it | the page declares a control and a component has `onHover` or reads what is under the pointer (the hint row) |
 | `focus`, `blur` | the keyboard's focus coming to the page and leaving it | a component has `onPageFocus`, or `onPageBlur` |
+| `select_digits`, `select_keypad` | the press of a digit's key: the ten keys of the digit row, by their place on the keyboard, and the keypad's ten | no component takes the keys, and the page does not own the digits |
+| `fastext_keys` | the press of F1 to F4 and of the remote's red, green, yellow and blue keys | no component takes the keys, and the page does not own the coloured keys |
 
 An **area** is a rectangle of the first sub-page's cells, in dots (a cell
 is 12 by 20), where the same is taken of the pointer: a component's cells
@@ -138,12 +148,33 @@ limits, `MOST_RECTS` and `MOST_RULES`), asks the whole page instead, under
 the names the server's default table uses: `press`, `release`, `wheel`,
 and `move` or `drag`.
 
-A page of text asks for nothing: its table has no rules, and nothing a
-viewer does on it is sent. **That includes the digits and the coloured
-keys**, which the protocol kit selects pages by: on a page where no
-component takes the keys they are not sent, so the page is left by its
-links and prompts, which the browser follows itself, or by the browser's
-own page keys.
+The last two rows are **page selection** (`src/core/page-selection.ts`).
+The protocol kit takes three typed digits as a page number and the
+coloured keys as the page's Fastext links, on every page that does not
+own them, and it can only take what it is sent. So a page of text asks
+for those keys and nothing else, and a page whose components take
+something of the pointer but no keys asks for them beside its pointer
+rules. A page that asks for every key (`keys`) has them already. A page
+that owns the digits and the coloured keys (`PageSpec`'s `ownsDigits` and
+`ownsColourKeys`) and has no component that takes input sends a table
+with no rules, and nothing a viewer does on it is sent.
+
+The digit row's keys are named by their place (the key that carries the
+digit on a United States layout), since the kit reads the digit from the
+text the key typed: on a layout that types digits with Shift, or in
+another script, the key's own character is not the digit. Three things
+the kit did when every input was sent are not asked for:
+
+- **A paste of digits.** The kit reads a page number from pasted text
+  that is digits alone. A rule cannot ask for such text only, and asking
+  for all text would send the channel whatever a viewer pastes on a page
+  of text.
+- **A click on a page number or a Fastext prompt.** The kit followed a
+  click the page did not take. The browser follows the links a page
+  declares itself (RULE-51 item 3); a press is not asked for on a page's
+  text.
+- **A digit typed by a key that is neither on the digit row nor the
+  keypad**, as some layouts have.
 
 A component of your own is read from its handlers, so it needs nothing
 new. One that takes less than its handlers could says so, and the table

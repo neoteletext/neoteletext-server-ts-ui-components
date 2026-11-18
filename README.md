@@ -80,9 +80,18 @@ await runChannel([
   only what the page's rule table asks for (program protocol 14), and the
   library writes that table from the components on the page: keys where
   one takes them, a press on a button's cells, the wheel over a list that
-  scrolls, nothing on a page of text. A channel writes no table, and its
+  scrolls, and on a page of text only the digits and the coloured keys
+  the protocol kit selects pages by. A channel writes no table, and its
   entry in the server's `channels.json` can say `"default_rules": "none"`
   ([How it works](docs/how-it-works.md#the-rule-table-what-a-page-asks-for)).
+- **`ruleTables: "none"`** in the channel's options switches that off:
+  the library sends no table, every page is left to the channel's
+  `default_rules` in the server's configuration, and with `"send_all"`
+  there the channel is sent every input, exactly as on release 23.0.0:
+
+  ```ts
+  new ComponentChannel(pages, { ruleTables: "none" });
+  ```
 - **`Frame`** is a sub-page with a title band, a hint row and up to four
   Fastext prompts, red, green, yellow and cyan.
 - **The bus** (`this.services.bus`) carries what one page's components

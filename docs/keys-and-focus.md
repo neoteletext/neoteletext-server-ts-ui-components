@@ -25,11 +25,11 @@ own them:
   prompts (`Frame`'s `prompts`), red, green, yellow and cyan.
 
 The digits and the coloured keys reach the kit only when the page's rule
-table asks for the keys, which the library's does when a component on the
-page takes them ([How it works](how-it-works.md#the-rule-table-what-a-page-asks-for)).
-On a page of text nothing typed is sent, so nothing is selected by it:
-the viewer leaves by the page's links and prompts, which the browser
-follows itself.
+table asks for them. The library's table always does, on a page that does
+not own them: with every other key where a component takes the keys, and
+by rules of their own (`select_digits`, `select_keypad`, `fastext_keys`)
+where none does, so a page number typed on a page of text still selects
+that page ([How it works](how-it-works.md#the-rule-table-what-a-page-asks-for)).
 
 A page owns the digits, or the coloured keys, when a component on it
 needs them: a numbered menu, a list picked by digit, a quiz answered by
