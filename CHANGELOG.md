@@ -3,6 +3,29 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 26.0.0 (19 November 2026)
+
+### To take it
+
+- **Take the protocol kit 18.0.0 with it**: the library pins the kit
+  exactly. Vendor both releases under the channel's `vendor/`. The kit's
+  own changes (`objectPage` takes the object page by its objects; the
+  rule table's limits exported by the engine's names; a page entry's
+  `keysOf`) are in its DEPLOYMENT.md.
+- **`tableLimits` and `TableLimits` are gone**: a table's limits are the
+  kit's `MAX_RECTS`, `MAX_RULES` and the rest, by the engine's names
+  (REQ-6608). Write a limit by its name, never its figure.
+- **A page of several sub-pages** asks for page selection on each
+  sub-page by that sub-page's own components (DEC-6599): a sub-page of
+  text beside a sub-page with a field now asks for the digits, the keypad
+  and the coloured keys, and a page number typed there selects that page.
+  A test that compared such a sub-page's table finds `select_digits`,
+  `select_keypad` and `fastext_keys` in it.
+- **Each sub-page has its own keys**: its own focused component and focus
+  history, Tab and the arrows moving among its components, and page keys
+  (`onPageKey`) offered to its own components and those it is drawn
+  within. A page of one sub-page behaves as before.
+
 ## 25.0.0 (19 November 2026)
 
 ### To take it
