@@ -36,9 +36,10 @@ repositories beside this one.
    off after 8 passes and reported.
 3. **The tree is drawn.** Each sub-page under it is laid out and painted
    onto a teletext screen of 40 by 25 cells, with its Fastext links and
-   the typing cursor. The first sub-page also declares its controls, for
-   the browser to show as it shows links, and its rollover colours
-   (`src/core/draw.ts`, `controls.ts`, `rollover.ts`).
+   the typing cursor. Each sub-page also declares its own controls, for
+   the browser to show as it shows links, and their rollover colours
+   (`src/core/draw.ts`, `controls.ts`, `rollover.ts`): a sub-page is a
+   page of its own (DEC-6599), and nothing of one is another's.
 4. **It is published.** The shared copy is published only when its TTI
    changed; a viewer's own copy only while it differs from the shared one
    (`src/core/publish.ts`). The protocol kit (version 8.0.0, protocol 7,
@@ -62,14 +63,12 @@ repositories beside this one.
 7. **The browser draws it.** Its decoder renders the page, 480 by 500, in
    Noto Teletext, the engine's one font; the window scales it for the screen
    (`neoteletext-browser`, docs/architecture.md §10). Each sub-page is
-   selected and shown on its own; the browser never cycles them. Every
-   sub-page declares its controls with the first's rollover colours only
-   on the first.
+   selected and shown on its own; the browser never cycles them.
 
 ## A key: from the viewer to a component, and back
 
 1. **The browser sends it, if the page's rule table asks for it.** A page
-   hears no input but what a rule of its table sends (program protocol 14;
+   hears no input but what a rule of its table sends (program protocol 15;
    `neoteletext-common/docs/page-rules.md`, RULE-50): a page with no table,
    or a table with no rules, is sent nothing. Unless the channel says
    `ruleTables: "none"`, the library writes each
@@ -91,8 +90,9 @@ repositories beside this one.
 4. **The library routes it** to the viewer's mount, or the shared one, and
    through it as [Keys and focus](keys-and-focus.md) says: capture, the
    focused component, typing, its parents, page-wide keys, then moving
-   the keys. A click goes to the component drawn in the cell clicked
-   (`src/core/pointer.ts`).
+   the keys. A click goes to the component drawn in the cell clicked, on
+   the sub-page the input names (`src/core/pointer.ts`,
+   `src/core/sub-pages.ts`).
 5. **The answer is a new page.** The component's state changes, the page
    is drawn again, and what changed is published. After each input the
    server tells the browser how much input it has acted on (DOC-1943);
@@ -104,14 +104,20 @@ repositories beside this one.
 
 ## The rule table: what a page asks for
 
-Under program protocol 14 a viewer's browser sends a page's channel only
+Under program protocol 15 a viewer's browser sends a page's channel only
 what the page's rule table asks for (`neoteletext-common/docs/page-rules.md`;
-REQ-6523). The library writes the table (RULE-54, `src/core/page-rules.ts`)
-from the components mounted on the page, each time the page is drawn, and
-sends it (`context.rules`) to each connection as it opens the page and
-again whenever it changes (`src/core/rule-tables.ts`). A channel writes no
-table and names no rule, and its server entry can say
-`"default_rules": "none"`.
+REQ-6523). A page is a page number and a sub-code together (DEC-6599,
+RULE-112): each sub-page has a table of its own. The library writes each
+sub-page's table (RULE-54, `src/core/page-rules.ts`) from the components
+drawn on that sub-page and those it is drawn within, each time the page
+is drawn, and sends it (`context.rules(to, page, sub, table)`) to each
+connection at every selection of that sub-page (of the page, or of
+another of its sub-pages, which is opening another page), since the
+server keeps no table, and again whenever it changes
+(`src/core/rule-tables.ts`, `src/core/selections.ts`). A selection of the
+page with no sub-page in particular shows its first, and is sent the
+first's table. A channel writes no table and names no rule, and its
+server entry can say `"default_rules": "none"`.
 
 A channel that says `ruleTables: "none"` in its `ComponentChannel` options
 is sent no table by the library at all. Its pages are then left to the
@@ -120,8 +126,12 @@ every page its default table and the channel is sent every input, exactly
 as on release 23.0.0 (RULE-53). The rest of this section is the default,
 `ruleTables: "components"`.
 
-Every rule of the library's only sends its own event; the browser does
-nothing else for it. What is asked, and of which components:
+Every rule of the library's only reports: it runs one command, a
+`report` of the firing (`"do": [{"type": "report"}]`), which sends the
+channel the viewer's event as they made it, and the server makes that
+one list into one group every rule shares. The browser does nothing
+else for it: it draws a control's hover and pressed looks under the
+pointer itself. What is asked, and of which components:
 
 | Rule | Asks for | When |
 | --- | --- | --- |
@@ -137,16 +147,17 @@ nothing else for it. What is asked, and of which components:
 | `select_digits`, `select_keypad` | the press of a digit's key: the ten keys of the digit row, by their place on the keyboard, and the keypad's ten | no component takes the keys, and the page does not own the digits |
 | `fastext_keys` | the press of F1 to F4 and of the remote's red, green, yellow and blue keys | no component takes the keys, and the page does not own the coloured keys |
 
-An **area** is a rectangle of the first sub-page's cells, in dots (a cell
+An **area** is a rectangle of one sub-page's cells, in dots (a cell
 is 12 by 20), where the same is taken of the pointer: a component's cells
 are those where it, or one drawn inside it, is the deepest thing drawn,
 so a dialog over a button takes the button's cells from it. Areas share
 no cell, so one event is sent by one rule. An area is named for the
 component that takes the pointer there and numbered, as `button_1`. A
-page with more than 16 areas, or whose rules would pass 64 (the table's
-limits, `MOST_RECTS` and `MOST_RULES`), asks the whole page instead, under
-the names the server's default table uses: `press`, `release`, `wheel`,
-and `move` or `drag`.
+sub-page with more areas than `MAX_RECTS`, or whose rules would pass
+`MAX_RULES` (the engine's limits, REQ-6608, whose figures the library
+reads from the kit's schema, `tableLimits`), asks the whole sub-page
+instead, under the names the server's default table uses: `press`,
+`release`, `wheel`, and `move` or `drag`, and the channel's log says so.
 
 The last two rows are **page selection** (`src/core/page-selection.ts`).
 The protocol kit takes three typed digits as a page number and the

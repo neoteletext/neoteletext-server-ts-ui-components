@@ -44,7 +44,7 @@ What a channel's entry in the server's `channels.json` says for
 
 | The channel's `ruleTables` | The entry's `default_rules` | What a viewer's browser sends |
 | --- | --- | --- |
-| `"components"`, or absent | `"none"`, or absent | What each page's components take, and the keys the kit selects pages by: the library sends each page's rule table itself. `"send_all"` gives the same, since the server's default table is only for a page the program gave no table. |
+| `"components"`, or absent | `"none"`, or absent | What each sub-page's components take, and the keys the kit selects pages by: the library sends each sub-page's rule table itself. `"send_all"` gives the same, since the server's default table is only for a page the program gave no table. |
 | `"none"` | `"send_all"` | Everything, as on release 23.0.0: the library sends no table, so every page has the server's default table. |
 | `"none"` | `"none"`, or absent | Nothing: no page has a table. The channel cannot be used. |
 

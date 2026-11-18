@@ -27,13 +27,13 @@ What a test can do and see:
 
 | | |
 | --- | --- |
-| `join(connection, page)`, `open(connection, page)`, `close(connection)` | A connection with no viewer comes, goes to a page, goes. |
+| `join(connection, page)`, `open(connection, page, sub?)`, `close(connection)` | A connection with no viewer comes, goes to a page or to one of its sub-pages by its sub-code, goes. |
 | `viewer(name)`, `join(viewer, page)`, `privateViewer(name)` | A named viewer with a fixed handle; joined twice, the viewer in two tabs; a private window. |
 | `grantState(connection)`, `refuseState(connection, reason)`, `forget(viewer)`, `restart()` | The server's answers to the library's request for state, a reset, and a restart, which gives connection numbers again. |
 | `press(connection, key)`, `typeKeys(connection, text)`, `typeText(connection, text)`, `paste` | Keys, typing from a keyboard, text from a phone. |
 | `clickLeft(connection, column, row)`, `wheel`, `hover` | The pointer. |
-| `fire(connection, rule, event, tick, target)` | An input as a rule of the page's table sends it, naming the rule: `fire(1, "press_button_1", { kind: "mouse", action: "press", button: 0, column: 4, row: 3, mods: 0 }, 0, { rect: "button_1" })`. |
-| `sent.filter((each) => each.type === "rules")` | The rule tables the channel sent: what each page asks a viewer's browser to send. |
+| `fire(connection, rule, event, tick, target, row?)` | An input as a rule of the page's table sends it, naming the rule, and the row that fired where a rule has rows: `fire(1, "press_button_1", { kind: "mouse", action: "press", button: 0, column: 4, row: 3, mods: 0 }, 0, { rect: "button_1" })`. |
+| `sent.filter((each) => each.type === "rules")` | The rule tables the channel sent, each for one page and sub-code: what each sub-page asks a viewer's browser to send. |
 | `advance(ms)`, `runUntil(ms)` | The clock, waking the channel when it asked to be. |
 | `seen(connection, page).rows`, `text(rows, row)`, `shows(rows, words)` | What the viewer sees. |
 | `redirects(connection)`, `addressRedirects(connection)`, `at(connection)` | The pages and the addresses the viewer was sent to, and where they are. |
@@ -43,7 +43,9 @@ What a test can do and see:
 The harness evaluates no rule table: `press`, `clickLeft` and the rest
 give the channel their input whatever the page's table asks, each named
 for the rule the server's default table would send it by. To hold a page
-to what it asks for, read the table it sent and `fire` its rules.
+to what it asks for, read the table it sent and `fire` its rules. An
+input the harness gives names no sub-page in particular (3F7F), which the
+library reads as the sub-page the connection selected, or the first.
 
 ## Snapshots
 
