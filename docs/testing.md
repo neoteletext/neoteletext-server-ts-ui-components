@@ -32,11 +32,18 @@ What a test can do and see:
 | `grantState(connection)`, `refuseState(connection, reason)`, `forget(viewer)`, `restart()` | The server's answers to the library's request for state, a reset, and a restart, which gives connection numbers again. |
 | `press(connection, key)`, `typeKeys(connection, text)`, `typeText(connection, text)`, `paste` | Keys, typing from a keyboard, text from a phone. |
 | `clickLeft(connection, column, row)`, `wheel`, `hover` | The pointer. |
+| `fire(connection, rule, event, tick, target)` | An input as a rule of the page's table sends it, naming the rule: `fire(1, "press_button_1", { kind: "mouse", action: "press", button: 0, column: 4, row: 3, mods: 0 }, 0, { rect: "button_1" })`. |
+| `sent.filter((each) => each.type === "rules")` | The rule tables the channel sent: what each page asks a viewer's browser to send. |
 | `advance(ms)`, `runUntil(ms)` | The clock, waking the channel when it asked to be. |
 | `seen(connection, page).rows`, `text(rows, row)`, `shows(rows, words)` | What the viewer sees. |
 | `redirects(connection)`, `addressRedirects(connection)`, `at(connection)` | The pages and the addresses the viewer was sent to, and where they are. |
 | `sounds(connection)` | The sound members sent to the viewer, bytes as `Uint8Array`. |
 | `errors` | What the channel reported failing. |
+
+The harness evaluates no rule table: `press`, `clickLeft` and the rest
+give the channel their input whatever the page's table asks, each named
+for the rule the server's default table would send it by. To hold a page
+to what it asks for, read the table it sent and `fire` its rules.
 
 ## Snapshots
 

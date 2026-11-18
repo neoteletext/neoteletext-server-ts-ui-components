@@ -38,6 +38,12 @@ The package exports `neoteletext-server-ts-ui-components`; nothing else.
 
 ## To the host
 
+A channel on the library needs no `default_rules` in its entry of the
+server's `channels.json`, or `"default_rules": "none"`: the library sends
+each page's rule table itself. With `"send_all"` the channel works the
+same, since the server's default table is only for a page the program
+gave no table, and the library gives every page one.
+
 A channel on the library sends its sound as Opus, encoded by ffmpeg with
 libopus (`ffmpeg -encoders` lists `libopus`): the host has it on the
 path, or the channel gives `ComponentChannel` an `opus` encoder of its

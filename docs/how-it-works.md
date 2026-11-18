@@ -68,15 +68,18 @@ repositories beside this one.
 
 ## A key: from the viewer to a component, and back
 
-1. **The browser sends it.** Only while the page open takes input. Every
-   key's press, repeat and release goes, digits and coloured keys
-   included; clicks, every move over the page (at most 60 a second, only
-   as the dot under the pointer changes), the wheel, and the pointer coming
-   onto or off a control (`neoteletext-common/PROTOCOL.html`, DOC-1938,
-   DOC-1945, DOC-1940). Pointer areas, which once limited the moves sent,
-   are withdrawn (DEC-657, 28 October 2026).
+1. **The browser sends it, if the page's rule table asks for it.** A page
+   hears no input but what a rule of its table sends (program protocol 14;
+   `neoteletext-common/docs/page-rules.md`, RULE-50): a page with no table,
+   or a table with no rules, is sent nothing. The library writes each
+   page's table from the components on it, as
+   [The rule table](#the-rule-table-what-a-page-asks-for) says, so a key's
+   press, repeat and release go where a component takes the keys, a click
+   where one takes it, a drag's moves (at most 60 a second, only as the
+   dot under the pointer changes), the wheel where one scrolls, and the
+   pointer coming onto or off a control where one draws something for it.
 2. **The server forwards it** to the program as an `input` line naming
-   the connection and the page; a viewer's PAGE message, sent as keys start
+   the connection, the page and the rule that sent it; a viewer's PAGE message, sent as keys start
    to go to a page, becomes `open` and `leave` (`teletext-server`,
    DOC-1968).
 3. **Page selection comes first**, in the protocol kit: three digits go to
@@ -97,6 +100,68 @@ repositories beside this one.
    another channel's address) does it the same way.
 6. **The browser draws a control's look under the pointer itself**, and
    sends nothing for it (DOC-1947).
+
+## The rule table: what a page asks for
+
+Under program protocol 14 a viewer's browser sends a page's channel only
+what the page's rule table asks for (`neoteletext-common/docs/page-rules.md`;
+REQ-6523). The library writes the table (RULE-54, `src/core/page-rules.ts`)
+from the components mounted on the page, each time the page is drawn, and
+sends it (`context.rules`) to each connection as it opens the page and
+again whenever it changes (`src/core/rule-tables.ts`). A channel writes no
+table and names no rule, and its server entry can say
+`"default_rules": "none"`.
+
+Every rule of the library's only sends its own event; the browser does
+nothing else for it. What is asked, and of which components:
+
+| Rule | Asks for | When |
+| --- | --- | --- |
+| `keys`, `keys_up` | every key, its repeats and its release | a component on the page takes the keys: it has `onKey`, `onKeyCapture`, `onPageKey` or `onText`, or is `focusable()` |
+| `text` | text that came from no key: a paste, an input method's text | a component has `onText`, `onPaste` or `onCompose` |
+| `press_<area>` | a button or a finger going down inside the area | on those cells a component has `onClick` or `onPointer`, or takes the keys, which a press gives it |
+| `release_<area>` | that button coming up, wherever the pointer is by then | on those cells a component has `onPointer` |
+| `wheel_<area>` | the wheel turning inside the area | on those cells a component has `onWheel` |
+| `move_<area>` | every move inside the area with no button down | on those cells a component says it takes every move (`PaintCanvas`) |
+| `drag` | every move anywhere on the page while a button is down | a component on the page has `onPointer`: it holds the pointer from its press to the release |
+| `hover_in`, `hover_out` | the pointer coming onto any control, and leaving it | the page declares a control and a component has `onHover` or reads what is under the pointer (the hint row) |
+| `focus`, `blur` | the keyboard's focus coming to the page and leaving it | a component has `onPageFocus`, or `onPageBlur` |
+
+An **area** is a rectangle of the first sub-page's cells, in dots (a cell
+is 12 by 20), where the same is taken of the pointer: a component's cells
+are those where it, or one drawn inside it, is the deepest thing drawn,
+so a dialog over a button takes the button's cells from it. Areas share
+no cell, so one event is sent by one rule. An area is named for the
+component that takes the pointer there and numbered, as `button_1`. A
+page with more than 16 areas, or whose rules would pass 64 (the table's
+limits, `MOST_RECTS` and `MOST_RULES`), asks the whole page instead, under
+the names the server's default table uses: `press`, `release`, `wheel`,
+and `move` or `drag`.
+
+A page of text asks for nothing: its table has no rules, and nothing a
+viewer does on it is sent. **That includes the digits and the coloured
+keys**, which the protocol kit selects pages by: on a page where no
+component takes the keys they are not sent, so the page is left by its
+links and prompts, which the browser follows itself, or by the browser's
+own page keys.
+
+A component of your own is read from its handlers, so it needs nothing
+new. One that takes less than its handlers could says so, and the table
+asks less:
+
+```ts
+override pointerInput(): PointerInput {
+  // Dragged only: no move is wanted while no button is down.
+  return { ...takenByHandlers(this), moves: "held" };
+}
+```
+
+`Slider` and `ScrollBar` do this; a modal's `Shield`, which only stops the
+pointer, answers `NO_POINTER_INPUT`. An input that comes back is given to
+its component as it always was, by the cell it landed on and by who has
+the keys; `input.rule` only says which rule asked for it. A fault a
+viewer's browser reports of a table (`rulesFault`) is written to the
+channel's log.
 
 ## Sound
 
@@ -159,5 +224,6 @@ repositories beside this one.
 | A character a text run's language cannot show refuses the whole page, unless the run is marked as from outside the program: what a viewer types is, and text from a dataset or a feed is when its component, or one above it, has the prop `outside: true`; the server then shows a stand-in for the character | DEC-2326 |
 
 The server records no addresses and no typed text (DOC-1968). A channel learns the pointer only over its own open page, while keys
-go to it: its clicks, drags and moves at most 60 a second, and nothing of
-the pointer anywhere else (DOC-2033).
+go to it, and only what the page's rule table asks for: its clicks, drags
+and moves at most 60 a second, and nothing of the pointer anywhere else
+(DOC-2033; page-rules.md RULE-52).

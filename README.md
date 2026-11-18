@@ -76,6 +76,13 @@ await runChannel([
 - **`ComponentChannel`** is the protocol's `Application` for pages of
   components: each `PageSpec` names its page, title and root, and whether
   each viewer gets a copy of their own (`perViewer`).
+- **Each page asks for its own input.** A viewer's browser sends a page
+  only what the page's rule table asks for (program protocol 14), and the
+  library writes that table from the components on the page: keys where
+  one takes them, a press on a button's cells, the wheel over a list that
+  scrolls, nothing on a page of text. A channel writes no table, and its
+  entry in the server's `channels.json` can say `"default_rules": "none"`
+  ([How it works](docs/how-it-works.md#the-rule-table-what-a-page-asks-for)).
 - **`Frame`** is a sub-page with a title band, a hint row and up to four
   Fastext prompts, red, green, yellow and cyan.
 - **The bus** (`this.services.bus`) carries what one page's components
