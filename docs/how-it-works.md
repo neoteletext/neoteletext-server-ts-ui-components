@@ -306,6 +306,24 @@ channel's log.
   connection and no parameters, and gives a title and text anyone may read, with a
   picture of the shared copy. A page without it shows nothing of itself
   (`neoteletext-common`'s REQ-1728).
+- **A snapshot** is the page drawn for no one in particular, for a
+  browser tab's picture, which any stranger may see for a minute
+  (`neoteletext-common`'s `docs/tab-thumbnails.md` section 7.4,
+  REQ-6903). The kit runs the page's selection for it on a connection of
+  its own, numbered below zero, as for someone who has just arrived, and
+  answers with what that connection is shown first. The library makes its
+  copy, when the page has one of each viewer's, with no parameters and no
+  viewer, so every kept component shows its own start and nothing of any
+  viewer's state is read; and does nothing beyond drawing for it:
+  `wantState`, `offerRemember`, `forgetViewer`, `setLanguage`, `play` and
+  every stream call do nothing, and `viewer` is null. The copy is
+  unmounted, with its timers, before the answer is sent.
+  `Services.isSnapshot(connection)` says whether a connection is a
+  snapshot's: a component of a channel's own with an effect beyond
+  drawing (counting visitors, telling others someone arrived) skips it.
+  A page never to be pictured says `snapshots: false` in its spec; a page
+  closed to strangers that denies a connection with no viewer as it is
+  drawn (`Services.deny`) is declined by the kit as well.
 - **When the program restarts**, the server drops the viewers' copies and
   tells it again who is where (`teletext-server`, DOC-1965).
 
