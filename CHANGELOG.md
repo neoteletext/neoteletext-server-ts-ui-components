@@ -3,6 +3,29 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 26.3.0 (19 November 2026)
+
+### What it changes
+
+- **NAPLPS cells meet exactly** (DEC-6849): built on
+  neoteletext-server-ts-protocol 18.4.0, whose NAPLPS builder writes
+  coordinates at four-byte precision, a picture page's NAPLPS fills
+  begin and end on their cells' own raster pixels, so two cells meet
+  exactly in one drawing and between drawings, and the raster's last
+  dot, 479, is painted. The growing of fills past their cells of 26.2.2
+  is gone, and a stream row or component is no longer drawn again when
+  only the objects beside it change. Text keeps to its cells along a
+  whole line: its field is written in four bytes, where at three a
+  line's 32nd character drew two cells left of its own. The goldens are
+  drawn again at format 5; only NAPLPS pictures change. A NAPLPS
+  picture's bytes grow by about 30 % (the catalogue's from 276,356 to
+  358,809).
+
+### To take it
+
+- Take neoteletext-server-ts-protocol 18.4.0 with it (the peer
+  dependency is 18.4.0), and replace 26.2.2 with 26.3.0 in `vendor/`.
+
 ## 26.2.2 (19 November 2026)
 
 ### What it changes
