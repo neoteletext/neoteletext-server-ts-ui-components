@@ -21,6 +21,9 @@ const SIXEL_DOTS = RASTER_CELL_DOTS / 2;
 const SEPARATED_GAP_DOTS = 2;
 const SEPARATED_GAP_LINES = 2;
 
+/** Double-height text is two teletext rows high (EN 300 706 Table 26, code 0/D). */
+const DOUBLE_HEIGHT_ROWS = 2;
+
 /** A rectangle of the raster: its top left dot and line, and the dots across and lines down it covers (RAS-6). */
 export interface RasterBox {
   readonly x: number;
@@ -63,10 +66,17 @@ export class NaplpsPainter implements CellPainter {
   }
 
   /**
-   * Text from its cell, one Noto cell a character (RAS-8). Double height is drawn single, on its upper row: the kit's
-   * `text` writes the field of one cell and no other, and is the one writer of a text part (DEC-6889).
+   * Text from its cell, one Noto cell a character (RAS-8), through the kit's `text`, the one writer of a text part.
+   * Double height is the kit's `rows: 2`, each character 12 dots by two rows from its upper row, the same pixels as
+   * teletext's double height (RAS-8 item 5, DEC-6889); the cell reader never gives it on row 23.
    */
-  text(row: number, column: number, text: string, language: LanguageTag | null, outside: boolean, entry: number): void {
-    this.#builder.pen(entry).text(text, { row, column, ...(language === null ? {} : { language }), ...(outside ? { outside } : {}) });
+  text(row: number, column: number, text: string, language: LanguageTag | null, outside: boolean, entry: number, doubleHeight: boolean): void {
+    this.#builder.pen(entry).text(text, {
+      row,
+      column,
+      ...(doubleHeight ? { rows: DOUBLE_HEIGHT_ROWS } : {}),
+      ...(language === null ? {} : { language }),
+      ...(outside ? { outside } : {}),
+    });
   }
 }

@@ -57,17 +57,23 @@ test("a sixel is its own dots and lines, 6 dots by 7, 7 and 6 lines, a separated
 
 test("text is the kit's at its cell, after the painter's pen", () => {
   const painted = new Naplps();
-  new NaplpsPainter(painted).text(4, 7, "Ab", "fr", true, 2);
+  new NaplpsPainter(painted).text(4, 7, "Ab", "fr", true, 2, false);
   assert.deepEqual(painted.parts(), new Naplps().pen(2).text("Ab", { row: 4, column: 7, language: "fr", outside: true }).parts());
 });
 
+test("double-height text is the kit's two-row text from its upper row (RAS-8 item 5, DEC-6889)", () => {
+  const painted = new Naplps();
+  new NaplpsPainter(painted).text(4, 7, "Ab", null, false, 2, true);
+  assert.deepEqual(painted.parts(), new Naplps().pen(2).text("Ab", { row: 4, column: 7, rows: 2 }).parts());
+});
+
 /**
- * The shared examples of neoteletext-common's docs/picture-examples.jsonl at d24ff33 (DEC-6857, TODO-6862), as both
+ * The shared examples of neoteletext-common's docs/picture-examples.jsonl at 92ecc72 (DEC-6857, TODO-6862), as both
  * kits copy them: the renderer's repository draws `naplps-text-page`'s bytes and finds every one of the 920 characters
  * exactly on its Noto cell (RAS-8). The library cannot run the renderer, so it compares its bytes with them.
  */
 const SHARED_EXAMPLES = join(import.meta.dirname, "fixtures", "picture-examples.jsonl");
-const SHARED_EXAMPLES_SHA256 = "c380063b8f8efded681dcc1a1b1c68030100fe397915a37bfc4f442c2d14e2f6";
+const SHARED_EXAMPLES_SHA256 = "59a543b296a4da4f018d40bc72a9456a391c9725106a5fa1756e15c506138655";
 /** RAS-8's page: 40 characters a row, row r and column c the G0 Latin English character of code 0x21 + ((r + c) mod 94). */
 const PAGE_COLUMNS = 40;
 const FIRST_CODE = 0x21;
@@ -115,17 +121,16 @@ function withPen(parts: readonly SharedPart[], entry: number): SharedPart[] {
   });
 }
 
-test("a page of 23 rows of 40 characters written by the painter is the shared example the renderer draws one Noto cell a character (RAS-8)", () => {
-  const text = readFileSync(SHARED_EXAMPLES, "utf8");
-  assert.equal(createHash("sha256").update(text).digest("hex"), SHARED_EXAMPLES_SHA256, "the shared examples as neoteletext-common d24ff33 has them");
+/** The parts of the shared example `name` in `text`, the shared examples' file. */
+function exampleParts(text: string, name: string): SharedPart[] {
   const example: unknown = text
     .split("\n")
     .filter((line) => line !== "")
     .map((line): unknown => JSON.parse(line))
-    .find((line) => typeof line === "object" && line !== null && "example" in line && line.example === "naplps-text-page");
+    .find((line) => typeof line === "object" && line !== null && "example" in line && line.example === name);
   assert.ok(typeof example === "object" && example !== null && "parts" in example && Array.isArray(example.parts));
   const listedParts: unknown[] = example.parts;
-  const expected = listedParts.map((part): SharedPart => {
+  return listedParts.map((part): SharedPart => {
     assert.ok(typeof part === "object" && part !== null, "a part is an object");
     if ("data" in part && typeof part.data === "string") {
       return { data: part.data };
@@ -133,13 +138,30 @@ test("a page of 23 rows of 40 characters written by the painter is the shared ex
     assert.ok("text" in part && typeof part.text === "string", "a part is data or text");
     return { text: part.text };
   });
+}
+
+test("a page of 23 rows of 40 characters written by the painter is the shared example the renderer draws one Noto cell a character (RAS-8)", () => {
+  const text = readFileSync(SHARED_EXAMPLES, "utf8");
+  assert.equal(createHash("sha256").update(text).digest("hex"), SHARED_EXAMPLES_SHA256, "the shared examples as neoteletext-common 92ecc72 has them");
+  const expected = exampleParts(text, "naplps-text-page");
 
   const builder = new Naplps().reset().clear();
   const painter = new NaplpsPainter(builder);
   for (let row = FIRST_TEXT_ROW; row <= LAST_TEXT_ROW; row += 1) {
-    painter.text(row, 0, pageRow(row), null, false, WHITE);
+    painter.text(row, 0, pageRow(row), null, false, WHITE, false);
   }
   const written = shared(builder.parts());
   assert.equal(written.filter((part) => "text" in part).length, LAST_TEXT_ROW - FIRST_TEXT_ROW + 1, "one run a row");
   assert.deepEqual(written, withPen(expected, WHITE));
+});
+
+test("double-height text written by the painter is the shared example naplps-double-height-text (RAS-8 item 5)", () => {
+  const [first, ...rest] = exampleParts(readFileSync(SHARED_EXAMPLES, "utf8"), "naplps-double-height-text");
+  assert.ok(first !== undefined);
+  const builder = new Naplps().reset().clear();
+  const painter = new NaplpsPainter(builder);
+  painter.text(1, 0, pageRow(0), null, false, WHITE, true);
+  painter.text(LAST_TEXT_ROW - 1, PAGE_COLUMNS - "Last".length, "Last", null, false, WHITE, true);
+  // The example selects the pen once; the painter selects its ink before every run.
+  assert.deepEqual(shared(builder.parts()), [first, ...withPen(rest, WHITE)]);
 });
