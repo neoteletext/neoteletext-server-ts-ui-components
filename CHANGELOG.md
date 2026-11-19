@@ -3,6 +3,38 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 27.0.0 (19 November 2026)
+
+### What it changes
+
+- **NAPLPS on the teletext raster** (DEC-6853, DEC-6857): built on
+  neoteletext-server-ts-protocol 19.0.0, a picture page's NAPLPS is
+  written in dots of the 480 by 500 teletext raster at six-byte
+  precision, shown on the 480 by 460 dots of lines 20 to 479, teletext
+  rows 1 to 23. A cell of row r and column c is dots 12c to 12c + 11 of
+  lines 20r to 20r + 19, filled exactly by the kit's `rect`; an object's
+  rectangle (`naplps_objects`) is its component's cells in those dots;
+  rows 0 and 24 are the teletext page's and nothing of the picture is
+  drawn there. The 640 by 480 design picture is gone.
+- **Text one Noto cell a character** (RAS-8): text is written through the
+  kit's `text` at its cell, so every character lies on its own 12 by 20
+  cell along a whole row. Double-height text is drawn at single height
+  on its upper row in NAPLPS until the kit can write a two-row field
+  (DEC-6889, needs the owner's confirmation); ReGIS keeps double height.
+- **Program protocol 16**, the kit's: a channel built on 27.0.0 stops on
+  a server at 15, and one on 26 stops on a server at 16.
+- The goldens are drawn again at format 6; only NAPLPS pictures change.
+  A NAPLPS picture's bytes grow by about 32 % (the catalogue's from
+  358,809 to 473,433).
+
+### To take it
+
+- Take neoteletext-server-ts-protocol 19.0.0 with it (the peer
+  dependency is 19.0.0), and replace 26.x with 27.0.0 in `vendor/`. A
+  channel that gives NAPLPS objects or coordinates of its own writes them
+  in raster dots (the kit's 19.0.0 notes). Deploy with a server at
+  program protocol 16.
+
 ## 26.3.0 (19 November 2026)
 
 ### What it changes
