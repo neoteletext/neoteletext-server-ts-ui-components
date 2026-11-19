@@ -49,6 +49,12 @@ export interface PageSpec {
    * All it gives, and all the page shows, is readable by anyone.
    */
   readonly describe?: () => PageDescription | null;
+  /**
+   * Whether the page may be pictured for a tab's thumbnail (tab-thumbnails.md section 7.4 item 3; REQ-6903): true when
+   * absent. False declines every snapshot of it without drawing it, for a page never to be shown to strangers. A page
+   * whose render or mount denies the connection (Services.deny) is declined as well, with nothing said here.
+   */
+  readonly snapshots?: boolean;
   /** The page's root element; on a page that keeps a copy for each viewer, made with what the viewer was sent there with (Services.redirect) or asked for in the address's query, if anything: a query's values are untrusted text. */
   root(params?: PageParams): Element;
 }
@@ -102,7 +108,7 @@ export class SpecNeeds {
    * long with the reason in its log.
    */
   entryOf(spec: PageSpec): PageEntry {
-    const entry: { page: number; title: string; section?: string; ownsDigits?: boolean; ownsColourKeys?: boolean } = {
+    const entry: { page: number; title: string; section?: string; ownsDigits?: boolean; ownsColourKeys?: boolean; snapshots?: boolean } = {
       page: spec.page,
       title: spec.title,
     };
@@ -114,6 +120,9 @@ export class SpecNeeds {
     }
     if (this.ownsColourKeys(spec)) {
       entry.ownsColourKeys = true;
+    }
+    if (spec.snapshots === false) {
+      entry.snapshots = false;
     }
     return entry;
   }

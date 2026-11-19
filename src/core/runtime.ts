@@ -4,6 +4,8 @@
 // - `opened`: a page with a copy for each viewer is mounted for that viewer (or found, if it was kept while they were away).
 // - `input`: to the viewer's mount, or the channel's for a shared page; `wake`: the timers that are due run.
 // - `leftPage` and `gone`: the viewer's mounts are unmounted; what their components keep (REQ-1058) stays in the store.
+// - A snapshot's connection (REQ-6903) is a stranger who has just arrived: mounted with no parameters and no viewer, nothing done for it beyond
+//   drawing (channel-services.ts), and unmounted with its timers when the kit says it left and is gone, within the one call that answers it.
 // - `viewerBegan`: what the connection held with no viewer is kept under the viewer's handle (viewer-state.md VS-407).
 // - `rulesFault`: a fault a viewer's receiver found in a page's rule table is logged; the table is the library's (rule-tables.ts).
 // After each call every mount with something new renders, and a page is published only if its TTI changed; each page's rule table, written from its
@@ -139,6 +141,10 @@ export class ComponentChannel implements Application {
 
   joined(connection: number, context: Context): void {
     this.#run(context, () => {
+      // A snapshot's connection has no viewer and no language of its own (REQ-6903 item 1): nothing is read for it.
+      if (context.isSnapshot(connection)) {
+        return;
+      }
       this.#viewerStates.joined(connection);
       this.#languages.joined(context, connection);
     });

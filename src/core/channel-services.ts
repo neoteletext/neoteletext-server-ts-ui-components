@@ -1,6 +1,10 @@
 // What a mounted component reaches of its channel (services.ts), made from
 // the runtime's parts for one copy of one page: the server call's context,
 // the viewer's address, streams and sounds, their language and their state.
+// A snapshot's connection (tab-thumbnails.md section 7.4; REQ-6903) is no
+// one: it has no viewer, and nothing beyond drawing is done for it, so
+// every call that would ask for state, sound, a stream or a language for it
+// does nothing here, once, whichever component makes it.
 
 import type { Context } from "../kit.ts";
 import type { EventBus } from "./bus.ts";
@@ -25,6 +29,56 @@ export interface ServiceParts {
   readonly viewers: ViewerStates;
 }
 
+/** Whether a connection is a snapshot's: such a connection is no one, and nothing beyond drawing is done for it. */
+type IsSnapshot = (connection: number) => boolean;
+
+/** `call`, done for every connection but a snapshot's (REQ-6903 item 2). */
+function forViewers<Rest extends unknown[]>(isSnapshot: IsSnapshot, call: (to: number, ...rest: Rest) => void): (to: number, ...rest: Rest) => void {
+  return (to, ...rest) => {
+    if (!isSnapshot(to)) {
+      call(to, ...rest);
+    }
+  };
+}
+
+/** The viewer's stream (live-streams.ts), never started or changed for a snapshot's connection. */
+function streamServices(
+  streams: ReturnType<LiveStreams["services"]>,
+  isSnapshot: IsSnapshot,
+): Pick<Services, "stream" | "stopStream" | "pauseStream" | "resumeStream" | "seekStream" | "streamGain" | "listening" | "streamPlace"> {
+  return {
+    stream: (source, to, fromMs) => {
+      if (!isSnapshot(to)) {
+        streams.stream(source, to, fromMs);
+      }
+    },
+    stopStream: forViewers(isSnapshot, streams.stopStream),
+    pauseStream: forViewers(isSnapshot, streams.pauseStream),
+    resumeStream: forViewers(isSnapshot, streams.resumeStream),
+    seekStream: forViewers(isSnapshot, streams.seekStream),
+    streamGain: forViewers(isSnapshot, streams.streamGain),
+    listening: streams.listening,
+    streamPlace: streams.streamPlace,
+  };
+}
+
+/** The viewer and their language (viewer-states.ts, viewer-languages.ts): a snapshot's connection has no viewer, chooses no language and never asks for state (REQ-6903 items 1 and 2). */
+function viewerServices(
+  parts: ServiceParts,
+  isSnapshot: IsSnapshot,
+): Pick<Services, "language" | "setLanguage" | "viewer" | "wantState" | "offerRemember" | "forgetViewer"> {
+  const languages = parts.languages.services(parts.context);
+  const viewers = parts.viewers.services(parts.context, parts.bus);
+  return {
+    language: languages.language,
+    setLanguage: forViewers(isSnapshot, languages.setLanguage),
+    viewer: (to) => (isSnapshot(to) ? null : viewers.viewer(to)),
+    wantState: forViewers(isSnapshot, viewers.wantState),
+    offerRemember: forViewers(isSnapshot, viewers.offerRemember),
+    forgetViewer: forViewers(isSnapshot, viewers.forgetViewer),
+  };
+}
+
 /** The services of the copy of `page` for `connection`, or the channel's (null). */
 export function channelServices(parts: ServiceParts, page: number, connection: number | null): Services {
   const context = (): Context => {
@@ -34,6 +88,7 @@ export function channelServices(parts: ServiceParts, page: number, connection: n
     }
     return now;
   };
+  const isSnapshot: IsSnapshot = (to) => parts.context()?.isSnapshot(to) === true;
   return {
     connection,
     page,
@@ -51,20 +106,27 @@ export function channelServices(parts: ServiceParts, page: number, connection: n
     deny: (to, status) => {
       context().deny(to, status);
     },
-    ...parts.streams.services(context, page, () => parts.context()?.now() ?? 0),
+    isSnapshot,
+    ...streamServices(
+      parts.streams.services(context, page, () => parts.context()?.now() ?? 0),
+      isSnapshot,
+    ),
     title: (text) => {
       context().title(page, fit(text, context().limits().budgets.titleCharacters));
     },
     limits: () => context().limits(),
     languages: () => context().languages(),
-    ...parts.languages.services(parts.context),
-    ...parts.viewers.services(parts.context, parts.bus),
+    ...viewerServices(parts, isSnapshot),
     below: (bound) => context().below(bound),
     log: (text) => {
       context().log(text);
     },
+    // A sound to the copy's own connection, or to everyone on the page from the channel's copy; none to a snapshot's (REQ-6903 item 2).
     play: (sound, to) => {
-      parts.sounds.play(context(), sound, to ?? connection, page);
+      const target = to ?? connection;
+      if (target === null || !isSnapshot(target)) {
+        parts.sounds.play(context(), sound, target, page);
+      }
     },
   };
 }

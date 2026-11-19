@@ -29,9 +29,11 @@ export function newMount(
   const log = (text: string): void => {
     parts.context()?.log(text);
   };
+  // REQ-6903 item 1: a snapshot's copy is a stranger's, whose kept components show their defaults and read nothing of any viewer's.
+  const snapshot = connection !== null && parts.context()?.isSnapshot(connection) === true;
   const kept = new KeptComponents(
     parts.store,
-    connection === null
+    connection === null || snapshot
       ? null
       : {
           viewer: (): KeptViewer | null => parts.viewers.viewer(parts.context(), connection),

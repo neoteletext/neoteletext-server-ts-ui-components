@@ -30,6 +30,16 @@ export interface Services {
   redirect(connection: number, address: string): void;
   /** Ends a viewer's selection with no page, the kit's `Context.deny` (DOC-1961): 403 forbidden, 404 not found, 429 too many, 503 unavailable. Called while their selection is being answered (from a page's render or mount), the status is the answer in place of the page; at any other time it ends the selection they have. */
   deny(connection: number, status: DeniedStatus): void;
+  /**
+   * Whether `connection` is a snapshot's (tab-thumbnails.md section 7.4;
+   * REQ-6903): the page drawn for no one in particular, for a tab's
+   * picture, which any stranger may see. It has no viewer and no
+   * parameters, and the library does nothing beyond drawing for it (no
+   * state asked for, no sound, no stream, no language); a component with
+   * an effect of its own beyond drawing, such as counting visitors or
+   * telling others someone arrived, skips it for a snapshot.
+   */
+  isSnapshot(connection: number): boolean;
   /** Gives this page a new title in the channel's contents (section 3.5). */
   title(text: string): void;
   /** Plays a sound to one viewer, or to everyone with this page open. */
