@@ -35,7 +35,7 @@ import { keptMessages } from "./picture-kept.ts";
 import { drawPictures, pictureServer } from "./picture-server.ts";
 
 /** The goldens' format: raised, with every golden drawn again, whenever what is drawn changes (DEVELOPMENT.md section 8). */
-export const GOLDEN_FORMAT_VERSION = 3;
+export const GOLDEN_FORMAT_VERSION = 4;
 
 const ROOT = join(import.meta.dirname, "..");
 export const GOLDENS = join(ROOT, "test", "goldens", "pictures");
@@ -57,6 +57,8 @@ export interface PictureExample {
   readonly sub: string;
   /** Its picture's messages, as the library keeps it. */
   readonly messages: readonly Record<string, unknown>[];
+  /** The scene the picture is drawn from, for tests that read what was drawn against its cells. */
+  readonly scene?: Parameters<typeof keptMessages>[1];
 }
 
 /** Every catalogue example staged in each picture language, with its shown sub-page's picture as the library keeps it. */
@@ -77,7 +79,7 @@ export function pictureExamples(): PictureExample[] {
           throw new Error(`${exampleName(example)} drew no ${renderer} picture of its sub-page ${at + 1}`);
         }
         const subText = sub.toString(PAGE_RADIX).toUpperCase().padStart(SUB_DIGITS, "0");
-        examples.push({ name: exampleName(example), renderer, page, sub: subText, messages: keptMessages(renderer, scene, page, subText) });
+        examples.push({ name: exampleName(example), renderer, page, sub: subText, messages: keptMessages(renderer, scene, page, subText), scene });
       }
     }
   }

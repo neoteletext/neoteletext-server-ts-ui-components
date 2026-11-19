@@ -12,14 +12,16 @@
 import { type ColourTable } from "../core/rollover.ts";
 import { Naplps, type NaplpsObject, type PicturePart } from "../kit.ts";
 import { drawCells, ROLLOVER_ENTRIES } from "./cell-drawing.ts";
-import { FIRST_TEXT_ROW, LAST_TEXT_ROW, LEVEL_1_PRIMARIES } from "./grid.ts";
-import { caretMacro, caretObject, componentObject, defineMacros, type Drawn, MacroSlots } from "./naplps-macros.ts";
+import { COLUMNS, FIRST_TEXT_ROW, LAST_TEXT_ROW, LEVEL_1_PRIMARIES } from "./grid.ts";
+import { caretMacro, caretObject, componentObject, defineMacros, type Drawn, laterRound, MacroSlots } from "./naplps-macros.ts";
 import { NaplpsPainter } from "./naplps-painter.ts";
 import { CURSOR_NUMBER } from "./numbers.ts";
 import { baseRowKey, componentKeys, cursorChange, cursorKey, linksChange, linksKey, linksOf, type SceneKeys } from "./scene-keys.ts";
 import type { PictureScene } from "./scene.ts";
 import type { ObjectsUpdate, PictureUpdate, PictureWriter } from "./update.ts";
 
+/** The rows a row's fill meets beyond itself: the one above, and the one or two below (a tall cell's fill is two rows high). */
+const ROWS_A_FILL_MEETS = [-1, 1, 2] as const;
 /** An 8-bit intensity at its full. */
 const FULL_INTENSITY = 255;
 /** A rollover colour's four bits a primary (Table 30): times 17 is the 8-bit intensity. */
@@ -79,9 +81,16 @@ export class NaplpsPictureWriter implements PictureWriter {
   /** The rows of what the stream draws (`inStream`) that changed since `last`, each drawn again over itself. */
   static #baseRows(scene: PictureScene, last: NaplpsKeys | null, inStream: (owner: number) => boolean, units: PicturePart[][]): string[] {
     const drawn = new Set([0, ...[...scene.components.keys()].filter((number) => inStream(number))]);
+    // A cell an object draws, over the stream (TODO-6840): the owner 0 is the page's own cells, in the stream.
+    const beneathObject = (row: number, column: number): boolean => {
+      const owner = scene.owners[row]?.[column];
+      return owner !== undefined && owner !== 0 && scene.components.has(owner) && !inStream(owner);
+    };
     const base: string[] = [];
     for (let row = FIRST_TEXT_ROW; row <= LAST_TEXT_ROW; row += 1) {
-      const key = baseRowKey(scene, row, inStream);
+      // The row's fills reach into the objects' cells round it, so which cells of the rows next to it are an object's is part of what it draws.
+      const round = ROWS_A_FILL_MEETS.map((offset) => Array.from({ length: COLUMNS }, (_, column) => beneathObject(row + offset, column)));
+      const key = JSON.stringify([baseRowKey(scene, row, inStream), round]);
       base[row] = key;
       if (last?.base[row] !== key) {
         const builder = new Naplps();
@@ -94,7 +103,7 @@ export class NaplpsPictureWriter implements PictureWriter {
           pageLanguage: scene.language,
           rows: new Set([row]),
         } as const;
-        drawCells(scene.cells, selection, new NaplpsPainter(builder));
+        drawCells(scene.cells, selection, new NaplpsPainter(builder, { clip: null, drawnOver: beneathObject }));
         units.push(builder.parts());
       }
     }
@@ -135,7 +144,13 @@ export class NaplpsPictureWriter implements PictureWriter {
     const inStream = (owner: number): boolean => drawnAs.get(owner)?.kind !== "macro";
     const units: PicturePart[][] = last === null ? [opening(this.#rollover).parts()] : [];
     const base = NaplpsPictureWriter.#baseRows(scene, last, inStream, units);
-    const keys = componentKeys(scene, this.#rollover !== null);
+    // A component's macros reach into the later components' cells round it, so those are part of its key (TODO-6840).
+    const keys = new Map(
+      [...componentKeys(scene, this.#rollover !== null)].map(([number, key]) => {
+        const component = scene.components.get(number);
+        return [number, component === undefined ? key : JSON.stringify([key, laterRound(scene, component)])];
+      }),
+    );
     const now = this.#objects(scene, last, drawnAs, keys, units);
     const caret = caretObject(scene);
     const caretKey = cursorKey(scene);
