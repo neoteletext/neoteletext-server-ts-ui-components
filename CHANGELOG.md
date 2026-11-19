@@ -3,6 +3,25 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 27.1.0 (19 November 2026)
+
+### What it changes
+
+- **Double height in NAPLPS** (DEC-6889, RAS-8 item 5): built on
+  neoteletext-server-ts-protocol 19.1.0, whose `text` takes `rows: 2`,
+  double-height text in a NAPLPS picture is drawn two rows high again,
+  each character 12 dots by 40 lines from its upper row, the same pixels
+  as teletext's double height: the frame's title band, headings and
+  every double-height component. ReGIS and teletext are unchanged.
+- The goldens are drawn again at format 7; only NAPLPS pictures change,
+  and only on the rows of double-height text.
+
+### To take it
+
+- Take neoteletext-server-ts-protocol 19.1.0 with it (the peer
+  dependency is 19.1.0) and replace 27.0.0 with 27.1.0 in `vendor/`.
+  Nothing a channel calls changes.
+
 ## 27.0.0 (19 November 2026)
 
 ### What it changes
