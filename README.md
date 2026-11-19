@@ -77,7 +77,7 @@ await runChannel([
   components: each `PageSpec` names its page, title and root, and whether
   each viewer gets a copy of their own (`perViewer`).
 - **Each page asks for its own input.** A viewer's browser sends a page
-  only what the page's rule table asks for (program protocol 15), and the
+  only what the page's rule table asks for (program protocol 16), and the
   library writes that table from the components on the page, each
   sub-page its own from its own cells (a sub-page is a page): keys where
   one takes them, a press on a button's cells, the wheel over a list that

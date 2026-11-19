@@ -87,8 +87,8 @@ the picture's language.
    spaces, since a picture is still and has no reveal.
 3. **Drawn on the grid.** ReGIS: a cell is 20 by 20 pixels, row r at
    y = 10 + 20 (r - 1), column c at x = 20 c. NAPLPS: the teletext
-   raster's own 12 by 20 cells, written in the 640 by 480 design
-   picture. Backgrounds and sixels are filled rectangles; text is text
+   raster's own 12 by 20 cells on rows 1 to 23, written as those dots
+   (DEC-6853, DEC-6857); text is one Noto cell a character. Backgrounds and sixels are filled rectangles; text is text
    parts, which the server writes in the language's provided sets
    (PAR-21, DEC-6669), so a picture's text is never in letters of its
    own.
@@ -122,7 +122,7 @@ the picture's language.
 ## A key: from the viewer to a component, and back
 
 1. **The browser sends it, if the page's rule table asks for it.** A page
-   hears no input but what a rule of its table sends (program protocol 15;
+   hears no input but what a rule of its table sends (program protocol 16;
    `neoteletext-common/docs/page-rules.md`, RULE-50): a page with no table,
    or a table with no rules, is sent nothing. Unless the channel says
    `ruleTables: "none"`, the library writes each
@@ -158,7 +158,7 @@ the picture's language.
 
 ## The rule table: what a page asks for
 
-Under program protocol 15 a viewer's browser sends a page's channel only
+Under program protocol 16 a viewer's browser sends a page's channel only
 what the page's rule table asks for (`neoteletext-common/docs/page-rules.md`;
 REQ-6523). A page is a page number and a sub-code together (DEC-6599,
 RULE-112): each sub-page has a table of its own. The library writes each
