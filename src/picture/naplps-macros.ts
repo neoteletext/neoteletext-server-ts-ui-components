@@ -12,9 +12,9 @@
 
 import { Naplps, type NaplpsObject, naplpsLimits, type NaplpsObjectSpec } from "../kit.ts";
 import { drawCells, type Look } from "./cell-drawing.ts";
-import { NAPLPS_COLUMN, naplpsDotCentre, naplpsLine, naplpsLineCentre, naplpsX, naplpsY, RASTER_ROW_LINES, rasterDot, rasterLine } from "./grid.ts";
+import { RASTER_CELL_DOTS, rasterDot, rasterLine } from "./grid.ts";
 import { boundsOf, objectLabel } from "./naplps-objects.ts";
-import { NaplpsPainter } from "./naplps-painter.ts";
+import { NaplpsPainter, type RasterBox } from "./naplps-painter.ts";
 import { CURSOR_NUMBER } from "./numbers.ts";
 import type { PictureScene, SceneComponent } from "./scene.ts";
 import { mostBytes } from "./stream-bounds.ts";
@@ -105,10 +105,9 @@ export function componentObject(scene: PictureScene, component: SceneComponent, 
   return new Naplps().object({ ...spec, kind: "macro", originX: box.x, originY: box.y, frames: [frame], ...looks });
 }
 
-/** The caret's rectangle: the foot of its cell. */
-function caretBox(row: number, column: number): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } {
-  const y = naplpsLine(RASTER_ROW_LINES * (row + 1) - CARET_LINES);
-  return { x: naplpsX(column), y, width: NAPLPS_COLUMN, height: Math.max(1, naplpsY(row + 1) - y) };
+/** The caret's rectangle: the last CARET_LINES raster lines of its cell. */
+function caretBox(row: number, column: number): RasterBox {
+  return { x: rasterDot(column), y: rasterLine(row + 1) - CARET_LINES, width: RASTER_CELL_DOTS, height: CARET_LINES };
 }
 
 /** The caret's object, or null with none. */
@@ -120,13 +119,11 @@ export function caretObject(scene: PictureScene): NaplpsObject | null {
   return new Naplps().object({ number: CURSOR_NUMBER, kind: "macro", ...box, originX: box.x, originY: box.y, frames: [CARET_MACRO], layer: OVERLAY_LAYER });
 }
 
-/** The caret's macro defined where it is now. */
+/** The caret's macro defined where it is now: a bar of exactly its rectangle's dots (RAS-6). */
 export function caretMacro(row: number, column: number): Naplps {
-  // The bar covers exactly the last CARET_LINES raster lines of its cell, from the first's centre to the last's (DEC-6849).
-  const [left, right] = [naplpsDotCentre(rasterDot(column)), naplpsDotCentre(rasterDot(column + 1) - 1)];
-  const [top, bottom] = [naplpsLineCentre(rasterLine(row + 1) - CARET_LINES), naplpsLineCentre(rasterLine(row + 1) - 1)];
+  const { x, y, width, height } = caretBox(row, column);
   return new Naplps().defineMacro(CARET_MACRO, (builder) => {
-    builder.pen(CARET_ENTRY).rect(left, top, right - left, bottom - top, { filled: true });
+    builder.pen(CARET_ENTRY).rect(x, y, width, height, { filled: true });
   });
 }
 

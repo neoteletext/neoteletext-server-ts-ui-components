@@ -11,7 +11,8 @@
 // and pressed looks, its links and the caret (picture-kept.ts). The server
 // at PICTURE_SERVER draws a public ReGIS picture with its committed
 // drawings composed over the base and a NAPLPS picture with its shown
-// objects clipped by the design picture (ANIM-11), so the golden is what a
+// objects clipped to their rectangles of raster dots (ANIM-11, RAS-4) on
+// the display area of rows 1 to 23 (RAS-11), so the golden is what a
 // viewer is shown of the page before the pointer comes onto it.
 //
 // The pictures are the goldens of test/goldens/pictures/;
@@ -35,7 +36,7 @@ import { keptMessages } from "./picture-kept.ts";
 import { drawPictures, pictureServer } from "./picture-server.ts";
 
 /** The goldens' format: raised, with every golden drawn again, whenever what is drawn changes (DEVELOPMENT.md section 8). */
-export const GOLDEN_FORMAT_VERSION = 5;
+export const GOLDEN_FORMAT_VERSION = 6;
 
 const ROOT = join(import.meta.dirname, "..");
 export const GOLDENS = join(ROOT, "test", "goldens", "pictures");

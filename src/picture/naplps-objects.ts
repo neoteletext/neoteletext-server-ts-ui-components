@@ -1,10 +1,11 @@
 // What a NAPLPS picture page's objects are made of (renderer parity PAR-42,
-// animation.md ANIM-11): each one's rectangle round its cells in the
-// design picture, and its label.
+// animation.md ANIM-11): each one's rectangle round its cells, in dots of
+// the teletext raster (neoteletext-common docs/naplps-raster.md RAS-4,
+// RAS-7), and its label.
 
 import { naplpsLimits } from "../kit.ts";
 import { FIRST_TEXT_ROW, LAST_TEXT_ROW } from "./grid.ts";
-import { cellsBox, type DesignBox } from "./naplps-painter.ts";
+import { cellsBox, type RasterBox } from "./naplps-painter.ts";
 import type { PictureScene } from "./scene.ts";
 
 /** A label as an object takes it: UTF-8 within MAX_LABEL_BYTES, cut at a whole character, or none. */
@@ -20,8 +21,8 @@ export function objectLabel(label: string): string | null {
   return cut === "" ? null : cut;
 }
 
-/** The design picture's rectangle round a component's cells. */
-export function boundsOf(scene: PictureScene, number: number): DesignBox | null {
+/** The raster's rectangle round a component's cells, cut to the picture's rows. */
+export function boundsOf(scene: PictureScene, number: number): RasterBox | null {
   let top = Infinity;
   let bottom = -Infinity;
   let left = Infinity;
