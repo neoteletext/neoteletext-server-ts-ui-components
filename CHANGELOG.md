@@ -3,6 +3,35 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 27.2.0 (19 November 2026)
+
+### What it changes
+
+- **Snapshots for tabs' pictures** (DEC-6875, REQ-6903;
+  `neoteletext-common`'s `docs/tab-thumbnails.md` section 7.4): built on
+  neoteletext-server-ts-protocol 19.2.1, which answers the server's
+  `snapshot` by running the page's selection for a stranger on a
+  connection of its own. The library draws that page as for someone who
+  has just arrived: no parameters, no viewer, every kept component at its
+  own start, the channel's language, and nothing beyond drawing (no state
+  asked for, no remember offer, no sound, no stream, no language chosen).
+  Its copy is unmounted with its timers before the answer goes.
+- **`Services.isSnapshot(connection)`**: whether a connection is a
+  snapshot's, for a component with an effect of its own beyond drawing.
+- **`PageSpec.snapshots`**: `false` declines every snapshot of the page,
+  passed to the kit's `PageEntry.snapshots`. A page that denies a
+  connection with no viewer as it is drawn is declined as well.
+
+### To take it
+
+- Take neoteletext-server-ts-protocol 19.2.1 with it (the peer
+  dependency is 19.2.1) and replace 27.1.0 with 27.2.0 in `vendor/`.
+  Nothing a channel calls changes. A channel whose pages are closed to
+  strangers, drawn from one viewer's data, or count visitors looks at
+  each: `snapshots: false`, a deny, or an `isSnapshot` check.
+- A program on 27.1.0 or before takes the server's `snapshot` for an
+  unknown message: the channel moves before the server that sends it.
+
 ## 27.1.0 (19 November 2026)
 
 ### What it changes
