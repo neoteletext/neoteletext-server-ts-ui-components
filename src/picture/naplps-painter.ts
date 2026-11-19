@@ -1,8 +1,10 @@
 // Cells drawn in NAPLPS on the grid of PAR-42 (renderer parity;
 // cell-drawing.ts says what is drawn), in the 640 by 480 design picture of
-// ANIM-11 as the kit's builder writes it, at the default three-byte
-// precision (ANSI X3.110-1983 section 5.3.1): a background or a sixel is a
-// filled RECTANGLE (section 5.3.3.4.5); text is written in a field 1/40 of
+// ANIM-11 as the kit's builder writes it, at its four-byte precision (ANSI
+// X3.110-1983 section 5.3.2.2.3; DEC-6849): a background or a sixel is a
+// filled RECTANGLE (section 5.3.3.4.5) covering exactly its raster pixels,
+// so cells meet exactly within a drawing and between drawings, and no fill
+// reaches past its cells; text is written in a field 1/40 of
 // the unit screen wide and 20 raster lines high (PAR-10), TEXT (section
 // 5.3.2.11) sent before each part since an object's macro starts from
 // RESET's presentation state (ANIM-11), and from the foot of its row, since
@@ -10,15 +12,38 @@
 
 import { COLUMNS, type LanguageTag, type Naplps, naplpsLimits } from "../kit.ts";
 import type { CellPainter } from "./cell-drawing.ts";
-import { DISPLAY_LINES, NAPLPS_COLUMN, NAPLPS_SIXEL_WIDTH, naplpsLine, naplpsX, naplpsY, RASTER_ROW_LINES, SIXEL_HEIGHTS } from "./grid.ts";
+import {
+  DISPLAY_LINES,
+  NAPLPS_COLUMN,
+  naplpsDotCentre,
+  naplpsLineCentre,
+  naplpsX,
+  naplpsY,
+  RASTER_CELL_DOTS,
+  RASTER_ROW_LINES,
+  rasterDot,
+  rasterLine,
+  SIXEL_HEIGHTS,
+} from "./grid.ts";
 
-/** A separated sixel leaves its right and bottom 2 design pixels out (EN 300 706 Table 26, Separated Mosaic Graphics). */
-const SEPARATED_GAP = 2;
+/** A mosaic cell's sixels are half a raster cell across. */
+const SIXEL_DOTS = RASTER_CELL_DOTS / 2;
+/** A separated sixel leaves its right 2 dots and bottom 2 raster lines out (EN 300 706 Table 26, Separated Mosaic Graphics). */
+const SEPARATED_GAP_DOTS = 2;
+const SEPARATED_GAP_LINES = 2;
 
 // Section 5.3.1 and Figure 11: a multi-value operand's bytes carry three bits of x and three of y each, after the data bit.
 const OPERAND = 0x40;
 const AXIS_BITS_PER_BYTE = 3;
-const OPERAND_BYTES = 3;
+/**
+ * The TEXT field's operand is written in four bytes, in the domain the kit's builder selects before these bytes
+ * (DEC-6849). PAR-10 states the field at a three-byte operand's precision, where 1/40 of the unit screen is 6/256,
+ * 11.25 dots: each character then advanced three quarters of a dot short of its 12-dot cell, and a line's 32nd
+ * character was drawn two cells left of its own (the poll's counts, measured on the goldens of format 4). In four
+ * bytes it is 51/2048, 11.95 dots, under two dots short at a line's end; 1/40 is no binary fraction, so no length is
+ * exact.
+ */
+const OPERAND_BYTES = 4;
 const AXIS_BITS = OPERAND_BYTES * AXIS_BITS_PER_BYTE;
 /** The steps of one unit of the unit screen at that precision: the operand's top bit is its sign. */
 const UNIT_STEPS = 2 ** (AXIS_BITS - 1);
@@ -63,137 +88,56 @@ export function cellsBox(row: number, column: number, width: number, height: num
   return { x: naplpsX(column), y, width: width * NAPLPS_COLUMN, height: naplpsY(row + height) - y };
 }
 
-/**
- * One step of the operand's precision in the design picture, rounded up to whole design pixels: across, the
- * picture's width is the unit's, so 640/256 is 2.5; down, the display shows 25/32 of the unit, so 480/200 is 2.4.
- * A coordinate written at that precision lands within half a step of where it was meant to be.
- */
-export const OVERFILL_ACROSS = Math.ceil(naplpsLimits.OBJECT_PICTURE_WIDTH / UNIT_STEPS);
-export const OVERFILL_DOWN = Math.ceil(
-  (naplpsLimits.OBJECT_PICTURE_HEIGHT * naplpsLimits.DISPLAY_HEIGHT_DENOMINATOR) / (UNIT_STEPS * naplpsLimits.DISPLAY_HEIGHT_NUMERATOR),
-);
-
-/** Which edges of a rectangle are grown by a step of the operand's precision. */
-interface Grown {
-  readonly left: boolean;
-  readonly top: boolean;
-  readonly right: boolean;
-  readonly bottom: boolean;
-}
-
-/** `box` grown by a whole step of the operand's precision at each edge `grown` names, within the design picture. */
-function grow(box: DesignBox, grown: Grown): DesignBox {
-  const left = grown.left ? Math.max(box.x - OVERFILL_ACROSS, 0) : box.x;
-  const top = grown.top ? Math.max(box.y - OVERFILL_DOWN, 0) : box.y;
-  const right = grown.right ? Math.min(box.x + box.width + OVERFILL_ACROSS, naplpsLimits.OBJECT_PICTURE_WIDTH) : box.x + box.width;
-  const bottom = grown.bottom ? Math.min(box.y + box.height + OVERFILL_DOWN, naplpsLimits.OBJECT_PICTURE_HEIGHT) : box.y + box.height;
-  return { x: left, y: top, width: right - left, height: bottom - top };
-}
-
-/** `box` grown by a whole step of the operand's precision at each edge it shares with `clip`, the rectangle of the object it is drawn in, which cuts it there exactly (Reach). */
-export function overfilled(box: DesignBox, clip: DesignBox): DesignBox {
-  return grow(box, {
-    left: box.x === clip.x,
-    top: box.y === clip.y,
-    right: box.x + box.width === clip.x + clip.width,
-    bottom: box.y + box.height === clip.y + clip.height,
-  });
-}
-
-/**
- * Where a painter's fills reach past their cells (TODO-6840). A filled rectangle written at three-byte precision
- * cannot end on most of the raster's cell edges: a step is 2.31 raster lines and 1.875 dots, so a cell's edge is
- * written up to half a step away and a fill can fall short of its cell by a line or a dot, which nothing then
- * paints. Where what lies past the edge hides what a fill reaches into, the fill is grown there by a whole step,
- * so that it covers every pixel of its cell:
- * - `clip`, in an object, is the object's rectangle. The renderer keeps exactly the canvas pixels whose centre
- *   lies in it (ANIM-11, DEC-6829), so a fill grown past it is cut exactly at the cell's edge.
- * - `drawnOver` says whether a cell is drawn by an object composed over this drawing (over the stream, or after
- *   this object in order of layer, order and number, ANIM-11), which paints every pixel of its cells.
- */
-export interface Reach {
-  readonly clip: DesignBox | null;
-  readonly drawnOver: (row: number, column: number) => boolean;
-}
-
-/** Whether the cell at `row`, `column` lies outside `clip`, where the renderer cuts what is drawn in it. */
-function outsideClip(clip: DesignBox | null, row: number, column: number): boolean {
-  if (clip === null) {
-    return false;
-  }
-  const cell = cellsBox(row, column, 1, 1);
-  return cell.x + cell.width <= clip.x || cell.x >= clip.x + clip.width || cell.y + cell.height <= clip.y || cell.y >= clip.y + clip.height;
+/** A run of raster pixels, first to last, each inclusive. */
+interface Pixels {
+  readonly firstDot: number;
+  readonly lastDot: number;
+  readonly firstLine: number;
+  readonly lastLine: number;
 }
 
 /** Draws cells on a NAPLPS builder. */
 export class NaplpsPainter implements CellPainter {
   readonly #builder: Naplps;
-  readonly #reach: Reach | null;
 
-  constructor(builder: Naplps, reach: Reach | null = null) {
+  constructor(builder: Naplps) {
     this.#builder = builder;
-    this.#reach = reach;
   }
 
   fill(row: number, column: number, width: number, height: number, entry: number): void {
-    const cells = cellsBox(row, column, width, height);
-    if (cells.height <= 0) {
+    if (width <= 0 || height <= 0) {
       return;
     }
     this.#builder.pen(entry);
-    if (this.#reach === null) {
-      this.#rect(cells);
-    } else {
-      this.#reaching(row, column, width, height, this.#reach);
-    }
+    this.#cover({
+      firstDot: rasterDot(column),
+      lastDot: rasterDot(column + width) - 1,
+      firstLine: rasterLine(row),
+      lastLine: rasterLine(row + height) - 1,
+    });
   }
 
-  /** A fill split where the cells above or below it change between drawn over and not, each piece grown where `reach` lets it. */
-  #reaching(row: number, column: number, width: number, height: number, { clip, drawnOver }: Reach): void {
-    const rows = Array.from({ length: height }, (_, index) => row + index);
-    const above = (at: number): boolean => drawnOver(row - 1, at);
-    const below = (at: number): boolean => drawnOver(row + height, at);
-    const whole = cellsBox(row, column, width, height);
-    const clipTop = clip !== null && whole.y === clip.y;
-    const clipBottom = clip !== null && whole.y + whole.height === clip.y + clip.height;
-    let start = column;
-    while (start < column + width) {
-      let end = start + 1;
-      while (end < column + width && above(end) === above(start) && below(end) === below(start)) {
-        end += 1;
-      }
-      const piece = cellsBox(row, start, end - start, height);
-      const top = clipTop || above(start);
-      const bottom = clipBottom || below(start);
-      // A side grown with a grown top or bottom reaches a step into the diagonal cell, which must be cut or drawn
-      // over too. An edge not grown may lie up to half a step past its cell whether or not a side is grown, as
-      // two rows' fills always may, and the grown side carries that no further than the step it grows by.
-      const hidden = (down: number, across: number): boolean => drawnOver(down, across) || outsideClip(clip, down, across);
-      const cornerHidden = (across: number): boolean => (!top || hidden(row - 1, across)) && (!bottom || hidden(row + height, across));
-      const sideHidden = (across: number): boolean => rows.every((each) => drawnOver(each, across)) && cornerHidden(across);
-      const left = (clip !== null && piece.x === clip.x) || (start === column && sideHidden(start - 1));
-      const right = (clip !== null && piece.x + piece.width === clip.x + clip.width) || (end === column + width && sideHidden(end));
-      this.#rect(grow(piece, { left, top, right, bottom }));
-      start = end;
-    }
-  }
-
-  #rect(box: DesignBox): void {
-    this.#builder.rect(box.x, box.y, box.width, box.height, { filled: true });
+  /**
+   * A filled RECTANGLE covering exactly `pixels`: it covers from the pixel its near corner rounds to through the pixel
+   * its far corner rounds to (ANSI X3.110-1983 sections 5.3.3.4.1 and 5.3.2.2.6), so it is written from the centre of
+   * the first pixel to the centre of the last, which four-byte coordinates place within a third of a pixel (DEC-6849).
+   * A cell's fill therefore meets its neighbours' exactly, in one drawing or two, and reaches nothing beyond it.
+   */
+  #cover({ firstDot, lastDot, firstLine, lastLine }: Pixels): void {
+    const x = naplpsDotCentre(firstDot);
+    const y = naplpsLineCentre(firstLine);
+    this.#builder.rect(x, y, naplpsDotCentre(lastDot) - x, naplpsLineCentre(lastLine) - y, { filled: true });
   }
 
   sixel(row: number, column: number, across: number, down: number, separated: boolean, entry: number): void {
     const above = SIXEL_HEIGHTS.slice(0, down).reduce((sum, lines) => sum + lines, 0);
-    const top = naplpsLine(RASTER_ROW_LINES * row + above);
-    const gap = separated ? SEPARATED_GAP : 0;
-    const height = naplpsLine(RASTER_ROW_LINES * row + above + (SIXEL_HEIGHTS[down] ?? 0)) - top - gap;
-    const width = NAPLPS_SIXEL_WIDTH - gap;
-    if (height > 0 && width > 0) {
-      const box = { x: naplpsX(column) + across * NAPLPS_SIXEL_WIDTH, y: top, width, height };
-      // A sixel on its object's edge falls short of it as a background would (Reach).
+    const firstDot = rasterDot(column) + across * SIXEL_DOTS;
+    const firstLine = rasterLine(row) + above;
+    const lastDot = firstDot + SIXEL_DOTS - 1 - (separated ? SEPARATED_GAP_DOTS : 0);
+    const lastLine = firstLine + (SIXEL_HEIGHTS[down] ?? 0) - 1 - (separated ? SEPARATED_GAP_LINES : 0);
+    if (lastDot >= firstDot && lastLine >= firstLine) {
       this.#builder.pen(entry);
-      const clip = this.#reach?.clip ?? null;
-      this.#rect(clip === null ? box : overfilled(box, clip));
+      this.#cover({ firstDot, lastDot, firstLine, lastLine });
     }
   }
 
@@ -202,7 +146,7 @@ export class NaplpsPainter implements CellPainter {
     this.#builder
       .bytes(textField(rows))
       .pen(entry)
-      .point(naplpsX(column), naplpsY(row + rows))
+      .point(naplpsDotCentre(rasterDot(column)), naplpsLineCentre(rasterLine(row + rows) - 1))
       .text(text, { ...(language === null ? {} : { language }), ...(outside ? { outside } : {}) });
   }
 }

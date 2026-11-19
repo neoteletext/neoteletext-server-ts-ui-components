@@ -35,7 +35,7 @@ import { keptMessages } from "./picture-kept.ts";
 import { drawPictures, pictureServer } from "./picture-server.ts";
 
 /** The goldens' format: raised, with every golden drawn again, whenever what is drawn changes (DEVELOPMENT.md section 8). */
-export const GOLDEN_FORMAT_VERSION = 4;
+export const GOLDEN_FORMAT_VERSION = 5;
 
 const ROOT = join(import.meta.dirname, "..");
 export const GOLDENS = join(ROOT, "test", "goldens", "pictures");

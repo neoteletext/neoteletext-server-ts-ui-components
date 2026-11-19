@@ -65,7 +65,7 @@ export function regisY(row: number): number {
 }
 
 /** The teletext raster a NAPLPS picture is shown on: a cell's dots across and lines down (the engine's 480 by 500 page). */
-const RASTER_CELL_DOTS = 12;
+export const RASTER_CELL_DOTS = 12;
 export const RASTER_ROW_LINES = 20;
 /** The raster's dots across, and the display area's first line and its lines (REQ-5819, DEC-6667). */
 const RASTER_DOTS = COLUMNS * RASTER_CELL_DOTS;
@@ -89,13 +89,40 @@ export function naplpsLine(line: number): number {
   return Math.round((fromTop * naplpsLimits.OBJECT_PICTURE_HEIGHT) / DISPLAY_LINES);
 }
 
-/** The top of row `row` in the design picture. */
+/** The top of row `row` in the design picture, the nearest whole line: an object's rectangle (ANIM-11) is whole. */
 export function naplpsY(row: number): number {
   return naplpsLine(RASTER_ROW_LINES * row);
 }
 
-/** A NAPLPS mosaic cell's sixels are half a column across. */
-export const NAPLPS_SIXEL_WIDTH = NAPLPS_COLUMN / 2;
+/** The raster's first dot of column `column`, and first line of row `row`. */
+export function rasterDot(column: number): number {
+  return RASTER_CELL_DOTS * column;
+}
+export function rasterLine(row: number): number {
+  return RASTER_ROW_LINES * row;
+}
+
+/**
+ * The design picture's point on which the centre of raster dot `dot` lands: the kit's builder writes x / 640 of the
+ * unit screen and the renderer puts it on the 480-dot canvas's x times 480/640, rounded to the nearest dot (ANSI
+ * X3.110-1983 section 5.3.2.2.6; DEC-6849), so a point written here lands on that dot.
+ */
+export function naplpsDotCentre(dot: number): number {
+  return (dot * naplpsLimits.OBJECT_PICTURE_WIDTH) / RASTER_DOTS;
+}
+
+/**
+ * The design picture's point on which the centre of raster line `line` lands. The builder writes y as (480 - y) / 480
+ * of the 25/32 of the unit screen the display shows, measured up from its foot, and the renderer puts the foot on the
+ * centre of the canvas's last line and the top a whole line above its first, so canvas line l (raster line l + 19) has
+ * its centre at design y = (l + 1) times 480/462. It is the whole-line mapping's unrounded value one line on
+ * (naplpsLine), and is not whole: at four-byte precision a step is 3/10 of a design line, so a point written here lands
+ * on that line (DEC-6849).
+ */
+export function naplpsLineCentre(line: number): number {
+  const fromTop = Math.min(Math.max(line + 1 - DISPLAY_FIRST_LINE, 0), DISPLAY_LINES);
+  return (fromTop * naplpsLimits.OBJECT_PICTURE_HEIGHT) / DISPLAY_LINES;
+}
 
 /** The eight Level 1 colours as red, green and blue, each on or off (EN 300 706 Table 30, CLUT 0). */
 export const LEVEL_1_PRIMARIES: readonly (readonly [boolean, boolean, boolean])[] = [

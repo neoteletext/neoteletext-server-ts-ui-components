@@ -1,75 +1,66 @@
-// REQ-6774, renderer parity PAR-42, TODO-6840: on the teletext raster a
+// REQ-6774, renderer parity PAR-42, DEC-6849: on the teletext raster a
 // NAPLPS picture's cell is 12 dots by 20 lines, row r on lines 20r to
 // 20r + 19 and column c on dots 12c to 12c + 11. The kit writes coordinates
-// at three-byte precision, a step of 2.31 raster lines and 1.875 dots (ANSI
-// X3.110-1983 section 5.3.2.2.3, Table 5), so a filled rectangle cannot end
-// on most cell edges, while an object's rectangle is exact (ANIM-11,
-// DEC-6829): a fill that fell short of it left the object's last line or
-// dot unpainted, a black line between two rows of coloured cells. Drawn by
-// the server's renderer, no raster line and no dot column of a coloured
-// blank cell is left black where it meets a cell of another drawing (an
-// object's and the stream's, or two objects'). The page's last dot, 479, is left out: the kit holds an
-// absolute coordinate below the unit screen's right edge, so nothing
-// reaches it (TODO-6846). The server is another repository's program:
-// without it named by TELETEXT_SERVER this test is skipped, saying so.
+// at four-byte precision (ANSI X3.110-1983 section 5.3.2.2.3, Table 5), a
+// step of 0.234 dots and 0.289 raster lines, and the painter writes each
+// fill from its first pixel's centre to its last's, so cells tile exactly:
+// drawn by the server's renderer, every pixel of every blank cell of every
+// NAPLPS catalogue page is one colour, its own background's. That reads
+// every boundary of every row and column where a blank cell lies, between
+// two cells of one drawing (the stream, or one object) and between two
+// drawings (an object's exact rectangle, ANIM-11 and DEC-6829, and the
+// stream or another object), the raster's last dot, 479, included: a fill
+// that fell short leaves a line or dot of what lies beneath, and one that
+// reached too far paints its colour into the cell next to it. The server
+// is another repository's program: without it named by TELETEXT_SERVER
+// this test is skipped, saying so.
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Colour, COLUMNS, FIRST_TEXT_ROW, LAST_TEXT_ROW, RASTER_ROW_LINES } from "../src/picture/grid.ts";
+import { COLUMNS, FIRST_TEXT_ROW, LAST_TEXT_ROW, RASTER_CELL_DOTS, RASTER_ROW_LINES } from "../src/picture/grid.ts";
 import type { PictureScene } from "../src/picture/scene.ts";
 import { pictureExamples } from "./picture-goldens.ts";
 import { drawPictures, pictureServer } from "./picture-server.ts";
 import { type Pixels, readPng } from "./png.ts";
 
 const server = pictureServer();
-/**
- * Pages whose rows of objects meet one another, the stream, and an object inside another's rectangle, each of
- * which showed a black raster line between two rows of coloured cells before TODO-6840.
- */
-const EXAMPLES = [
-  "collapsible-an-accordion-the-second-opened",
-  "textfield-a-placeholder-shown-while-it-does-not-have-the-keys",
-  "dialog-with-a-shadow-and-a-field",
-  "switch-on-and-off",
-  "tabstrip-each-style",
-  "wizard-finished",
-] as const;
-/** The raster's cell: 12 dots across (the engine's 480 by 500 page). */
-const CELL_DOTS = 12;
-/** The raster's last dot, which nothing written at three-byte precision reaches (TODO-6846). */
-const LAST_DOT = COLUMNS * CELL_DOTS - 1;
-const BLACK = 0x000000;
+/** The raster's last dot, which three-byte coordinates never reached (TODO-6846). */
+const LAST_DOT = COLUMNS * RASTER_CELL_DOTS - 1;
+/** The fewest boundaries of each kind the catalogue must exercise, so that the test reads what it says it reads. */
+const LEAST_BOUNDARIES = 100;
 
-/** A coloured blank cell drawn alone: a space on a background other than black, neither half of double height. */
-function colouredBlank(scene: PictureScene, row: number, column: number): boolean {
+/** A cell's neighbours' offsets, each way. */
+const NEXT_TO = [-1, 0, 1] as const;
+
+/**
+ * A blank cell: a space in its background alone, neither half of double height, nor the caret's cell, which the
+ * caret's bar draws over, nor beside text, since a provided glyph may be drawn wider than its 12-dot field and reach
+ * into the cell next to it, which is the font's, not the tiling's.
+ */
+function blank(scene: PictureScene, row: number, column: number): boolean {
   const cell = scene.cells[row]?.[column];
-  return cell !== undefined && cell.background !== Colour.Black && cell.content.kind === "space" && !cell.covered && !cell.tall && !cell.doubleHeight;
+  const caret = scene.cursor !== null && scene.cursor.row === row && scene.cursor.column === column;
+  const besideText = NEXT_TO.some((down) => NEXT_TO.some((across) => scene.cells[row + down]?.[column + across]?.content.kind === "text"));
+  return cell !== undefined && cell.content.kind === "space" && !cell.covered && !cell.tall && !cell.doubleHeight && !caret && !besideText;
 }
 
-/**
- * The lines and dot columns of the cell at `row`, `column` the test reads: those at each edge where it meets a cell
- * of another drawing, an object's and the stream's or two objects', where one drawing's fill met the other's exact
- * rectangle. An edge between two cells of one drawing is left out: both are drawn at three-byte precision, which
- * puts the line or dot where two colours meet up to one off (TODO-6848).
- */
-function linesChecked(scene: PictureScene, objects: ReadonlySet<number>, row: number, column: number): { lines: number[]; dots: number[] } {
-  const drawing = (down: number, across: number): number => {
-    const owner = scene.owners[down]?.[across] ?? 0;
-    return objects.has(owner) ? owner : 0;
-  };
-  const meets = (down: number, across: number): boolean => {
-    const inside = down >= FIRST_TEXT_ROW && down <= LAST_TEXT_ROW && across >= 0 && across < COLUMNS;
-    return inside && drawing(down, across) !== drawing(row, column);
-  };
-  const [left, top] = [CELL_DOTS * column, RASTER_ROW_LINES * row];
-  return {
-    lines: [...(meets(row - 1, column) ? [top] : []), ...(meets(row + 1, column) ? [top + RASTER_ROW_LINES - 1] : [])],
-    dots: [...(meets(row, column - 1) ? [left] : []), ...(meets(row, column + 1) ? [left + CELL_DOTS - 1] : [])].filter((dot) => dot !== LAST_DOT),
-  };
+/** The pixels of the cell at `row`, `column` that are not the colour of its first, as "dot,line". */
+function strayPixels(pixels: Pixels, row: number, column: number): string[] {
+  const [left, top] = [RASTER_CELL_DOTS * column, RASTER_ROW_LINES * row];
+  const colour = pixels.at(left, top);
+  const stray: string[] = [];
+  for (let line = top; line < top + RASTER_ROW_LINES; line += 1) {
+    for (let dot = left; dot < left + RASTER_CELL_DOTS; dot += 1) {
+      if (pixels.at(dot, line) !== colour) {
+        stray.push(`${String(dot)},${String(line)}`);
+      }
+    }
+  }
+  return stray;
 }
 
-/** The numbers of the macro objects among a picture's messages. */
+/** The numbers of the macro objects among a picture's messages: the drawings beside the stream. */
 function macroObjects(messages: readonly Record<string, unknown>[]): Set<number> {
   const numbers = new Set<number>();
   for (const message of messages) {
@@ -94,53 +85,74 @@ function macroObjects(messages: readonly Record<string, unknown>[]): Set<number>
   return numbers;
 }
 
-/** Whether every pixel at `points` is black. */
-function allBlack(pixels: Pixels, points: readonly (readonly [number, number])[]): boolean {
-  return points.every(([dot, line]) => pixels.at(dot, line) === BLACK);
+/** How many boundaries blank cells have with their neighbours on the page, of one drawing and of two, and how many lie on the last dot. */
+interface Boundaries {
+  oneDrawing: number;
+  twoDrawings: number;
+  lastDot: number;
 }
 
-/** The lines and dot columns of `scene`'s coloured blank cells left black where they meet another drawing's cells. */
-function blackEdges(name: string, scene: PictureScene, objects: ReadonlySet<number>, pixels: Pixels): string[] {
-  const black: string[] = [];
-  for (let row = FIRST_TEXT_ROW; row <= LAST_TEXT_ROW; row += 1) {
-    for (let column = 0; column < COLUMNS; column += 1) {
-      const [left, top] = [CELL_DOTS * column, RASTER_ROW_LINES * row];
-      const { lines, dots } = colouredBlank(scene, row, column) ? linesChecked(scene, objects, row, column) : { lines: [], dots: [] };
-      const blackLines = lines.filter((line) =>
-        allBlack(
-          pixels,
-          Array.from({ length: CELL_DOTS }, (_, index) => [left + index, line] as const),
-        ),
-      );
-      const blackDots = dots.filter((dot) =>
-        allBlack(
-          pixels,
-          Array.from({ length: RASTER_ROW_LINES }, (_, index) => [dot, top + index] as const),
-        ),
-      );
-      black.push(
-        ...blackLines.map((line) => `${name}: line ${String(line)} of row ${String(row)}, column ${String(column)}`),
-        ...blackDots.map((dot) => `${name}: dot ${String(dot)} of row ${String(row)}, column ${String(column)}`),
-      );
+/** Counts the boundaries of the blank cell at `row`, `column` with the cells beside it. */
+function countBoundaries(scene: PictureScene, objects: ReadonlySet<number>, row: number, column: number, counts: Boundaries): void {
+  const drawing = (down: number, across: number): number => {
+    const owner = scene.owners[down]?.[across] ?? 0;
+    return objects.has(owner) ? owner : 0;
+  };
+  for (const [down, across] of [
+    [row - 1, column],
+    [row + 1, column],
+    [row, column - 1],
+    [row, column + 1],
+  ] as const) {
+    if (down >= FIRST_TEXT_ROW && down <= LAST_TEXT_ROW && across >= 0 && across < COLUMNS) {
+      if (drawing(down, across) === drawing(row, column)) {
+        counts.oneDrawing += 1;
+      } else {
+        counts.twoDrawings += 1;
+      }
     }
   }
-  return black;
+  if (RASTER_CELL_DOTS * (column + 1) - 1 === LAST_DOT) {
+    counts.lastDot += 1;
+  }
 }
 
 test(
-  "no raster line or dot column of a coloured NAPLPS cell is left black where it meets another drawing's cell",
+  "every pixel of every blank NAPLPS cell is one colour: cells meet exactly in one drawing and between two, to the raster's last dot",
   { skip: server === null ? "needs TELETEXT_SERVER, neoteletext-app-server's teletext-server at PICTURE_SERVER (picture-server.ts)" : false },
   async () => {
-    const examples = pictureExamples().filter((example) => example.renderer === "naplps" && (EXAMPLES as readonly string[]).includes(example.name));
-    assert.deepEqual(examples.map((example) => example.name).toSorted(), [...EXAMPLES].toSorted(), "every example named is in the catalogue");
+    const examples = pictureExamples().filter((example) => example.renderer === "naplps");
     const drawn = await drawPictures(server ?? "", examples);
-    const black = examples.flatMap((example) => {
+    const counts: Boundaries = { oneDrawing: 0, twoDrawings: 0, lastDot: 0 };
+    const stray = examples.flatMap((example) => {
       const png = drawn.get(`naplps/${example.name}`);
+      const { scene } = example;
+      assert.ok(png !== undefined && scene !== undefined, `the server drew ${example.name}`);
+      const pixels = readPng(png);
       const objects = macroObjects(example.messages);
-      assert.ok(png !== undefined && example.scene !== undefined, `the server drew ${example.name}`);
-      assert.ok(objects.size > 0, `${example.name} has objects`);
-      return blackEdges(example.name, example.scene, objects, readPng(png));
+      const found: string[] = [];
+      for (let row = FIRST_TEXT_ROW; row <= LAST_TEXT_ROW; row += 1) {
+        for (let column = 0; column < COLUMNS; column += 1) {
+          if (blank(scene, row, column)) {
+            countBoundaries(scene, objects, row, column, counts);
+            const off = strayPixels(pixels, row, column);
+            if (off.length > 0) {
+              found.push(
+                `${example.name}: row ${String(row)}, column ${String(column)}: ${off.slice(0, 4).join(" ")}${off.length > 4 ? ` and ${String(off.length - 4)} more` : ""}`,
+              );
+            }
+          }
+        }
+      }
+      return found;
     });
-    assert.deepEqual(black, [], "raster lines and dot columns of coloured cells left black");
+    assert.deepEqual(stray, [], "blank cells with a pixel of another colour");
+    for (const [kind, count] of Object.entries(counts)) {
+      assert.ok(
+        count >= LEAST_BOUNDARIES,
+        `the catalogue's blank cells meet ${String(count)} boundaries of kind ${kind}, fewer than ${String(LEAST_BOUNDARIES)}`,
+      );
+    }
+    process.stdout.write(`# boundaries read: ${JSON.stringify(counts)}\n`);
   },
 );

@@ -12,9 +12,9 @@
 
 import { Naplps, type NaplpsObject, naplpsLimits, type NaplpsObjectSpec } from "../kit.ts";
 import { drawCells, type Look } from "./cell-drawing.ts";
-import { NAPLPS_COLUMN, naplpsLine, naplpsX, naplpsY, RASTER_ROW_LINES } from "./grid.ts";
+import { NAPLPS_COLUMN, naplpsDotCentre, naplpsLine, naplpsLineCentre, naplpsX, naplpsY, RASTER_ROW_LINES, rasterDot, rasterLine } from "./grid.ts";
 import { boundsOf, objectLabel } from "./naplps-objects.ts";
-import { NaplpsPainter, overfilled } from "./naplps-painter.ts";
+import { NaplpsPainter } from "./naplps-painter.ts";
 import { CURSOR_NUMBER } from "./numbers.ts";
 import type { PictureScene, SceneComponent } from "./scene.ts";
 import { mostBytes } from "./stream-bounds.ts";
@@ -33,8 +33,6 @@ const MOST_OBJECTS = 64;
 /** The scene and overlay layers of ANIM-11 (1 to LAYERS - 1). */
 const SCENE_LAYER = 1;
 const OVERLAY_LAYER = naplpsLimits.LAYERS - 1;
-/** A cell's neighbours' offsets, each way. */
-const NEXT_TO = [-1, 0, 1] as const;
 /** The caret: a bar along the foot of its cell, 3 raster lines high, in white. */
 const CARET_LINES = 3;
 const CARET_ENTRY = 7;
@@ -47,44 +45,15 @@ function hasLooks(component: SceneComponent): boolean {
   return component.detectable && component.controls.length > 0;
 }
 
-/** Whether the cell at `row`, `column` belongs to a component numbered after `number`, whose object is composed after `number`'s. */
-function drawnAfter(scene: PictureScene, number: number, row: number, column: number): boolean {
-  const owner = scene.owners[row]?.[column];
-  return owner !== undefined && owner > number && scene.components.has(owner);
-}
-
 /** What draws `component` in `look`: its cells, at their own places. */
 function contents(scene: PictureScene, component: SceneComponent, look: Look, rollover: boolean): (builder: Naplps) => void {
-  const clip = boundsOf(scene, component.number);
-  // Objects are composed in order of number within the scene layer (ANIM-11): a later component's cells are drawn over this one's.
-  const drawnOver = (row: number, column: number): boolean => drawnAfter(scene, component.number, row, column);
   return (builder): void => {
     drawCells(
       scene.cells,
       { owners: scene.owners, drawn: new Set([component.number]), look, controls: component.controls, rollover, pageLanguage: scene.language },
-      new NaplpsPainter(builder, { clip, drawnOver }),
+      new NaplpsPainter(builder),
     );
   };
-}
-
-/** The cells next to `component`'s, sideways or diagonally, that a later component's are: its macros' fills reach into them (contents), so a change of them draws its macros again. */
-export function laterRound(scene: PictureScene, component: SceneComponent): string {
-  const marks = new Set<string>();
-  scene.owners.forEach((owners, row) => {
-    owners.forEach((owner, column) => {
-      if (owner !== component.number) {
-        return;
-      }
-      for (const down of NEXT_TO) {
-        for (const across of NEXT_TO) {
-          if (drawnAfter(scene, component.number, row + down, column + across)) {
-            marks.add(`${row + down},${column + across}`);
-          }
-        }
-      }
-    });
-  });
-  return [...marks].toSorted().join(" ");
 }
 
 /** Whether `component`'s macros fit MAX_MACRO_BYTES however the server writes their text. */
@@ -153,11 +122,11 @@ export function caretObject(scene: PictureScene): NaplpsObject | null {
 
 /** The caret's macro defined where it is now. */
 export function caretMacro(row: number, column: number): Naplps {
-  const box = caretBox(row, column);
-  // The bar's rectangle is its object's, grown at every edge so that the object's exact rectangle cuts it (TODO-6840).
-  const bar = overfilled(box, box);
+  // The bar covers exactly the last CARET_LINES raster lines of its cell, from the first's centre to the last's (DEC-6849).
+  const [left, right] = [naplpsDotCentre(rasterDot(column)), naplpsDotCentre(rasterDot(column + 1) - 1)];
+  const [top, bottom] = [naplpsLineCentre(rasterLine(row + 1) - CARET_LINES), naplpsLineCentre(rasterLine(row + 1) - 1)];
   return new Naplps().defineMacro(CARET_MACRO, (builder) => {
-    builder.pen(CARET_ENTRY).rect(bar.x, bar.y, bar.width, bar.height, { filled: true });
+    builder.pen(CARET_ENTRY).rect(left, top, right - left, bottom - top, { filled: true });
   });
 }
 
