@@ -3,6 +3,23 @@
 Each release of the library: what changed for a program built on it,
 and what such a program has to change to take it.
 
+## 26.2.2 (19 November 2026)
+
+### What it changes
+
+- **NAPLPS cells meet without a black line** (DEC-6847): a picture
+  page's NAPLPS fills reach a step past an object's rectangle, which the
+  renderer cuts exactly, and into cells an object draws over them, so the
+  line or dot that three-byte coordinates fell short by is painted. The
+  format 3 goldens showed a black raster line where two rows of objects
+  met. The goldens are drawn again at format 4; only NAPLPS pictures
+  change, and a stream row or component is drawn again when the objects
+  beside it change.
+
+### To take it
+
+- Nothing to change: replace 26.2.1 with 26.2.2 in `vendor/`.
+
 ## 26.2.1 (19 November 2026)
 
 ### What it changes
